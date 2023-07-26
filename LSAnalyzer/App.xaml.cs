@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using LSAnalyzer.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using RDotNet;
 using System;
@@ -19,27 +20,20 @@ namespace LSAnalyzer
 
         private void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<Rservice>();
             services.AddSingleton<MainWindow>();
         }
 
         private void OnStartup(object sender, StartupEventArgs e)
         {
-            var rPath = Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\R-core\\R64", "InstallPath", null);
-
-            if (rPath == null)
+            var rService = _serviceProvider.GetService<Rservice>()!;
+            if (!rService.Connect())
             {
+                MessageBox.Show("An R installation was not found!\n\nPlease make sure that R (>=4.3.0) is installed, registered in Windows Registry and fully available to the current user", "R not found", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            var rPathString = rPath.ToString()!;
-            rPathString = rPathString.Replace("\\", "/");
-
-            using var engine = REngine.GetInstance();
-            engine.Evaluate("Sys.setenv(PATH = paste(\"" + rPathString + "/bin/x64\", Sys.getenv(\"PATH\"), sep=\";\"))"); //ugly workaround for now!
-            string[] a = engine.Evaluate("paste0('Result: ', stats::sd(c(1,2,3)))").AsCharacter().ToArray();
-
             MainWindow window = _serviceProvider.GetRequiredService<MainWindow>();
-            window.Title = a[0];
             window.Show();
         }
     }
