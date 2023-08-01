@@ -15,5 +15,14 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
         }
+
+        [Fact]
+        public void TestInstallAndCheckNecessaryRPackages()
+        {
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.InstallNecessaryRPackages());
+            Assert.True(rservice.CheckNecessaryRPackages(), "R packages are also necessary for tests");
+        }
     }
 }

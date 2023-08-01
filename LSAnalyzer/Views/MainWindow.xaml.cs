@@ -23,6 +23,13 @@ namespace LSAnalyzer
         public MainWindow()
         {
             InitializeComponent();
+
+            Closed += WindowClosed;
+        }
+
+        private void WindowClosed(object? sender, EventArgs e)
+        {
+            Environment.Exit(0);
         }
     }
 }
