@@ -5,8 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LSAnalyzer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="LSAnalyzer" Height="450" Width="800" WindowState="Maximized">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_Config">
+                <MenuItem x:Name="menuItemDatasetTypes" Header="_Dataset-Types ..." Click="MenuItemDatasetTypes_Click"></MenuItem>
+            </MenuItem>
 
-    </Grid>
+        </Menu>
+        <Grid>
+
+        </Grid>
+    </DockPanel>
 </Window>

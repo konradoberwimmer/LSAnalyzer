@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LSAnalyzer.Views;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,6 +31,12 @@ namespace LSAnalyzer
         private void WindowClosed(object? sender, EventArgs e)
         {
             Environment.Exit(0);
+        }
+
+        private void MenuItemDatasetTypes_Click (object sender, RoutedEventArgs e)
+        {
+            ConfigDatasetTypes configDatasetTypesView = new();
+            configDatasetTypesView.ShowDialog();
         }
     }
 }

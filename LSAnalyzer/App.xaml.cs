@@ -1,8 +1,11 @@
-﻿using LSAnalyzer.Services;
+﻿using LSAnalyzer.Models;
+using LSAnalyzer.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using RDotNet;
 using System;
+using System.IO;
+using System.Text.Json;
 using System.Windows;
 
 namespace LSAnalyzer
@@ -51,6 +54,25 @@ namespace LSAnalyzer
                 }
                 Shutdown(1);
                 return;
+            }
+
+            var fileDatasetTypes = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");
+            if (!File.Exists(fileDatasetTypes))
+            {
+                try
+                {
+                    if (!Directory.Exists(Path.GetDirectoryName(fileDatasetTypes)))
+                    { 
+                        Directory.CreateDirectory(Path.GetDirectoryName(fileDatasetTypes));
+                    }
+                    var defaultDatasetTypes = JsonSerializer.Serialize(DatasetType.CreateDefaultDatasetTypes());
+                    File.WriteAllText(fileDatasetTypes, defaultDatasetTypes);
+                } catch
+                {
+                    MessageBox.Show("There was an error storing the default dataset types. Please contact your administrator!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Shutdown(1);
+                    return;
+                }
             }
 
             MainWindow window = _serviceProvider.GetRequiredService<MainWindow>();
