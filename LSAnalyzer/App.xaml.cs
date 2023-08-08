@@ -25,6 +25,10 @@ namespace LSAnalyzer
         private void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<Rservice>();
+            services.AddTransient<Configuration>(provider => { 
+                var userDatasetTypesConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");
+                return new Configuration(userDatasetTypesConfigFile); 
+            });
             services.AddSingleton<MainWindow>();
         }
 
@@ -56,14 +60,15 @@ namespace LSAnalyzer
                 return;
             }
 
-            var fileDatasetTypes = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");
+            var configurationService = _serviceProvider.GetRequiredService<Configuration>();
+            var fileDatasetTypes = configurationService.DatasetTypesConfigFile;
             if (!File.Exists(fileDatasetTypes))
             {
                 try
                 {
                     if (!Directory.Exists(Path.GetDirectoryName(fileDatasetTypes)))
                     { 
-                        Directory.CreateDirectory(Path.GetDirectoryName(fileDatasetTypes));
+                        Directory.CreateDirectory(Path.GetDirectoryName(fileDatasetTypes)!);
                     }
                     var defaultDatasetTypes = JsonSerializer.Serialize(DatasetType.CreateDefaultDatasetTypes());
                     File.WriteAllText(fileDatasetTypes, defaultDatasetTypes);

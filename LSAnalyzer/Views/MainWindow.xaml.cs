@@ -1,4 +1,5 @@
-﻿using LSAnalyzer.Views;
+﻿using LSAnalyzer.Services;
+using LSAnalyzer.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,8 +22,12 @@ namespace LSAnalyzer
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        private Configuration _configuration;
+
+        public MainWindow(Configuration configuration)
         {
+            _configuration = configuration;
+
             InitializeComponent();
 
             Closed += WindowClosed;
@@ -35,7 +40,7 @@ namespace LSAnalyzer
 
         private void MenuItemDatasetTypes_Click (object sender, RoutedEventArgs e)
         {
-            ConfigDatasetTypes configDatasetTypesView = new();
+            ConfigDatasetTypes configDatasetTypesView = new(new ViewModels.ConfigDatasetTypes(_configuration));
             configDatasetTypesView.ShowDialog();
         }
     }

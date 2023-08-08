@@ -1,12 +1,138 @@
-﻿<Window x:Class="LSAnalyzer.Views.ConfigDatasetTypes"
+﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         xmlns:local="clr-namespace:LSAnalyzer.Views"
+        xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" x:Class="LSAnalyzer.Views.ConfigDatasetTypes"
         mc:Ignorable="d"
-        Title="Dataset Types" Height="450" Width="800">
+        Title="Dataset Types" Height="628" Width="519" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Closing="WindowClosing">
+    <Window.DataContext>
+        <ViewModels:ConfigDatasetTypes/>
+    </Window.DataContext>
+    <Window.Resources>
+        <converter:DictionaryHasElementToBool x:Key="DictionaryHasElementToBoolConverter"/>
+        <converter:IndexToBool x:Key="IndexToBoolConverter"/>
+    </Window.Resources>
     <Grid>
-        
+        <ComboBox x:Name="comboBoxSelectDatasetType" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="312" ItemsSource="{Binding DatasetTypes}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedDatasetType, UpdateSourceTrigger=PropertyChanged}"/>
+        <Button x:Name="buttonNewDatasetType" Content="New" HorizontalAlignment="Left" Margin="327,10,0,0" VerticalAlignment="Top" Height="22" Width="80" Command="{Binding NewDatasetTypeCommand, Mode=OneWay}"/>
+        <Button x:Name="buttonRemoveDatasetType" Content="Remove" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Height="22" Width="78" IsEnabled="{Binding SelectedIndex, ElementName=comboBoxSelectDatasetType, Converter={StaticResource IndexToBoolConverter}}" Click="ButtonRemoveDatasetTypeClick"/>
+        <Label Content="Name:" HorizontalAlignment="Left" Margin="10,49,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="textBoxName" Margin="106,53,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Name}" VerticalAlignment="Top">
+            <ToolTipService.ToolTip>
+                <TextBlock Text="{Binding SelectedDatasetType.Errors[Name]}" Foreground="Red"/>
+            </ToolTipService.ToolTip>
+            <ToolTipService.IsEnabled>
+                <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Name"/>
+            </ToolTipService.IsEnabled>
+        </TextBox>
+        <Label Content="Description:" HorizontalAlignment="Left" Margin="10,75,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="textBoxDescription" Margin="106,79,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Description}" VerticalAlignment="Top"/>
+        <Label Content="Weight Variable:" HorizontalAlignment="Left" Margin="10,101,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="textBoxWeightVariable" Margin="106,105,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Weight}" VerticalAlignment="Top">
+            <ToolTipService.ToolTip>
+                <TextBlock Text="{Binding SelectedDatasetType.Errors[Weight]}" Foreground="Red"/>
+            </ToolTipService.ToolTip>
+            <ToolTipService.IsEnabled>
+                <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Weight"/>
+            </ToolTipService.IsEnabled>
+        </TextBox>
+        <GroupBox Margin="10,128,10,135" VerticalAlignment="Top">
+            <GroupBox.Header>
+                <TextBlock FontWeight="DemiBold"><Run Text="Multiple Imputation / Plausible Values"/></TextBlock>
+            </GroupBox.Header>
+            <StackPanel>
+                <TextBlock TextWrapping="Wrap" Text="Number of multiple imputations or plausible values:" Margin="0,5,0,0"/>
+                <TextBox x:Name="textBoxNMI" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.NMI}" HorizontalAlignment="Left">
+                    <ToolTipService.ToolTip>
+                        <TextBlock Text="{Binding SelectedDatasetType.Errors[NMI]}" Foreground="Red"/>
+                    </ToolTipService.ToolTip>
+                    <ToolTipService.IsEnabled>
+                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="NMI"/>
+                    </ToolTipService.IsEnabled>
+                </TextBox>
+                <Rectangle Height="1" Stroke="Gray" Margin="0,10,0,10"/>
+                <TextBlock TextWrapping="Wrap" Text="Variable indicating imputation count:"/>
+                <TextBox x:Name="textBoxMIVariable" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.MIvar}">
+                    <ToolTipService.ToolTip>
+                        <TextBlock Text="{Binding SelectedDatasetType.Errors[MIvar]}" Foreground="Red"/>
+                    </ToolTipService.ToolTip>
+                    <ToolTipService.IsEnabled>
+                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="MIvar"/>
+                    </ToolTipService.IsEnabled>
+                </TextBox>
+                <TextBlock TextWrapping="Wrap" Text="OR"/>
+                <TextBlock TextWrapping="Wrap" Text="Variables with plausible values (semicolon-separated):"/>
+                <TextBox x:Name="textBoxPVVariables" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.PVvars}" Margin="0,0,0,5">
+                    <ToolTipService.ToolTip>
+                        <TextBlock Text="{Binding SelectedDatasetType.Errors[PVvars]}" Foreground="Red"/>
+                    </ToolTipService.ToolTip>
+                    <ToolTipService.IsEnabled>
+                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="PVvars"/>
+                    </ToolTipService.IsEnabled>
+                </TextBox>
+            </StackPanel>
+        </GroupBox>
+        <GroupBox  Margin="10,305,10,0" VerticalAlignment="Top" Height="250">
+            <GroupBox.Header>
+                <TextBlock FontWeight="DemiBold"><Run Text="Replicate Weights"/></TextBlock>
+            </GroupBox.Header>
+            <StackPanel>
+                <TextBlock TextWrapping="Wrap" Text="Number of replications:"/>
+                <TextBox x:Name="textBoxNRep" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.Nrep}" HorizontalAlignment="Left">
+                    <ToolTipService.ToolTip>
+                        <TextBlock Text="{Binding SelectedDatasetType.Errors[Nrep]}" Foreground="Red"/>
+                    </ToolTipService.ToolTip>
+                    <ToolTipService.IsEnabled>
+                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Nrep"/>
+                    </ToolTipService.IsEnabled>
+                </TextBox>
+                <TextBlock TextWrapping="Wrap" Text="Replication variance adjustment factor (argument fayfac in BIFIEsurvey):"/>
+                <TextBox x:Name="textBoxFayFac" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.FayFac}" HorizontalAlignment="Left">
+                    <ToolTipService.ToolTip>
+                        <TextBlock Text="{Binding SelectedDatasetType.Errors[FayFac]}" Foreground="Red"/>
+                    </ToolTipService.ToolTip>
+                    <ToolTipService.IsEnabled>
+                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="FayFac"/>
+                    </ToolTipService.IsEnabled>
+                </TextBox>
+                <Rectangle Height="1" Stroke="Gray" Margin="0,10,0,10"/>
+                <TextBlock TextWrapping="Wrap" Text="Variables with replicate weights (regex):"/>
+                <TextBox x:Name="textBoxRepWeights" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.RepWgts}">
+                    <ToolTipService.ToolTip>
+                        <TextBlock Text="{Binding SelectedDatasetType.Errors[RepWgts]}" Foreground="Red"/>
+                    </ToolTipService.ToolTip>
+                    <ToolTipService.IsEnabled>
+                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="RepWgts"/>
+                    </ToolTipService.IsEnabled>
+                </TextBox>
+                <TextBlock TextWrapping="Wrap" Text="OR"/>
+                <TextBlock TextWrapping="Wrap" Text="Variable indicating jackknife zones:"/>
+                <TextBox x:Name="textBoxJKZone" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.JKzone}">
+                    <ToolTipService.ToolTip>
+                        <TextBlock Text="{Binding SelectedDatasetType.Errors[JKzone]}" Foreground="Red"/>
+                    </ToolTipService.ToolTip>
+                    <ToolTipService.IsEnabled>
+                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="JKzone"/>
+                    </ToolTipService.IsEnabled>
+                </TextBox>
+                <TextBlock TextWrapping="Wrap" Text="Variable indicating inclusion/exclusion within jackknife zone:"/>
+                <TextBox x:Name="textBoxJKRep" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.JKrep}">
+                    <ToolTipService.ToolTip>
+                        <TextBlock Text="{Binding SelectedDatasetType.Errors[JKrep]}" Foreground="Red"/>
+                    </ToolTipService.ToolTip>
+                    <ToolTipService.IsEnabled>
+                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="JKrep"/>
+                    </ToolTipService.IsEnabled>
+                </TextBox>
+                <CheckBox x:Name="checkBoxJKReverse" Content="Use reverse inclusion/exclusion?" Margin="0,5,0,5" IsChecked="{Binding SelectedDatasetType.JKreverse}"/>
+
+
+            </StackPanel>
+        </GroupBox>
+        <Button Content="Save" HorizontalAlignment="Right" Margin="0,560,10,0" VerticalAlignment="Top" Height="22" Width="78" Command="{Binding SaveSelectedDatasetTypeCommand, Mode=OneWay}" IsEnabled="{Binding SelectedIndex, ElementName=comboBoxSelectDatasetType, Converter={StaticResource IndexToBoolConverter}}"/>
+
     </Grid>
 </Window>
