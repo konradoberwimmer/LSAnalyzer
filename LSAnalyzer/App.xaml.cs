@@ -1,6 +1,6 @@
 ﻿using LSAnalyzer.Models;
 using LSAnalyzer.Services;
-using LSAnalyzer.Views;
+using LSAnalyzer.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using RDotNet;
@@ -30,7 +30,15 @@ namespace LSAnalyzer
                 var userDatasetTypesConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");
                 return new Configuration(userDatasetTypesConfigFile); 
             });
-            services.AddSingleton<MainWindow>();
+            services.AddTransient<ConfigDatasetTypes>();
+            services.AddTransient<SelectAnalysisFile>();
+            services.AddTransient<MainWindow>();
+            services.AddTransient<Views.ConfigDatasetTypes>();
+            services.AddTransient<Views.SelectAnalysisFile>();
+            services.AddSingleton<Views.MainWindow>(provider =>
+            {
+                return new Views.MainWindow(_serviceProvider);
+            });
         }
 
         private void OnStartup(object sender, StartupEventArgs e)
@@ -81,7 +89,7 @@ namespace LSAnalyzer
                 }
             }
 
-            MainWindow window = _serviceProvider.GetRequiredService<MainWindow>();
+            Views.MainWindow window = _serviceProvider.GetRequiredService<Views.MainWindow>();
             window.Show();
         }
     }

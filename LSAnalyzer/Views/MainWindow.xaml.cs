@@ -1,6 +1,7 @@
 ﻿using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.Views;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,12 +24,12 @@ namespace LSAnalyzer.Views
     /// </summary>
     public partial class MainWindow : Window
     {
-        private Configuration _configuration;
-
-        public MainWindow(Configuration configuration)
+        private IServiceProvider _serviceProvider;
+        
+        public MainWindow(IServiceProvider serviceProvider)
         {
-            _configuration = configuration;
-
+            _serviceProvider = serviceProvider;
+            
             InitializeComponent();
 
             Closed += WindowClosed;
@@ -41,13 +42,13 @@ namespace LSAnalyzer.Views
 
         private void MenuItemDatasetTypes_Click (object sender, RoutedEventArgs e)
         {
-            ConfigDatasetTypes configDatasetTypesView = new(new ViewModels.ConfigDatasetTypes(_configuration));
+            ConfigDatasetTypes configDatasetTypesView = _serviceProvider.GetRequiredService<ConfigDatasetTypes>();
             configDatasetTypesView.ShowDialog();
         }
 
         private void MenuItemAnalysisSelectFile_Click (object sender, RoutedEventArgs e)
         {
-            SelectAnalysisFile selectAnalysisFileView = new(new ViewModels.SelectAnalysisFile(_configuration));
+            SelectAnalysisFile selectAnalysisFileView = _serviceProvider.GetRequiredService<SelectAnalysisFile>();
             selectAnalysisFileView.ShowDialog();
         }
     }
