@@ -1,5 +1,6 @@
 ﻿using LSAnalyzer.Models;
 using LSAnalyzer.Services;
+using LSAnalyzer.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using RDotNet;

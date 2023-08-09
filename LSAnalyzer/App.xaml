@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:LSAnalyzer"
              Startup="OnStartup">
     <Application.Resources>
-         
+        <ResourceDictionary Source="Icons.xaml"/>
     </Application.Resources>
 </Application>

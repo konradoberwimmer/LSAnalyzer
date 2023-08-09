@@ -1,4 +1,5 @@
-﻿using LSAnalyzer.Services;
+﻿using LSAnalyzer.Models;
+using LSAnalyzer.Services;
 using LSAnalyzer.Views;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace LSAnalyzer
+namespace LSAnalyzer.Views
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -42,6 +43,12 @@ namespace LSAnalyzer
         {
             ConfigDatasetTypes configDatasetTypesView = new(new ViewModels.ConfigDatasetTypes(_configuration));
             configDatasetTypesView.ShowDialog();
+        }
+
+        private void MenuItemAnalysisSelectFile_Click (object sender, RoutedEventArgs e)
+        {
+            SelectAnalysisFile selectAnalysisFileView = new(new ViewModels.SelectAnalysisFile(_configuration));
+            selectAnalysisFileView.ShowDialog();
         }
     }
 }

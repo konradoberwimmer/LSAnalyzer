@@ -1,20 +1,65 @@
-﻿<Window x:Class="LSAnalyzer.MainWindow"
+﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         xmlns:local="clr-namespace:LSAnalyzer"
+        xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" x:Class="LSAnalyzer.Views.MainWindow"
         mc:Ignorable="d"
         Title="LSAnalyzer" Height="450" Width="800" WindowState="Maximized">
+    <Window.DataContext>
+        <ViewModels:MainWindow/>
+    </Window.DataContext>
+    <Window.Resources>
+        <converter:BoolToAnalysisMode x:Key="BoolToAnalysisConverter"/>
+    </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_Config">
-                <MenuItem x:Name="menuItemDatasetTypes" Header="_Dataset-Types ..." Click="MenuItemDatasetTypes_Click"></MenuItem>
+                <MenuItem x:Name="menuItemDatasetTypes" Header="_Dataset-Types ..." Click="MenuItemDatasetTypes_Click" />
             </MenuItem>
-
+            <MenuItem Header="_Analysis">
+                <MenuItem x:Name="menuItemAnalysisSelectFile" Header="_Select File ..." Click="MenuItemAnalysisSelectFile_Click"/>
+                <Separator/>
+                <MenuItem x:Name="menuItemAnalysisCorrelations" Header="_Correlations ..."/>
+            </MenuItem>
         </Menu>
-        <Grid>
-
-        </Grid>
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>                            
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            <StatusBarItem Grid.Column="0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="File: "/>
+                    <TextBlock x:Name="textBlockAnalysisDatasetFile" Text="{Binding AnalysisConfiguration.FileName}"/>
+                </StackPanel>
+            </StatusBarItem>
+            <Separator Grid.Column="1"/>
+            <StatusBarItem Grid.Column="2">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="DatasetType: "/>
+                    <TextBlock x:Name="textBlockAnalysisDatasetType" Text="{Binding AnalysisConfiguration.DatasetType.Name}"/>
+                </StackPanel>
+            </StatusBarItem>
+            <Separator Grid.Column="3"/>
+            <StatusBarItem Grid.Column="4">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Mode: "/>
+                    <TextBlock x:Name="textBlockAnalysisMode" Text="{Binding AnalysisConfiguration.ModeKeep, Converter={StaticResource BoolToAnalysisConverter}}"/>
+                </StackPanel>
+            </StatusBarItem>
+        </StatusBar>        
+        <Grid/>
     </DockPanel>
 </Window>
