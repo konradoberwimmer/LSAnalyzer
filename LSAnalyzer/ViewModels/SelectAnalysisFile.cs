@@ -18,6 +18,8 @@ namespace LSAnalyzer.ViewModels
 {
     public class SelectAnalysisFile : INotifyPropertyChanged
     {
+        private Rservice _rservice;
+
         private string? _fileName;
         public string? FileName
         {
@@ -56,8 +58,9 @@ namespace LSAnalyzer.ViewModels
 
         }
 
-        public SelectAnalysisFile(Configuration configuration)
+        public SelectAnalysisFile(Configuration configuration, Rservice rservice)
         {
+            _rservice = rservice;
             DatasetTypes = configuration.GetStoredDatasetTypes()?.OrderBy(dst => dst.Name).ToList() ?? DatasetTypes;
         }
 
@@ -95,6 +98,12 @@ namespace LSAnalyzer.ViewModels
                 ModeKeep = true
             };
 
+            if (!_rservice.TestAnalysisConfiguration(analysisConfiguration))
+            {
+                WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
+                return;
+            }
+
             WeakReferenceMessenger.Default.Send(new SetAnalysisConfigurationMessage(analysisConfiguration));
 
             window?.Close();
@@ -104,6 +113,14 @@ namespace LSAnalyzer.ViewModels
     internal class SetAnalysisConfigurationMessage : ValueChangedMessage<AnalysisConfiguration>
     {
         public SetAnalysisConfigurationMessage(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
+        {
+
+        }
+    }
+
+    internal class FailureAnalysisConfigurationMessage : ValueChangedMessage<AnalysisConfiguration>
+    {
+        public FailureAnalysisConfigurationMessage(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
         {
 
         }

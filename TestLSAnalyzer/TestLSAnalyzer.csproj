@@ -25,4 +25,16 @@
     <ProjectReference Include="..\LSAnalyzer\LSAnalyzer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="_testData\test_create_repwgts.sav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="_testData\test_dummy.sav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="_testData\test_nmi10_nrep5.sav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

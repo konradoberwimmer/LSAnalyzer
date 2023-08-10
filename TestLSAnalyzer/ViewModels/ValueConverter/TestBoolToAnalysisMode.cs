@@ -11,8 +11,8 @@ namespace TestLSAnalyzer.ViewModels.ValueConverter
     public class TestBoolToAnalysisMode
     {
         [Theory]
-        [InlineData(false, "Build BIFIEsurvey object for analyses")]
-        [InlineData(true, "Keep BIFIEsurvey object")]
+        [InlineData(false, "Build BIFIEdata object for analyses")]
+        [InlineData(true, "Keep BIFIEdata object")]
         public void TestConvert(bool boolVal, string expected)
         {
             var converter = new BoolToAnalysisMode();

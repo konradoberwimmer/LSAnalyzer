@@ -8,18 +8,11 @@ using System.Windows.Data;
 
 namespace LSAnalyzer.ViewModels.ValueConverter
 {
-    public class BoolToAnalysisMode : IValueConverter
+    public class NullToBool : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if ((bool)value)
-            {
-                return "Keep BIFIEdata object";
-            }
-            else
-            {
-                return "Build BIFIEdata object for analyses";
-            }
+            return value != null;
         }
 
         [ExcludeFromCodeCoverage]
@@ -27,6 +20,5 @@ namespace LSAnalyzer.ViewModels.ValueConverter
         {
             throw new NotImplementedException();
         }
-
     }
 }

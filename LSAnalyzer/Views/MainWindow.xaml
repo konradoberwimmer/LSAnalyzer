@@ -13,6 +13,7 @@
     </Window.DataContext>
     <Window.Resources>
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisConverter"/>
+        <converter:NullToBool x:Key="NullToBoolConverter"/>
     </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -22,7 +23,7 @@
             <MenuItem Header="_Analysis">
                 <MenuItem x:Name="menuItemAnalysisSelectFile" Header="_Select File ..." Click="MenuItemAnalysisSelectFile_Click"/>
                 <Separator/>
-                <MenuItem x:Name="menuItemAnalysisCorrelations" Header="_Correlations ..."/>
+                <MenuItem x:Name="menuItemAnalysisCorrelations" Header="_Correlations ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
             </MenuItem>
         </Menu>
         <StatusBar DockPanel.Dock="Bottom">
@@ -48,7 +49,7 @@
             <Separator Grid.Column="1"/>
             <StatusBarItem Grid.Column="2">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="DatasetType: "/>
+                    <TextBlock Text="Dataset Type: "/>
                     <TextBlock x:Name="textBlockAnalysisDatasetType" Text="{Binding AnalysisConfiguration.DatasetType.Name}"/>
                 </StackPanel>
             </StatusBarItem>

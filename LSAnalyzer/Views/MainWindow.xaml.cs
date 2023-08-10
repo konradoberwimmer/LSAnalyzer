@@ -1,9 +1,11 @@
 ﻿using LSAnalyzer.Models;
 using LSAnalyzer.Services;
+using LSAnalyzer.ViewModels;
 using LSAnalyzer.Views;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +17,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace LSAnalyzer.Views
 {
@@ -49,6 +50,13 @@ namespace LSAnalyzer.Views
         private void MenuItemAnalysisSelectFile_Click (object sender, RoutedEventArgs e)
         {
             SelectAnalysisFile selectAnalysisFileView = _serviceProvider.GetRequiredService<SelectAnalysisFile>();
+
+            var mainWindowViewModel = DataContext as ViewModels.MainWindow;
+            if (mainWindowViewModel?.AnalysisConfiguration?.FileName != null)
+            {
+                selectAnalysisFileView.InitialDirectory = Path.GetDirectoryName(mainWindowViewModel.AnalysisConfiguration.FileName);
+            }
+
             selectAnalysisFileView.ShowDialog();
         }
     }
