@@ -59,5 +59,22 @@ namespace LSAnalyzer.Views
 
             selectAnalysisFileView.ShowDialog();
         }
+
+        private void MenuItemAnalysisUnivar_Click (object sender, RoutedEventArgs e)
+        {
+            var mainWindowViewModel = DataContext as ViewModels.MainWindow;
+
+            if (mainWindowViewModel!.AnalysisConfiguration == null)
+            {
+                return;
+            }
+
+            RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
+            requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            requestAnalysisViewModel.Analysis = new AnalysisUnivar();
+
+            RequestAnalysisUnivar requestAnalysisUnivarView = new(requestAnalysisViewModel);
+            requestAnalysisUnivarView.ShowDialog();
+        }
     }
 }

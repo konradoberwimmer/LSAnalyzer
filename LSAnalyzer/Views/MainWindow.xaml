@@ -23,6 +23,7 @@
             <MenuItem Header="_Analysis">
                 <MenuItem x:Name="menuItemAnalysisSelectFile" Header="_Select File ..." Click="MenuItemAnalysisSelectFile_Click"/>
                 <Separator/>
+                <MenuItem x:Name="menuItemAnalysisUnivar" Header="_Univariate ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisUnivar_Click"/>
                 <MenuItem x:Name="menuItemAnalysisCorrelations" Header="_Correlations ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
             </MenuItem>
         </Menu>

@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:LSAnalyzer.Views"
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" x:Name="windowSelectAnalysisFile" x:Class="LSAnalyzer.Views.SelectAnalysisFile"
         mc:Ignorable="d"
-        Title="Analysis File" Height="185" Width="614" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Closed="Window_Closed">
+        Title="Analysis File" Height="185" Width="614" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Closed="Window_Closed" SizeToContent="WidthAndHeight">
     <Window.DataContext>
         <ViewModels:SelectAnalysisFile/>
     </Window.DataContext>
@@ -22,14 +22,14 @@
         </Grid.ColumnDefinitions>
         <Label Content="File:" HorizontalAlignment="Left" Margin="10,13,0,0" VerticalAlignment="Top" Height="26" Width="38"/>
         <TextBox x:Name="textBoxFileName" Grid.Column="1" HorizontalAlignment="Left" Margin="10,14,0,0" TextWrapping="Wrap" Text="{Binding FileName}" VerticalAlignment="Top" Width="400" IsEnabled="False" Height="22"/>
-        <Button x:Name="buttonSelectFile" Grid.Column="1" Content="Select ..." HorizontalAlignment="Left" Margin="415,14,0,0" VerticalAlignment="Top" Width="80" Height="22" Click="ButtonSelectFile_Click"/>
+        <Button x:Name="buttonSelectFile" Grid.Column="1" Content="Select ..." HorizontalAlignment="Left" Margin="415,14,10,0" VerticalAlignment="Top" Width="80" Height="22" Click="ButtonSelectFile_Click"/>
         <Label Content="Dataset Type:" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Height="26" Width="81"/>
         <ComboBox x:Name="comboBoxDatasetType" Grid.Column="1" HorizontalAlignment="Left" Margin="10,42,0,0" VerticalAlignment="Top" Width="400" Height="22" ItemsSource="{Binding DatasetTypes}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedDatasetType}"/>
         <Button Grid.Column="1" ContentTemplate="{StaticResource MagicWand}" HorizontalAlignment="Left" Margin="415,42,0,0" VerticalAlignment="Top" Width="80" Height="22" IsEnabled="{Binding Path=Text.Length, ElementName=textBoxFileName}"/>
         <Label Content="Mode:" HorizontalAlignment="Left" Margin="10,66,0,0" VerticalAlignment="Top" Height="26" Width="44"/>
         <RadioButton x:Name="radioButtonAnalysisModeKeep" Grid.Column="1" Content="Keep BIFIEdata object between analyses (recommended if memory limit allows it)" HorizontalAlignment="Left" Margin="10,72,0,0" VerticalAlignment="Top" Height="15" Width="485" GroupName="AnalysisMode" IsChecked="True"/>
         <RadioButton x:Name="radioButtonAnalysisModeBuild" Grid.Column="1" Content="Build BIFIEdata object for each analysis (Use only in case of reaching memory limit!)" HorizontalAlignment="Left" Margin="10,92,0,0" VerticalAlignment="Top" Width="485" GroupName="AnalysisMode" IsEnabled="False"/>
-        <Button Grid.Column="1" Content="Go!" HorizontalAlignment="Left" Margin="415,112,0,0" VerticalAlignment="Top" Height="22" Width="80" Command="{Binding UseFileForAnalysisCommand, Mode=OneWay}" CommandParameter="{Binding ElementName=windowSelectAnalysisFile}">
+        <Button Grid.Column="1" Content="Go!" HorizontalAlignment="Left" Margin="415,112,10,13" VerticalAlignment="Top" Height="22" Width="80" Command="{Binding UseFileForAnalysisCommand, Mode=OneWay}" CommandParameter="{Binding ElementName=windowSelectAnalysisFile}">
             <Button.IsEnabled>
                 <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                     <Binding Path="Text.Length" ElementName="textBoxFileName"/>
