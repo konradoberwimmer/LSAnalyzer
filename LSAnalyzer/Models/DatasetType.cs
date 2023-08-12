@@ -3,6 +3,7 @@ using LSAnalyzer.Models.ValidationAttributes;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace LSAnalyzer.Models
 {
@@ -38,6 +39,28 @@ namespace LSAnalyzer.Models
         {
             Name = "New Dataset Type";
             Weight = string.Empty;
+        }
+
+        public bool HasSystemVariable(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return false;
+            }
+
+            if (Weight == name || MIvar == name)
+            {
+                return true;
+            }
+
+            var repwgtRegex = string.IsNullOrWhiteSpace(RepWgts) ? "lsanalyzer_repwgt_" : RepWgts;
+
+            if (Regex.IsMatch(name, repwgtRegex))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public static List<DatasetType> CreateDefaultDatasetTypes()

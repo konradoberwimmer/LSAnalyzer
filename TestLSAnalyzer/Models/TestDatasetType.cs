@@ -21,5 +21,24 @@ namespace TestLSAnalyzer.Models
                 new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", Nrep = 1, RepWgts = "wgtrep[0-9]*" }, true},
                 new object[] { DatasetType.CreateDefaultDatasetTypes().FirstOrDefault()!, true }
             };
+
+        [Theory]
+        [InlineData("", false)]
+        [InlineData("W_FSTUWT", true)]
+        [InlineData("W_STURWT", true)]
+        [InlineData("mivar", true)]
+        [InlineData("mimimi", false)]
+        public void HasSystemVariable(string name, bool expectedHasSystemVariable)
+        {
+            DatasetType datasetType = new()
+            {
+                Weight = "W_FSTUWT",
+                MIvar = "mivar",
+                PVvars = "ASRREA",
+                RepWgts = "W_STURWT",
+            };
+
+            Assert.Equal(expectedHasSystemVariable, datasetType.HasSystemVariable(name));
+        }
     }
 }

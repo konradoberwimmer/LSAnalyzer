@@ -2,6 +2,7 @@
 using LSAnalyzer.Services;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -22,6 +23,19 @@ namespace LSAnalyzer.ViewModels
             {
                 _analysisConfiguration = value;
                 NotifyPropertyChanged(nameof(AnalysisConfiguration));
+                
+                if (AnalysisConfiguration != null) {
+                    var currentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration);
+                    if (currentDatasetVariables != null)
+                    {
+                        ObservableCollection<Variable> newAvailableVariables = new();
+                        foreach (var variable in currentDatasetVariables)
+                        {
+                            newAvailableVariables.Add(variable);
+                        }
+                        AvailableVariables = newAvailableVariables;
+                    }
+                }
             }
         }
 
@@ -36,6 +50,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private ObservableCollection<Variable> _availableVariables;
+        public ObservableCollection<Variable> AvailableVariables
+        {
+            get => _availableVariables;
+            set
+            {
+                _availableVariables = value;
+                NotifyPropertyChanged(nameof(AvailableVariables));
+            }
+        }
+
         public RequestAnalysis()
         {
             // design-time-only constructor
@@ -44,6 +69,7 @@ namespace LSAnalyzer.ViewModels
         public RequestAnalysis(Rservice rservice)
         {
             _rservice = rservice;
+            AvailableVariables = new ObservableCollection<Variable>();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -11,5 +11,10 @@ namespace LSAnalyzer.Models
         public string? FileName { get; set; }
         public DatasetType? DatasetType { get; set; }
         public bool? ModeKeep { get; set; }
+
+        public bool HasSystemVariable(string name)
+        {
+            return DatasetType?.HasSystemVariable(name) ?? false;
+        }
     }
 }

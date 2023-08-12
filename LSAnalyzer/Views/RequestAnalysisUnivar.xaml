@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         xmlns:local="clr-namespace:LSAnalyzer.Views"
-        xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" x:Name="windowRequestAnalysisUnivar"
+        xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" 
+        xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
+        x:Name="windowRequestAnalysisUnivar"
         mc:Ignorable="d"
         Title="Univariate statistics" Height="450" MinHeight="450" Width="800" MinWidth="800" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight">
     <Window.DataContext>
@@ -13,6 +15,11 @@
     </Window.DataContext>
     <Window.Resources>
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisModeConverter"/>
+        <CollectionViewSource x:Key="AvailableVariablesCollectionView" Source="{Binding AvailableVariables}" Filter="AvailableVariablesCollectionView_FilterSystemVariables">
+            <CollectionViewSource.SortDescriptions>
+                <componentmodel:SortDescription PropertyName="Position" Direction="Ascending"/>
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -38,9 +45,10 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Content="Variables in dataset:" Margin="10,0,0,0"/>
-            <ListBox x:Name="listBoxVariablesDataset" Grid.Row="0" Margin="10,27,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                
-            </ListBox>
+            <Border x:Name="HeightHelperPanel" Grid.Column="0" Margin="10,27,10,22">
+                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanel}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Name" SelectionMode="Multiple"/>
+            </Border>
+            <CheckBox x:Name="checkBoxIncludeSystemVariables" Grid.Column="0" Margin="10,0,10,0" VerticalAlignment="Bottom" IsChecked="False" Content="Include system variables (weights, ...)" Checked="CheckBoxIncludeSystemVariables_Checked" Unchecked="CheckBoxIncludeSystemVariables_Checked"/>
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="66*"/>

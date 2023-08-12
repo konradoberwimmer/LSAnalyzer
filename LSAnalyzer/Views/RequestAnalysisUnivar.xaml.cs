@@ -1,4 +1,5 @@
-﻿using LSAnalyzer.ViewModels;
+﻿using LSAnalyzer.Models;
+using LSAnalyzer.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,27 @@ namespace LSAnalyzer.Views
             InitializeComponent();
 
             DataContext = requestAnalysisViewModel;
+        }
+
+        private void AvailableVariablesCollectionView_FilterSystemVariables (object sender, FilterEventArgs e)
+        {
+            e.Accepted = true;
+            if (e.Item is Variable variable && variable.IsSystemVariable)
+            {
+                e.Accepted = false;
+            }
+        }
+
+        private void CheckBoxIncludeSystemVariables_Checked (object sender, RoutedEventArgs e)
+        {
+            var availableVariablesCollectionView = Resources["AvailableVariablesCollectionView"] as CollectionViewSource;
+            if (((CheckBox)sender).IsChecked == true)
+            {
+                availableVariablesCollectionView!.Filter -= AvailableVariablesCollectionView_FilterSystemVariables;
+            } else
+            {
+                availableVariablesCollectionView!.Filter += AvailableVariablesCollectionView_FilterSystemVariables;
+            }
         }
     }
 }

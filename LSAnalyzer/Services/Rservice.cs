@@ -2,6 +2,7 @@
 using Microsoft.Win32;
 using RDotNet;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -268,6 +269,36 @@ namespace LSAnalyzer.Services
             }
 
             return true;
+        }
+
+        public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration)
+        {
+            if (_engine == null)
+            {
+                return null;
+            }
+
+            if (analysisConfiguration.ModeKeep == null || analysisConfiguration.ModeKeep == false)
+            {
+                throw new NotImplementedException("Analysis mode 'Build BIFIEdata object' has yet to be implemented!");
+            }
+
+            try
+            {
+                var variables = _engine.Evaluate("lsanalyzer_dat_BO$variables").AsDataFrame();
+
+                List<Variable> variableList = new();
+                foreach (var variable in variables.GetRows())
+                {
+                    variableList.Add(new(variable.RowIndex, (string)variable["variable"], analysisConfiguration.HasSystemVariable((string)variable["variable"])));
+                }
+
+                return variableList;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }
