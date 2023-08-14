@@ -45,8 +45,8 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Content="Variables in dataset:" Margin="10,0,0,0"/>
-            <Border x:Name="HeightHelperPanel" Grid.Column="0" Margin="10,27,10,22">
-                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanel}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Name" SelectionMode="Multiple"/>
+            <Border x:Name="HeightHelperPanelVariablesDataset" Grid.Column="0" Margin="10,27,10,22">
+                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDataset}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Name" SelectionMode="Extended"/>
             </Border>
             <CheckBox x:Name="checkBoxIncludeSystemVariables" Grid.Column="0" Margin="10,0,10,0" VerticalAlignment="Bottom" IsChecked="False" Content="Include system variables (weights, ...)" Checked="CheckBoxIncludeSystemVariables_Checked" Unchecked="CheckBoxIncludeSystemVariables_Checked"/>
             <Grid Grid.Column="1">
@@ -60,10 +60,10 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="&#x21D4;" Margin="10,0,10,0" Height="50" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent"/>
-                    <ListBox x:Name="listBoxVariablesAnalyze" Grid.Column="1" Margin="0,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-
-                    </ListBox>
+                    <Button x:Name="buttonMoveToAndFromAnalysisVariables" Grid.Column="0" Content="&#x21D4;" Margin="10,0,10,0" Height="50" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Command="{Binding MoveToAndFromAnalysisVariablesCommand}" Click="ButtonMoveToAndFromAnalysisVariables_Click"/>
+                    <Border x:Name="HeightHelperPanelVariablesAnalyze" Grid.Column="1" Margin="0,0,10,0">
+                        <ListBox x:Name="listBoxVariablesAnalyze" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesAnalyze}" ItemsSource="{Binding AnalysisVariables}" DisplayMemberPath="Name" SelectionMode="Extended"/>
+                    </Border>
                 </Grid>
                 <Label Grid.Row="1" Content="Group by:" Margin="10,0,10,0"/>
                 <Grid Grid.Row="1" Margin="0,27,0,0">
@@ -71,13 +71,13 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="&#x21D4;" Margin="10,0,10,0" Height="50" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent"/>
-                    <ListBox x:Name="listBoxVariablesGroupBy" Grid.Column="1" Margin="0,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-
-                    </ListBox>
+                    <Button x:Name="buttonMoveToAndFromGroupByVariables" Grid.Column="0" Content="&#x21D4;" Margin="10,0,10,0" Height="50" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Command="{Binding MoveToAndFromGroupByVariablesCommand}" Click="ButtonMoveToAndFromGroupByVariables_Click"/>
+                    <Border x:Name="HeightHelperPanelVariablesGroupBy" Grid.Column="1" Margin="0,0,10,0">
+                        <ListBox x:Name="listBoxVariablesGroupBy" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesGroupBy}" ItemsSource="{Binding GrouyByVariables}" DisplayMemberPath="Name" SelectionMode="Extended"/>
+                    </Border>
                 </Grid>
             </Grid>
         </Grid>
-        <Button Grid.Row="2" Content="Go !" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,10" Width="80" Height="22"></Button>
+        <Button Grid.Row="2" Content="Go !" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,10" Width="80" Height="22" IsEnabled="{Binding AnalysisVariables.Count}"></Button>
     </Grid>
 </Window>

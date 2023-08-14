@@ -48,5 +48,23 @@ namespace LSAnalyzer.Views
                 availableVariablesCollectionView!.Filter += AvailableVariablesCollectionView_FilterSystemVariables;
             }
         }
+
+        private void ButtonMoveToAndFromAnalysisVariables_Click (object sender, RoutedEventArgs e)
+        {
+            buttonMoveToAndFromAnalysisVariables.CommandParameter = new MoveToAndFromVariablesCommandParameters()
+            {
+                SelectedFrom = listBoxVariablesDataset.SelectedItems.Cast<Variable>().ToList(),
+                SelectedTo = listBoxVariablesAnalyze.SelectedItems.Cast<Variable>().ToList(),
+            };
+        }
+
+        private void ButtonMoveToAndFromGroupByVariables_Click(object sender, RoutedEventArgs e)
+        {
+            buttonMoveToAndFromGroupByVariables.CommandParameter = new MoveToAndFromVariablesCommandParameters()
+            {
+                SelectedFrom = listBoxVariablesDataset.SelectedItems.Cast<Variable>().ToList(),
+                SelectedTo = listBoxVariablesGroupBy.SelectedItems.Cast<Variable>().ToList(),
+            };
+        }
     }
 }

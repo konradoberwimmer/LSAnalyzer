@@ -1,13 +1,13 @@
-﻿using LSAnalyzer.Models;
+﻿using CommunityToolkit.Mvvm.Input;
+using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace LSAnalyzer.ViewModels
 {
@@ -61,6 +61,29 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private ObservableCollection<Variable> _analysisVariables = new();
+        public ObservableCollection<Variable> AnalysisVariables
+        {
+            get => _analysisVariables;
+            set
+            {
+                _analysisVariables = value;
+                NotifyPropertyChanged(nameof(AnalysisVariables));
+            }
+        }
+
+        private ObservableCollection<Variable> _groupByVariables = new();
+        public ObservableCollection<Variable> GrouyByVariables
+        {
+            get => _groupByVariables;
+            set
+            {
+                _groupByVariables = value;
+                NotifyPropertyChanged(nameof(GrouyByVariables));
+            }
+        }
+
+        [ExcludeFromCodeCoverage]
         public RequestAnalysis()
         {
             // design-time-only constructor
@@ -80,5 +103,83 @@ namespace LSAnalyzer.ViewModels
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
+
+        private RelayCommand<MoveToAndFromVariablesCommandParameters?> _moveToAndFromAnalysisVariablesCommand;
+        public ICommand MoveToAndFromAnalysisVariablesCommand
+        {
+            get
+            {
+                if (_moveToAndFromAnalysisVariablesCommand == null)
+                    _moveToAndFromAnalysisVariablesCommand = new(this.MoveToAndFromAnalysisVariables);
+                return _moveToAndFromAnalysisVariablesCommand;
+            }
+        }
+
+        private void MoveToAndFromAnalysisVariables(MoveToAndFromVariablesCommandParameters? commandParams)
+        {
+            if (commandParams == null)
+            {
+                return;
+            }
+
+            if (commandParams.SelectedFrom.Count > 0)
+            {
+                foreach (var variable in commandParams.SelectedFrom)
+                {
+                    AnalysisVariables.Add(variable);
+                    AvailableVariables.Remove(variable);
+                }
+            }
+            if (commandParams.SelectedTo.Count > 0)
+            {
+                foreach (var variable in commandParams.SelectedTo)
+                {
+                    AvailableVariables.Add(variable);
+                    AnalysisVariables.Remove(variable);
+                }
+            }
+        }
+
+        private RelayCommand<MoveToAndFromVariablesCommandParameters?> _moveToAndFromGroupByVariablesCommand;
+        public ICommand MoveToAndFromGroupByVariablesCommand
+        {
+            get
+            {
+                if (_moveToAndFromGroupByVariablesCommand == null)
+                    _moveToAndFromGroupByVariablesCommand = new(this.MoveToAndFromGroupByVariables);
+                return _moveToAndFromGroupByVariablesCommand;
+            }
+        }
+
+        private void MoveToAndFromGroupByVariables(MoveToAndFromVariablesCommandParameters? commandParams)
+        {
+            if (commandParams == null)
+            {
+                return;
+            }
+
+            if (commandParams.SelectedFrom.Count > 0)
+            {
+                foreach (var variable in commandParams.SelectedFrom)
+                {
+                    GrouyByVariables.Add(variable);
+                    AvailableVariables.Remove(variable);
+                }
+            }
+            if (commandParams.SelectedTo.Count > 0)
+            {
+                foreach (var variable in commandParams.SelectedTo)
+                {
+                    AvailableVariables.Add(variable);
+                    GrouyByVariables.Remove(variable);
+                }
+            }
+        }
+    }
+
+    public class MoveToAndFromVariablesCommandParameters
+    {
+        public List<Variable> SelectedFrom { get; set; } = new();
+        public List<Variable> SelectedTo { get; set; } = new();
     }
 }
