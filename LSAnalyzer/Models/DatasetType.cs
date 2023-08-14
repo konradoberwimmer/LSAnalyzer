@@ -41,6 +41,23 @@ namespace LSAnalyzer.Models
             Weight = string.Empty;
         }
 
+        public DatasetType(DatasetType datasetType)
+        {
+            Id = datasetType.Id;
+            Name = datasetType.Name;
+            Description = datasetType.Description;
+            Weight = datasetType.Weight;
+            NMI = datasetType.NMI;
+            MIvar = datasetType.MIvar;
+            PVvars = datasetType.PVvars;
+            Nrep = datasetType.Nrep;
+            RepWgts = datasetType.RepWgts;
+            FayFac = datasetType.FayFac;
+            JKzone = datasetType.JKzone;
+            JKrep = datasetType.JKrep;
+            JKreverse = datasetType.JKreverse;
+        }
+
         public bool HasSystemVariable(string name)
         {
             if (string.IsNullOrWhiteSpace(name))

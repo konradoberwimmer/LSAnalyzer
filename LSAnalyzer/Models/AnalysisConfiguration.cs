@@ -12,6 +12,15 @@ namespace LSAnalyzer.Models
         public DatasetType? DatasetType { get; set; }
         public bool? ModeKeep { get; set; }
 
+        public AnalysisConfiguration() { }
+
+        public AnalysisConfiguration (AnalysisConfiguration analysisConfiguration)
+        {
+            FileName = analysisConfiguration.FileName;
+            DatasetType = analysisConfiguration.DatasetType != null ? new(analysisConfiguration.DatasetType) : null;
+            ModeKeep = analysisConfiguration.ModeKeep;
+        }
+
         public bool HasSystemVariable(string name)
         {
             return DatasetType?.HasSystemVariable(name) ?? false;

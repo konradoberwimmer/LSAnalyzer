@@ -9,9 +9,18 @@ namespace LSAnalyzer.Models
 {
     public abstract class Analysis
     {
-        public int Id { get; set; }
-        public List<string> Vars { get; set; } = new List<string>();
-        public List<string> GroupBy { get; set; } = new List<string>();
+        protected readonly AnalysisConfiguration _analysisConfiguration;
+        public AnalysisConfiguration AnalysisConfiguration 
+        { 
+            get => _analysisConfiguration; 
+        }
+        public List<Variable> Vars { get; set; } = new();
+        public List<Variable> GroupBy { get; set; } = new();
         public GenericVector? Result { get; set; }
+
+        public Analysis(AnalysisConfiguration analysisConfiguration) 
+        {
+            _analysisConfiguration = analysisConfiguration;
+        }
     }
 }

@@ -8,6 +8,9 @@ namespace LSAnalyzer.Models
 {
     public class AnalysisUnivar : Analysis
     {
-
+        public AnalysisUnivar(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
+        {
+            
+        }
     }
 }

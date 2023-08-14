@@ -1,4 +1,5 @@
-﻿using LSAnalyzer.Models;
+﻿using LSAnalyzer.Helper;
+using LSAnalyzer.Models;
 using LSAnalyzer.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace LSAnalyzer.Views
     /// <summary>
     /// Interaktionslogik für RequestAnalysisUnivar.xaml
     /// </summary>
-    public partial class RequestAnalysisUnivar : Window
+    public partial class RequestAnalysisUnivar : Window, ICloseable
     {
         public RequestAnalysisUnivar(RequestAnalysis requestAnalysisViewModel)
         {

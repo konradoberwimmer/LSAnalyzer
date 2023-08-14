@@ -71,7 +71,6 @@ namespace LSAnalyzer.Views
 
             RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
             requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
-            requestAnalysisViewModel.Analysis = new AnalysisUnivar();
 
             RequestAnalysisUnivar requestAnalysisUnivarView = new(requestAnalysisViewModel);
             requestAnalysisUnivarView.ShowDialog();

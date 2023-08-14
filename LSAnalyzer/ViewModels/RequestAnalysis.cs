@@ -1,4 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
+using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using System;
@@ -36,17 +39,6 @@ namespace LSAnalyzer.ViewModels
                         AvailableVariables = newAvailableVariables;
                     }
                 }
-            }
-        }
-
-        private Analysis? _analysis;
-        public Analysis? Analysis
-        {
-            get => _analysis;
-            set
-            {
-                _analysis = value;
-                NotifyPropertyChanged(nameof(Analysis));
             }
         }
 
@@ -174,6 +166,43 @@ namespace LSAnalyzer.ViewModels
                     GrouyByVariables.Remove(variable);
                 }
             }
+        }
+
+        private RelayCommand<ICloseable?> _sendAnalysisRequestCommand;
+        public ICommand SendAnalysisRequestCommand
+        {
+            get
+            {
+                if (_sendAnalysisRequestCommand == null)
+                    _sendAnalysisRequestCommand = new(this.SendAnalysisRequest);
+                return _sendAnalysisRequestCommand;
+            }
+        }
+
+        private void SendAnalysisRequest(ICloseable? window)
+        {
+            if (AnalysisConfiguration == null || AnalysisVariables.Count == 0)
+            {
+                return;
+            }
+
+            AnalysisUnivar analysis = new(new(AnalysisConfiguration))
+            {
+                Vars = new(AnalysisVariables),
+                GroupBy = new(GrouyByVariables),
+            };
+
+            WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysis));
+
+            window?.Close();
+        }
+    }
+
+    internal class RequestAnalysisMessage : ValueChangedMessage<Analysis>
+    {
+        public RequestAnalysisMessage(Analysis analysis) : base(analysis)
+        {
+
         }
     }
 
