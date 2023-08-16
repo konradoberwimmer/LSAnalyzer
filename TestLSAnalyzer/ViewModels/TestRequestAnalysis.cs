@@ -44,7 +44,7 @@ namespace TestLSAnalyzer.ViewModels
                 ModeKeep = true,
             };
 
-            Assert.Equal(10, requestAnalysisViewModel.AvailableVariables.Count());
+            Assert.Equal(11, requestAnalysisViewModel.AvailableVariables.Count());
 
 
             requestAnalysisViewModel.MoveToAndFromAnalysisVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
@@ -53,16 +53,16 @@ namespace TestLSAnalyzer.ViewModels
                 SelectedTo = new(),
             });
 
-            Assert.Equal(8, requestAnalysisViewModel.AvailableVariables.Count());
+            Assert.Equal(9, requestAnalysisViewModel.AvailableVariables.Count());
             Assert.Equal(2, requestAnalysisViewModel.AnalysisVariables.Count());
 
             requestAnalysisViewModel.MoveToAndFromGroupByVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
             {
-                SelectedFrom = requestAnalysisViewModel.AvailableVariables.Where(var => var.Name == "mi").ToList(),
+                SelectedFrom = requestAnalysisViewModel.AvailableVariables.Where(var => var.Name == "cat").ToList(),
                 SelectedTo = new(),
             });
 
-            Assert.Equal(7, requestAnalysisViewModel.AvailableVariables.Count());
+            Assert.Equal(8, requestAnalysisViewModel.AvailableVariables.Count());
             Assert.Single(requestAnalysisViewModel.GrouyByVariables);
 
             requestAnalysisViewModel.MoveToAndFromAnalysisVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
@@ -71,18 +71,18 @@ namespace TestLSAnalyzer.ViewModels
                 SelectedTo = requestAnalysisViewModel.AnalysisVariables.Where(var => var.Name == "x").ToList(),
             });
 
-            Assert.Equal(8, requestAnalysisViewModel.AvailableVariables.Count());
+            Assert.Equal(9, requestAnalysisViewModel.AvailableVariables.Count());
             Assert.Single(requestAnalysisViewModel.AnalysisVariables);
 
             requestAnalysisViewModel.MoveToAndFromGroupByVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
             {
                 SelectedFrom = requestAnalysisViewModel.AvailableVariables.Where(var => var.Name == "x").ToList(),
-                SelectedTo = requestAnalysisViewModel.GrouyByVariables.Where(var => var.Name == "mi").ToList(),
+                SelectedTo = requestAnalysisViewModel.GrouyByVariables.Where(var => var.Name == "cat").ToList(),
             });
 
-            Assert.Equal(8, requestAnalysisViewModel.AvailableVariables.Count());
+            Assert.Equal(9, requestAnalysisViewModel.AvailableVariables.Count());
             Assert.Single(requestAnalysisViewModel.GrouyByVariables);
-            Assert.Empty(requestAnalysisViewModel.GrouyByVariables.Where(var => var.Name == "mi"));
+            Assert.Empty(requestAnalysisViewModel.GrouyByVariables.Where(var => var.Name == "cat"));
             Assert.Single(requestAnalysisViewModel.GrouyByVariables.Where(var => var.Name == "x"));
         }
 

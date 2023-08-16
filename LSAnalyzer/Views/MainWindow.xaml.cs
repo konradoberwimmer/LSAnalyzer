@@ -1,4 +1,5 @@
-﻿using LSAnalyzer.Models;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using LSAnalyzer.Views;
@@ -36,6 +37,11 @@ namespace LSAnalyzer.Views
             DataContext = new ViewModels.MainWindow(_serviceProvider.GetRequiredService<Rservice>());
 
             Closed += WindowClosed;
+
+            WeakReferenceMessenger.Default.Register<FailureWithAnalysisCalculationMessage>(this, (r, m) =>
+            {
+                MessageBox.Show("Something went wrong with analysis '" + m.Value.AnalysisName + "'!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
         }
 
         private void WindowClosed(object? sender, EventArgs e)

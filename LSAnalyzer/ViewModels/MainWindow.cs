@@ -1,6 +1,10 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
+using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
+using RDotNet;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,11 +14,14 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace LSAnalyzer.ViewModels
 {
     public class MainWindow : INotifyPropertyChanged
     {
+
+        private Rservice _rservice;
 
         private AnalysisConfiguration? _analysisConfiguration;
         public AnalysisConfiguration? AnalysisConfiguration
@@ -100,6 +107,8 @@ namespace LSAnalyzer.ViewModels
 
         public MainWindow(Rservice rservice) 
         {
+            _rservice = rservice;
+
             WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (r, m) =>
             {
                 AnalysisConfiguration = m.Value;
@@ -107,7 +116,11 @@ namespace LSAnalyzer.ViewModels
 
             WeakReferenceMessenger.Default.Register<RequestAnalysisMessage>(this, (r, m) =>
             {
-                Analyses.Add(new(m.Value));
+                AnalysisPresentation analysisPresentation = new(m.Value);
+
+                Analyses.Add(analysisPresentation);
+
+                StartAnalysisCommand.Execute(analysisPresentation);
             });
         }
 
@@ -118,6 +131,68 @@ namespace LSAnalyzer.ViewModels
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
+        }
+
+        private RelayCommand<AnalysisPresentation?> _startAnalysisCommand;
+        public ICommand StartAnalysisCommand
+        {
+            get
+            {
+                if (_startAnalysisCommand == null)
+                    _startAnalysisCommand = new RelayCommand<AnalysisPresentation?>(this.StartAnalysis);
+                return _startAnalysisCommand;
+            }
+        }
+
+        private void StartAnalysis(AnalysisPresentation? analysisPresentation)
+        {
+            if (analysisPresentation == null)
+            {
+                return;
+            }
+
+            BackgroundWorker analysisWorker = new();
+            analysisWorker.WorkerReportsProgress = false;
+            analysisWorker.WorkerSupportsCancellation = false;
+            analysisWorker.DoWork += AnalysisWorker_DoWork;
+            analysisWorker.RunWorkerAsync(analysisPresentation);
+        }
+
+        void AnalysisWorker_DoWork (object? sender, DoWorkEventArgs e)
+        {
+            if (e.Argument is not AnalysisPresentation)
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            var analysisPresentation = e.Argument as AnalysisPresentation;
+
+            GenericVector? result = null;
+            switch (analysisPresentation!.Analysis)
+            {
+                case AnalysisUnivar analysisUnivar:
+                    result = _rservice.CalculateUnivar(analysisUnivar);
+                    break;
+                default:
+                    break;
+            }
+            analysisPresentation.SetAnalysisResult(result);
+
+            if (result == null)
+            {
+                WeakReferenceMessenger.Default.Send(new FailureWithAnalysisCalculationMessage(analysisPresentation.Analysis));
+            }
+
+            e.Result = result;
+        }
+    }
+
+    internal class FailureWithAnalysisCalculationMessage : ValueChangedMessage<Analysis>
+    {
+        public FailureWithAnalysisCalculationMessage(Analysis analysis) : base(analysis)
+        {
+
         }
     }
 }

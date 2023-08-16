@@ -142,14 +142,14 @@ namespace LSAnalyzer.Services
                     "for (lsanalyzer_jk_zone in lsanalyzer_jk_zones) " +
                     "   lsanalyzer_dat_raw[, paste0('lsanalyzer_repwgt_', lsanalyzer_jk_zone)] <- " +
                     "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] != lsanalyzer_jk_zone) + " +
-                    "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] == lsanalyzer_jk_zone) * lsanalyzer_dat_raw[, '" + jkrep + "'];");
+                    "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] == lsanalyzer_jk_zone) * lsanalyzer_dat_raw[, '" + jkrep + "'] * 2;");
                 if (jkreverse)
                 {
                     _engine.Evaluate(
                         "for (lsanalyzer_jk_zone in lsanalyzer_jk_zones) " +
                         "   lsanalyzer_dat_raw[, paste0('lsanalyzer_repwgt_', lsanalyzer_jk_zone + max(lsanalyzer_jk_zones))] <- " +
                         "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] != lsanalyzer_jk_zone) + " +
-                        "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] == lsanalyzer_jk_zone) * (1 - lsanalyzer_dat_raw[, '" + jkrep + "']);");
+                        "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] == lsanalyzer_jk_zone) * (1 - lsanalyzer_dat_raw[, '" + jkrep + "']) * 2;");
                 }
                 _engine.Evaluate("lsanalyzer_repwgts <- grep('lsanalyzer_repwgt_', colnames(lsanalyzer_dat_raw), value = TRUE);");
                 var repWgts = _engine.GetSymbol("lsanalyzer_repwgts").AsCharacter();
@@ -294,6 +294,39 @@ namespace LSAnalyzer.Services
                 }
 
                 return variableList;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        
+        public GenericVector? CalculateUnivar(Analysis analysis)
+        {
+            if (_engine == null || analysis.Vars.Count == 0)
+            {
+                return null;
+            }
+
+            if (analysis.AnalysisConfiguration.ModeKeep == null || analysis.AnalysisConfiguration.ModeKeep == false)
+            {
+                throw new NotImplementedException("Analysis mode 'Build BIFIEdata object' has yet to be implemented!");
+            }
+
+            try
+            {
+                string baseCall = "lsanalyzer_result_univar <- BIFIEsurvey::BIFIE.univar(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
+
+                string groupByArg = "";
+                if (analysis.GroupBy.Count > 0)
+                {
+                    groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                }
+
+                string finalCall = baseCall + groupByArg + ")";
+
+                _engine.Evaluate(finalCall);
+                return _engine.GetSymbol("lsanalyzer_result_univar").AsList();
             }
             catch
             {
