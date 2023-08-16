@@ -33,6 +33,8 @@ namespace LSAnalyzer.Views
             
             InitializeComponent();
 
+            DataContext = new ViewModels.MainWindow(_serviceProvider.GetRequiredService<Rservice>());
+
             Closed += WindowClosed;
         }
 

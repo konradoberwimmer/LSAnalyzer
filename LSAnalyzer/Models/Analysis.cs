@@ -9,6 +9,8 @@ namespace LSAnalyzer.Models
 {
     public abstract class Analysis
     {
+        public abstract string AnalysisName { get; }
+
         protected readonly AnalysisConfiguration _analysisConfiguration;
         public AnalysisConfiguration AnalysisConfiguration 
         { 

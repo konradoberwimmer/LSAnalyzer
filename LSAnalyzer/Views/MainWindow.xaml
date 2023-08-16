@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         xmlns:local="clr-namespace:LSAnalyzer"
-        xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" x:Class="LSAnalyzer.Views.MainWindow"
+        xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels"
+        x:Class="LSAnalyzer.Views.MainWindow"
         mc:Ignorable="d"
         Title="LSAnalyzer" Height="450" Width="800" WindowState="Maximized">
     <Window.DataContext>
@@ -13,7 +14,39 @@
     </Window.DataContext>
     <Window.Resources>
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisConverter"/>
+        <converter:EmptyEnumerableToVisibilityCollapsed x:Key="EmptyEnumerableToVisibilityCollapsedConverter"/>
         <converter:NullToBool x:Key="NullToBoolConverter"/>
+        <converter:VariablesToString x:Key="VariablesToStringConverter"/>
+        <DataTemplate DataType="{x:Type ViewModels:AnalysisPresentation}">
+            <Border BorderBrush="Gray" BorderThickness="0,0,0,0.5">
+                <StackPanel Orientation="Vertical" Margin="10,10,10,10">
+                    <TextBlock Text="{Binding Analysis.AnalysisName}" FontWeight="Bold"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="85"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="File:"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Analysis.AnalysisConfiguration.FileName}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Dataset Type:"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Analysis.AnalysisConfiguration.DatasetType.Name}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Variables:"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Analysis.Vars, Converter={StaticResource VariablesToStringConverter}}"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Group by:" Visibility="{Binding Analysis.GroupBy, Converter={StaticResource EmptyEnumerableToVisibilityCollapsedConverter}}"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Analysis.GroupBy, Converter={StaticResource VariablesToStringConverter}}" Visibility="{Binding Analysis.GroupBy, Converter={StaticResource EmptyEnumerableToVisibilityCollapsedConverter}}"/>
+                    </Grid>
+                    <DataGrid IsReadOnly="True" ItemsSource="{Binding DataTable}">
+                        
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
     </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -61,7 +94,11 @@
                     <TextBlock x:Name="textBlockAnalysisMode" Text="{Binding AnalysisConfiguration.ModeKeep, Converter={StaticResource BoolToAnalysisConverter}}"/>
                 </StackPanel>
             </StatusBarItem>
-        </StatusBar>        
-        <Grid/>
+        </StatusBar>
+        <Grid>
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Analyses}"/>
+            </ScrollViewer>
+        </Grid>
     </DockPanel>
 </Window>
