@@ -34,5 +34,17 @@ namespace LSAnalyzer.Properties {
                 this["lastDataFileLocation"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string lastResultOutFileLocation {
+            get {
+                return ((string)(this["lastResultOutFileLocation"]));
+            }
+            set {
+                this["lastResultOutFileLocation"] = value;
+            }
+        }
     }
 }

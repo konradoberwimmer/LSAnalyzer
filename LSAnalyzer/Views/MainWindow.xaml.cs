@@ -94,12 +94,25 @@ namespace LSAnalyzer.Views
 
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.Filter = "Excel File (*.xlsx)|*.xlsx";
-            saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            saveFileDialog.InitialDirectory = Properties.Settings.Default.lastResultOutFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             var wantsSave = saveFileDialog.ShowDialog(this);
 
             if (wantsSave == true)
             {
+                Properties.Settings.Default.lastResultOutFileLocation = Path.GetDirectoryName(saveFileDialog.FileName);
+                Properties.Settings.Default.Save();
                 analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(saveFileDialog.FileName);
+            }
+        }
+
+        private void DataGridResults_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
+        {
+            if (e.PropertyType == typeof(double))
+            {
+                if (e.Column is DataGridTextColumn dataGridTextColumn)
+                {
+                    dataGridTextColumn.Binding.StringFormat = "{0:0.###}";
+                }
             }
         }
     }

@@ -48,7 +48,8 @@ namespace LSAnalyzer.Views
 
             if (result == true)
             {
-                Properties.Settings.Default.lastDataFileLocation = Path.GetFullPath(openFileDialog.FileName);
+                Properties.Settings.Default.lastDataFileLocation = Path.GetDirectoryName(openFileDialog.FileName);
+                Properties.Settings.Default.Save();
                 var selectAnalysisFileViewModel = DataContext as ViewModels.SelectAnalysisFile;
                 selectAnalysisFileViewModel!.FileName = openFileDialog.FileName;
             }
