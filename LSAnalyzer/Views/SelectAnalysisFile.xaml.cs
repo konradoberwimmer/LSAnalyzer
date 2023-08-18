@@ -4,6 +4,7 @@ using LSAnalyzer.ViewModels;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +16,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace LSAnalyzer.Views
 {
@@ -34,6 +34,7 @@ namespace LSAnalyzer.Views
 
             WeakReferenceMessenger.Default.Register<FailureAnalysisConfigurationMessage>(this, (r, m) =>
             {
+                busySpinner.Visibility = Visibility.Hidden;
                 MessageBox.Show("Unable to create BIFIEdata object from file '" + m.Value.FileName + "' when applying dataset type '" + m.Value.DatasetType?.Name + "'.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             });
         }
@@ -42,11 +43,12 @@ namespace LSAnalyzer.Views
         {
             OpenFileDialog openFileDialog = new();
             openFileDialog.Filter = "SPSS Data Files (*.sav)|*.sav";
-            openFileDialog.InitialDirectory = InitialDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            openFileDialog.InitialDirectory = InitialDirectory ?? Properties.Settings.Default.lastDataFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             var result = openFileDialog.ShowDialog(this);
 
             if (result == true)
             {
+                Properties.Settings.Default.lastDataFileLocation = Path.GetFullPath(openFileDialog.FileName);
                 var selectAnalysisFileViewModel = DataContext as ViewModels.SelectAnalysisFile;
                 selectAnalysisFileViewModel!.FileName = openFileDialog.FileName;
             }

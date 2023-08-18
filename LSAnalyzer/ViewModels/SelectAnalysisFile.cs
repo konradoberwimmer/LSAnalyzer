@@ -11,6 +11,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 [assembly: InternalsVisibleTo("TestLSAnalyzer")]
@@ -91,6 +92,11 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
+            if (window != null && window is Views.SelectAnalysisFile selectAnalysisFileWindow)
+            {
+                selectAnalysisFileWindow.busySpinner.Visibility = Visibility.Visible;
+            }
+
             AnalysisConfiguration analysisConfiguration = new()
             {
                 FileName = this.FileName,
@@ -98,7 +104,9 @@ namespace LSAnalyzer.ViewModels
                 ModeKeep = true
             };
 
-            if (!_rservice.TestAnalysisConfiguration(analysisConfiguration))
+            var testAnalysisConfiguration = _rservice.TestAnalysisConfiguration(analysisConfiguration);
+
+            if (!testAnalysisConfiguration)
             {
                 WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
                 return;

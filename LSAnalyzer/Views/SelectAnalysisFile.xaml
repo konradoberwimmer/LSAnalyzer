@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         xmlns:local="clr-namespace:LSAnalyzer.Views"
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" x:Name="windowSelectAnalysisFile" x:Class="LSAnalyzer.Views.SelectAnalysisFile"
@@ -37,6 +38,6 @@
                 </MultiBinding>
             </Button.IsEnabled>
         </Button>
-
+        <fa:ImageAwesome x:Name="busySpinner" Grid.ColumnSpan="2" Icon="SunOutline" Spin="True" VerticalAlignment="Center" Height="100" Foreground="Gray" Visibility="Hidden"/>
     </Grid>
 </Window>

@@ -97,12 +97,12 @@ namespace LSAnalyzer.ViewModels
                 columns.Add(groupByVar, new DataColumn(analysisUnivar.GroupBy[cntGroupyBy].Name, typeof(double)));
             }
 
-            columns.Add("Ncases", new DataColumn("N - cases/unweighted", typeof(string)));
-            columns.Add("Nweight", new DataColumn("N - weighted", typeof(string)));
-            columns.Add("M", new DataColumn("mean", typeof(string)));
-            columns.Add("M_SE", new DataColumn("mean - standard error", typeof(string)));
-            columns.Add("SD", new DataColumn("standard deviation", typeof(string)));
-            columns.Add("SD_SE", new DataColumn("standard deviation - standard error", typeof(string)));
+            columns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
+            columns.Add("Nweight", new DataColumn("N - weighted", typeof(double)));
+            columns.Add("M", new DataColumn("mean", typeof(double)));
+            columns.Add("M_SE", new DataColumn("mean - standard error", typeof(double)));
+            columns.Add("SD", new DataColumn("standard deviation", typeof(double)));
+            columns.Add("SD_SE", new DataColumn("standard deviation - standard error", typeof(double)));
 
             foreach (var column in columns.Values)
             {
