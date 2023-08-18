@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -74,6 +75,77 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private RelayCommand<object?> _guessDatasetTypeCommand;
+        public ICommand GuessDatasetTypeCommand
+        {
+            get
+            {
+                if (_guessDatasetTypeCommand == null)
+                    _guessDatasetTypeCommand = new RelayCommand<object?>(this.GuessDatasetType);
+                return _guessDatasetTypeCommand;
+            }
+        }
+
+        private void GuessDatasetType(object? dummy)
+        {
+            if (_fileName == null)
+            {
+                return;
+            }
+            
+            var variables = _rservice.GetDatasetVariables(_fileName);
+
+            if (variables == null)
+            {
+                return;
+            }
+
+            List<DatasetType> possibleDatasetTypes = new();
+            
+            foreach (var datasetType in _datasetTypes)
+            {
+                if (variables.Where(var => var.Name == datasetType.Weight).Count() == 0) continue;
+                
+                if (!String.IsNullOrWhiteSpace(datasetType.MIvar) && variables.Where(var => var.Name == datasetType.MIvar).Count() == 0) continue;
+                if (!String.IsNullOrWhiteSpace(datasetType.PVvars))
+                {
+                    string[] pvVarsSplit = datasetType.PVvars.Split(';');
+                    
+                    bool foundAllPvVars = true;
+                    foreach (var pvVar in pvVarsSplit)
+                    {
+                        if (variables.Where(var => Regex.IsMatch(var.Name, pvVar)).Count() != datasetType.NMI) 
+                        {
+                            foundAllPvVars = false;
+                            break;
+                        }
+                    }
+
+                    if (!foundAllPvVars) continue;
+                }
+
+                if (!String.IsNullOrWhiteSpace(datasetType.RepWgts) && variables.Where(var => Regex.IsMatch(var.Name, datasetType.RepWgts)).Count() != datasetType.Nrep) continue;
+                if (!String.IsNullOrWhiteSpace(datasetType.JKzone) && variables.Where(var => var.Name == datasetType.JKzone).Count() == 0) continue;
+                if (!String.IsNullOrWhiteSpace(datasetType.JKrep) && variables.Where(var => var.Name == datasetType.JKrep).Count() == 0) continue;
+
+                possibleDatasetTypes.Add(datasetType);
+            }
+
+            if (possibleDatasetTypes.Count == 0)
+            {
+                SelectedDatasetType = null;
+            }
+            else if (possibleDatasetTypes.Count == 1)
+            {
+                SelectedDatasetType = possibleDatasetTypes.FirstOrDefault();
+            }
+            else
+            {
+                SelectedDatasetType = null;
+                WeakReferenceMessenger.Default.Send(new MultiplePossibleDatasetTypesMessage(possibleDatasetTypes));
+            }
+        }
+
         private RelayCommand<ICloseable?> _useFileForAnalysisCommand;
         public ICommand UseFileForAnalysisCommand
         {
@@ -115,6 +187,14 @@ namespace LSAnalyzer.ViewModels
             WeakReferenceMessenger.Default.Send(new SetAnalysisConfigurationMessage(analysisConfiguration));
 
             window?.Close();
+        }
+    }
+
+    internal class MultiplePossibleDatasetTypesMessage : ValueChangedMessage<List<DatasetType>>
+    {
+        public MultiplePossibleDatasetTypesMessage(List<DatasetType> possibleDatasetTypes) : base(possibleDatasetTypes)
+        {
+
         }
     }
 

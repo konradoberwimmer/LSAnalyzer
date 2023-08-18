@@ -136,6 +136,19 @@ namespace TestLSAnalyzer.Services
             Assert.True(Math.Abs((double)stats["SD"][0] - 44.54742) < 0.0001);
         }
 
+        [Fact]
+        public void TestGetDatasetVariables()
+        {
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            var filename = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
+
+            var variables = rservice.GetDatasetVariables(filename);
+            Assert.NotNull(variables);
+            Assert.Equal(10, variables.Count);
+            Assert.Single(variables.Where(var => var.Name == "repwgt3"));
+        }
+
         public static string AssemblyDirectory
         {
             get

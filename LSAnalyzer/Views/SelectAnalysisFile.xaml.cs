@@ -37,6 +37,12 @@ namespace LSAnalyzer.Views
                 busySpinner.Visibility = Visibility.Hidden;
                 MessageBox.Show("Unable to create BIFIEdata object from file '" + m.Value.FileName + "' when applying dataset type '" + m.Value.DatasetType?.Name + "'.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             });
+
+            WeakReferenceMessenger.Default.Register<MultiplePossibleDatasetTypesMessage>(this, (r, m) =>
+            {
+                var listPossibleDatasetTypeNames = m.Value.ConvertAll(datasetType => datasetType.Name).ToArray();
+                MessageBox.Show("Unable to determine dataset type exactly. May be one of:\n\n" + String.Join("\n", listPossibleDatasetTypeNames), "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            });
         }
 
         private void ButtonSelectFile_Click (object sender, RoutedEventArgs e)

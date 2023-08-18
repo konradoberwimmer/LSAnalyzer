@@ -333,5 +333,32 @@ namespace LSAnalyzer.Services
                 return null;
             }
         }
+
+        public List<Variable>? GetDatasetVariables(string filename)
+        {
+            if (_engine == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                _engine.Evaluate("lsanalyzer_some_file_raw <- foreign::read.spss('" + filename.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                var variables = _engine.Evaluate("colnames(lsanalyzer_some_file_raw)").AsCharacter();
+
+                List<Variable> variableList = new();
+                int vv = 0;
+                foreach (var variable in variables)
+                {
+                    variableList.Add(new(++vv, variable, false));
+                }
+
+                return variableList;
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

@@ -15,6 +15,65 @@ namespace TestLSAnalyzer.ViewModels
     public class TestSelectAnalysisFile
     {
         [Fact]
+        public void TestGuessDatasetType()
+        {
+            Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+            foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
+            {
+                datasetTypesConfiguration.StoreDatasetType(datasetType);
+            }
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+
+            SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice);
+            selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
+
+            bool messageSent = false;
+            WeakReferenceMessenger.Default.Register<MultiplePossibleDatasetTypesMessage>(this, (r, m) =>
+            {
+                messageSent = true;
+            });
+
+            selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
+
+            Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType);
+            Assert.False(messageSent);
+
+            selectAnalysisFileViewModel.DatasetTypes.Add(new()
+            {
+                Id = 999991,
+                Name = "Test with NMI 10 and NREP 5",
+                Weight = "wgt",
+                NMI = 10,
+                MIvar = "mi",
+                Nrep = 5,
+                RepWgts = "repwgt",
+            });
+
+            selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
+
+            Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType);
+            Assert.Equal("Test with NMI 10 and NREP 5", selectAnalysisFileViewModel.SelectedDatasetType.Name);
+            Assert.False(messageSent);
+
+            selectAnalysisFileViewModel.DatasetTypes.Add(new()
+            {
+                Id = 999991,
+                Name = "Test with NMI 10 and NREP 5 (duplicate)",
+                Weight = "wgt",
+                NMI = 10,
+                MIvar = "mi",
+                Nrep = 5,
+                RepWgts = "repwgt",
+            });
+
+            selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
+
+            Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType);
+            Assert.True(messageSent);
+        }
+
+        [Fact]
         public void TestUseFileForAnalysisSendsMessageOnFailure()
         {
             Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
