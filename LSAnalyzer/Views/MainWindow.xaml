@@ -31,6 +31,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="85"/>
                             <ColumnDefinition/>
+                            <ColumnDefinition Width="auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="File:"/>
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Analysis.AnalysisConfiguration.FileName}"/>
@@ -40,6 +41,7 @@
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Analysis.Vars, Converter={StaticResource VariablesToStringConverter}}"/>
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Group by:" Visibility="{Binding Analysis.GroupBy, Converter={StaticResource EmptyEnumerableToVisibilityCollapsedConverter}}"/>
                         <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Analysis.GroupBy, Converter={StaticResource VariablesToStringConverter}}" Visibility="{Binding Analysis.GroupBy, Converter={StaticResource EmptyEnumerableToVisibilityCollapsedConverter}}"/>
+                        <Button x:Name="ButtonDownloadXlsx" Grid.Column="2" Grid.Row="0" Grid.RowSpan="4" VerticalAlignment="Bottom" Height="22" ContentTemplate="{StaticResource Download}" Click="ButtonDownloadXlsx_Click"/>
                     </Grid>
                     <DataGrid IsReadOnly="True" ItemsSource="{Binding DataTable}">
                         

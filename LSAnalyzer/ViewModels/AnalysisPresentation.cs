@@ -1,14 +1,18 @@
-﻿using LSAnalyzer.Models;
+﻿using ClosedXML.Excel;
+using CommunityToolkit.Mvvm.Input;
+using LSAnalyzer.Models;
 using RDotNet;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace LSAnalyzer.ViewModels
 {
@@ -82,7 +86,7 @@ namespace LSAnalyzer.ViewModels
 
             var dataFrame = analysisUnivar.Result["stat"].AsDataFrame();
 
-            DataTable table = new();
+            DataTable table = new(analysisUnivar.AnalysisName);
             Dictionary<string, DataColumn> columns = new();
 
             columns.Add("var", new DataColumn("variable", typeof(string)));
@@ -120,6 +124,35 @@ namespace LSAnalyzer.ViewModels
             }
 
             return table;
+        }
+
+        private RelayCommand<string?> _saveDataTableXlsxCommand;
+        public ICommand SaveDataTableXlsxCommand
+        {
+            get
+            {
+                if (_saveDataTableXlsxCommand == null)
+                    _saveDataTableXlsxCommand = new RelayCommand<string?>(this.SaveDataTableXlsx);
+                return _saveDataTableXlsxCommand;
+            }
+        }
+
+        private void SaveDataTableXlsx(string? filename)
+        {
+            if (filename == null || DataTable == null)
+            {
+                return;
+            }
+
+            using XLWorkbook wb = new();
+
+            var worksheet = wb.AddWorksheet(DataTable);
+
+            if (File.Exists(filename))
+            {
+                File.Delete(filename);
+            }
+            wb.SaveAs(filename);
         }
     }
 }

@@ -4,6 +4,7 @@ using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using LSAnalyzer.Views;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -82,6 +83,24 @@ namespace LSAnalyzer.Views
 
             RequestAnalysisUnivar requestAnalysisUnivarView = new(requestAnalysisViewModel);
             requestAnalysisUnivarView.ShowDialog();
+        }
+
+        private void ButtonDownloadXlsx_Click (object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button button || button.DataContext is not AnalysisPresentation analysisPresentationViewModel)
+            {
+                return;
+            }
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Excel File (*.xlsx)|*.xlsx";
+            saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var wantsSave = saveFileDialog.ShowDialog(this);
+
+            if (wantsSave == true)
+            {
+                analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(saveFileDialog.FileName);
+            }
         }
     }
 }
