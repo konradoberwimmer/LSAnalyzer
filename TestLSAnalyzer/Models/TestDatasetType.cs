@@ -28,7 +28,7 @@ namespace TestLSAnalyzer.Models
         [InlineData("W_STURWT", true)]
         [InlineData("mivar", true)]
         [InlineData("mimimi", false)]
-        public void HasSystemVariable(string name, bool expectedHasSystemVariable)
+        public void TestHasSystemVariable(string name, bool expectedHasSystemVariable)
         {
             DatasetType datasetType = new()
             {
@@ -39,6 +39,24 @@ namespace TestLSAnalyzer.Models
             };
 
             Assert.Equal(expectedHasSystemVariable, datasetType.HasSystemVariable(name));
+        }
+
+        [Fact]
+        public void TestGetRegexNecessaryVariables()
+        {
+            DatasetType datasetType = new()
+            {
+                Weight = "W_FSTUWT",
+                PVvars = "ASRREA;ASRINF",
+                RepWgts = "W_STURWT",
+            };
+
+            var regexNecessaryVariables = datasetType.GetRegexNecessaryVariables();
+
+            Assert.Equal(4, regexNecessaryVariables.Count);
+            Assert.Contains("^W_FSTUWT$", regexNecessaryVariables);
+            Assert.Contains("^ASRREA", regexNecessaryVariables);
+            Assert.Contains("W_STURWT", regexNecessaryVariables);
         }
     }
 }

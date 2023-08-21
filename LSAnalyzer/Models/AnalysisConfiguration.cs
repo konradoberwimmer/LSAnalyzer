@@ -25,5 +25,10 @@ namespace LSAnalyzer.Models
         {
             return DatasetType?.HasSystemVariable(name) ?? false;
         }
+
+        public List<string> GetRegexNecessaryVariables()
+        {
+            return DatasetType?.GetRegexNecessaryVariables() ?? new();
+        }
     }
 }

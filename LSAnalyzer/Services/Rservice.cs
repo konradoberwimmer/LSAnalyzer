@@ -114,13 +114,48 @@ namespace LSAnalyzer.Services
 
             try
             {
-                _engine.Evaluate("lsanalyzer_dat_raw <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                _engine.Evaluate("lsanalyzer_dat_raw_stored <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                _engine.Evaluate("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
                 var rawData = _engine.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
                 if (rawData == null)
                 {
                     return false;
                 }
             } catch (Exception ex)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool ReduceToNecessaryVariables(List<string> regexNecessaryVariables)
+        {
+            if (_engine == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                _engine.Evaluate("lsanalyzer_necessary_variables <- numeric(0)");
+                foreach (string regexNecessaryVariable in regexNecessaryVariables)
+                {
+                    _engine.Evaluate("lsanalyzer_necessary_variable <- grep('" + regexNecessaryVariable + "', colnames(lsanalyzer_dat_raw_stored))");
+                    if (_engine.GetSymbol("lsanalyzer_necessary_variable").AsNumeric().Length == 0)
+                    {
+                        return false;
+                    }
+                    _engine.Evaluate("lsanalyzer_necessary_variables <- c(lsanalyzer_necessary_variables, lsanalyzer_necessary_variable)");
+                }
+                _engine.Evaluate("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored[, lsanalyzer_necessary_variables]");
+                var rawData = _engine.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
+                if (rawData == null)
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
             {
                 return false;
             }
@@ -241,6 +276,11 @@ namespace LSAnalyzer.Services
             }
 
             if (!LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName))
+            {
+                return false;
+            }
+
+            if (analysisConfiguration.ModeKeep == false && !ReduceToNecessaryVariables(analysisConfiguration.GetRegexNecessaryVariables()))
             {
                 return false;
             }

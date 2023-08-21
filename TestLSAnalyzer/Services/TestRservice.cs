@@ -31,6 +31,17 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void ReduceToNecessaryVariables()
+        {
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_create_repwgts.sav")));
+
+            Assert.False(rservice.ReduceToNecessaryVariables(new() { "^impossible$" }));
+            Assert.True(rservice.ReduceToNecessaryVariables(new() { "^wgt$", "^jkzone$", "^jkrep$" }));
+        }
+
+        [Fact]
         public void TestLoadFileIntoGlobalEnvironment()
         {
             Rservice rservice = new();

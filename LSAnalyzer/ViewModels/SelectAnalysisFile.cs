@@ -55,6 +55,18 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        public enum AnalysisModes { Keep, Build }
+        private AnalysisModes _selectedAnalysisMode = AnalysisModes.Keep;
+        public AnalysisModes SelectedAnalysisMode
+        {
+            get => _selectedAnalysisMode;
+            set
+            {
+                _selectedAnalysisMode = value;
+                NotifyPropertyChanged(nameof(SelectedAnalysisMode));
+            }
+        }
+
         public SelectAnalysisFile()
         {
 
@@ -173,7 +185,7 @@ namespace LSAnalyzer.ViewModels
             {
                 FileName = this.FileName,
                 DatasetType = SelectedDatasetType,
-                ModeKeep = true
+                ModeKeep = (SelectedAnalysisMode == AnalysisModes.Keep),
             };
 
             var testAnalysisConfiguration = _rservice.TestAnalysisConfiguration(analysisConfiguration);

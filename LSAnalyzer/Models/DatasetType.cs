@@ -80,6 +80,26 @@ namespace LSAnalyzer.Models
             return false;
         }
 
+        public List<string> GetRegexNecessaryVariables()
+        {
+            List<string> regexNecessaryVariables = new();
+
+            regexNecessaryVariables.Add("^" + Weight + "$");
+            
+            if (!string.IsNullOrWhiteSpace(MIvar)) regexNecessaryVariables.Add("^" + MIvar + "$");
+            if (!string.IsNullOrWhiteSpace(PVvars))
+            {
+                string[] pvVarsSplit = PVvars.Split(';');
+                foreach (var pvVar in pvVarsSplit) regexNecessaryVariables.Add("^" + pvVar);
+            }
+
+            if (!string.IsNullOrWhiteSpace(RepWgts)) regexNecessaryVariables.Add(RepWgts);
+            if (!string.IsNullOrWhiteSpace(JKzone)) regexNecessaryVariables.Add("^" + JKzone + "$");
+            if (!string.IsNullOrWhiteSpace(JKrep)) regexNecessaryVariables.Add("^" + JKrep + "$");
+
+            return regexNecessaryVariables;
+        }
+
         public static List<DatasetType> CreateDefaultDatasetTypes()
         {
             return new List<DatasetType>
@@ -91,13 +111,25 @@ namespace LSAnalyzer.Models
                     Description = "PIRLS 2016 - student level",
                     Weight = "TOTWGT",
                     NMI = 5,
+                    PVvars = "ASRREA;ASRLIT;ASRINF;ASRIIE;ASRRSI;ASRIBM",
                     Nrep = 150,
+                    FayFac = 0.5,
                     JKzone = "JKZONE",
                     JKrep = "JKREP",
                     JKreverse = true,
-                    FayFac = 0.5,
-                    PVvars = "ASRREA;ASRLIT;ASRINF;ASRIIE;ASRRSI;ASRIBM"
-                }
+                },
+                new DatasetType
+                {
+                    Id = 2,
+                    Name = "PISA 2018 - student level",
+                    Description = "PISA 2018 - student level",
+                    Weight = "W_FSTUWT",
+                    NMI = 10,
+                    PVvars = "PV[0-9]+MATH;PV[0-9]+READ;PV[0-9]+SCIE;PV[0-9]+GLCM;PV[0-9]+RCLI;PV[0-9]+RCUN;PV[0-9]+RCER;PV[0-9]+RTSN;PV[0-9]+RTML",
+                    Nrep = 80,
+                    RepWgts = "W_FSTURWT",
+                    FayFac = 0.05,
+                },
             };
         }
     }
