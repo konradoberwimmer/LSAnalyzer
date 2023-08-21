@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace LSAnalyzer.Services
 {
@@ -146,7 +147,7 @@ namespace LSAnalyzer.Services
                     {
                         return false;
                     }
-                    _engine.Evaluate("lsanalyzer_necessary_variables <- c(lsanalyzer_necessary_variables, lsanalyzer_necessary_variable)");
+                    _engine.Evaluate("lsanalyzer_necessary_variables <- unique(c(lsanalyzer_necessary_variables, lsanalyzer_necessary_variable))");
                 }
                 _engine.Evaluate("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored[, lsanalyzer_necessary_variables]");
                 var rawData = _engine.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
@@ -318,19 +319,38 @@ namespace LSAnalyzer.Services
                 return null;
             }
 
-            if (analysisConfiguration.ModeKeep == null || analysisConfiguration.ModeKeep == false)
-            {
-                throw new NotImplementedException("Analysis mode 'Build BIFIEdata object' has yet to be implemented!");
-            }
-
             try
             {
-                var variables = _engine.Evaluate("lsanalyzer_dat_BO$variables").AsDataFrame();
+                DataFrame? variables = null;
+                if (analysisConfiguration.ModeKeep == true)
+                {
+                    variables = _engine.Evaluate("lsanalyzer_dat_BO$variables").AsDataFrame();
+                } else
+                {
+                    variables = _engine.Evaluate("data.frame(variable = colnames(lsanalyzer_dat_raw_stored))").AsDataFrame();
+                }
 
                 List<Variable> variableList = new();
                 foreach (var variable in variables.GetRows())
                 {
                     variableList.Add(new(variable.RowIndex, (string)variable["variable"], analysisConfiguration.HasSystemVariable((string)variable["variable"])));
+                }
+
+                if (analysisConfiguration.ModeKeep == false)
+                {
+                    var maxPosition = variableList.Last().Position + 1;
+                    
+                    if (!string.IsNullOrWhiteSpace(analysisConfiguration.DatasetType?.PVvars))
+                    { 
+                        var pvVars = analysisConfiguration.DatasetType.PVvars.Split(";");
+                        foreach (var pvVar in pvVars)
+                        {
+                            variableList.RemoveAll(var => Regex.IsMatch(var.Name, pvVar));
+                            variableList.Add(new(maxPosition++, pvVar, false));
+                        }
+                    }
+                    
+                    variableList.Add(new(maxPosition++, "one", false));
                 }
 
                 return variableList;
@@ -348,13 +368,50 @@ namespace LSAnalyzer.Services
                 return null;
             }
 
-            if (analysis.AnalysisConfiguration.ModeKeep == null || analysis.AnalysisConfiguration.ModeKeep == false)
-            {
-                throw new NotImplementedException("Analysis mode 'Build BIFIEdata object' has yet to be implemented!");
-            }
-
             try
             {
+
+                if (analysis.AnalysisConfiguration.ModeKeep == false)
+                {
+                    var regexNecesaryVariables = analysis.AnalysisConfiguration.GetRegexNecessaryVariables() ?? new();
+                    foreach (var variable in analysis.Vars)
+                    {
+                        regexNecesaryVariables.Add(variable.Name);
+                    }
+                    foreach (var variable in analysis.GroupBy)
+                    {
+                        regexNecesaryVariables.Add(variable.Name);
+                    }
+
+                    if (analysis.AnalysisConfiguration.DatasetType == null || !ReduceToNecessaryVariables(regexNecesaryVariables))
+                    {
+                        return null;
+                    }
+
+                    var repWgtsRegex = analysis.AnalysisConfiguration.DatasetType.RepWgts;
+                    if (analysis.AnalysisConfiguration.DatasetType.JKzone != null && analysis.AnalysisConfiguration.DatasetType.JKzone.Length != 0)
+                    {
+                        if (analysis.AnalysisConfiguration.DatasetType.Weight.Length == 0 ||
+                            analysis.AnalysisConfiguration.DatasetType.JKrep == null || analysis.AnalysisConfiguration.DatasetType.JKrep.Length == 0 ||
+                            analysis.AnalysisConfiguration.DatasetType.JKreverse == null)
+                        {
+                            return null;
+                        }
+
+                        if (!CreateReplicateWeights((int)analysis.AnalysisConfiguration.DatasetType.Nrep, analysis.AnalysisConfiguration.DatasetType.Weight, analysis.AnalysisConfiguration.DatasetType.JKzone, analysis.AnalysisConfiguration.DatasetType.JKrep, (bool)analysis.AnalysisConfiguration.DatasetType.JKreverse))
+                        {
+                            return null;
+                        }
+
+                        repWgtsRegex = "lsanalyzer_repwgt_";
+                    }
+
+                    if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI, analysis.AnalysisConfiguration.DatasetType.MIvar, analysis.AnalysisConfiguration.DatasetType.PVvars, (int)analysis.AnalysisConfiguration.DatasetType.Nrep, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac))
+                    {
+                        return null;
+                    }
+                }
+
                 string baseCall = "lsanalyzer_result_univar <- BIFIEsurvey::BIFIE.univar(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
 
                 string groupByArg = "";

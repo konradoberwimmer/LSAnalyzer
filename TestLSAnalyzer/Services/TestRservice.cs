@@ -109,6 +109,30 @@ namespace TestLSAnalyzer.Services
             Assert.NotNull(variablesList);
             Assert.True(variablesList.Count == 11);
             Assert.True(variablesList.Where(var => var.Name == "repwgt1").First().IsSystemVariable);
+
+            AnalysisConfiguration analysisConfigurationModeBuild = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    PVvars = "x;y[0-9]+",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 0.5,
+                },
+                ModeKeep = false,
+            };
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationModeBuild.FileName));
+            var variablesListModeBuild = rservice.GetCurrentDatasetVariables(analysisConfigurationModeBuild);
+
+            Assert.NotNull(variablesListModeBuild);
+            Assert.True(variablesListModeBuild.Count == 11);
+            Assert.Single(variablesListModeBuild.Where(var => var.Name == "x").ToList());
+            Assert.Single(variablesListModeBuild.Where(var => var.Name == "y[0-9]+").ToList());
+            Assert.Single(variablesListModeBuild.Where(var => var.Name == "one").ToList());
         }
 
         [Fact]
@@ -132,7 +156,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 1));
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
@@ -145,6 +169,42 @@ namespace TestLSAnalyzer.Services
             var stats = result["stat"].AsDataFrame();
             Assert.Equal(5, Convert.ToInt32(stats["Ncases"][2]));
             Assert.True(Math.Abs((double)stats["SD"][0] - 44.54742) < 0.0001);
+            Assert.True(Math.Abs((double)stats["SD_SE"][0] - 13.24182) < 0.0001);
+
+            AnalysisConfiguration analysisConfigurationModeBuild = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    PVvars = "x;y[0-9]+",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 1,
+                },
+                ModeKeep = false,
+            };
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationModeBuild.FileName));
+
+            AnalysisUnivar analysisUnivarModeBuild = new(analysisConfigurationModeBuild)
+            {
+                Vars = new() { new(1, "x", false), new(1, "y[0-9]+", false) },
+                GroupBy = new() { new(3, "cat", false) },
+            };
+
+            var resultModeBuild = rservice.CalculateUnivar(analysisUnivarModeBuild);
+            Assert.NotNull(resultModeBuild);
+            var statsModeBuild = resultModeBuild["stat"].AsDataFrame();
+            Assert.Equal(5, Convert.ToInt32(statsModeBuild["Ncases"][2]));
+            Assert.True(Math.Abs((double)statsModeBuild["SD"][0] - 44.54742) < 0.0001);
+            Assert.True(Math.Abs((double)statsModeBuild["SD_SE"][0] - 13.24182) < 0.0001);
+
+            for (int i = 0; i < 4; i++)
+            {
+                Assert.Equal((double)statsModeBuild["M_SE"][i], (double)stats["M_SE"][i]);
+            }
         }
 
         [Fact]
