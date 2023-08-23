@@ -18,7 +18,8 @@ namespace LSAnalyzer.Models
         }
         public List<Variable> Vars { get; set; } = new();
         public List<Variable> GroupBy { get; set; } = new();
-        public GenericVector? Result { get; set; }
+        public bool CalculateOverall { get; set; } = true;
+        public List<GenericVector> Result { get; set; } = new();
 
         public Analysis(AnalysisConfiguration analysisConfiguration) 
         {

@@ -75,6 +75,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _calculateOverall = true;
+        public bool CalculateOverall
+        {
+            get => _calculateOverall;
+            set
+            {
+                _calculateOverall = value;
+                NotifyPropertyChanged(nameof(CalculateOverall));
+            }
+        }
+
         [ExcludeFromCodeCoverage]
         public RequestAnalysis()
         {
@@ -190,6 +201,7 @@ namespace LSAnalyzer.ViewModels
             {
                 Vars = new(AnalysisVariables),
                 GroupBy = new(GrouyByVariables),
+                CalculateOverall = this.CalculateOverall,
             };
 
             WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysis));

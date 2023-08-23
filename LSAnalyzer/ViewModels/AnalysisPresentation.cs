@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -61,7 +62,7 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        public void SetAnalysisResult(GenericVector? result)
+        public void SetAnalysisResult(List<GenericVector> result)
         {
             Analysis.Result = result;
             NotifyPropertyChanged(nameof(Analysis));
@@ -79,12 +80,10 @@ namespace LSAnalyzer.ViewModels
 
         public DataTable CreateDataTableFromResultUnivar(AnalysisUnivar analysisUnivar)
         {
-            if (analysisUnivar.Result == null)
+            if (analysisUnivar.Result == null || analysisUnivar.Result.Count == 0)
             {
                 return new();
             }
-
-            var dataFrame = analysisUnivar.Result["stat"].AsDataFrame();
 
             DataTable table = new(analysisUnivar.AnalysisName);
             Dictionary<string, DataColumn> columns = new();
@@ -93,8 +92,7 @@ namespace LSAnalyzer.ViewModels
 
             for (int cntGroupyBy = 0; cntGroupyBy < analysisUnivar.GroupBy.Count; cntGroupyBy++)
             {
-                string groupByVar = analysisUnivar.GroupBy.Count == 1 ? "groupval" : "groupval" + (cntGroupyBy + 1);
-                columns.Add(groupByVar, new DataColumn(analysisUnivar.GroupBy[cntGroupyBy].Name, typeof(double)));
+                columns.Add("groupval" + (cntGroupyBy + 1), new DataColumn(analysisUnivar.GroupBy[cntGroupyBy].Name, typeof(double)));
             }
 
             columns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
@@ -109,19 +107,44 @@ namespace LSAnalyzer.ViewModels
                 table.Columns.Add(column);
             }
 
-            foreach (var dataFrameRow in dataFrame.GetRows())
+            foreach (var result in Analysis.Result)
             {
-                DataRow tableRow = table.NewRow();
-
-                List<object> cellValues = new();
-                foreach (var column in columns.Keys)
+                var dataFrame = result["stat"].AsDataFrame();
+                
+                var groupNameColumns = dataFrame.ColumnNames.Where(columnName => Regex.IsMatch(columnName, "^groupvar[0-9]*$")).ToArray();
+                var groupValColumns = dataFrame.ColumnNames.Where(columnName => Regex.IsMatch(columnName, "^groupval[0-9]*$")).ToArray();
+                Dictionary<string, string> groupColumns = new Dictionary<string, string>();
+                for (int i = 0; i < groupNameColumns.Length; i++)
                 {
-                    cellValues.Add(dataFrameRow[column]);
+                    groupColumns.Add(dataFrame[groupNameColumns[i]].AsCharacter().First(), groupValColumns[i]);
                 }
 
-                tableRow.ItemArray = cellValues.ToArray();
-                table.Rows.Add(tableRow);
+                foreach (var dataFrameRow in dataFrame.GetRows())
+                {
+                    DataRow tableRow = table.NewRow();
+
+                    List<object?> cellValues = new();
+                    foreach (var column in columns.Keys)
+                    {
+                        if (Regex.IsMatch(column, "^groupval[0-9]*$") && groupColumns.ContainsKey(columns[column].ColumnName))
+                        {
+                            cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                        } else if (dataFrame.ColumnNames.Contains(column))
+                        {
+                            cellValues.Add(dataFrameRow[column]);
+                        } else
+                        {
+                            cellValues.Add(null);
+                        }
+                    }
+
+                    tableRow.ItemArray = cellValues.ToArray();
+                    table.Rows.Add(tableRow);
+                }
             }
+
+            string[] sortBy = { "variable" };
+            table.DefaultView.Sort = String.Join(", ", sortBy.Concat(analysisUnivar.GroupBy.ConvertAll(var => var.Name)).ToArray());
 
             return table;
         }

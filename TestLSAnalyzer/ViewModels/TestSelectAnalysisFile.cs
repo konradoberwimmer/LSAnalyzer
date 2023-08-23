@@ -71,6 +71,24 @@ namespace TestLSAnalyzer.ViewModels
 
             Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType);
             Assert.True(messageSent);
+
+            selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_pv10_nrep5.sav");
+            selectAnalysisFileViewModel.DatasetTypes.Add(new()
+            {
+                Id = 999991,
+                Name = "Test with PV 10 and NREP 5",
+                Weight = "wgt",
+                NMI = 10,
+                PVvars = "x;y[0-9]+",
+                Nrep = 5,
+                RepWgts = "repwgt",
+            });
+            selectAnalysisFileViewModel.SelectedAnalysisMode = SelectAnalysisFile.AnalysisModes.Build;
+
+            selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
+
+            Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType);
+            Assert.Equal(selectAnalysisFileViewModel.DatasetTypes.Last(), selectAnalysisFileViewModel.SelectedDatasetType);
         }
 
         [Fact]

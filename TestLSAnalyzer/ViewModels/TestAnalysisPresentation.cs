@@ -40,18 +40,61 @@ namespace TestLSAnalyzer.ViewModels
             {
                 Vars = new() { new(1, "x", false), new(1, "y", false) },
                 GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = false,
             };
 
             var result = rservice.CalculateUnivar(analysisUnivar);
 
             AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
-            analysisPresentationViewModel.SetAnalysisResult(result);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
 
             Assert.NotNull(analysisPresentationViewModel.DataTable);
             Assert.Equal(4, analysisPresentationViewModel.DataTable.Rows.Count);
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat"));
         }
+
+        [Fact]
+        public void TestSetAnalysisResultWithOverallValues()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 0.5));
+
+            AnalysisUnivar analysisUnivar = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "x", false), new(1, "y", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = true,
+            };
+
+            var result = rservice.CalculateUnivar(analysisUnivar);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(6, analysisPresentationViewModel.DataTable.Rows.Count);
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat"));
+        }
+
 
         [Fact]
         public void TestSaveDataTableXlsx()

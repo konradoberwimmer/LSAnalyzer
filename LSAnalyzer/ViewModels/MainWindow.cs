@@ -168,7 +168,7 @@ namespace LSAnalyzer.ViewModels
 
             var analysisPresentation = e.Argument as AnalysisPresentation;
 
-            GenericVector? result = null;
+            List<GenericVector>? result = null;
             switch (analysisPresentation!.Analysis)
             {
                 case AnalysisUnivar analysisUnivar:
@@ -177,7 +177,7 @@ namespace LSAnalyzer.ViewModels
                 default:
                     break;
             }
-            analysisPresentation.SetAnalysisResult(result);
+            analysisPresentation.SetAnalysisResult(result != null ? result : new());
 
             if (result == null)
             {

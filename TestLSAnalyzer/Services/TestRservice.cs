@@ -129,7 +129,7 @@ namespace TestLSAnalyzer.Services
             var variablesListModeBuild = rservice.GetCurrentDatasetVariables(analysisConfigurationModeBuild);
 
             Assert.NotNull(variablesListModeBuild);
-            Assert.True(variablesListModeBuild.Count == 11);
+            Assert.True(variablesListModeBuild.Count == 10);
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "x").ToList());
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "y[0-9]+").ToList());
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "one").ToList());
@@ -162,11 +162,14 @@ namespace TestLSAnalyzer.Services
             {
                 Vars = new() { new(1, "x", false), new(1, "y", false) },
                 GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = false,
             };
 
             var result = rservice.CalculateUnivar(analysisUnivar);
             Assert.NotNull(result);
-            var stats = result["stat"].AsDataFrame();
+            Assert.Single(result);
+            var firstResult = result.First();
+            var stats = firstResult["stat"].AsDataFrame();
             Assert.Equal(5, Convert.ToInt32(stats["Ncases"][2]));
             Assert.True(Math.Abs((double)stats["SD"][0] - 44.54742) < 0.0001);
             Assert.True(Math.Abs((double)stats["SD_SE"][0] - 13.24182) < 0.0001);
@@ -192,11 +195,14 @@ namespace TestLSAnalyzer.Services
             {
                 Vars = new() { new(1, "x", false), new(1, "y[0-9]+", false) },
                 GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = false,
             };
 
             var resultModeBuild = rservice.CalculateUnivar(analysisUnivarModeBuild);
             Assert.NotNull(resultModeBuild);
-            var statsModeBuild = resultModeBuild["stat"].AsDataFrame();
+            Assert.Single(resultModeBuild);
+            var firstResultModeBuild = resultModeBuild.First();
+            var statsModeBuild = firstResultModeBuild["stat"].AsDataFrame();
             Assert.Equal(5, Convert.ToInt32(statsModeBuild["Ncases"][2]));
             Assert.True(Math.Abs((double)statsModeBuild["SD"][0] - 44.54742) < 0.0001);
             Assert.True(Math.Abs((double)statsModeBuild["SD_SE"][0] - 13.24182) < 0.0001);
@@ -205,6 +211,69 @@ namespace TestLSAnalyzer.Services
             {
                 Assert.Equal((double)statsModeBuild["M_SE"][i], (double)stats["M_SE"][i]);
             }
+        }
+
+        [Fact]
+        public void TestCalculateUnivarWithOverallValues()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 1));
+
+            AnalysisUnivar analysisUnivar = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "x", false), new(1, "y", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = true,
+            };
+
+            var result = rservice.CalculateUnivar(analysisUnivar);
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count);
+            Assert.Equal(2, result[0]["stat"].AsDataFrame().RowCount);
+            Assert.Equal(4, result[1]["stat"].AsDataFrame().RowCount);
+
+            analysisUnivar = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "x", false) },
+                GroupBy = new() { new(3, "cat", false), new(3, "mi", false) },
+                CalculateOverall = true,
+            };
+
+            result = rservice.CalculateUnivar(analysisUnivar);
+            Assert.NotNull(result);
+            Assert.Equal(4, result.Count);
+            Assert.Equal(1, result[0]["stat"].AsDataFrame().RowCount);
+            Assert.Equal(2, result[1]["stat"].AsDataFrame().RowCount);
+            Assert.Equal(10, result[2]["stat"].AsDataFrame().RowCount);
+            Assert.Equal(20, result[3]["stat"].AsDataFrame().RowCount);
+
+            analysisUnivar = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "x", false) },
+                CalculateOverall = true,
+            };
+
+            result = rservice.CalculateUnivar(analysisUnivar);
+            Assert.NotNull(result);
+            Assert.Single(result);
+            Assert.Equal(1, result[0]["stat"].AsDataFrame().RowCount);
         }
 
         [Fact]
