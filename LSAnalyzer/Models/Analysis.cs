@@ -25,5 +25,14 @@ namespace LSAnalyzer.Models
         {
             _analysisConfiguration = analysisConfiguration;
         }
+
+        public string ShortInfo
+        {
+            get => 
+                AnalysisName + 
+                " (" + String.Join(", ", Vars.ConvertAll(var => var.Name).ToArray()) + 
+                " - " + AnalysisConfiguration.DatasetType?.Name +
+                ")";
+        }
     }
 }

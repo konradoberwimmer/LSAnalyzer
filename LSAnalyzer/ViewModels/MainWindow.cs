@@ -158,7 +158,7 @@ namespace LSAnalyzer.ViewModels
             analysisWorker.RunWorkerAsync(analysisPresentation);
         }
 
-        void AnalysisWorker_DoWork (object? sender, DoWorkEventArgs e)
+        private void AnalysisWorker_DoWork (object? sender, DoWorkEventArgs e)
         {
             if (e.Argument is not AnalysisPresentation)
             {
@@ -185,6 +185,25 @@ namespace LSAnalyzer.ViewModels
             }
 
             e.Result = result;
+        }
+
+        private RelayCommand<AnalysisPresentation?> _removeAnalysisCommand;
+        public ICommand RemoveAnalysisCommand
+        {
+            get
+            {
+                if (_removeAnalysisCommand == null)
+                    _removeAnalysisCommand = new RelayCommand<AnalysisPresentation?>(this.RemoveAnalysis);
+                return _removeAnalysisCommand;
+            }
+        }
+
+        private void RemoveAnalysis(AnalysisPresentation? analysisPresentation)
+        {
+            if (analysisPresentation != null && Analyses.Contains(analysisPresentation))
+            {
+                Analyses.Remove(analysisPresentation);
+            }
         }
     }
 
