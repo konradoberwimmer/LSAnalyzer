@@ -22,6 +22,29 @@ namespace TestLSAnalyzer.Models
                 new object[] { DatasetType.CreateDefaultDatasetTypes().FirstOrDefault()!, true }
             };
 
+        [Fact]
+        public void TestIsChanged()
+        {
+            DatasetType datasetType = new()
+            {
+                Weight = "W_FSTUWT",
+                MIvar = "mivar",
+                PVvars = "ASRREA",
+                RepWgts = "W_STURWT",
+            };
+
+            Assert.False(datasetType.IsChanged);
+
+            datasetType.AcceptChanges();
+            Assert.False(datasetType.IsChanged);
+
+            datasetType.NMI = 10;
+            Assert.True(datasetType.IsChanged);
+
+            datasetType.AcceptChanges();
+            Assert.False(datasetType.IsChanged);
+        }
+
         [Theory]
         [InlineData("", false)]
         [InlineData("W_FSTUWT", true)]

@@ -7,20 +7,37 @@
         xmlns:local="clr-namespace:LSAnalyzer.Views"
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" x:Class="LSAnalyzer.Views.ConfigDatasetTypes"
         mc:Ignorable="d"
-        Title="Dataset Types" Height="628" Width="519" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Closing="WindowClosing">
+        Title="Dataset Types" WindowStartupLocation="CenterScreen" Closing="WindowClosing" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
     <Window.DataContext>
         <ViewModels:ConfigDatasetTypes/>
     </Window.DataContext>
     <Window.Resources>
+        <converter:BooleanAnd x:Key="BooleanAndConverter"/>
         <converter:DictionaryHasElementToBool x:Key="DictionaryHasElementToBoolConverter"/>
         <converter:IndexToBool x:Key="IndexToBoolConverter"/>
     </Window.Resources>
     <Grid>
-        <ComboBox x:Name="comboBoxSelectDatasetType" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="312" ItemsSource="{Binding DatasetTypes}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedDatasetType, UpdateSourceTrigger=PropertyChanged}"/>
-        <Button x:Name="buttonNewDatasetType" Content="New" HorizontalAlignment="Left" Margin="327,10,0,0" VerticalAlignment="Top" Height="22" Width="80" Command="{Binding NewDatasetTypeCommand, Mode=OneWay}"/>
-        <Button x:Name="buttonRemoveDatasetType" Content="Remove" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Height="22" Width="78" IsEnabled="{Binding SelectedIndex, ElementName=comboBoxSelectDatasetType, Converter={StaticResource IndexToBoolConverter}}" Click="ButtonRemoveDatasetTypeClick"/>
-        <Label Content="Name:" HorizontalAlignment="Left" Margin="10,49,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="textBoxName" Margin="106,53,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Name}" VerticalAlignment="Top">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Margin="10,10,10,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <ComboBox x:Name="comboBoxSelectDatasetType" Grid.Column="0" VerticalAlignment="Top" Width="312" ItemsSource="{Binding DatasetTypes}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedDatasetType, Mode=TwoWay}"/>
+            <Button x:Name="buttonNewDatasetType" Grid.Column="1" Content="New" HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Top" Height="22" Width="78" Command="{Binding NewDatasetTypeCommand, Mode=OneWay}"/>
+            <Button x:Name="buttonImportDatasetType" Grid.Column="2" Content="Import ..." HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Top" Height="22" Width="78" Click="ButtonImportDatasetType_Click"></Button>
+            <Button x:Name="buttonRemoveDatasetType" Grid.Column="3" Content="Remove" HorizontalAlignment="Right" Margin="30,0,0,0" VerticalAlignment="Top" Height="22" Width="78" IsEnabled="{Binding SelectedIndex, ElementName=comboBoxSelectDatasetType, Converter={StaticResource IndexToBoolConverter}}" Click="ButtonRemoveDatasetTypeClick"/>
+        </Grid>
+        <Label Grid.Row="1" Content="Name:" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="textBoxName" Grid.Row="1" Margin="106,4,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Name, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top">
             <ToolTipService.ToolTip>
                 <TextBlock Text="{Binding SelectedDatasetType.Errors[Name]}" Foreground="Red"/>
             </ToolTipService.ToolTip>
@@ -28,10 +45,10 @@
                 <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Name"/>
             </ToolTipService.IsEnabled>
         </TextBox>
-        <Label Content="Description:" HorizontalAlignment="Left" Margin="10,75,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="textBoxDescription" Margin="106,79,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Description}" VerticalAlignment="Top"/>
-        <Label Content="Weight Variable:" HorizontalAlignment="Left" Margin="10,101,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="textBoxWeightVariable" Margin="106,105,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Weight}" VerticalAlignment="Top">
+        <Label Content="Description:" Grid.Row="1" HorizontalAlignment="Left" Margin="10,26,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="textBoxDescription" Grid.Row="1" Margin="106,30,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Description, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top"/>
+        <Label Content="Weight Variable:" Grid.Row="1" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="textBoxWeightVariable" Grid.Row="1" Margin="106,56,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Weight, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top">
             <ToolTipService.ToolTip>
                 <TextBlock Text="{Binding SelectedDatasetType.Errors[Weight]}" Foreground="Red"/>
             </ToolTipService.ToolTip>
@@ -39,13 +56,13 @@
                 <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Weight"/>
             </ToolTipService.IsEnabled>
         </TextBox>
-        <GroupBox Margin="10,128,10,135" VerticalAlignment="Top">
+        <GroupBox Grid.Row="2" Margin="10,10,10,0" VerticalAlignment="Top">
             <GroupBox.Header>
                 <TextBlock FontWeight="DemiBold"><Run Text="Multiple Imputation / Plausible Values"/></TextBlock>
             </GroupBox.Header>
             <StackPanel>
                 <TextBlock TextWrapping="Wrap" Text="Number of multiple imputations or plausible values:" Margin="0,5,0,0"/>
-                <TextBox x:Name="textBoxNMI" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.NMI}" HorizontalAlignment="Left">
+                <TextBox x:Name="textBoxNMI" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.NMI, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left">
                     <ToolTipService.ToolTip>
                         <TextBlock Text="{Binding SelectedDatasetType.Errors[NMI]}" Foreground="Red"/>
                     </ToolTipService.ToolTip>
@@ -55,7 +72,7 @@
                 </TextBox>
                 <Rectangle Height="1" Stroke="Gray" Margin="0,10,0,10"/>
                 <TextBlock TextWrapping="Wrap" Text="Variable indicating imputation count:"/>
-                <TextBox x:Name="textBoxMIVariable" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.MIvar}">
+                <TextBox x:Name="textBoxMIVariable" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.MIvar, UpdateSourceTrigger=PropertyChanged}">
                     <ToolTipService.ToolTip>
                         <TextBlock Text="{Binding SelectedDatasetType.Errors[MIvar]}" Foreground="Red"/>
                     </ToolTipService.ToolTip>
@@ -65,7 +82,7 @@
                 </TextBox>
                 <TextBlock TextWrapping="Wrap" Text="OR"/>
                 <TextBlock TextWrapping="Wrap" Text="Variables with plausible values (semicolon-separated):"/>
-                <TextBox x:Name="textBoxPVVariables" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.PVvars}" Margin="0,0,0,5">
+                <TextBox x:Name="textBoxPVVariables" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.PVvars, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,5">
                     <ToolTipService.ToolTip>
                         <TextBlock Text="{Binding SelectedDatasetType.Errors[PVvars]}" Foreground="Red"/>
                     </ToolTipService.ToolTip>
@@ -75,13 +92,13 @@
                 </TextBox>
             </StackPanel>
         </GroupBox>
-        <GroupBox  Margin="10,305,10,0" VerticalAlignment="Top" Height="250">
+        <GroupBox Grid.Row="3"  Margin="10,10,10,0" VerticalAlignment="Top" Height="250">
             <GroupBox.Header>
                 <TextBlock FontWeight="DemiBold"><Run Text="Replicate Weights"/></TextBlock>
             </GroupBox.Header>
             <StackPanel>
                 <TextBlock TextWrapping="Wrap" Text="Number of replications:"/>
-                <TextBox x:Name="textBoxNRep" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.Nrep}" HorizontalAlignment="Left">
+                <TextBox x:Name="textBoxNRep" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.Nrep, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left">
                     <ToolTipService.ToolTip>
                         <TextBlock Text="{Binding SelectedDatasetType.Errors[Nrep]}" Foreground="Red"/>
                     </ToolTipService.ToolTip>
@@ -90,7 +107,7 @@
                     </ToolTipService.IsEnabled>
                 </TextBox>
                 <TextBlock TextWrapping="Wrap" Text="Replication variance adjustment factor (argument fayfac in BIFIEsurvey):"/>
-                <TextBox x:Name="textBoxFayFac" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.FayFac}" HorizontalAlignment="Left">
+                <TextBox x:Name="textBoxFayFac" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.FayFac, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left">
                     <ToolTipService.ToolTip>
                         <TextBlock Text="{Binding SelectedDatasetType.Errors[FayFac]}" Foreground="Red"/>
                     </ToolTipService.ToolTip>
@@ -100,7 +117,7 @@
                 </TextBox>
                 <Rectangle Height="1" Stroke="Gray" Margin="0,10,0,10"/>
                 <TextBlock TextWrapping="Wrap" Text="Variables with replicate weights (regex):"/>
-                <TextBox x:Name="textBoxRepWeights" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.RepWgts}">
+                <TextBox x:Name="textBoxRepWeights" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.RepWgts, UpdateSourceTrigger=PropertyChanged}">
                     <ToolTipService.ToolTip>
                         <TextBlock Text="{Binding SelectedDatasetType.Errors[RepWgts]}" Foreground="Red"/>
                     </ToolTipService.ToolTip>
@@ -110,7 +127,7 @@
                 </TextBox>
                 <TextBlock TextWrapping="Wrap" Text="OR"/>
                 <TextBlock TextWrapping="Wrap" Text="Variable indicating jackknife zones:"/>
-                <TextBox x:Name="textBoxJKZone" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.JKzone}">
+                <TextBox x:Name="textBoxJKZone" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.JKzone, UpdateSourceTrigger=PropertyChanged}">
                     <ToolTipService.ToolTip>
                         <TextBlock Text="{Binding SelectedDatasetType.Errors[JKzone]}" Foreground="Red"/>
                     </ToolTipService.ToolTip>
@@ -119,7 +136,7 @@
                     </ToolTipService.IsEnabled>
                 </TextBox>
                 <TextBlock TextWrapping="Wrap" Text="Variable indicating inclusion/exclusion within jackknife zone:"/>
-                <TextBox x:Name="textBoxJKRep" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.JKrep}">
+                <TextBox x:Name="textBoxJKRep" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.JKrep, UpdateSourceTrigger=PropertyChanged}">
                     <ToolTipService.ToolTip>
                         <TextBlock Text="{Binding SelectedDatasetType.Errors[JKrep]}" Foreground="Red"/>
                     </ToolTipService.ToolTip>
@@ -132,7 +149,13 @@
 
             </StackPanel>
         </GroupBox>
-        <Button Content="Save" HorizontalAlignment="Right" Margin="0,560,10,0" VerticalAlignment="Top" Height="22" Width="78" Command="{Binding SaveSelectedDatasetTypeCommand, Mode=OneWay}" IsEnabled="{Binding SelectedIndex, ElementName=comboBoxSelectDatasetType, Converter={StaticResource IndexToBoolConverter}}"/>
-
+        <Grid Grid.Row="4" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" x:Name="buttonExportDatasetType" Content="Export ..." IsEnabled="{Binding SelectedIndex, ElementName=comboBoxSelectDatasetType, Converter={StaticResource IndexToBoolConverter}}" HorizontalAlignment="Left" Height="22" Width="78" Click="ButtonExportDatasetType_Click"/>
+            <Button Grid.Column="1" Content="Save" HorizontalAlignment="Right" VerticalAlignment="Top" Height="22" Width="78" Command="{Binding SaveSelectedDatasetTypeCommand, Mode=OneWay}" IsEnabled="{Binding SelectedIndex, ElementName=comboBoxSelectDatasetType, Converter={StaticResource IndexToBoolConverter}}"/>
+        </Grid>
     </Grid>
 </Window>

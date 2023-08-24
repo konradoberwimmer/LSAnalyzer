@@ -3,11 +3,13 @@ using LSAnalyzer.Models.ValidationAttributes;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace LSAnalyzer.Models
 {
-    public class DatasetType : ObservableValidatorExtended
+    public class DatasetType : ObservableValidatorExtended, IChangeTracking
     {
         public int Id { get; set; }
         [MinLength(3, ErrorMessage = "Name must have length of at least three characters!")]
@@ -33,12 +35,30 @@ namespace LSAnalyzer.Models
         public string? JKzone { get; set; }
         [MutuallyExclusive(nameof(RepWgts), "Cannot specify both replicate weight variables and jackknife zone variables!")]
         public string? JKrep { get; set; }
-        public bool? JKreverse { get; set; }
+        public bool JKreverse { get; set; }
+
+
+        private DatasetType? _savedState;
+        [NotMapped]
+        [JsonIgnore]
+        public bool IsChanged 
+        {
+            get
+            {
+                if (_savedState == null)
+                {
+                    return false;
+                }
+
+                return !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, new string[] { "Errors", "IsChanged" });
+            }
+        }
 
         public DatasetType()
         {
             Name = "New Dataset Type";
             Weight = string.Empty;
+            JKreverse = false;
         }
 
         public DatasetType(DatasetType datasetType)
@@ -56,6 +76,11 @@ namespace LSAnalyzer.Models
             JKzone = datasetType.JKzone;
             JKrep = datasetType.JKrep;
             JKreverse = datasetType.JKreverse;
+        }
+
+        public void AcceptChanges()
+        {
+            _savedState = new DatasetType(this);
         }
 
         public bool HasSystemVariable(string name)
@@ -129,6 +154,7 @@ namespace LSAnalyzer.Models
                     Nrep = 80,
                     RepWgts = "W_FSTURWT",
                     FayFac = 0.05,
+                    JKreverse = false,
                 },
             };
         }

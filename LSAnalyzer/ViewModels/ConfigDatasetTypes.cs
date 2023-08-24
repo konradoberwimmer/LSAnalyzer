@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using System;
@@ -6,9 +8,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -37,24 +41,14 @@ namespace LSAnalyzer.ViewModels
             {
                 _selectedDatasetType = value;
                 NotifyPropertyChanged(nameof(SelectedDatasetType));
-                if (_selectedDatasetType != null && !_unsavedDatasetTypeIds.Contains(_selectedDatasetType.Id))
-                {
-                    _unsavedDatasetTypeIds.Add(_selectedDatasetType.Id);
-                }
             }
         }
 
-        private List<int> _unsavedDatasetTypeIds = new();
         public List<string> UnsavedDatasetTypeNames
         {
             get
             {
-                var unsavedDatasetNames = new List<string>();
-                foreach (var unsavedDatasetId in  _unsavedDatasetTypeIds)
-                {
-                    unsavedDatasetNames.Add(_datasetTypes.Where(dst => dst.Id == unsavedDatasetId).First().Name);
-                }
-                return unsavedDatasetNames;
+                return _datasetTypes.Where(dst => dst.IsChanged).Select(dst => dst.Name).ToList();
             }
         }
 
@@ -73,7 +67,10 @@ namespace LSAnalyzer.ViewModels
                 var storedDatasetTypes = _configuration.GetStoredDatasetTypes();
                 if (storedDatasetTypes != null)
                 {
-                    storedDatasetTypes.OrderBy(d => d.Name).ToList().ForEach(d => DatasetTypes.Add(d));
+                    storedDatasetTypes.OrderBy(d => d.Name).ToList().ForEach(d => {
+                        d.AcceptChanges();
+                        DatasetTypes.Add(d);
+                    });
                 }
             }
             catch
@@ -112,9 +109,12 @@ namespace LSAnalyzer.ViewModels
                     maxDatasetTypeId = datasetType.Id;
                 }
             }
-            DatasetTypes.Add(new() { Id = maxDatasetTypeId + 1, Name = "New dataset type", JKreverse = false });
-            SelectedDatasetType = DatasetTypes.LastOrDefault();
-            _unsavedDatasetTypeIds.Add(maxDatasetTypeId + 1);
+
+            DatasetType newDatasetType = new() { Id = maxDatasetTypeId + 1, Name = "New dataset type", JKreverse = false };
+            newDatasetType.AcceptChanges();
+
+            DatasetTypes.Add(newDatasetType);
+            SelectedDatasetType = newDatasetType;
         }
 
         private RelayCommand<object?> _saveSelectedDatasetTypeCommand;
@@ -136,11 +136,7 @@ namespace LSAnalyzer.ViewModels
             }
 
             _configuration.StoreDatasetType(SelectedDatasetType);
-
-            if (_unsavedDatasetTypeIds.Contains(SelectedDatasetType.Id))
-            {
-                _unsavedDatasetTypeIds.Remove(SelectedDatasetType.Id);
-            }
+            SelectedDatasetType.AcceptChanges();
         }
 
         private RelayCommand<object?> _removeDatasetTypeCommand;
@@ -163,13 +159,94 @@ namespace LSAnalyzer.ViewModels
 
             _configuration.RemoveDatasetType(SelectedDatasetType);
 
-            if (_unsavedDatasetTypeIds.Contains(SelectedDatasetType.Id))
-            {
-                _unsavedDatasetTypeIds.Remove(SelectedDatasetType.Id);
-            }
-
             DatasetTypes.Remove(SelectedDatasetType);
             SelectedDatasetType = null;
+        }
+
+        private RelayCommand<string?> _importDatasetTypeCommand;
+        public ICommand ImportDatasetTypeCommand
+        {
+            get
+            {
+                if (_importDatasetTypeCommand == null)
+                    _importDatasetTypeCommand = new RelayCommand<string?>(this.ImportDatasetType);
+                return _importDatasetTypeCommand;
+            }
+        }
+
+        private void ImportDatasetType(string? filename)
+        {
+            if (filename == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var fileContent = File.ReadAllText(filename);
+                var newDatasetType = JsonSerializer.Deserialize<DatasetType>(fileContent);
+                
+                if (newDatasetType == null)
+                {
+                    WeakReferenceMessenger.Default.Send(new FailureImportDatasetTypeMessage("invalid file"));
+                    return;
+                }
+
+                int maxDatasetTypeId = 0;
+                foreach (var datasetType in DatasetTypes)
+                {
+                    if (datasetType.Id > maxDatasetTypeId)
+                    {
+                        maxDatasetTypeId = datasetType.Id;
+                    }
+                }
+                newDatasetType.Id = maxDatasetTypeId + 1;
+
+                if (!newDatasetType.Validate())
+                {
+                    WeakReferenceMessenger.Default.Send(new FailureImportDatasetTypeMessage("invalid dataset type"));
+                    return;
+                }
+
+                _configuration.StoreDatasetType(newDatasetType);
+
+                DatasetTypes.Add(newDatasetType);
+                newDatasetType.AcceptChanges();
+                SelectedDatasetType = newDatasetType;
+            }
+            catch (Exception)
+            {
+                WeakReferenceMessenger.Default.Send(new FailureImportDatasetTypeMessage("invalid file"));
+            }
+        }
+
+        private RelayCommand<string?> _exportDatasetTypeCommand;
+        public ICommand ExportDatasetTypeCommand
+        {
+            get
+            {
+                if (_exportDatasetTypeCommand == null)
+                    _exportDatasetTypeCommand = new RelayCommand<string?>(this.ExportDatasetType);
+                return _exportDatasetTypeCommand;
+            }
+        }
+
+        private void ExportDatasetType(string? filename)
+        {
+            if (SelectedDatasetType == null || !SelectedDatasetType.Validate() || filename == null)
+            {
+                return;
+            }
+
+            File.WriteAllText(filename, JsonSerializer.Serialize(SelectedDatasetType));
+        }
+    }
+
+    internal class FailureImportDatasetTypeMessage : ValueChangedMessage<string>
+    {
+        public FailureImportDatasetTypeMessage(string message) : base(message)
+        {
+
         }
     }
 }

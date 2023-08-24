@@ -1,4 +1,6 @@
-﻿using LSAnalyzer.ViewModels;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using LSAnalyzer.ViewModels;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,6 +28,11 @@ namespace LSAnalyzer.Views
             InitializeComponent();
 
             DataContext = configDatasetTypesViewModel;
+
+            WeakReferenceMessenger.Default.Register<FailureImportDatasetTypeMessage>(this, (r, m) =>
+            {
+                MessageBox.Show("Import failed: " + m.Value, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
         }
 
         private void WindowClosing(object? sender, CancelEventArgs e)
@@ -48,6 +55,44 @@ namespace LSAnalyzer.Views
             {
                 var viewModel = DataContext as LSAnalyzer.ViewModels.ConfigDatasetTypes;
                 viewModel!.RemoveDatasetTypeCommand.Execute(null);
+            }
+        }
+
+        private void ButtonImportDatasetType_Click(object? sender, RoutedEventArgs e)
+        {
+            var configDatasetTypesViewModel = DataContext as ViewModels.ConfigDatasetTypes;
+            if (configDatasetTypesViewModel == null)
+            {
+                return;
+            }
+
+            OpenFileDialog openFileDialog = new();
+            openFileDialog.Filter = "JSON File (*.json)|*.json";
+            openFileDialog.InitialDirectory = Properties.Settings.Default.lastResultOutFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var result = openFileDialog.ShowDialog(this);
+
+            if (result == true)
+            {
+                configDatasetTypesViewModel.ImportDatasetTypeCommand.Execute(openFileDialog.FileName);
+            }
+        }
+
+        private void ButtonExportDatasetType_Click(object? sender, RoutedEventArgs e)
+        {
+            var configDatasetTypesViewModel = DataContext as ViewModels.ConfigDatasetTypes;
+            if (configDatasetTypesViewModel?.SelectedDatasetType == null || !configDatasetTypesViewModel.SelectedDatasetType.Validate())
+            {
+                return;
+            }
+
+            SaveFileDialog saveFileDialog = new();
+            saveFileDialog.Filter = "JSON File (*.json)|*.json";
+            saveFileDialog.InitialDirectory = Properties.Settings.Default.lastResultOutFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var wantsSave = saveFileDialog.ShowDialog(this);
+
+            if (wantsSave == true)
+            {
+                configDatasetTypesViewModel.ExportDatasetTypeCommand.Execute(saveFileDialog.FileName);
             }
         }
     }
