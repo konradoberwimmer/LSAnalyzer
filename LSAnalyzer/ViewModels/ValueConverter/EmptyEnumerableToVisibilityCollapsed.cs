@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -27,6 +28,7 @@ namespace LSAnalyzer.ViewModels.ValueConverter
             return Visibility.Visible;
         }
 
+        [ExcludeFromCodeCoverage]
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();

@@ -118,13 +118,18 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
-            DispatcherHelper.CheckBeginInvokeOnUI(() =>
-            {
-                IsBusy = true;
-            });
-            Thread.Yield();
+            IsBusy = true;
 
-            var variables = _rservice.GetDatasetVariables(_fileName);
+            BackgroundWorker guessDatasetTypeWorker = new();
+            guessDatasetTypeWorker.WorkerReportsProgress = false;
+            guessDatasetTypeWorker.WorkerSupportsCancellation = false;
+            guessDatasetTypeWorker.DoWork += GuessDatasetTypeWorker_DoWork;
+            guessDatasetTypeWorker.RunWorkerAsync(_fileName);
+        }
+
+        private void GuessDatasetTypeWorker_DoWork(object? sender, DoWorkEventArgs e)
+        {
+            var variables = _rservice.GetDatasetVariables((string)e.Argument!);
 
             if (variables == null)
             {
@@ -133,20 +138,20 @@ namespace LSAnalyzer.ViewModels
             }
 
             List<DatasetType> possibleDatasetTypes = new();
-            
+
             foreach (var datasetType in _datasetTypes)
             {
                 if (variables.Where(var => var.Name == datasetType.Weight).Count() == 0) continue;
-                
+
                 if (!String.IsNullOrWhiteSpace(datasetType.MIvar) && variables.Where(var => var.Name == datasetType.MIvar).Count() == 0) continue;
                 if (!String.IsNullOrWhiteSpace(datasetType.PVvars))
                 {
                     string[] pvVarsSplit = datasetType.PVvars.Split(';');
-                    
+
                     bool foundAllPvVars = true;
                     foreach (var pvVar in pvVarsSplit)
                     {
-                        if (variables.Where(var => Regex.IsMatch(var.Name, pvVar)).Count() != datasetType.NMI) 
+                        if (variables.Where(var => Regex.IsMatch(var.Name, pvVar)).Count() != datasetType.NMI)
                         {
                             foundAllPvVars = false;
                             break;
@@ -198,12 +203,17 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
-            DispatcherHelper.CheckBeginInvokeOnUI(() =>
-            {
-                IsBusy = true;
-            });
-            Thread.Yield();
+            IsBusy = true;
 
+            BackgroundWorker useFileForAnalysisWorker = new();
+            useFileForAnalysisWorker.WorkerReportsProgress = false;
+            useFileForAnalysisWorker.WorkerSupportsCancellation = false;
+            useFileForAnalysisWorker.DoWork += UseFileForAnalysisWorker_DoWork;
+            useFileForAnalysisWorker.RunWorkerAsync(window);
+        }
+
+        private void UseFileForAnalysisWorker_DoWork(object? sender, DoWorkEventArgs e)
+        {
             AnalysisConfiguration analysisConfiguration = new()
             {
                 FileName = this.FileName,
@@ -223,9 +233,16 @@ namespace LSAnalyzer.ViewModels
             WeakReferenceMessenger.Default.Send(new SetAnalysisConfigurationMessage(analysisConfiguration));
             IsBusy = false;
 
-            window?.Close();
+            if (e.Argument is ICloseable window)
+            {
+                DispatcherHelper.CheckBeginInvokeOnUI(() =>
+                {
+                    window.Close();
+                });
+            }
         }
     }
+
 
     internal class MultiplePossibleDatasetTypesMessage : ValueChangedMessage<List<DatasetType>>
     {

@@ -35,6 +35,7 @@ namespace LSAnalyzer.Services
             try
             {
                 _engine = REngine.GetInstance();
+                _engine.ClearGlobalEnvironment();
                 _engine.Evaluate("Sys.setenv(PATH = paste(\"" + _rPath + "/bin/x64\", Sys.getenv(\"PATH\"), sep=\";\"))"); //ugly workaround for now!
                 string[] a = _engine.Evaluate("paste0('Result: ', stats::sd(c(1,2,3)))").AsCharacter().ToArray();
                 if (a.Length == 0 || a[0] != "Result: 1")

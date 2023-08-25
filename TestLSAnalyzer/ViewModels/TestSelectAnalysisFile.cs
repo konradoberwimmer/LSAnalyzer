@@ -16,10 +16,8 @@ namespace TestLSAnalyzer.ViewModels
     public class TestSelectAnalysisFile
     {
         [Fact]
-        public void TestGuessDatasetType()
+        public async Task TestGuessDatasetType()
         {
-            DispatcherHelper.Initialize();
-
             Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
             foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
             {
@@ -38,6 +36,7 @@ namespace TestLSAnalyzer.ViewModels
             });
 
             selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
+            await Task.Delay(100);
 
             Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType);
             Assert.False(messageSent);
@@ -54,6 +53,7 @@ namespace TestLSAnalyzer.ViewModels
             });
 
             selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
+            await Task.Delay(100);
 
             Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType);
             Assert.Equal("Test with NMI 10 and NREP 5", selectAnalysisFileViewModel.SelectedDatasetType.Name);
@@ -71,6 +71,7 @@ namespace TestLSAnalyzer.ViewModels
             });
 
             selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
+            await Task.Delay(100);
 
             Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType);
             Assert.True(messageSent);
@@ -89,13 +90,14 @@ namespace TestLSAnalyzer.ViewModels
             selectAnalysisFileViewModel.SelectedAnalysisMode = SelectAnalysisFile.AnalysisModes.Build;
 
             selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
+            await Task.Delay(100);
 
             Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType);
             Assert.Equal(selectAnalysisFileViewModel.DatasetTypes.Last(), selectAnalysisFileViewModel.SelectedDatasetType);
         }
 
         [Fact]
-        public void TestUseFileForAnalysisSendsMessageOnFailure()
+        public async Task TestUseFileForAnalysisSendsMessageOnFailure()
         {
             DispatcherHelper.Initialize();
 
@@ -118,6 +120,7 @@ namespace TestLSAnalyzer.ViewModels
             });
 
             selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
+            await Task.Delay(500);
 
             Assert.True(messageSent);
 
@@ -125,6 +128,7 @@ namespace TestLSAnalyzer.ViewModels
             selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
 
             selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
+            await Task.Delay(500);
 
             Assert.True(messageSent);
 
@@ -141,12 +145,13 @@ namespace TestLSAnalyzer.ViewModels
             };
 
             selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
+            await Task.Delay(500);
 
             Assert.True(messageSent);
         }
 
         [Fact]
-        public void TestUseFileForAnalysisSendsMessageOnSuccess()
+        public async Task TestUseFileForAnalysisSendsMessageOnSuccess()
         {
             DispatcherHelper.Initialize();
 
@@ -178,6 +183,7 @@ namespace TestLSAnalyzer.ViewModels
             });
 
             selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
+            await Task.Delay(100);
 
             Assert.True(messageSent);
         }

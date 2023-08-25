@@ -17,7 +17,11 @@
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <converter:EnumToBoolean x:Key="EnumToBooleanConverter"/>
         <converter:IndexToBool x:Key="IndexToBoolConverter"/>
+        <converter:InverseBool x:Key="InverseBoolConverter"/>
     </Window.Resources>
+    <Window.IsEnabled>
+        <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
+    </Window.IsEnabled>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="87"/>

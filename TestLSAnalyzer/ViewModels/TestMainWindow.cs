@@ -1,4 +1,5 @@
-﻿using LSAnalyzer.Models;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using System;
@@ -54,6 +55,53 @@ namespace TestLSAnalyzer.ViewModels
 
             Assert.NotNull(mainWindowViewModel.Analyses.First().DataTable);
             Assert.NotEmpty(mainWindowViewModel.Analyses.First().DataTable.Rows);
+        }
+
+        [Fact]
+        public async Task TestStartAnalysisSendsFailureMessage()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 0.5));
+
+            AnalysisUnivar analysisUnivar = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "z", false), new(1, "k", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = false,
+            };
+            AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
+
+            MainWindow mainWindowViewModel = new(rservice);
+
+            bool messageSent = false;
+            WeakReferenceMessenger.Default.Register<FailureWithAnalysisCalculationMessage>(this, (r, m) =>
+            {
+                messageSent = true;
+            });
+
+            mainWindowViewModel.Analyses.Add(analysisPresentationViewModel);
+            mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModel);
+            await Task.Delay(1000);
+
+            Assert.Empty(mainWindowViewModel.Analyses.First().DataTable.Rows);
+            Assert.True(messageSent);
         }
 
         [Fact]

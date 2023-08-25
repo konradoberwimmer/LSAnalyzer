@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace TestLSAnalyzer.ViewModels
 {
+    [Collection("Sequential")]
     public class TestConfigDatasetTypes
     {
         [Fact]
