@@ -34,7 +34,6 @@ namespace LSAnalyzer.Views
 
             WeakReferenceMessenger.Default.Register<FailureAnalysisConfigurationMessage>(this, (r, m) =>
             {
-                busySpinner.Visibility = Visibility.Hidden;
                 MessageBox.Show("Unable to create BIFIEdata object from file '" + m.Value.FileName + "' when applying dataset type '" + m.Value.DatasetType?.Name + "'.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             });
 

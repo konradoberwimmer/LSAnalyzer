@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using GalaSoft.MvvmLight.Threading;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
@@ -11,6 +12,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -67,6 +69,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _busy = false;
+        public bool IsBusy
+        {
+            get => _busy;
+            set
+            {
+                _busy = value;
+                NotifyPropertyChanged(nameof(IsBusy));
+            }
+        }
+
         public SelectAnalysisFile()
         {
 
@@ -104,11 +117,18 @@ namespace LSAnalyzer.ViewModels
             {
                 return;
             }
-            
+
+            DispatcherHelper.CheckBeginInvokeOnUI(() =>
+            {
+                IsBusy = true;
+            });
+            Thread.Yield();
+
             var variables = _rservice.GetDatasetVariables(_fileName);
 
             if (variables == null)
             {
+                IsBusy = false;
                 return;
             }
 
@@ -156,6 +176,8 @@ namespace LSAnalyzer.ViewModels
                 SelectedDatasetType = null;
                 WeakReferenceMessenger.Default.Send(new MultiplePossibleDatasetTypesMessage(possibleDatasetTypes));
             }
+
+            IsBusy = false;
         }
 
         private RelayCommand<ICloseable?> _useFileForAnalysisCommand;
@@ -176,10 +198,11 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
-            if (window != null && window is Views.SelectAnalysisFile selectAnalysisFileWindow)
+            DispatcherHelper.CheckBeginInvokeOnUI(() =>
             {
-                selectAnalysisFileWindow.busySpinner.Visibility = Visibility.Visible;
-            }
+                IsBusy = true;
+            });
+            Thread.Yield();
 
             AnalysisConfiguration analysisConfiguration = new()
             {
@@ -193,10 +216,12 @@ namespace LSAnalyzer.ViewModels
             if (!testAnalysisConfiguration)
             {
                 WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
+                IsBusy = false;
                 return;
             }
 
             WeakReferenceMessenger.Default.Send(new SetAnalysisConfigurationMessage(analysisConfiguration));
+            IsBusy = false;
 
             window?.Close();
         }

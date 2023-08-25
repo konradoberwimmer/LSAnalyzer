@@ -14,6 +14,7 @@
     </Window.DataContext>
     <Window.Resources>
         <converter:BooleanAnd x:Key="BooleanAndConverter"/>
+        <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <converter:EnumToBoolean x:Key="EnumToBooleanConverter"/>
         <converter:IndexToBool x:Key="IndexToBoolConverter"/>
     </Window.Resources>
@@ -39,6 +40,6 @@
                 </MultiBinding>
             </Button.IsEnabled>
         </Button>
-        <fa:ImageAwesome x:Name="busySpinner" Grid.ColumnSpan="2" Icon="SunOutline" Spin="True" VerticalAlignment="Center" Height="100" Foreground="Gray" Visibility="Hidden"/>
+        <fa:ImageAwesome Grid.ColumnSpan="2" Icon="SunOutline" Spin="True" VerticalAlignment="Center" Height="100" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
     </Grid>
 </Window>

@@ -1,4 +1,5 @@
-﻿using LSAnalyzer.Models;
+﻿using GalaSoft.MvvmLight.Threading;
+using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,8 +19,12 @@ namespace LSAnalyzer
         public App()
         {
             var services = new ServiceCollection();
+
             ConfigureServices(services);
             _serviceProvider = services.BuildServiceProvider();
+
+            DispatcherHelper.Initialize();
+
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
         }
 

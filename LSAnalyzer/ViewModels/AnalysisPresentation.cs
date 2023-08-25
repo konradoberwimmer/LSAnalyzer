@@ -41,6 +41,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _busy = false;
+        public bool IsBusy
+        {
+            get => _busy;
+            set
+            {
+                _busy = value;
+                NotifyPropertyChanged(nameof(IsBusy));
+            }
+        }
+
         [ExcludeFromCodeCoverage]
         public AnalysisPresentation()
         {
@@ -64,6 +75,8 @@ namespace LSAnalyzer.ViewModels
 
         public void SetAnalysisResult(List<GenericVector> result)
         {
+            IsBusy = true;
+
             Analysis.Result = result;
             NotifyPropertyChanged(nameof(Analysis));
             
@@ -76,6 +89,8 @@ namespace LSAnalyzer.ViewModels
                     break;
             }
             NotifyPropertyChanged(nameof(DataTable));
+
+            IsBusy = false;
         }
 
         public DataTable CreateDataTableFromResultUnivar(AnalysisUnivar analysisUnivar)

@@ -151,6 +151,8 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
+            analysisPresentation.IsBusy = true;
+
             BackgroundWorker analysisWorker = new();
             analysisWorker.WorkerReportsProgress = false;
             analysisWorker.WorkerSupportsCancellation = false;
