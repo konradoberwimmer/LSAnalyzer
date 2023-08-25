@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using TestLSAnalyzer.Services;
+using GalaSoft.MvvmLight.Threading;
 
 namespace TestLSAnalyzer.ViewModels
 {
@@ -17,6 +18,8 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestGuessDatasetType()
         {
+            DispatcherHelper.Initialize();
+
             Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
             foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
             {
@@ -94,6 +97,8 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestUseFileForAnalysisSendsMessageOnFailure()
         {
+            DispatcherHelper.Initialize();
+
             Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
             foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
             {
@@ -143,6 +148,8 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestUseFileForAnalysisSendsMessageOnSuccess()
         {
+            DispatcherHelper.Initialize();
+
             Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
             foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
             {

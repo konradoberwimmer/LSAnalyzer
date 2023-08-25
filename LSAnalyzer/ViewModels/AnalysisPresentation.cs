@@ -108,6 +108,10 @@ namespace LSAnalyzer.ViewModels
             for (int cntGroupyBy = 0; cntGroupyBy < analysisUnivar.GroupBy.Count; cntGroupyBy++)
             {
                 columns.Add("groupval" + (cntGroupyBy + 1), new DataColumn(analysisUnivar.GroupBy[cntGroupyBy].Name, typeof(double)));
+                if (analysisUnivar.ValueLabels.ContainsKey(analysisUnivar.GroupBy[cntGroupyBy].Name))
+                {
+                    columns.Add("$label_" + analysisUnivar.GroupBy[cntGroupyBy].Name, new DataColumn(analysisUnivar.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
+                }
             }
 
             columns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
@@ -144,6 +148,27 @@ namespace LSAnalyzer.ViewModels
                         if (Regex.IsMatch(column, "^groupval[0-9]*$") && groupColumns.ContainsKey(columns[column].ColumnName))
                         {
                             cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                        } else if (Regex.IsMatch(column, "^\\$label_"))
+                        {
+                            if ((double?)cellValues.Last() == null)
+                            {
+                                cellValues.Add(null);
+                                continue;
+                            }
+
+                            var groupByVariable = column.Substring(column.IndexOf("_") + 1);
+                            var valueLabels = analysisUnivar.ValueLabels[groupByVariable];
+                            // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
+                            var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)cellValues.Last()!);
+
+                            if (posValueLabel != -1)
+                            {
+                                var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
+                                cellValues.Add(valueLabel);
+                            } else
+                            {
+                                cellValues.Add(null);
+                            }
                         } else if (dataFrame.ColumnNames.Contains(column))
                         {
                             cellValues.Add(dataFrameRow[column]);

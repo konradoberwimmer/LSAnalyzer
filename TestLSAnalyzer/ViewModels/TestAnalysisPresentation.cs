@@ -43,8 +43,9 @@ namespace TestLSAnalyzer.ViewModels
                 CalculateOverall = false,
             };
 
+            analysisUnivar.ValueLabels.Add("cat", rservice.GetValueLabels("cat")!);
             var result = rservice.CalculateUnivar(analysisUnivar);
-
+            
             AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
             analysisPresentationViewModel.SetAnalysisResult(result!);
 
@@ -52,6 +53,8 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal(4, analysisPresentationViewModel.DataTable.Rows.Count);
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat (label)"));
+            Assert.Equal(2, analysisPresentationViewModel.DataTable.Select("[cat (label)] = 'Kategorie B'").Length);
         }
 
         [Fact]

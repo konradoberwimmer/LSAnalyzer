@@ -51,72 +51,64 @@ namespace LSAnalyzer.Services
 
         public bool CheckNecessaryRPackages()
         {
-            if (_engine == null) 
-            { 
-                return false;
-            }
-
-            foreach (string rPackage in _rPackages)
-            {
-                bool available = _engine.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
-                if (!available)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        public bool InstallNecessaryRPackages()
-        {
-            if (_engine == null)
-            {
-                return false;
-            }
-
-            bool userLibraryFolderConfigured = _engine.Evaluate("nzchar(Sys.getenv('R_LIBS_USER'))").AsLogical().First();
-            if (!userLibraryFolderConfigured) 
-            {
-                return false;
-            }
-
             try
             {
-                _engine.Evaluate("if (!dir.exists(Sys.getenv('R_LIBS_USER'))) { dir.create(Sys.getenv('R_LIBS_USER')) }");
-            } catch
-            {
-                return false;
-            }
-
-            foreach (string rPackage in _rPackages)
-            {
-                bool available = _engine.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
-                if (!available)
+                foreach (string rPackage in _rPackages)
                 {
-                    try
-                    {
-                        _engine.Evaluate("install.packages('" + rPackage + "', lib = Sys.getenv('R_LIBS_USER'), repos = 'https://cloud.r-project.org')");
-                    } catch
+                    bool available = _engine!.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
+                    if (!available)
                     {
                         return false;
                     }
                 }
-            }
 
-            return true;
+                return true;
+            } catch 
+            {
+                return false;
+            }
+        }
+
+        public bool InstallNecessaryRPackages()
+        {
+            try
+            {
+                bool userLibraryFolderConfigured = _engine!.Evaluate("nzchar(Sys.getenv('R_LIBS_USER'))").AsLogical().First();
+                if (!userLibraryFolderConfigured)
+                {
+                    return false;
+                }
+
+                _engine.Evaluate("if (!dir.exists(Sys.getenv('R_LIBS_USER'))) { dir.create(Sys.getenv('R_LIBS_USER')) }");
+
+                foreach (string rPackage in _rPackages)
+                {
+                    bool available = _engine.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
+                    if (!available)
+                    {
+                        try
+                        {
+                            _engine.Evaluate("install.packages('" + rPackage + "', lib = Sys.getenv('R_LIBS_USER'), repos = 'https://cloud.r-project.org')");
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            } catch
+            {
+                return false;
+            }
         }
 
         public bool LoadFileIntoGlobalEnvironment(string fileName)
         {
-            if (_engine == null)
-            {
-                return false;
-            }
-
             try
             {
-                _engine.Evaluate("lsanalyzer_dat_raw_stored <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                _engine!.Evaluate("lsanalyzer_dat_raw_stored <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
                 _engine.Evaluate("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
                 var rawData = _engine.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
                 if (rawData == null)
@@ -133,14 +125,9 @@ namespace LSAnalyzer.Services
 
         public bool ReduceToNecessaryVariables(List<string> regexNecessaryVariables)
         {
-            if (_engine == null)
-            {
-                return false;
-            }
-
             try
             {
-                _engine.Evaluate("lsanalyzer_necessary_variables <- numeric(0)");
+                _engine!.Evaluate("lsanalyzer_necessary_variables <- numeric(0)");
                 foreach (string regexNecessaryVariable in regexNecessaryVariables)
                 {
                     _engine.Evaluate("lsanalyzer_necessary_variable <- grep('" + regexNecessaryVariable + "', colnames(lsanalyzer_dat_raw_stored))");
@@ -167,14 +154,9 @@ namespace LSAnalyzer.Services
 
         public bool CreateReplicateWeights(int nrep, string weight, string jkzone, string jkrep, bool jkreverse)
         {
-            if (_engine == null)
-            {
-                return false;
-            }
-
             try
             {
-                _engine.Evaluate("lsanalyzer_jk_zones <- unique(lsanalyzer_dat_raw[,'" + jkzone + "'])");
+                _engine!.Evaluate("lsanalyzer_jk_zones <- unique(lsanalyzer_dat_raw[,'" + jkzone + "'])");
                 _engine.Evaluate(
                     "for (lsanalyzer_jk_zone in lsanalyzer_jk_zones) " +
                     "   lsanalyzer_dat_raw[, paste0('lsanalyzer_repwgt_', lsanalyzer_jk_zone)] <- " +
@@ -205,17 +187,12 @@ namespace LSAnalyzer.Services
 
         public bool CreateBIFIEdataObject(string weight, int nmi, string? mivar, string? pvvars, int nrep, string? repwgts, double? fayfac)
         {
-            if (_engine == null)
-            {
-                return false;
-            }
-
             try
             {
                 string rawDataVariableName = "lsanalyzer_dat_raw";
                 if (mivar != null && mivar.Length > 0)
                 {
-                    _engine.Evaluate("lsanalyzer_dat_raw_list <- split(lsanalyzer_dat_raw, lsanalyzer_dat_raw[, '" + mivar + "'])");
+                    _engine!.Evaluate("lsanalyzer_dat_raw_list <- split(lsanalyzer_dat_raw, lsanalyzer_dat_raw[, '" + mivar + "'])");
                     rawDataVariableName = "lsanalyzer_dat_raw_list";
                 }
 
@@ -247,7 +224,7 @@ namespace LSAnalyzer.Services
                 }
 
                 string finalCall = baseCall + repwgtArg + fayfacArg + pvvarsArg + ", cdata = TRUE)";
-                _engine.Evaluate(finalCall);
+                _engine!.Evaluate(finalCall);
 
                 var bifieDataObject = _engine.GetSymbol("lsanalyzer_dat_BO").AsList();
                 var nmiReported = (int)bifieDataObject["Nimp"].AsNumeric().First();
@@ -257,7 +234,7 @@ namespace LSAnalyzer.Services
                     return false;
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 return false;
             }
@@ -291,8 +268,8 @@ namespace LSAnalyzer.Services
             if (analysisConfiguration.DatasetType.JKzone != null && analysisConfiguration.DatasetType.JKzone.Length != 0)
             {
                 if (analysisConfiguration.DatasetType.Weight.Length == 0 || 
-                    analysisConfiguration.DatasetType.JKrep == null || analysisConfiguration.DatasetType.JKrep.Length == 0 ||
-                    analysisConfiguration.DatasetType.JKreverse == null)
+                    analysisConfiguration.DatasetType.JKrep == null || 
+                    analysisConfiguration.DatasetType.JKrep.Length == 0)
                 {
                     return false;
                 }
@@ -315,20 +292,15 @@ namespace LSAnalyzer.Services
 
         public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration)
         {
-            if (_engine == null)
-            {
-                return null;
-            }
-
             try
             {
                 DataFrame? variables = null;
                 if (analysisConfiguration.ModeKeep == true)
                 {
-                    variables = _engine.Evaluate("lsanalyzer_dat_BO$variables").AsDataFrame();
+                    variables = _engine!.Evaluate("lsanalyzer_dat_BO$variables").AsDataFrame();
                 } else
                 {
-                    variables = _engine.Evaluate("data.frame(variable = colnames(lsanalyzer_dat_raw_stored))").AsDataFrame();
+                    variables = _engine!.Evaluate("data.frame(variable = colnames(lsanalyzer_dat_raw_stored))").AsDataFrame();
                 }
 
                 List<Variable> variableList = new();
@@ -392,8 +364,8 @@ namespace LSAnalyzer.Services
                     if (analysis.AnalysisConfiguration.DatasetType.JKzone != null && analysis.AnalysisConfiguration.DatasetType.JKzone.Length != 0)
                     {
                         if (analysis.AnalysisConfiguration.DatasetType.Weight.Length == 0 ||
-                            analysis.AnalysisConfiguration.DatasetType.JKrep == null || analysis.AnalysisConfiguration.DatasetType.JKrep.Length == 0 ||
-                            analysis.AnalysisConfiguration.DatasetType.JKreverse == null)
+                            analysis.AnalysisConfiguration.DatasetType.JKrep == null || 
+                            analysis.AnalysisConfiguration.DatasetType.JKrep.Length == 0)
                         {
                             return null;
                         }
@@ -460,14 +432,9 @@ namespace LSAnalyzer.Services
 
         public List<Variable>? GetDatasetVariables(string filename)
         {
-            if (_engine == null)
-            {
-                return null;
-            }
-
             try
             {
-                _engine.Evaluate("lsanalyzer_some_file_raw <- foreign::read.spss('" + filename.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                _engine!.Evaluate("lsanalyzer_some_file_raw <- foreign::read.spss('" + filename.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
                 var variables = _engine.Evaluate("colnames(lsanalyzer_some_file_raw)").AsCharacter();
 
                 List<Variable> variableList = new();
@@ -482,6 +449,24 @@ namespace LSAnalyzer.Services
             catch
             {
                 return null;
+            }
+        }
+
+        public DataFrame? GetValueLabels(string variable)
+        {
+            try
+            {
+                _engine!.Evaluate("lsanalyzer_value_labels <- attr(lsanalyzer_dat_raw_stored[, '" + variable + "'], 'value.labels')");
+                if (!_engine.GetSymbol("lsanalyzer_value_labels").IsVector())
+                {
+                    return null;
+                }
+
+                _engine.Evaluate("lsanalyzer_value_labels_df <- data.frame(value = lsanalyzer_value_labels, label = names(lsanalyzer_value_labels))");
+                return _engine.GetSymbol("lsanalyzer_value_labels_df").AsDataFrame();
+            } catch 
+            { 
+                return null; 
             }
         }
     }

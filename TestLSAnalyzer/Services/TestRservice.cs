@@ -289,6 +289,26 @@ namespace TestLSAnalyzer.Services
             Assert.Single(variables.Where(var => var.Name == "repwgt3"));
         }
 
+        [Fact]
+        public void TestGetValueLabels()
+        {
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            var filename = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(filename));
+
+            var nonExistentVariableValueLabels = rservice.GetValueLabels("Maulmaus");
+            Assert.Null(nonExistentVariableValueLabels);
+
+            var nonExistentValueLabels = rservice.GetValueLabels("mi");
+            Assert.Null(nonExistentValueLabels);
+
+            var valueLabels = rservice.GetValueLabels("cat");
+            Assert.NotNull(valueLabels);
+            Assert.Equal(2, valueLabels.RowCount);
+            Assert.Equal("Kategorie B", valueLabels["label"].AsCharacter()[valueLabels["value"].AsInteger().ToList().IndexOf(2)]);
+        }
+
         public static string AssemblyDirectory
         {
             get

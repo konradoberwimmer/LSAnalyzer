@@ -175,6 +175,14 @@ namespace LSAnalyzer.ViewModels
             {
                 case AnalysisUnivar analysisUnivar:
                     result = _rservice.CalculateUnivar(analysisUnivar);
+                    foreach (var groupByVariable in analysisUnivar.GroupBy)
+                    {
+                        var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
+                        if (valueLabels != null)
+                        {
+                            analysisUnivar.ValueLabels.Add(groupByVariable.Name, valueLabels);
+                        }
+                    }
                     break;
                 default:
                     break;
