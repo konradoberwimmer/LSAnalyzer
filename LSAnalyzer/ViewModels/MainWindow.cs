@@ -103,6 +103,8 @@ namespace LSAnalyzer.ViewModels
                     },
                 }
             };
+
+            Analyses.First().DataView = new(Analyses.First().DataTable);
         }
 
         public MainWindow(Rservice rservice) 
@@ -187,11 +189,13 @@ namespace LSAnalyzer.ViewModels
                 default:
                     break;
             }
-            analysisPresentation.SetAnalysisResult(result != null ? result : new());
 
             if (result == null)
             {
                 WeakReferenceMessenger.Default.Send(new FailureWithAnalysisCalculationMessage(analysisPresentation.Analysis));
+            } else
+            {
+                analysisPresentation.SetAnalysisResult(result);
             }
 
             e.Result = result;

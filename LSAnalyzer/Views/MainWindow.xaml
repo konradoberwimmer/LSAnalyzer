@@ -17,6 +17,7 @@
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisConverter"/>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <converter:EmptyEnumerableToVisibilityCollapsed x:Key="EmptyEnumerableToVisibilityCollapsedConverter"/>
+        <converter:InverseBool x:Key="InverseBoolConverter"/>
         <converter:NullToBool x:Key="NullToBoolConverter"/>
         <converter:VariablesToString x:Key="VariablesToStringConverter"/>
         <DataTemplate DataType="{x:Type ViewModels:AnalysisPresentation}">
@@ -53,13 +54,28 @@
                             <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Analysis.Vars, Converter={StaticResource VariablesToStringConverter}}"/>
                             <TextBlock Grid.Row="3" Grid.Column="0" Text="Group by:" Visibility="{Binding Analysis.GroupBy, Converter={StaticResource EmptyEnumerableToVisibilityCollapsedConverter}}"/>
                             <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Analysis.GroupBy, Converter={StaticResource VariablesToStringConverter}}" Visibility="{Binding Analysis.GroupBy, Converter={StaticResource EmptyEnumerableToVisibilityCollapsedConverter}}"/>
-                            <Button x:Name="buttonDownloadXlsx" Grid.Column="2" Grid.Row="0" Grid.RowSpan="4" VerticalAlignment="Bottom" Height="22" ContentTemplate="{StaticResource Download}" Click="ButtonDownloadXlsx_Click" IsEnabled="{Binding DataTable, Converter={StaticResource NullToBoolConverter}}"/>
+                            <Button x:Name="buttonDownloadXlsx" Grid.Column="2" Grid.Row="0" Grid.RowSpan="4" VerticalAlignment="Bottom" Height="22" ContentTemplate="{StaticResource Download}" Click="ButtonDownloadXlsx_Click" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
                         </Grid>
                         <Grid>
-                            <DataGrid x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataTable}" AutoGeneratingColumn="DataGridResults_AutoGeneratingColumn" MaxHeight="450">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="auto"/>
+                            </Grid.ColumnDefinitions>
+                            <DataGrid Grid.Column="0" x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataView}" AutoGeneratingColumn="DataGridResults_AutoGeneratingColumn" MaxHeight="450">
 
                             </DataGrid>
-                            <fa:ImageAwesome Icon="SunOutline" Spin="True" VerticalAlignment="Top" Height="20" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                            <fa:ImageAwesome Grid.Column="0"  Icon="SunOutline" Spin="True" VerticalAlignment="Top" Height="20" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                            <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                <CheckBox Content="Show p values" IsChecked="{Binding ShowPValues}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
+                                <CheckBox IsChecked="{Binding ShowFMI}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
+                                    <CheckBox.Content>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Show FMI"/>
+                                            <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="FMI = fraction of missing information: Amount of variance in coefficient that comes from multiple imputation (or PVs) compared to replication."/>
+                                        </StackPanel>
+                                    </CheckBox.Content>
+                                </CheckBox>
+                            </StackPanel>
                         </Grid>
                     </StackPanel>
                 </Expander>

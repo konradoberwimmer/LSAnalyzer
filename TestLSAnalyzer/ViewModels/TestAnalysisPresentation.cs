@@ -1,4 +1,5 @@
-﻿using LSAnalyzer.Models;
+﻿using ClosedXML.Excel;
+using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using System;
@@ -124,6 +125,7 @@ namespace TestLSAnalyzer.ViewModels
                             { "x3", 4, -0.45, 0.64, 0.7, 0.011 },
                         }
             };
+            analysisPresentationViewModel.DataView = new(analysisPresentationViewModel.DataTable);
 
             var filename = Path.Combine(Path.GetTempPath(), "TestSaveDataTableXlsx.xlsx");
 
@@ -135,6 +137,61 @@ namespace TestLSAnalyzer.ViewModels
             analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(filename);
 
             Assert.True(File.Exists(filename));
+        }
+
+        [Fact]
+        public void TestSaveFullDataTableXlsx()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 0.5));
+
+            AnalysisUnivar analysisUnivar = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "x", false), new(1, "y", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = false,
+            };
+
+            analysisUnivar.ValueLabels.Add("cat", rservice.GetValueLabels("cat")!);
+            var result = rservice.CalculateUnivar(analysisUnivar);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            analysisPresentationViewModel.ShowPValues = true;
+            analysisPresentationViewModel.ShowFMI = true;
+
+            var filename = Path.Combine(Path.GetTempPath(), "TestSaveFullDataTableXlsx.xlsx");
+
+            if (File.Exists(filename))
+            {
+                File.Delete(filename);
+            }
+
+            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(filename);
+
+            Assert.True(File.Exists(filename));
+
+            using XLWorkbook wb = new(filename);
+
+            Assert.Equal(13, wb.Worksheets.First().ColumnsUsed().Count());
         }
 
         public static string AssemblyDirectory

@@ -41,6 +41,59 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private DataView _dataView;
+        public DataView DataView
+        {
+            get => _dataView;
+            set
+            {
+                _dataView = value;
+                NotifyPropertyChanged(nameof(DataView));
+            }
+        }
+
+        private bool _showPValues = false;
+        public bool ShowPValues
+        {
+            get => _showPValues;
+            set
+            {
+                _showPValues = value;
+                NotifyPropertyChanged(nameof(ShowPValues));
+
+                switch (Analysis)
+                {
+                    case AnalysisUnivar analysisUnivar:
+                        DataView = DataTableViewUnivar(DataTable);
+                        break;
+                    default:
+                        break;
+                }
+                NotifyPropertyChanged(nameof(DataView));
+            }
+        }
+
+        private bool _showFMI = false;
+        public bool ShowFMI
+        {
+            get => _showFMI;
+            set
+            {
+                _showFMI = value;
+                NotifyPropertyChanged(nameof(ShowFMI));
+
+                switch (Analysis)
+                {
+                    case AnalysisUnivar analysisUnivar:
+                        DataView = DataTableViewUnivar(DataTable);
+                        break;
+                    default:
+                        break;
+                }
+                NotifyPropertyChanged(nameof(DataView));
+            }
+        }
+
         private bool _busy = false;
         public bool IsBusy
         {
@@ -62,6 +115,7 @@ namespace LSAnalyzer.ViewModels
         {
             Analysis = analysis;
             DataTable = new();
+            DataView = new(DataTable);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -84,11 +138,12 @@ namespace LSAnalyzer.ViewModels
             {
                 case AnalysisUnivar analysisUnivar:
                     DataTable = CreateDataTableFromResultUnivar(analysisUnivar);
+                    DataView = DataTableViewUnivar(DataTable);
                     break;
                 default:
                     break;
             }
-            NotifyPropertyChanged(nameof(DataTable));
+            NotifyPropertyChanged(nameof(DataView));
 
             IsBusy = false;
         }
@@ -118,8 +173,12 @@ namespace LSAnalyzer.ViewModels
             columns.Add("Nweight", new DataColumn("N - weighted", typeof(double)));
             columns.Add("M", new DataColumn("mean", typeof(double)));
             columns.Add("M_SE", new DataColumn("mean - standard error", typeof(double)));
+            columns.Add("M_p", new DataColumn("mean - p value", typeof(double)));
+            columns.Add("M_fmi", new DataColumn("mean - FMI", typeof(double)));
             columns.Add("SD", new DataColumn("standard deviation", typeof(double)));
             columns.Add("SD_SE", new DataColumn("standard deviation - standard error", typeof(double)));
+            columns.Add("SD_p", new DataColumn("standard deviation - p value", typeof(double)));
+            columns.Add("SD_fmi", new DataColumn("standard deviation - FMI", typeof(double)));
 
             foreach (var column in columns.Values)
             {
@@ -189,6 +248,18 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
+        private DataView DataTableViewUnivar(DataTable table)
+        {
+            DataView dataView = new(table.Copy());
+
+            if (!ShowPValues) dataView.Table!.Columns.Remove("mean - p value");
+            if (!ShowFMI) dataView.Table!.Columns.Remove("mean - FMI");
+            if (!ShowPValues) dataView.Table!.Columns.Remove("standard deviation - p value");
+            if (!ShowFMI) dataView.Table!.Columns.Remove("standard deviation - FMI");
+
+            return dataView;
+        }
+
         private RelayCommand<string?> _saveDataTableXlsxCommand;
         public ICommand SaveDataTableXlsxCommand
         {
@@ -209,7 +280,7 @@ namespace LSAnalyzer.ViewModels
 
             using XLWorkbook wb = new();
 
-            var worksheet = wb.AddWorksheet(DataTable);
+            var worksheet = wb.AddWorksheet(DataView.Table);
 
             if (File.Exists(filename))
             {
