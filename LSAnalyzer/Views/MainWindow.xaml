@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:fa="http://schemas.fontawesome.io/icons/"
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:LSAnalyzer"
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels"
         x:Class="LSAnalyzer.Views.MainWindow"
@@ -61,11 +62,29 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="auto"/>
                             </Grid.ColumnDefinitions>
-                            <DataGrid Grid.Column="0" x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataView}" AutoGeneratingColumn="DataGridResults_AutoGeneratingColumn" MaxHeight="450">
+                            <DataGrid Grid.Column="0" x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataView}" AutoGeneratingColumn="DataGridResults_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top">
 
                             </DataGrid>
                             <fa:ImageAwesome Grid.Column="0"  Icon="SunOutline" Spin="True" VerticalAlignment="Top" Height="20" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
                             <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                <StackPanel>
+                                    <StackPanel.Visibility>
+                                        <Binding Path="HasTableAverage" Converter="{StaticResource BoolToVisibilityConverter}">
+                                            <Binding.ConverterParameter>
+                                                <sys:Boolean>true</sys:Boolean>
+                                            </Binding.ConverterParameter>
+                                        </Binding>
+                                    </StackPanel.Visibility>
+                                    <CheckBox IsChecked="{Binding UseTableAverage}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
+                                        <CheckBox.Content>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Calculate table average"/>
+                                                <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="Table average used by OECD/IEA for reporting of international average (mean of means)"/>
+                                            </StackPanel>
+                                        </CheckBox.Content>
+                                    </CheckBox>
+                                    <Separator/>
+                                </StackPanel>
                                 <CheckBox Content="Show p values" IsChecked="{Binding ShowPValues}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
                                 <CheckBox IsChecked="{Binding ShowFMI}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
                                     <CheckBox.Content>

@@ -101,6 +101,7 @@ namespace LSAnalyzer.ViewModels
                             { "x3", 4, -0.45, 0.64, 0.7, 0.011 },
                         }
                     },
+                    HasTableAverage = true,
                 }
             };
 

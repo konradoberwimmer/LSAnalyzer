@@ -4,6 +4,7 @@ using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -99,6 +100,50 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat"));
         }
 
+        [Fact]
+        public void TestSetAnalysisResultWithTableAverage()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 0.5));
+
+            AnalysisUnivar analysisUnivar = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "x", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = true,
+            };
+
+            var result = rservice.CalculateUnivar(analysisUnivar);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(4, analysisPresentationViewModel.DataTable.Rows.Count);
+            Assert.True(analysisPresentationViewModel.HasTableAverage);
+            Assert.True(Math.Abs(analysisPresentationViewModel.DataTable.AsEnumerable().Where(row => row.Field<string>("variable") == "- TABLE AVERAGE:").Select(row => row.Field<double>("mean")).First() - 44.8519190) < 0.0001);
+            Assert.True(Math.Abs(analysisPresentationViewModel.DataTable.AsEnumerable().Where(row => row.Field<string>("variable") == "- TABLE AVERAGE:").Select(row => row.Field<double>("mean - standard error")).First()- 9.9634143) < 0.0001);
+
+            analysisPresentationViewModel.UseTableAverage = false;
+            Assert.Equal(3, analysisPresentationViewModel.DataView.Count);
+        }
 
         [Fact]
         public void TestSaveDataTableXlsx()

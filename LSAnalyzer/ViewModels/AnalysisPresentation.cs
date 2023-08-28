@@ -52,6 +52,38 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _hasTableAverage = false;
+        public bool HasTableAverage
+        {
+            get => _hasTableAverage;
+            set
+            {
+                _hasTableAverage = value;
+                NotifyPropertyChanged(nameof(HasTableAverage));
+            }
+        }
+
+        private bool _useTableAverage = true;
+        public bool UseTableAverage
+        {
+            get => _useTableAverage;
+            set
+            {
+                _useTableAverage = value;
+                NotifyPropertyChanged(nameof(UseTableAverage));
+
+                switch (Analysis)
+                {
+                    case AnalysisUnivar analysisUnivar:
+                        DataView = DataTableViewUnivar(DataTable);
+                        break;
+                    default:
+                        break;
+                }
+                NotifyPropertyChanged(nameof(DataView));
+            }
+        }
+
         private bool _showPValues = false;
         public bool ShowPValues
         {
@@ -242,6 +274,25 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
+            if (Analysis.Vars.Count == 1 && Analysis.GroupBy.Count == 1)
+            {
+                var relevantRows = table.AsEnumerable().Where(row => row.Field<double?>(Analysis.GroupBy.First().Name) != null);
+                var values = relevantRows.Select(row => row.Field<double>("mean")).ToList();
+                var valuesSE = relevantRows.Select(row => row.Field<double>("mean - standard error")).ToList();
+                var rowCount = relevantRows.ToList().Count;
+
+                double average = values.Sum() / rowCount;
+                double averageSE = Math.Sqrt(valuesSE.ConvertAll(se => Math.Pow(se, 2.0)).Sum() / Math.Pow(rowCount, 2.0));
+
+                var newRow = table.NewRow();
+                newRow["variable"] = "- TABLE AVERAGE:";
+                newRow["mean"] = average;
+                newRow["mean - standard error"] = averageSE;
+                table.Rows.Add(newRow);
+
+                HasTableAverage = true;
+            }
+
             string[] sortBy = { "variable" };
             table.DefaultView.Sort = String.Join(", ", sortBy.Concat(analysisUnivar.GroupBy.ConvertAll(var => var.Name)).ToArray());
 
@@ -252,6 +303,10 @@ namespace LSAnalyzer.ViewModels
         {
             DataView dataView = new(table.Copy());
 
+            if (HasTableAverage && !UseTableAverage)
+            {
+                dataView.Table!.Rows.RemoveAt(dataView.Table!.Rows.Count - 1);
+            }
             if (!ShowPValues) dataView.Table!.Columns.Remove("mean - p value");
             if (!ShowFMI) dataView.Table!.Columns.Remove("mean - FMI");
             if (!ShowPValues) dataView.Table!.Columns.Remove("standard deviation - p value");

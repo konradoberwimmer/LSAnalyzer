@@ -20,7 +20,14 @@ namespace LSAnalyzer.ViewModels.ValueConverter
             }
             else
             {
-                return Visibility.Hidden;
+                if (parameter is bool boolParameter && boolParameter)
+                {
+                    return Visibility.Collapsed;
+                }
+                else
+                {
+                    return Visibility.Hidden;
+                }
             }
         }
 
