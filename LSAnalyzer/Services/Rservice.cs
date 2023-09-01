@@ -335,7 +335,7 @@ namespace LSAnalyzer.Services
             }
         }
         
-        public List<GenericVector>? CalculateUnivar(Analysis analysis)
+        public List<GenericVector>? CalculateUnivar(AnalysisUnivar analysis)
         {
             try
             {

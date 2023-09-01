@@ -179,7 +179,7 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private RelayCommand<ICloseable?> _sendAnalysisRequestCommand;
+        private RelayCommand<IRequestingAnalysis?> _sendAnalysisRequestCommand;
         public ICommand SendAnalysisRequestCommand
         {
             get
@@ -190,23 +190,30 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private void SendAnalysisRequest(ICloseable? window)
+        private void SendAnalysisRequest(IRequestingAnalysis? window)
         {
-            if (AnalysisConfiguration == null || AnalysisVariables.Count == 0)
+            if (AnalysisConfiguration == null || AnalysisVariables.Count == 0 || window == null)
             {
                 return;
             }
 
-            AnalysisUnivar analysis = new(new(AnalysisConfiguration))
+            Analysis analysis = (Analysis)Activator.CreateInstance(window.GetAnalysisType(), new object[] { new AnalysisConfiguration(AnalysisConfiguration) })!;
+            switch (analysis)
             {
-                Vars = new(AnalysisVariables),
-                GroupBy = new(GrouyByVariables),
-                CalculateOverall = this.CalculateOverall,
-            };
+                case AnalysisUnivar analysisUnivar:
+                    analysisUnivar.Vars = new(AnalysisVariables);
+                    analysisUnivar.GroupBy = new(GrouyByVariables);
+                    analysisUnivar.CalculateOverall = this.CalculateOverall;
+                    WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisUnivar));
+                    break;
+            }
+            
+            if (analysis == null)
+            {
+                return;
+            }
 
-            WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysis));
-
-            window?.Close();
+            window.Close();
         }
     }
 

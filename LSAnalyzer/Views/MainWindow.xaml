@@ -103,20 +103,21 @@
     </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_Config">
-                <MenuItem x:Name="menuItemDatasetTypes" Header="_Dataset-Types ..." Click="MenuItemDatasetTypes_Click" />
-            </MenuItem>
             <MenuItem Header="_Analysis">
-                <MenuItem x:Name="menuItemAnalysisSelectFile" Header="_Select File ..." Click="MenuItemAnalysisSelectFile_Click"/>
+                <MenuItem x:Name="menuItemAnalysisSelectFile" Header="Select _File ..." Click="MenuItemAnalysisSelectFile_Click"/>
+                <MenuItem x:Name="menuItemAnalysisSubsetting" Header="_Subsetting ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <Separator/>
                 <MenuItem x:Name="menuItemAnalysisUnivar" Header="_Univariate ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisUnivar_Click"/>
-                <MenuItem x:Name="menuItemAnalysisMeanDiff" Header="_Difference in mean ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+                <MenuItem x:Name="menuItemAnalysisMeanDiff" Header="_Difference in mean ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisMeanDiff_Click"/>
                 <MenuItem x:Name="menuItemAnalysisFrequencies" Header="_Frequencies ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisPercentiles" Header="_Percentiles ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisCorrelations" Header="_Correlations ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisRegression" Header="Linear _Regression ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisLogistReg" Header="_Logistic Regression ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisMultilevel" Header="_Multilevel Regression ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+            </MenuItem>
+            <MenuItem Header="_Config">
+                <MenuItem x:Name="menuItemDatasetTypes" Header="_Dataset-Types ..." Click="MenuItemDatasetTypes_Click" />
             </MenuItem>
         </Menu>
         <StatusBar DockPanel.Dock="Bottom">

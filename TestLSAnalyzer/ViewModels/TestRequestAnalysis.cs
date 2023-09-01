@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
@@ -130,7 +131,7 @@ namespace TestLSAnalyzer.ViewModels
                 requestedAnalysis = m.Value as Analysis;
             });
 
-            requestAnalysisViewModel.SendAnalysisRequestCommand.Execute(null);
+            requestAnalysisViewModel.SendAnalysisRequestCommand.Execute(new MockRequestingAnalysisUnivar());
 
             Assert.True(messageSent);
             Assert.NotNull(requestedAnalysis);
@@ -141,5 +142,16 @@ namespace TestLSAnalyzer.ViewModels
         }
     }
 
+    internal class MockRequestingAnalysisUnivar : IRequestingAnalysis
+    {
+        public void Close()
+        {
+            
+        }
 
+        public Type GetAnalysisType()
+        {
+            return Type.GetType("LSAnalyzer.Models.AnalysisUnivar,LSAnalyzer")!;
+        }
+    }
 }

@@ -18,11 +18,11 @@ using System.Windows.Shapes;
 namespace LSAnalyzer.Views
 {
     /// <summary>
-    /// Interaktionslogik für RequestAnalysisUnivar.xaml
+    /// Interaktionslogik für RequestAnalysisMeanDiff.xaml
     /// </summary>
-    public partial class RequestAnalysisUnivar : Window, IRequestingAnalysis
+    public partial class RequestAnalysisMeanDiff : Window, IRequestingAnalysis
     {
-        public RequestAnalysisUnivar(RequestAnalysis requestAnalysisViewModel)
+        public RequestAnalysisMeanDiff(RequestAnalysis requestAnalysisViewModel)
         {
             InitializeComponent();
 
@@ -70,7 +70,7 @@ namespace LSAnalyzer.Views
 
         public Type GetAnalysisType()
         {
-            return Type.GetType("LSAnalyzer.Models.AnalysisUnivar")!;
+            return Type.GetType("LSAnalyzer.Models.AnalysisMeanDiff")!;
         }
     }
 }

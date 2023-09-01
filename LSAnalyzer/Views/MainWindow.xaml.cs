@@ -85,6 +85,22 @@ namespace LSAnalyzer.Views
             requestAnalysisUnivarView.ShowDialog();
         }
 
+        private void MenuItemAnalysisMeanDiff_Click(object sender, RoutedEventArgs e)
+        {
+            var mainWindowViewModel = DataContext as ViewModels.MainWindow;
+
+            if (mainWindowViewModel!.AnalysisConfiguration == null)
+            {
+                return;
+            }
+
+            RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
+            requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+
+            RequestAnalysisMeanDiff requestAnalysisMeanDiffView = new(requestAnalysisViewModel);
+            requestAnalysisMeanDiffView.ShowDialog();
+        }
+
         private void ButtonDownloadXlsx_Click (object sender, RoutedEventArgs e)
         {
             if (sender is not Button button || button.DataContext is not AnalysisPresentation analysisPresentationViewModel)

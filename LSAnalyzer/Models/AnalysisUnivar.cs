@@ -8,6 +8,7 @@ namespace LSAnalyzer.Models
 {
     public class AnalysisUnivar : Analysis
     {
+        public bool CalculateOverall { get; set; } = true;
 
         public AnalysisUnivar(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
         {
