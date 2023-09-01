@@ -12,36 +12,18 @@ using TestLSAnalyzer.Services;
 
 namespace TestLSAnalyzer.ViewModels
 {
-    [Collection("Sequential")]
     public class TestRequestAnalysis
     {
         [Fact]
         public void TestConstructorAndMoveVariablesBackAndForth()
         {
-            Rservice rservice = new();
-            Assert.True(rservice.Connect(), "R must also be available for tests");
-            Assert.True(rservice.CheckNecessaryRPackages(), "R packages are necessary for this test");
-
-            DatasetType datasetType = new()
-            {
-                Id = 999991,
-                Name = "Test with NMI 10 and NREP 5",
-                Weight = "wgt",
-                NMI = 10,
-                MIvar = "mi",
-                Nrep = 5,
-                RepWgts = "repwgt",
-                FayFac = 1,
-            };
-            var fileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
-            Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 1));
-
+            MockRserviceForTestRequestAnalysis rservice = new();
             RequestAnalysis requestAnalysisViewModel = new(rservice);
+
             requestAnalysisViewModel.AnalysisConfiguration = new()
             {
-                DatasetType = datasetType,
-                FileName = fileName,
+                DatasetType = new(),
+                FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
                 ModeKeep = true,
             };
 
@@ -90,26 +72,15 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestRequestAnalysisSendsMessage()
         {
-            Rservice rservice = new();
-            Assert.True(rservice.Connect(), "R must also be available for tests");
-            Assert.True(rservice.CheckNecessaryRPackages(), "R packages are necessary for this test");
+            MockRserviceForTestRequestAnalysis rservice = new();
+            RequestAnalysis requestAnalysisViewModel = new(rservice);
 
             DatasetType datasetType = new()
             {
-                Id = 999991,
-                Name = "Test with NMI 10 and NREP 5",
-                Weight = "wgt",
-                NMI = 10,
-                MIvar = "mi",
-                Nrep = 5,
-                RepWgts = "repwgt",
-                FayFac = 1,
+                Weight = "wgt"
             };
             var fileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
-            Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 1));
-
-            RequestAnalysis requestAnalysisViewModel = new(rservice);
+            
             requestAnalysisViewModel.AnalysisConfiguration = new()
             {
                 DatasetType = datasetType,
@@ -139,6 +110,27 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Empty(requestedAnalysis.GroupBy);
             Assert.Equal("wgt", requestedAnalysis.AnalysisConfiguration.DatasetType?.Weight);
             Assert.Equal(fileName, requestedAnalysis.AnalysisConfiguration.FileName);
+        }
+    }
+
+    internal class MockRserviceForTestRequestAnalysis : Rservice
+    {
+        public override List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration)
+        {
+            return new()
+            {
+                new(1, "mi", true),
+                new(2, "x", false),
+                new(3, "y", false),
+                new(4, "cat", false),
+                new(5, "wgt", true),
+                new(6, "repwgt1", true),
+                new(7, "repwgt2", true),
+                new(8, "repwgt3", true),
+                new(9, "repwgt4", true),
+                new(10, "repwgt5", true),
+                new(11, "one", false),
+            };
         }
     }
 

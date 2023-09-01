@@ -346,7 +346,7 @@ namespace LSAnalyzer.Services
             return true;
         }
 
-        public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration)
+        public virtual List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration)
         {
             try
             {
