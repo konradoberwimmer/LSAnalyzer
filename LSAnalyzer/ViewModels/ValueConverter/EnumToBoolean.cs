@@ -18,7 +18,7 @@ namespace LSAnalyzer.ViewModels.ValueConverter
             if (ParameterString == null)
                 return DependencyProperty.UnsetValue;
 
-            if (Enum.IsDefined(value.GetType(), value) == false)
+            if (Enum.IsDefined(value.GetType(), ParameterString) == false)
                 return DependencyProperty.UnsetValue;
 
             object paramvalue = Enum.Parse(value.GetType(), ParameterString);

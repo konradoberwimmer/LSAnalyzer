@@ -26,7 +26,7 @@ namespace LSAnalyzer.Models
             _analysisConfiguration = analysisConfiguration;
         }
 
-        public string ShortInfo
+        public virtual string ShortInfo
         {
             get => 
                 AnalysisName + 

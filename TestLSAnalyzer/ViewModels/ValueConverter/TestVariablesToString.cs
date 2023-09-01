@@ -26,5 +26,12 @@ namespace TestLSAnalyzer.ViewModels.ValueConverter
                 new object[] { new List<Variable>() { new(1, "x1", false), new(1, "x2", false) }, "x1, x2" },
                 new object[] { new List<Variable>() { new(1, "x1", false), new(1, "x2", false), new(1, "x3", false) }, "x1, x2, x3" },
             };
+
+        [Fact]
+        public void TestConvertWithImpissibleValue()
+        {
+            VariablesToString variablesToStringConverter = new();
+            Assert.Equal("", variablesToStringConverter.Convert(1, Type.GetType("string")!, "", CultureInfo.InvariantCulture));
+        }
     }
 }
