@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 
 namespace TestLSAnalyzer.ViewModels
 {
-    [Collection("Sequential")]
     public class TestConfigDatasetTypes
     {
         [Fact]
@@ -111,7 +110,7 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
-        public void TestImprtDatasetType()
+        public void TestImportDatasetType()
         {
             Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
             foreach (var aDatasetType in DatasetType.CreateDefaultDatasetTypes())
