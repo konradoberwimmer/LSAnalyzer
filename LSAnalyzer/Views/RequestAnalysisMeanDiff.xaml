@@ -77,7 +77,7 @@
                         <ListBox x:Name="listBoxVariablesGroupBy" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesGroupBy}" ItemsSource="{Binding GrouyByVariables}" DisplayMemberPath="Name" SelectionMode="Extended"/>
                     </Border>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                        <CheckBox x:Name="checkBoxCalculateSeparately" Content="Calculate separately" IsEnabled="{Binding GrouyByVariables.Count}"/>
+                        <CheckBox x:Name="checkBoxCalculateSeparately" Content="Calculate separately" IsChecked="{Binding CalculateSeparately}" IsEnabled="{Binding GrouyByVariables.Count}"/>
                         <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="When calculating separately, mean differences will be reported for each of the variables but not combined."/>
                     </StackPanel>
                 </Grid>

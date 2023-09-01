@@ -277,6 +277,94 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void TestCalculateMeanDiffAllGroups()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvars = "ASRREA",
+                    Nrep = 150,
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "ASRREA", false) },
+                GroupBy = new() { },
+                CalculateSeparately = false,
+            };
+
+            Assert.Null(rservice.CalculateMeanDiff(analysisMeanDiff));
+
+            analysisMeanDiff.GroupBy = new() { new(2, "ITSEX", false), new(3, "ASBG05C", false) };
+
+            var result = rservice.CalculateMeanDiff(analysisMeanDiff);
+            Assert.NotNull(result);
+            Assert.Single(result);
+            var firstResult = result.First();
+            var statEta = firstResult["stat.eta"].AsDataFrame();
+            Assert.True(Math.Abs((double)statEta["eta"][0] - 0.1770158) < 0.0001);
+            Assert.True(Math.Abs((double)statEta["eta_SE"][0] - 0.0211625) < 0.0001);
+            var statD= firstResult["stat.dstat"].AsDataFrame();
+            Assert.Equal(6, statD.RowCount);
+        }
+
+        [Fact]
+        public void TestCalculateMeanDiffSeparate()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvars = "ASRREA",
+                    Nrep = 150,
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "ASRREA", false) },
+                GroupBy = new() { new(2, "ITSEX", false), new(3, "ASBG05C", false) },
+                CalculateSeparately = true,
+            };
+
+            var result = rservice.CalculateMeanDiff(analysisMeanDiff);
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count);
+            var firstResult = result.First();
+            var statEta = firstResult["stat.eta"].AsDataFrame();
+            Assert.True(Math.Abs((double)statEta["eta"][0] - 0.04523357) < 0.0001);
+            Assert.True(Math.Abs((double)statEta["eta_SE"][0] - 0.0185994) < 0.0001);
+            var statD = firstResult["stat.dstat"].AsDataFrame();
+            Assert.Equal(1, statD.RowCount);
+        }
+
+        [Fact]
         public void TestGetDatasetVariables()
         {
             Rservice rservice = new();

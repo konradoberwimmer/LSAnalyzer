@@ -86,6 +86,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _calculateSeparately = true;
+        public bool CalculateSeparately
+        {
+            get => _calculateSeparately;
+            set
+            {
+                _calculateSeparately = value;
+                NotifyPropertyChanged(nameof(CalculateSeparately));
+            }
+        }
+
         [ExcludeFromCodeCoverage]
         public RequestAnalysis()
         {
@@ -205,6 +216,12 @@ namespace LSAnalyzer.ViewModels
                     analysisUnivar.GroupBy = new(GrouyByVariables);
                     analysisUnivar.CalculateOverall = this.CalculateOverall;
                     WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisUnivar));
+                    break;
+                case AnalysisMeanDiff analysisMeanDiff:
+                    analysisMeanDiff.Vars = new(AnalysisVariables);
+                    analysisMeanDiff.GroupBy = new(GrouyByVariables);
+                    analysisMeanDiff.CalculateSeparately = this.CalculateSeparately;
+                    WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisMeanDiff));
                     break;
             }
             

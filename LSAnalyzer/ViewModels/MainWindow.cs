@@ -187,6 +187,9 @@ namespace LSAnalyzer.ViewModels
                         }
                     }
                     break;
+                case AnalysisMeanDiff analysisMeanDiff:
+                    result = _rservice.CalculateMeanDiff(analysisMeanDiff);
+                    break;
                 default:
                     break;
             }
