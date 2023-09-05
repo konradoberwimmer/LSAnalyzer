@@ -104,8 +104,8 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_Analysis">
-                <MenuItem x:Name="menuItemAnalysisSelectFile" Header="Select _File ..." Click="MenuItemAnalysisSelectFile_Click"/>
-                <MenuItem x:Name="menuItemAnalysisSubsetting" Header="_Subsetting ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+                <MenuItem x:Name="menuItemAnalysisSelectFile" Header="_Select File ..." Click="MenuItemAnalysisSelectFile_Click"/>
+                <MenuItem x:Name="menuItemAnalysisSubsetting" Header="Su_bsetting ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <Separator/>
                 <MenuItem x:Name="menuItemAnalysisUnivar" Header="_Univariate ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisUnivar_Click"/>
                 <MenuItem x:Name="menuItemAnalysisMeanDiff" Header="_Difference in mean ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisMeanDiff_Click"/>

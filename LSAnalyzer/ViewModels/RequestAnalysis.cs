@@ -86,7 +86,7 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private bool _calculateSeparately = true;
+        private bool _calculateSeparately = false;
         public bool CalculateSeparately
         {
             get => _calculateSeparately;

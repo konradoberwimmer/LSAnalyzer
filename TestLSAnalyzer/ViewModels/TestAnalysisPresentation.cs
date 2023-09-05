@@ -16,7 +16,7 @@ namespace TestLSAnalyzer.ViewModels
     public class TestAnalysisPresentation
     {
         [Fact]
-        public void TestSetAnalysisResult()
+        public void TestSetAnalysisResultUnivar()
         {
             AnalysisConfiguration analysisConfiguration = new()
             {
@@ -60,7 +60,7 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
-        public void TestSetAnalysisResultWithOverallValues()
+        public void TestSetAnalysisResultUnivarWithOverallValues()
         {
             AnalysisConfiguration analysisConfiguration = new()
             {
@@ -101,7 +101,7 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
-        public void TestSetAnalysisResultWithTableAverage()
+        public void TestSetAnalysisResultUnivarWithTableAverage()
         {
             AnalysisConfiguration analysisConfiguration = new()
             {
@@ -143,6 +143,100 @@ namespace TestLSAnalyzer.ViewModels
 
             analysisPresentationViewModel.UseTableAverage = false;
             Assert.Equal(3, analysisPresentationViewModel.DataView.Count);
+        }
+
+        [Fact]
+        public void TestSetAnalysisResultMeanDiff()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvars = "ASRREA;ASRLIT",
+                    Nrep = 150,
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            
+            AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "ASRREA", false), new(2, "ASRLIT", false) },
+                GroupBy = new() { new(3, "ITSEX", false), new(3, "ASBG05C", false) },
+                CalculateSeparately = false,
+            };
+
+            analysisMeanDiff.ValueLabels.Add("ITSEX", rservice.GetValueLabels("ITSEX")!);
+            analysisMeanDiff.ValueLabels.Add("ASBG05C", rservice.GetValueLabels("ASBG05C")!);
+            var result = rservice.CalculateMeanDiff(analysisMeanDiff);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisMeanDiff);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(12, analysisPresentationViewModel.DataTable.Rows.Count);
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("group A - ITSEX"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("group B - ASBG05C (label)"));
+            Assert.Equal(8, analysisPresentationViewModel.DataTable.Select("[group A - ITSEX (label)] = 'Girl'").Length);
+            Assert.Equal(10, analysisPresentationViewModel.DataTable.Select("[group B - ASBG05C] = 2").Length);
+        }
+
+        [Fact]
+        public void TestSetAnalysisResultMeanDiffSeparately()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvars = "ASRREA;ASRLIT",
+                    Nrep = 150,
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "ASRREA", false), new(2, "ASRLIT", false) },
+                GroupBy = new() { new(3, "ITSEX", false), new(3, "ASBG05C", false) },
+                CalculateSeparately = true,
+            };
+
+            analysisMeanDiff.ValueLabels.Add("ITSEX", rservice.GetValueLabels("ITSEX")!);
+            analysisMeanDiff.ValueLabels.Add("ASBG05C", rservice.GetValueLabels("ASBG05C")!);
+            var result = rservice.CalculateMeanDiff(analysisMeanDiff);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisMeanDiff);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(4, analysisPresentationViewModel.DataTable.Rows.Count);
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("groups by"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("group A - value"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("group B - label"));
+            Assert.Equal(2, analysisPresentationViewModel.DataTable.Select("[groups by] = 'ITSEX'").Length);
+            Assert.Equal(4, analysisPresentationViewModel.DataTable.Select("[group B - value] = 2").Length);
         }
 
         [Fact]

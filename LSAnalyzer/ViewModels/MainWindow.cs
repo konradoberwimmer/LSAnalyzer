@@ -189,6 +189,14 @@ namespace LSAnalyzer.ViewModels
                     break;
                 case AnalysisMeanDiff analysisMeanDiff:
                     result = _rservice.CalculateMeanDiff(analysisMeanDiff);
+                    foreach (var groupByVariable in analysisMeanDiff.GroupBy)
+                    {
+                        var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
+                        if (valueLabels != null)
+                        {
+                            analysisMeanDiff.ValueLabels.Add(groupByVariable.Name, valueLabels);
+                        }
+                    }
                     break;
                 default:
                     break;

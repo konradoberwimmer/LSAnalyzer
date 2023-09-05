@@ -98,6 +98,9 @@ namespace LSAnalyzer.ViewModels
                     case AnalysisUnivar analysisUnivar:
                         DataView = DataTableViewUnivar(DataTable);
                         break;
+                    case AnalysisMeanDiff analysisMeanDiff:
+                        DataView = DataTableViewMeanDiff(DataTable);
+                        break;
                     default:
                         break;
                 }
@@ -118,6 +121,9 @@ namespace LSAnalyzer.ViewModels
                 {
                     case AnalysisUnivar analysisUnivar:
                         DataView = DataTableViewUnivar(DataTable);
+                        break;
+                    case AnalysisMeanDiff analysisMeanDiff:
+                        DataView = DataTableViewMeanDiff(DataTable);
                         break;
                     default:
                         break;
@@ -171,6 +177,11 @@ namespace LSAnalyzer.ViewModels
                 case AnalysisUnivar analysisUnivar:
                     DataTable = CreateDataTableFromResultUnivar(analysisUnivar);
                     DataView = DataTableViewUnivar(DataTable);
+                    break;
+                case AnalysisMeanDiff analysisMeanDiff:
+                    DataTable = CreateDataTableFromResultMeanDiff(analysisMeanDiff);
+                    ShowPValues = true;
+                    DataView = DataTableViewMeanDiff(DataTable);
                     break;
                 default:
                     break;
@@ -299,6 +310,137 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
+        public DataTable CreateDataTableFromResultMeanDiff(AnalysisMeanDiff analysisMeanDiff)
+        {
+            if (analysisMeanDiff.Result == null || analysisMeanDiff.Result.Count == 0)
+            {
+                return new();
+            }
+
+            DataTable table = new(analysisMeanDiff.AnalysisName);
+            Dictionary<string, DataColumn> columns = new();
+
+            columns.Add("var", new DataColumn("variable", typeof(string)));
+
+            if (analysisMeanDiff.CalculateSeparately)
+            {
+                columns.Add("group", new DataColumn("groups by", typeof(string)));
+                columns.Add("groupval1", new DataColumn("group A - value", typeof(double)));
+                columns.Add("$label_groupval1_1", new DataColumn("group A - label", typeof(string)));
+                columns.Add("groupval2", new DataColumn("group B - value", typeof(double)));
+                columns.Add("$label_groupval2_1", new DataColumn("group B - label", typeof(string)));
+            }
+            else
+            {
+                for (int cntGroupyBy = 0; cntGroupyBy < analysisMeanDiff.GroupBy.Count; cntGroupyBy++)
+                {
+                    columns.Add("groupval1_" + (cntGroupyBy + 1), new DataColumn("group A - " + analysisMeanDiff.GroupBy[cntGroupyBy].Name, typeof(double)));
+                    if (analysisMeanDiff.ValueLabels.ContainsKey(analysisMeanDiff.GroupBy[cntGroupyBy].Name))
+                    {
+                        columns.Add("$label_groupval1_" + (cntGroupyBy + 1), new DataColumn("group A - " + analysisMeanDiff.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
+                    }
+                    columns.Add("groupval2_" + (cntGroupyBy + 1), new DataColumn("group B - " + analysisMeanDiff.GroupBy[cntGroupyBy].Name, typeof(double)));
+                    if (analysisMeanDiff.ValueLabels.ContainsKey(analysisMeanDiff.GroupBy[cntGroupyBy].Name))
+                    {
+                        columns.Add("$label_groupval2_" + (cntGroupyBy + 1), new DataColumn("group B - " + analysisMeanDiff.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
+                    }
+                }
+            }
+
+            columns.Add("M1", new DataColumn("mean - group A", typeof(double)));
+            columns.Add("M2", new DataColumn("mean - group B", typeof(double)));
+            columns.Add("SD", new DataColumn("standard deviation (pooled)", typeof(double)));
+            columns.Add("d", new DataColumn("Cohens d", typeof(double)));
+            columns.Add("d_SE", new DataColumn("Cohens d - standard error", typeof(double)));
+            columns.Add("d_p", new DataColumn("Cohens d - p value", typeof(double)));
+            columns.Add("d_fmi", new DataColumn("Cohens d - FMI", typeof(double)));
+
+            foreach (var column in columns.Values)
+            {
+                table.Columns.Add(column);
+            }
+
+            foreach (var result in Analysis.Result)
+            {
+                var dataFrame = result["stat.dstat"].AsDataFrame();
+
+                foreach (var dataFrameRow in dataFrame.GetRows())
+                {
+                    DataRow tableRow = table.NewRow();
+
+                    List<object?> cellValues = new();
+                    foreach (var column in columns.Keys)
+                    {
+                        if (Regex.IsMatch(column, "^groupval(1|2)_"))
+                        {
+                            var groupPosition = Convert.ToInt32(Regex.Replace(column, "groupval(1|2)_", ""));
+                            var groupValVariable = column.Substring(0, 9);
+
+                            var groupVals = (string)dataFrameRow[groupValVariable];
+                            var groupValsSplit = groupVals.Split('#');
+
+                            cellValues.Add(groupValsSplit[groupPosition - 1]);
+                        }
+                        else if (Regex.IsMatch(column, "^\\$label_groupval(1|2)_"))
+                        {
+                            var groupPosition = Convert.ToInt32(Regex.Replace(column, "\\$label_groupval(1|2)_", ""));
+                            var groupVars = (string)dataFrameRow["group"];
+                            var groupVarsSplit = groupVars.Split("#");
+                            var groupVar = groupVarsSplit[groupPosition - 1];
+                            
+                            if (analysisMeanDiff.ValueLabels.ContainsKey(groupVar))
+                            {
+                                var groupvalColumn = Regex.Replace(Regex.Replace(column, "\\$label_", ""), "_[0-9]+$", "");
+
+                                double groupVal;
+                                if (dataFrameRow[groupvalColumn] is double)
+                                {
+                                    groupVal = (double)dataFrameRow[groupvalColumn];
+                                }
+                                else
+                                {
+                                    var groupVals = (string)dataFrameRow[groupvalColumn];
+                                    var groupValsSplit = groupVals.Split('#');
+                                    groupVal = Convert.ToDouble(groupValsSplit[groupPosition - 1]);
+                                }
+
+                                var valueLabels = analysisMeanDiff.ValueLabels[groupVar];
+                                var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf(groupVal);
+
+                                if (posValueLabel != -1)
+                                {
+                                    var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
+                                    cellValues.Add(valueLabel);
+                                }
+                                else
+                                {
+                                    cellValues.Add(null);
+                                }
+                            } else
+                            {
+                                cellValues.Add(null);
+                            }
+                        }
+                        else if (dataFrame.ColumnNames.Contains(column))
+                        {
+                            cellValues.Add(dataFrameRow[column]);
+                        }
+                        else
+                        {
+                            cellValues.Add(null);
+                        }
+                    }
+
+                    tableRow.ItemArray = cellValues.ToArray();
+                    table.Rows.Add(tableRow);
+                }
+            }
+
+            table.DefaultView.Sort = "variable";
+
+            return table;
+        }
+
         private DataView DataTableViewUnivar(DataTable table)
         {
             DataView dataView = new(table.Copy());
@@ -311,6 +453,16 @@ namespace LSAnalyzer.ViewModels
             if (!ShowFMI) dataView.Table!.Columns.Remove("mean - FMI");
             if (!ShowPValues) dataView.Table!.Columns.Remove("standard deviation - p value");
             if (!ShowFMI) dataView.Table!.Columns.Remove("standard deviation - FMI");
+
+            return dataView;
+        }
+
+        private DataView DataTableViewMeanDiff(DataTable table)
+        {
+            DataView dataView = new(table.Copy());
+
+            if (!ShowPValues) dataView.Table!.Columns.Remove("Cohens d - p value");
+            if (!ShowFMI) dataView.Table!.Columns.Remove("Cohens d - FMI");
 
             return dataView;
         }
