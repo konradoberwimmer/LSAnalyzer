@@ -132,6 +132,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private DataTable? _tableEta;
+        public DataTable? TableEta
+        {
+            get => _tableEta;
+            set
+            {
+                _tableEta = value;
+                NotifyPropertyChanged(nameof(TableEta));
+            }
+        }
+
         private bool _busy = false;
         public bool IsBusy
         {
@@ -180,6 +191,7 @@ namespace LSAnalyzer.ViewModels
                     break;
                 case AnalysisMeanDiff analysisMeanDiff:
                     DataTable = CreateDataTableFromResultMeanDiff(analysisMeanDiff);
+                    TableEta = CreateTableEtaFromResultMeanDiff(analysisMeanDiff);
                     ShowPValues = true;
                     DataView = DataTableViewMeanDiff(DataTable);
                     break;
@@ -376,10 +388,19 @@ namespace LSAnalyzer.ViewModels
                             var groupPosition = Convert.ToInt32(Regex.Replace(column, "groupval(1|2)_", ""));
                             var groupValVariable = column.Substring(0, 9);
 
-                            var groupVals = (string)dataFrameRow[groupValVariable];
-                            var groupValsSplit = groupVals.Split('#');
+                            double groupVal;
+                            if (dataFrameRow[groupValVariable] is double)
+                            {
+                                groupVal = (double)dataFrameRow[groupValVariable];
+                            }
+                            else
+                            {
+                                var groupVals = (string)dataFrameRow[groupValVariable];
+                                var groupValsSplit = groupVals.Split('#');
+                                groupVal = Convert.ToDouble(groupValsSplit[groupPosition - 1]);
+                            }
 
-                            cellValues.Add(groupValsSplit[groupPosition - 1]);
+                            cellValues.Add(groupVal);
                         }
                         else if (Regex.IsMatch(column, "^\\$label_groupval(1|2)_"))
                         {
@@ -436,7 +457,61 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            table.DefaultView.Sort = "variable";
+            return table;
+        }
+
+        public DataTable CreateTableEtaFromResultMeanDiff(AnalysisMeanDiff analysisMeanDiff)
+        {
+            if (analysisMeanDiff.Result == null || analysisMeanDiff.Result.Count == 0)
+            {
+                return new();
+            }
+
+            DataTable table = new(analysisMeanDiff.AnalysisName + " - eta");
+            Dictionary<string, DataColumn> columns = new();
+
+            columns.Add("var", new DataColumn("variable", typeof(string)));
+
+            if (analysisMeanDiff.CalculateSeparately)
+            {
+                columns.Add("group", new DataColumn("groups by", typeof(string)));
+            }
+
+            columns.Add("eta2", new DataColumn("eta²", typeof(double)));
+            columns.Add("eta", new DataColumn("eta", typeof(double)));
+            columns.Add("eta_SE", new DataColumn("eta - standard error", typeof(double)));
+            columns.Add("fmi", new DataColumn("eta - FMI", typeof(double)));
+
+            foreach (var column in columns.Values)
+            {
+                table.Columns.Add(column);
+            }
+
+            foreach (var result in Analysis.Result)
+            {
+                var dataFrame = result["stat.eta"].AsDataFrame();
+
+                foreach (var dataFrameRow in dataFrame.GetRows())
+                {
+                    DataRow tableRow = table.NewRow();
+
+                    List<object?> cellValues = new();
+                    foreach (var column in columns.Keys)
+                    {
+                        if (dataFrame.ColumnNames.Contains(column))
+                        {
+                            cellValues.Add(dataFrameRow[column]);
+                        }
+                        else
+                        {
+                            cellValues.Add(null);
+                        }
+                    }
+
+                    tableRow.ItemArray = cellValues.ToArray();
+                    table.Rows.Add(tableRow);
+                }
+            }
 
             return table;
         }
@@ -488,6 +563,11 @@ namespace LSAnalyzer.ViewModels
             using XLWorkbook wb = new();
 
             var worksheet = wb.AddWorksheet(DataView.Table);
+
+            if (TableEta != null)
+            {
+                wb.AddWorksheet(TableEta);
+            }
 
             if (File.Exists(filename))
             {

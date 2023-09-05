@@ -190,6 +190,11 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("group B - ASBG05C (label)"));
             Assert.Equal(8, analysisPresentationViewModel.DataTable.Select("[group A - ITSEX (label)] = 'Girl'").Length);
             Assert.Equal(10, analysisPresentationViewModel.DataTable.Select("[group B - ASBG05C] = 2").Length);
+
+            Assert.NotNull(analysisPresentationViewModel.TableEta);
+            Assert.Equal(2, analysisPresentationViewModel.TableEta.Rows.Count);
+            Assert.False(analysisPresentationViewModel.TableEta.Columns.Contains("groups by"));
+            Assert.True(Math.Abs(analysisPresentationViewModel.TableEta.AsEnumerable().Where(row => row.Field<string>("variable") == "ASRREA").Select(row => row.Field<double>("eta")).First() - 0.1770158) < 0.0001);
         }
 
         [Fact]
@@ -237,6 +242,13 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("group B - label"));
             Assert.Equal(2, analysisPresentationViewModel.DataTable.Select("[groups by] = 'ITSEX'").Length);
             Assert.Equal(4, analysisPresentationViewModel.DataTable.Select("[group B - value] = 2").Length);
+
+
+            Assert.NotNull(analysisPresentationViewModel.TableEta);
+            Assert.Equal(4, analysisPresentationViewModel.TableEta.Rows.Count);
+            Assert.True(analysisPresentationViewModel.TableEta.Columns.Contains("groups by"));
+            Assert.Equal(2, analysisPresentationViewModel.TableEta.Select("[groups by] = 'ITSEX'").Length);
+            Assert.True(Math.Abs(analysisPresentationViewModel.TableEta.AsEnumerable().Where(row => row.Field<string>("variable") == "ASRLIT" && row.Field<string>("groups by") == "ITSEX").Select(row => row.Field<double>("eta - standard error")).First() - 0.01758326) < 0.0001);
         }
 
         [Fact]

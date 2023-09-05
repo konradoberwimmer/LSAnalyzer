@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using DocumentFormat.OpenXml.Spreadsheet;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
@@ -95,13 +96,18 @@ namespace LSAnalyzer.ViewModels
                             { "x2", 2, 11.3, 0.13, 1.02, 0.064 },
                             { "x2", 3, 9.8, 0.22, 2.01, 0.044 },
                             { "x2", 4, 12.1, 0.21, 2.01, 0.031 },
-                            { "x3", 1, -2.28, 0.23, 0.5, 0.012 },
-                            { "x3", 2, 3.12, 0.73, 0.3, 0.031 },
-                            { "x3", 3, 1.02, 0.32, 0.3, 0.021 },
-                            { "x3", 4, -0.45, 0.64, 0.7, 0.011 },
                         }
                     },
                     HasTableAverage = true,
+                    TableEta = new()
+                    {
+                        Columns = { { "var", typeof(string) }, { "eta2" , typeof(double) }, { "eta", typeof(double) }, { "eta__se", typeof(double) } },
+                        Rows =
+                        {
+                            { "x", 0.25, 0.50, 0.02 },
+                            { "y", 0.16, 0.40, 0.15 },
+                        },
+                    },
                 }
             };
 

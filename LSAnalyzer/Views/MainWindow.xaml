@@ -20,6 +20,7 @@
         <converter:EmptyEnumerableToVisibilityCollapsed x:Key="EmptyEnumerableToVisibilityCollapsedConverter"/>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
         <converter:NullToBool x:Key="NullToBoolConverter"/>
+        <converter:NullToVisibilityCollapsed x:Key="NullToVisibilityCollapsedConverter"/>
         <converter:VariablesToString x:Key="VariablesToStringConverter"/>
         <DataTemplate DataType="{x:Type ViewModels:AnalysisPresentation}">
             <Border BorderBrush="Gray" BorderThickness="0,0,0,0.5">
@@ -62,10 +63,19 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="auto"/>
                             </Grid.ColumnDefinitions>
-                            <DataGrid Grid.Column="0" x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataView}" AutoGeneratingColumn="DataGridResults_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top">
+                            <Grid Grid.Column="0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <DataGrid Grid.Row="0" x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataView}" AutoGeneratingColumn="DataGridResults_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top">
 
-                            </DataGrid>
-                            <fa:ImageAwesome Grid.Column="0"  Icon="SunOutline" Spin="True" VerticalAlignment="Top" Height="20" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                </DataGrid>
+                                <fa:ImageAwesome Grid.Row="0" Icon="SunOutline" Spin="True" VerticalAlignment="Top" Height="20" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                <DataGrid Grid.Row="1" Margin="0,10,0,0" x:Name="dataGridEta" IsReadOnly="True" ItemsSource="{Binding TableEta}" AutoGeneratingColumn="DataGridResults_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top" Visibility="{Binding TableEta, Converter={StaticResource NullToVisibilityCollapsedConverter}}">
+
+                                </DataGrid>
+                            </Grid>
                             <StackPanel Grid.Column="1" Margin="10,0,0,0">
                                 <StackPanel>
                                     <StackPanel.Visibility>
