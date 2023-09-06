@@ -35,6 +35,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private string? _subsettingExpression;
+        public string? SubsettingExpression
+        {
+            get => _subsettingExpression;
+            set
+            {
+                _subsettingExpression = value;
+                NotifyPropertyChanged(nameof(SubsettingExpression));
+            }
+        }
+
         private ObservableCollection<AnalysisPresentation> _analyses = new();
         public ObservableCollection<AnalysisPresentation> Analyses
         {
@@ -121,6 +132,11 @@ namespace LSAnalyzer.ViewModels
             WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (r, m) =>
             {
                 AnalysisConfiguration = m.Value;
+            });
+
+            WeakReferenceMessenger.Default.Register<SetSubsettingExpressionMessage>(this, (r, m) =>
+            {
+                SubsettingExpression = string.IsNullOrWhiteSpace(m.Value) ? null : m.Value;
             });
 
             WeakReferenceMessenger.Default.Register<RequestAnalysisMessage>(this, (r, m) =>

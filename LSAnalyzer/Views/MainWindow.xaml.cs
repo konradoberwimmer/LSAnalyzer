@@ -69,6 +69,26 @@ namespace LSAnalyzer.Views
             selectAnalysisFileView.ShowDialog();
         }
 
+        private void MenuItemAnalysisSubsetting_Click(object sender, RoutedEventArgs e)
+        {
+            var mainWindowViewModel = DataContext as ViewModels.MainWindow;
+
+            if (mainWindowViewModel!.AnalysisConfiguration == null)
+            {
+                return;
+            }
+
+            ViewModels.Subsetting subsettingViewModel = _serviceProvider.GetRequiredService<ViewModels.Subsetting>();
+            subsettingViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            if (mainWindowViewModel.SubsettingExpression != null)
+            {
+                subsettingViewModel.SetCurrentSubsetting(mainWindowViewModel.SubsettingExpression);
+            }
+
+            Subsetting subsettingView = new(subsettingViewModel);
+            subsettingView.ShowDialog();
+        }
+
         private void MenuItemAnalysisUnivar_Click (object sender, RoutedEventArgs e)
         {
             var mainWindowViewModel = DataContext as ViewModels.MainWindow;

@@ -37,6 +37,7 @@ namespace LSAnalyzer
             });
             services.AddTransient<ConfigDatasetTypes>();
             services.AddTransient<SelectAnalysisFile>();
+            services.AddTransient<Subsetting>();
             services.AddTransient<RequestAnalysis>();
             services.AddTransient<MainWindow>();
             services.AddTransient<Views.ConfigDatasetTypes>();
