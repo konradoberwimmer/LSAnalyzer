@@ -44,7 +44,7 @@
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Content="Variables in dataset:" Margin="10,0,0,0"/>
             <Border x:Name="HeightHelperPanelVariablesDataset" Grid.Column="0" Margin="10,27,10,22">
-                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDataset}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Name" SelectionMode="Extended"/>
+                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDataset}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Name" SelectionMode="Single" MouseDoubleClick="ListBoxVariablesDataset_MouseDoubleClick"/>
             </Border>
             <CheckBox x:Name="checkBoxIncludeSystemVariables" Grid.Column="0" Margin="10,0,10,0" VerticalAlignment="Bottom" IsChecked="False" Content="Include system variables (weights, ...)" Checked="CheckBoxIncludeSystemVariables_Checked" Unchecked="CheckBoxIncludeSystemVariables_Checked"/>
             <Label Grid.Column="1" Content="Expression for selecting subset:"/>

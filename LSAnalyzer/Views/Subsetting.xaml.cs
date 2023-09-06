@@ -49,5 +49,15 @@ namespace LSAnalyzer.Views
                 availableVariablesCollectionView!.Filter += AvailableVariablesCollectionView_FilterSystemVariables;
             }
         }
+
+        private void ListBoxVariablesDataset_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (listBoxVariablesDataset.SelectedItems.Count == 1) 
+            {
+                textBoxSubsettingExpression.Text += (listBoxVariablesDataset.SelectedItem as Variable)!.Name;
+                textBoxSubsettingExpression.Focus();
+                textBoxSubsettingExpression.CaretIndex = textBoxSubsettingExpression.Text.Length;
+            }
+        }
     }
 }
