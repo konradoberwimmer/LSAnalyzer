@@ -52,6 +52,26 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void TestTestSubsetting()
+        {
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav")));
+
+            Assert.False(rservice.TestSubsetting("xyz == 2").ValidSubset);
+
+            var subsetInformationWithoutMI = rservice.TestSubsetting("cat == 2 & mi >= 5");
+            Assert.True(subsetInformationWithoutMI.ValidSubset);
+            Assert.Equal(100, subsetInformationWithoutMI.NCases);
+            Assert.Equal(30, subsetInformationWithoutMI.NSubset);
+
+            var subsetInformationWithMI = rservice.TestSubsetting("cat == 1", "mi");
+            Assert.True(subsetInformationWithMI.ValidSubset);
+            Assert.Equal(10, subsetInformationWithMI.NCases);
+            Assert.Equal(5, subsetInformationWithMI.NSubset);
+        }
+
+        [Fact]
         public void TestCreateReplicateWeights()
         {
             Rservice rservice = new();

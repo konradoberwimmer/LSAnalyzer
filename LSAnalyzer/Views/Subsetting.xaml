@@ -13,6 +13,7 @@
     </Window.DataContext>
     <Window.Resources>
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisModeConverter"/>
+        <converter:BoolToRedGreen x:Key="BoolToRedGreenConverter"/>
         <CollectionViewSource x:Key="AvailableVariablesCollectionView" Source="{Binding AvailableVariables}" Filter="AvailableVariablesCollectionView_FilterSystemVariables">
             <CollectionViewSource.SortDescriptions>
                 <componentmodel:SortDescription PropertyName="Position" Direction="Ascending"/>
@@ -48,11 +49,12 @@
             </Border>
             <CheckBox x:Name="checkBoxIncludeSystemVariables" Grid.Column="0" Margin="10,0,10,0" VerticalAlignment="Bottom" IsChecked="False" Content="Include system variables (weights, ...)" Checked="CheckBoxIncludeSystemVariables_Checked" Unchecked="CheckBoxIncludeSystemVariables_Checked"/>
             <Label Grid.Column="1" Content="Expression for selecting subset:"/>
-            <TextBox Grid.Column="1" Margin="0,27,10,0" x:Name="textBoxSubsettingExpression" Text="{Binding SubsetExpression}"/>
+            <TextBox Grid.Column="1" Margin="0,27,10,22" x:Name="textBoxSubsettingExpression" Text="{Binding SubsetExpression, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Grid.Column="1" VerticalAlignment="Bottom" Text="{Binding SubsettingInformation.Stringify}" Foreground="{Binding SubsettingInformation.ValidSubset, Converter={StaticResource BoolToRedGreenConverter}}"/>
         </Grid>
         <Button Grid.Row="2" Content="Clear" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,10" Width="80" Height="22" Command="{Binding ClearSubsettingCommand}" CommandParameter="{Binding ElementName=windowSubsetting}" IsEnabled="{Binding IsCurrentlySubsetting}"/>
         <StackPanel Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,10" Orientation="Horizontal">
-            <Button Content="Test" Width="80" Height="22" Margin="0,0,10,0" IsEnabled="{Binding ElementName=textBoxSubsettingExpression, Path=Text.Length}"/>
+            <Button Content="Test" Width="80" Height="22" Margin="0,0,10,0" Command="{Binding TestSubsettingCommand}" IsEnabled="{Binding ElementName=textBoxSubsettingExpression, Path=Text.Length}"/>
             <Button Content="OK" Width="80" Height="22" Command="{Binding UseSubsettingCommand}" CommandParameter="{Binding ElementName=windowSubsetting}" IsEnabled="{Binding ElementName=textBoxSubsettingExpression, Path=Text.Length}"/>
         </StackPanel>
     </Grid>

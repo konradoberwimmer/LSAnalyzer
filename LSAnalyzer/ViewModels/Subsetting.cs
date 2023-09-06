@@ -70,7 +70,19 @@ namespace LSAnalyzer.ViewModels
             set
             {
                 _subsetExpression = value;
+                SubsettingInformation = null;
                 NotifyPropertyChanged(nameof(SubsetExpression));
+            }
+        }
+
+        private SubsettingInformation? _subsettingInformation = null;
+        public SubsettingInformation? SubsettingInformation
+        {
+            get => _subsettingInformation;
+            set
+            {
+                _subsettingInformation = value;
+                NotifyPropertyChanged(nameof(SubsettingInformation));
             }
         }
 
@@ -78,6 +90,7 @@ namespace LSAnalyzer.ViewModels
         public Subsetting()
         {
             // design-time-only constructor
+            SubsettingInformation = new() { ValidSubset = true, NCases = 100, NSubset = 57 };
         }
 
         public Subsetting(Rservice rservice)
@@ -118,6 +131,25 @@ namespace LSAnalyzer.ViewModels
             WeakReferenceMessenger.Default.Send(new SetSubsettingExpressionMessage(SubsetExpression));
 
             window?.Close();
+        }
+
+        private RelayCommand<object?> _testSubsettingCommand;
+        public ICommand TestSubsettingCommand
+        {
+            get
+            {
+                if (_testSubsettingCommand == null)
+                    _testSubsettingCommand = new RelayCommand<object?>(this.TestSubsetting);
+                return _testSubsettingCommand;
+            }
+        }
+
+        private void TestSubsetting(object? dummy)
+        {
+            if (SubsetExpression != null)
+            {
+                SubsettingInformation = _rservice.TestSubsetting(SubsetExpression, AnalysisConfiguration?.DatasetType?.MIvar);
+            }
         }
 
         private RelayCommand<ICloseable?> _useSubsettingCommand;

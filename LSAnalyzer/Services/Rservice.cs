@@ -124,6 +124,40 @@ namespace LSAnalyzer.Services
             return true;
         }
 
+        public virtual SubsettingInformation TestSubsetting(string subsettingExpression, string? MIvar = null)
+        {
+            try
+            {
+                _engine!.Evaluate("lsanalyzer_dat_raw_stored_subset <- subset(lsanalyzer_dat_raw_stored, " + subsettingExpression + ")");
+
+                int nCases;
+                int nSubset;
+
+                if (string.IsNullOrWhiteSpace(MIvar))
+                {
+                    _engine!.Evaluate("lsanalyzer_dat_raw_stored_ncases <- nrow(lsanalyzer_dat_raw_stored)");
+                    nCases = _engine.GetSymbol("lsanalyzer_dat_raw_stored_ncases").AsInteger().First();
+
+                    _engine!.Evaluate("lsanalyzer_dat_raw_stored_nsubset <- nrow(lsanalyzer_dat_raw_stored_subset)");
+                    nSubset = _engine.GetSymbol("lsanalyzer_dat_raw_stored_nsubset").AsInteger().First();
+                } else
+                {
+                    _engine!.Evaluate("lsanalyzer_dat_raw_stored_ncases_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored[, '" + MIvar + "'])[1])");
+                    nCases = _engine.GetSymbol("lsanalyzer_dat_raw_stored_ncases_mi1").AsInteger().First();
+
+                    _engine!.Evaluate("lsanalyzer_dat_raw_stored_nsubset_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'])[1])");
+                    nSubset = _engine.GetSymbol("lsanalyzer_dat_raw_stored_nsubset_mi1").AsInteger().First();
+                }
+
+                _engine!.Evaluate("rm(lsanalyzer_dat_raw_stored_subset)");
+
+                return new SubsettingInformation() { ValidSubset = true, NCases = nCases, NSubset = nSubset };
+            } catch (Exception)
+            {
+                return new SubsettingInformation() { ValidSubset = false }; ;
+            }
+        }
+
         public bool ReduceToNecessaryVariables(List<string> regexNecessaryVariables)
         {
             try
@@ -523,6 +557,18 @@ namespace LSAnalyzer.Services
             { 
                 return null; 
             }
+        }
+    }
+
+    public class SubsettingInformation
+    {
+        public bool ValidSubset { get; set; }
+        public int NCases { get; set; }
+        public int NSubset { get; set; }
+
+        public string Stringify
+        {
+            get => ValidSubset ? "Subset has " + NSubset + " cases, data has " + NCases + " cases (first imputation)." : "Invalid subsetting expression.";
         }
     }
 }
