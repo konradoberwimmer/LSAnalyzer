@@ -93,6 +93,7 @@ namespace LSAnalyzer.ViewModels
                         {
                             new(4, "y1", false),
                         },
+                        SubsettingExpression = "cat == 1 & val < 0.5",
                     },
                     DataTable = new()
                     {
@@ -123,6 +124,9 @@ namespace LSAnalyzer.ViewModels
             };
 
             Analyses.First().DataView = new(Analyses.First().DataTable);
+
+            AnalysisConfiguration = dummyConfiguration;
+            SubsettingExpression = "cat == 1";
         }
 
         public MainWindow(Rservice rservice) 
