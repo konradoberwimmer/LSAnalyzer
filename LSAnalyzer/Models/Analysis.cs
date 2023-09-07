@@ -20,6 +20,7 @@ namespace LSAnalyzer.Models
         public List<Variable> GroupBy { get; set; } = new();
         public List<GenericVector> Result { get; set; } = new();
         public Dictionary<string, DataFrame> ValueLabels { get; set; } = new();
+        public string? SubsettingExpression { get; set; } = null;
 
         public Analysis(AnalysisConfiguration analysisConfiguration) 
         {

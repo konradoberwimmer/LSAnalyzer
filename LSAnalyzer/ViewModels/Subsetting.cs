@@ -128,6 +128,12 @@ namespace LSAnalyzer.ViewModels
         private void ClearSubsetting(ICloseable? window)
         {
             SubsetExpression = null;
+
+            if (AnalysisConfiguration?.ModeKeep == true)
+            {
+                _rservice.TestAnalysisConfiguration(AnalysisConfiguration);
+            }
+
             WeakReferenceMessenger.Default.Send(new SetSubsettingExpressionMessage(SubsetExpression));
 
             window?.Close();
@@ -165,6 +171,23 @@ namespace LSAnalyzer.ViewModels
 
         private void UseSubsetting(ICloseable? window)
         {
+            if (SubsetExpression == null || AnalysisConfiguration == null)
+            {
+                return;
+            }
+
+            var testResult = _rservice.TestSubsetting(SubsetExpression);
+            if (!testResult.ValidSubset)
+            {
+                SubsettingInformation = testResult;
+                return;
+            }
+
+            if (AnalysisConfiguration.ModeKeep == true)
+            {
+                _rservice.TestAnalysisConfiguration(AnalysisConfiguration, SubsetExpression);
+            }
+            
             WeakReferenceMessenger.Default.Send(new SetSubsettingExpressionMessage(SubsetExpression));
 
             window?.Close();

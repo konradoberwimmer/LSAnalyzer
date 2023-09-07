@@ -158,21 +158,41 @@ namespace LSAnalyzer.Services
             }
         }
 
-        public bool ReduceToNecessaryVariables(List<string> regexNecessaryVariables)
+        public bool ApplySubsetting(string subsettingExpression)
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_necessary_variables <- numeric(0)");
+                _engine!.Evaluate("lsanalyzer_dat_raw <- subset(lsanalyzer_dat_raw, " + subsettingExpression + ")");
+                return true;
+            } catch
+            {
+                return false;
+            }
+        }
+
+        public bool ReduceToNecessaryVariables(List<string> regexNecessaryVariables, string? subsettingExpression = null)
+        {
+            try
+            {
+                _engine!.Evaluate("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
+
+                _engine.Evaluate("lsanalyzer_necessary_variables <- numeric(0)");
                 foreach (string regexNecessaryVariable in regexNecessaryVariables)
                 {
-                    _engine.Evaluate("lsanalyzer_necessary_variable <- grep('" + regexNecessaryVariable + "', colnames(lsanalyzer_dat_raw_stored))");
+                    _engine.Evaluate("lsanalyzer_necessary_variable <- grep('" + regexNecessaryVariable + "', colnames(lsanalyzer_dat_raw))");
                     if (_engine.GetSymbol("lsanalyzer_necessary_variable").AsNumeric().Length == 0)
                     {
                         return false;
                     }
                     _engine.Evaluate("lsanalyzer_necessary_variables <- unique(c(lsanalyzer_necessary_variables, lsanalyzer_necessary_variable))");
                 }
-                _engine.Evaluate("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored[, lsanalyzer_necessary_variables]");
+
+                if (!string.IsNullOrWhiteSpace(subsettingExpression))
+                {
+                    _engine!.Evaluate("lsanalyzer_dat_raw <- subset(lsanalyzer_dat_raw, " + subsettingExpression + ")");
+                }
+
+                _engine.Evaluate("lsanalyzer_dat_raw <- lsanalyzer_dat_raw[, lsanalyzer_necessary_variables]");
                 var rawData = _engine.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
                 if (rawData == null)
                 {
@@ -187,7 +207,7 @@ namespace LSAnalyzer.Services
             return true;
         }
 
-        public bool ReduceToNecessaryVariables(Analysis analysis, List<string>? additionalVariables = null)
+        public bool ReduceToNecessaryVariables(Analysis analysis, List<string>? additionalVariables = null, string? subsettingExpression = null)
         {
             var regexNecessaryVariables = analysis.AnalysisConfiguration.GetRegexNecessaryVariables() ?? new();
             foreach (var variable in analysis.Vars)
@@ -206,7 +226,7 @@ namespace LSAnalyzer.Services
                 }
             }
 
-            return ReduceToNecessaryVariables(regexNecessaryVariables);
+            return ReduceToNecessaryVariables(regexNecessaryVariables, subsettingExpression);
         }
 
         public bool CreateReplicateWeights(int nrep, string weight, string jkzone, string jkrep, bool jkreverse)
@@ -299,7 +319,7 @@ namespace LSAnalyzer.Services
             return true;
         }
 
-        public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration)
+        public virtual bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, string? subsettingExpression = null)
         {
             if (_engine == null || 
                 analysisConfiguration.FileName == null || 
@@ -312,6 +332,11 @@ namespace LSAnalyzer.Services
             }
 
             if (!LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName))
+            {
+                return false;
+            }
+
+            if (subsettingExpression != null && !ApplySubsetting(subsettingExpression))
             {
                 return false;
             }
@@ -349,7 +374,7 @@ namespace LSAnalyzer.Services
 
         public bool PrepareForAnalysis(Analysis analysis, List<string>? additionalVariables = null)
         {
-            if (analysis.AnalysisConfiguration.DatasetType == null || !ReduceToNecessaryVariables(analysis, additionalVariables))
+            if (analysis.AnalysisConfiguration.DatasetType == null || !ReduceToNecessaryVariables(analysis, additionalVariables, analysis.SubsettingExpression))
             {
                 return false;
             }

@@ -31,17 +31,6 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
-        public void ReduceToNecessaryVariables()
-        {
-            Rservice rservice = new();
-            Assert.True(rservice.Connect(), "R must also be available for tests");
-            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_create_repwgts.sav")));
-
-            Assert.False(rservice.ReduceToNecessaryVariables(new() { "^impossible$" }));
-            Assert.True(rservice.ReduceToNecessaryVariables(new() { "^wgt$", "^jkzone$", "^jkrep$" }));
-        }
-
-        [Fact]
         public void TestLoadFileIntoGlobalEnvironment()
         {
             Rservice rservice = new();
@@ -58,7 +47,9 @@ namespace TestLSAnalyzer.Services
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav")));
 
-            Assert.False(rservice.TestSubsetting("xyz == 2").ValidSubset);
+            var subsetInformationInvalid = rservice.TestSubsetting("xyz == 2");
+            Assert.False(subsetInformationInvalid.ValidSubset);
+            Assert.Contains("Invalid", subsetInformationInvalid.Stringify);
 
             var subsetInformationWithoutMI = rservice.TestSubsetting("cat == 2 & mi >= 5");
             Assert.True(subsetInformationWithoutMI.ValidSubset);
@@ -69,6 +60,49 @@ namespace TestLSAnalyzer.Services
             Assert.True(subsetInformationWithMI.ValidSubset);
             Assert.Equal(10, subsetInformationWithMI.NCases);
             Assert.Equal(5, subsetInformationWithMI.NSubset);
+            Assert.DoesNotContain("Invalid", subsetInformationWithMI.Stringify);
+        }
+
+        [Fact]
+        public void TestApplySubsetting()
+        {
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav")));
+
+            Assert.False(rservice.ApplySubsetting("xyz == 2"));
+            Assert.True(rservice.ApplySubsetting("mi == 2"));
+        }
+
+        [Fact]
+        public void TestReduceToNecessaryVariables()
+        {
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_create_repwgts.sav")));
+
+            Assert.False(rservice.ReduceToNecessaryVariables(new List<string>() { "^impossible$" }));
+            Assert.True(rservice.ReduceToNecessaryVariables(new List<string>() { "^wgt$", "^jkzone$", "^jkrep$" }));
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav")));
+
+            Assert.True(rservice.ReduceToNecessaryVariables(new List<string>() { "^wgt$", "x" }, "cat == 1"));
+
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 0.5,
+                },
+                ModeKeep = true,
+            };
+            Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfiguration) { Vars = new() { new(1, "x", false) } }, new() { "y" }, "cat == 2"));
         }
 
         [Fact]
@@ -153,6 +187,78 @@ namespace TestLSAnalyzer.Services
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "x").ToList());
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "y[0-9]+").ToList());
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "one").ToList());
+        }
+
+        [Fact]
+        public void TestTestAnalysisConfiguration()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.False(rservice.TestAnalysisConfiguration(analysisConfiguration));
+
+            analysisConfiguration.FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
+            Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
+
+            analysisConfiguration.ModeKeep = false;
+            Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
+
+            Assert.False(rservice.TestAnalysisConfiguration(analysisConfiguration, "xyz == 1"));
+            Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration, "cat == 1"));
+
+            analysisConfiguration.DatasetType.JKzone = "mi";
+            Assert.False(rservice.TestAnalysisConfiguration(analysisConfiguration));
+
+            analysisConfiguration.DatasetType.JKzone = null;
+            analysisConfiguration.DatasetType.RepWgts = "Bloedsinn";
+            Assert.False(rservice.TestAnalysisConfiguration(analysisConfiguration));
+        }
+
+        [Fact]
+        public void TestPrepareForAnalysis()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 1,
+                },
+                ModeKeep = false,
+            };
+
+            AnalysisUnivar analysisUnivar = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "x", false) },
+                GroupBy = new() { new(2, "cat", false) },
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            Assert.True(rservice.PrepareForAnalysis(analysisUnivar));
+            Assert.False(rservice.PrepareForAnalysis(analysisUnivar, new() { "xyz" }));
+
+
         }
 
         [Fact]

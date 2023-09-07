@@ -176,6 +176,8 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
+            analysisPresentation.Analysis.SubsettingExpression = SubsettingExpression;
+
             analysisPresentation.IsBusy = true;
 
             BackgroundWorker analysisWorker = new();
