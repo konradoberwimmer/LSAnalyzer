@@ -187,9 +187,9 @@ namespace LSAnalyzer.Services
                     _engine.Evaluate("lsanalyzer_necessary_variables <- unique(c(lsanalyzer_necessary_variables, lsanalyzer_necessary_variable))");
                 }
 
-                if (!string.IsNullOrWhiteSpace(subsettingExpression))
+                if (!string.IsNullOrWhiteSpace(subsettingExpression) && !ApplySubsetting(subsettingExpression))
                 {
-                    _engine!.Evaluate("lsanalyzer_dat_raw <- subset(lsanalyzer_dat_raw, " + subsettingExpression + ")");
+                    return false;
                 }
 
                 _engine.Evaluate("lsanalyzer_dat_raw <- lsanalyzer_dat_raw[, lsanalyzer_necessary_variables]");
@@ -233,7 +233,7 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_jk_zones <- unique(lsanalyzer_dat_raw[,'" + jkzone + "'])");
+                _engine!.Evaluate("lsanalyzer_jk_zones <- sort(unique(lsanalyzer_dat_raw_stored[,'" + jkzone + "']))");
                 _engine.Evaluate(
                     "for (lsanalyzer_jk_zone in lsanalyzer_jk_zones) " +
                     "   lsanalyzer_dat_raw[, paste0('lsanalyzer_repwgt_', lsanalyzer_jk_zone)] <- " +

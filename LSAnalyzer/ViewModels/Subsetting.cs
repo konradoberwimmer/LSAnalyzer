@@ -185,7 +185,16 @@ namespace LSAnalyzer.ViewModels
 
             if (AnalysisConfiguration.ModeKeep == true)
             {
-                _rservice.TestAnalysisConfiguration(AnalysisConfiguration, SubsetExpression);
+                if (!_rservice.TestAnalysisConfiguration(AnalysisConfiguration, SubsetExpression))
+                {
+                    SubsettingInformation = new()
+                    {
+                        ValidSubset = false,
+                        NCases = 0,
+                        NSubset = 0,
+                    };
+                    return;
+                }
             }
             
             WeakReferenceMessenger.Default.Send(new SetSubsettingExpressionMessage(SubsetExpression));

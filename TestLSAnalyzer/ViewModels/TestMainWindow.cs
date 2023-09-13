@@ -15,6 +15,33 @@ namespace TestLSAnalyzer.ViewModels
     public class TestMainWindow
     {
         [Fact]
+        public void TestSetAnalysisConfigurationClearsSubsetting()
+        {
+            AnalysisConfiguration analysisConfigurationA = new()
+            {
+                FileName = "dummyA.sav",
+                DatasetType = new(),
+                ModeKeep = true,
+            };
+
+            AnalysisConfiguration analysisConfigurationB = new()
+            {
+                FileName = "dummyB.sav",
+                DatasetType = new(),
+                ModeKeep = false,
+            };
+
+            Rservice rservice = new();
+            MainWindow mainWindowViewModel = new(rservice);
+
+            mainWindowViewModel.AnalysisConfiguration = analysisConfigurationA;
+            mainWindowViewModel.SubsettingExpression = "x == 2";
+
+            mainWindowViewModel.AnalysisConfiguration = analysisConfigurationB;
+            Assert.Null(mainWindowViewModel.SubsettingExpression);
+        }
+
+        [Fact]
         public async Task TestStartAnalysis()
         {
             AnalysisConfiguration analysisConfiguration = new()

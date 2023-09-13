@@ -78,6 +78,7 @@ namespace TestLSAnalyzer.ViewModels
             var mockRservice = new Mock<Rservice>();
             mockRservice.Setup(rservice => rservice.TestSubsetting("invalid", null)).Returns(new SubsettingInformation() { ValidSubset = false });
             mockRservice.Setup(rservice => rservice.TestSubsetting("valid", null)).Returns(new SubsettingInformation() { ValidSubset = true });
+            mockRservice.Setup(rservice => rservice.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>())).Returns(true);
 
             Subsetting subsettingViewModel = new(mockRservice.Object);
             subsettingViewModel.AnalysisConfiguration = new() { ModeKeep = false };
@@ -115,6 +116,7 @@ namespace TestLSAnalyzer.ViewModels
         {
             var mockRservice = new Mock<Rservice>();
             mockRservice.Setup(rservice => rservice.TestSubsetting("valid", null)).Returns(new SubsettingInformation() { ValidSubset = true });
+            mockRservice.Setup(rservice => rservice.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>())).Returns(true);
 
             Subsetting subsettingViewModel = new(mockRservice.Object);
             subsettingViewModel.AnalysisConfiguration = new() { ModeKeep = true };

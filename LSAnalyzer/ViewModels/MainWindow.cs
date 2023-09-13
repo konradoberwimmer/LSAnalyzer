@@ -32,6 +32,8 @@ namespace LSAnalyzer.ViewModels
             {
                 _analysisConfiguration = value;
                 NotifyPropertyChanged(nameof(AnalysisConfiguration));
+
+                SubsettingExpression = null;
             }
         }
 

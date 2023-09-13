@@ -124,6 +124,17 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void TestCreateReplicateWeightsAfterSubsetting()
+        {
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_create_repwgts.sav")));
+            Assert.True(rservice.ApplySubsetting("subset == 1"));
+
+            Assert.True(rservice.CreateReplicateWeights(2, "wgt", "jkzone", "jkrep", false));
+        }
+
+        [Fact]
         public void TestCreateBIFIEdataObject()
         {
             Rservice rservice = new();

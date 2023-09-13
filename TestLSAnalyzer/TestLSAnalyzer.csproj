@@ -36,6 +36,9 @@
     <None Update="_testData\test_dummy.sav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="_testData\test_nmi10_imputed_subset.sav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="_testData\test_nmi10_nrep5.sav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
