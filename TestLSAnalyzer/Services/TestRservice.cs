@@ -49,6 +49,7 @@ namespace TestLSAnalyzer.Services
 
             var subsetInformationInvalid = rservice.TestSubsetting("xyz == 2");
             Assert.False(subsetInformationInvalid.ValidSubset);
+            Assert.False(subsetInformationInvalid.MIvariance);
             Assert.Contains("Invalid", subsetInformationInvalid.Stringify);
 
             var subsetInformationWithoutMI = rservice.TestSubsetting("cat == 2 & mi >= 5");
@@ -61,6 +62,19 @@ namespace TestLSAnalyzer.Services
             Assert.Equal(10, subsetInformationWithMI.NCases);
             Assert.Equal(5, subsetInformationWithMI.NSubset);
             Assert.DoesNotContain("Invalid", subsetInformationWithMI.Stringify);
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_imputed_subset.sav")));
+
+            var subsetInformationWithoutMIvariance = rservice.TestSubsetting("cat == 1", "mi");
+            Assert.True(subsetInformationWithoutMIvariance.ValidSubset);
+            Assert.Equal(10, subsetInformationWithoutMIvariance.NCases);
+            Assert.Equal(5, subsetInformationWithoutMIvariance.NSubset);
+            Assert.DoesNotContain("Invalid", subsetInformationWithoutMIvariance.Stringify);
+
+            var subsetInformationWithMIvariance = rservice.TestSubsetting("instable == 1", "mi");
+            Assert.False(subsetInformationWithMIvariance.ValidSubset);
+            Assert.True(subsetInformationWithMIvariance.MIvariance);
+            Assert.Contains("variance", subsetInformationWithMIvariance.Stringify);
         }
 
         [Fact]

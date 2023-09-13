@@ -138,14 +138,23 @@ namespace LSAnalyzer.Services
                     _engine!.Evaluate("lsanalyzer_dat_raw_stored_ncases <- nrow(lsanalyzer_dat_raw_stored)");
                     nCases = _engine.GetSymbol("lsanalyzer_dat_raw_stored_ncases").AsInteger().First();
 
-                    _engine!.Evaluate("lsanalyzer_dat_raw_stored_nsubset <- nrow(lsanalyzer_dat_raw_stored_subset)");
+                    _engine.Evaluate("lsanalyzer_dat_raw_stored_nsubset <- nrow(lsanalyzer_dat_raw_stored_subset)");
                     nSubset = _engine.GetSymbol("lsanalyzer_dat_raw_stored_nsubset").AsInteger().First();
                 } else
                 {
-                    _engine!.Evaluate("lsanalyzer_dat_raw_stored_ncases_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored[, '" + MIvar + "'])[1])");
+                    _engine!.Evaluate("lsanalyzer_cnt_subset_mi <- table(lsanalyzer_dat_raw_stored_subset$" + MIvar + ")");
+                    _engine!.Evaluate("lsanalyzer_cnt_subset_mi_max <- max(lsanalyzer_cnt_subset_mi)");
+                    _engine!.Evaluate("lsanalyzer_cnt_subset_mi_all_equal <- all(lsanalyzer_cnt_subset_mi == lsanalyzer_cnt_subset_mi_max)");
+                    var allMIEqual = _engine.GetSymbol("lsanalyzer_cnt_subset_mi_all_equal").AsLogical().First();
+                    if (!allMIEqual)
+                    {
+                        return new SubsettingInformation() { ValidSubset = false, MIvariance = true };
+                    }
+
+                    _engine.Evaluate("lsanalyzer_dat_raw_stored_ncases_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored[, '" + MIvar + "'])[1])");
                     nCases = _engine.GetSymbol("lsanalyzer_dat_raw_stored_ncases_mi1").AsInteger().First();
 
-                    _engine!.Evaluate("lsanalyzer_dat_raw_stored_nsubset_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'])[1])");
+                    _engine.Evaluate("lsanalyzer_dat_raw_stored_nsubset_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'])[1])");
                     nSubset = _engine.GetSymbol("lsanalyzer_dat_raw_stored_nsubset_mi1").AsInteger().First();
                 }
 
@@ -588,12 +597,13 @@ namespace LSAnalyzer.Services
     public class SubsettingInformation
     {
         public bool ValidSubset { get; set; }
+        public bool MIvariance { get; set; } = false;
         public int NCases { get; set; }
         public int NSubset { get; set; }
 
         public string Stringify
         {
-            get => ValidSubset ? "Subset has " + NSubset + " cases, data has " + NCases + " cases (first imputation)." : "Invalid subsetting expression.";
+            get => ValidSubset ? "Subset has " + NSubset + " cases, data has " + NCases + " cases." : (MIvariance ? "Subsetting is not supported for variables with MI variance." : "Invalid subsetting expression.");
         }
     }
 }
