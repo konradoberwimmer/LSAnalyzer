@@ -553,6 +553,65 @@ namespace LSAnalyzer.Services
             }
         }
 
+        public List<GenericVector>? CalculateFreq(AnalysisFreq analysis)
+        {
+            try
+            {
+                if (analysis.Vars.Count == 0 ||
+                    analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
+                {
+                    return null;
+                }
+
+                List<GenericVector> resultList = new();
+
+                string baseCall = "lsanalyzer_result_freq <- BIFIEsurvey::BIFIE.freq(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                string groupByArg = "";
+
+                if (analysis.GroupBy.Count == 0)
+                {
+                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
+                }
+                else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
+                {
+                    groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
+                }
+                else
+                {
+                    var groupByCombinations = Combinations.GetCombinations(analysis.GroupBy);
+
+                    for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
+                    {
+                        if (nGroups == 0)
+                        {
+                            groupByArg = "";
+                            _engine!.Evaluate(baseCall + groupByArg + ")");
+                            resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
+                        }
+                        else
+                        {
+                            var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
+                            foreach (var combination in groupByCombinationsN)
+                            {
+                                groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                                _engine!.Evaluate(baseCall + groupByArg + ")");
+                                resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
+                            }
+                        }
+                    }
+                }
+
+                return resultList;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         public List<Variable>? GetDatasetVariables(string filename)
         {
             try

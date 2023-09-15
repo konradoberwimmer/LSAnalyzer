@@ -516,6 +516,112 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void TestCalculateFreq()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisFreq analysisFreq = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = false,
+            };
+
+            var result = rservice.CalculateFreq(analysisFreq);
+            Assert.NotNull(result);
+            Assert.Single(result);
+            var firstResult = result.First();
+            var stats = firstResult["stat"].AsDataFrame();
+            Assert.Equal(1.5, Convert.ToDouble(stats["Ncases"][2]));
+            Assert.True(Math.Abs((double)stats["perc"][0] - 0.2941176) < 0.0001);
+            Assert.True(Math.Abs((double)stats["Nweight"][0] - 1.250) < 0.0001);
+
+            AnalysisConfiguration analysisConfigurationModeBuild = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = false,
+            };
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationModeBuild.FileName));
+
+            AnalysisFreq analysisFreqModeBuild = new(analysisConfigurationModeBuild)
+            {
+                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = false,
+            };
+
+            var resultModeBuild = rservice.CalculateFreq(analysisFreqModeBuild);
+            Assert.NotNull(resultModeBuild);
+            Assert.Single(resultModeBuild);
+            var firstResultModeBuild = resultModeBuild.First();
+            var statsModeBuild = firstResultModeBuild["stat"].AsDataFrame();
+
+            for (int i = 0; i < statsModeBuild.RowCount; i++)
+            {
+                Assert.Equal((double)statsModeBuild["perc_SE"][i], (double)stats["perc_SE"][i]);
+            }
+        }
+
+        [Fact]
+        public void TestCalculateFreqWithOverallValues()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisFreq analysisFreq = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = true,
+            };
+
+            var result = rservice.CalculateFreq(analysisFreq);
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count);
+            Assert.Equal(9, result.First()["stat"].AsDataFrame().RowCount);
+            Assert.Equal(18, result.Last()["stat"].AsDataFrame().RowCount);
+        }
+
+        [Fact]
         public void TestGetDatasetVariables()
         {
             Rservice rservice = new();
