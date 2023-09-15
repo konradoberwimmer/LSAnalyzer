@@ -223,6 +223,12 @@ namespace LSAnalyzer.ViewModels
                     analysisMeanDiff.CalculateSeparately = this.CalculateSeparately;
                     WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisMeanDiff));
                     break;
+                case AnalysisFreq analysisFreq:
+                    analysisFreq.Vars = new(AnalysisVariables);
+                    analysisFreq.GroupBy = new(GrouyByVariables);
+                    analysisFreq.CalculateOverall = this.CalculateOverall;
+                    WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisFreq));
+                    break;
             }
             
             if (analysis == null)
