@@ -252,6 +252,92 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
+        public void TestSetAnalysisResultFreq()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisFreq analysisFreq = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
+                GroupBy = new() { new(3, "instable", false) },
+                CalculateOverall = false,
+            };
+
+            analysisFreq.ValueLabels.Add("instable", rservice.GetValueLabels("instable")!);
+            var result = rservice.CalculateFreq(analysisFreq);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisFreq);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(4, analysisPresentationViewModel.DataTable.Rows.Count);
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("instable"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("instable (label)"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Cat 1"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Cat 5 - standard error"));
+            Assert.Equal(2, analysisPresentationViewModel.DataTable.Select("[instable (label)] = 'Kategorie B'").Length);
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("instable = 1")[0]["Cat 1"] - 0.2971394) < 0.0001);
+        }
+
+        [Fact]
+        public void TestSetAnalysisResultFreqWithOverallValues()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisFreq analysisFreq = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
+                GroupBy = new() { new(3, "instable", false) },
+                CalculateOverall = true,
+            };
+
+            analysisFreq.ValueLabels.Add("instable", rservice.GetValueLabels("instable")!);
+            var result = rservice.CalculateFreq(analysisFreq);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisFreq);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(6, analysisPresentationViewModel.DataTable.Rows.Count);
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("variable = 'item1'")[0]["N - weighted"] - 10.0) < 0.0001);
+        }
+
+        [Fact]
         public void TestSaveDataTableXlsx()
         {
 

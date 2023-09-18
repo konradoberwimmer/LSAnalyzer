@@ -71,16 +71,18 @@ namespace LSAnalyzer.ViewModels
             {
                 _useTableAverage = value;
                 NotifyPropertyChanged(nameof(UseTableAverage));
+                ResetDataView();
+            }
+        }
 
-                switch (Analysis)
-                {
-                    case AnalysisUnivar analysisUnivar:
-                        DataView = DataTableViewUnivar(DataTable);
-                        break;
-                    default:
-                        break;
-                }
-                NotifyPropertyChanged(nameof(DataView));
+        private bool _hasPValues = true;
+        public bool HasPValues
+        {
+            get => _hasPValues;
+            set
+            {
+                _hasPValues = value;
+                NotifyPropertyChanged(nameof(HasPValues));
             }
         }
 
@@ -92,19 +94,7 @@ namespace LSAnalyzer.ViewModels
             {
                 _showPValues = value;
                 NotifyPropertyChanged(nameof(ShowPValues));
-
-                switch (Analysis)
-                {
-                    case AnalysisUnivar analysisUnivar:
-                        DataView = DataTableViewUnivar(DataTable);
-                        break;
-                    case AnalysisMeanDiff analysisMeanDiff:
-                        DataView = DataTableViewMeanDiff(DataTable);
-                        break;
-                    default:
-                        break;
-                }
-                NotifyPropertyChanged(nameof(DataView));
+                ResetDataView();
             }
         }
 
@@ -116,19 +106,53 @@ namespace LSAnalyzer.ViewModels
             {
                 _showFMI = value;
                 NotifyPropertyChanged(nameof(ShowFMI));
+                ResetDataView();
+            }
+        }
 
-                switch (Analysis)
-                {
-                    case AnalysisUnivar analysisUnivar:
-                        DataView = DataTableViewUnivar(DataTable);
-                        break;
-                    case AnalysisMeanDiff analysisMeanDiff:
-                        DataView = DataTableViewMeanDiff(DataTable);
-                        break;
-                    default:
-                        break;
-                }
-                NotifyPropertyChanged(nameof(DataView));
+        private bool _hasNcasesToggle = false;
+        public bool HasNcasesToggle
+        {
+            get => _hasNcasesToggle;
+            set 
+            {
+                _hasNcasesToggle = value;
+                NotifyPropertyChanged(nameof(HasNcasesToggle));
+            }
+        }
+
+        private bool _showNcases = false;
+        public bool ShowNcases
+        {
+            get => _showNcases;
+            set
+            {
+                _showNcases = value;
+                NotifyPropertyChanged(nameof(ShowNcases));
+                ResetDataView();
+            }
+        }
+
+        private bool _hasNweightToggle = false;
+        public bool HasNweightToggle
+        {
+            get => _hasNweightToggle;
+            set
+            {
+                _hasNweightToggle = value;
+                NotifyPropertyChanged(nameof(HasNweightToggle));
+            }
+        }
+
+        private bool _showNweight = false;
+        public bool ShowNweight
+        {
+            get => _showNweight;
+            set
+            {
+                _showNweight = value;
+                NotifyPropertyChanged(nameof(ShowNweight));
+                ResetDataView();
             }
         }
 
@@ -194,6 +218,10 @@ namespace LSAnalyzer.ViewModels
                     TableEta = CreateTableEtaFromResultMeanDiff(analysisMeanDiff);
                     ShowPValues = true;
                     DataView = DataTableViewMeanDiff(DataTable);
+                    break;
+                case AnalysisFreq analysisFreq:
+                    DataTable = CreateDataTableFromResultFreq(analysisFreq);
+                    DataView = DataTableViewFreq(DataTable);
                     break;
                 default:
                     break;
@@ -516,6 +544,194 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
+        public DataTable CreateDataTableFromResultFreq(AnalysisFreq analysisFreq)
+        {
+            if (analysisFreq.Result == null || analysisFreq.Result.Count == 0)
+            {
+                return new();
+            }
+
+            List<double> categories = new();
+            foreach (var result in Analysis.Result)
+            {
+                var dataFrame = result["stat"].AsDataFrame();
+                var categoriesInResult = dataFrame["varval"].AsNumeric();
+                foreach (double cat1 in categoriesInResult)
+                {
+                    if (!categories.Contains(cat1))
+                    {
+                        categories.Add(cat1);
+                    }
+                }
+            }
+            categories.Sort();
+
+            DataTable table = new(analysisFreq.AnalysisName);
+
+            Dictionary<string, DataColumn> columns = new();
+
+            columns.Add("var", new DataColumn("variable", typeof(string)));
+
+            for (int cntGroupyBy = 0; cntGroupyBy < analysisFreq.GroupBy.Count; cntGroupyBy++)
+            {
+                columns.Add("groupval" + (cntGroupyBy + 1), new DataColumn(analysisFreq.GroupBy[cntGroupyBy].Name, typeof(double)));
+                if (analysisFreq.ValueLabels.ContainsKey(analysisFreq.GroupBy[cntGroupyBy].Name))
+                {
+                    columns.Add("$label_" + analysisFreq.GroupBy[cntGroupyBy].Name, new DataColumn(analysisFreq.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
+                }
+            }
+
+            columns.Add("$overall_Ncases", new DataColumn("N - cases unweighted", typeof(int)));
+            columns.Add("$overall_Nweight", new DataColumn("N - weighted", typeof(double)));
+
+            for (int cc = 0; cc < categories.Count; cc++)
+            {
+                var category = categories[cc];
+                columns.Add("$cat_" + cc + "_perc", new DataColumn("Cat " + category, typeof(double)));
+                columns.Add("$cat_" + cc + "_perc_SE", new DataColumn("Cat " + category + " - standard error", typeof(double)));
+                columns.Add("$cat_" + cc + "_Ncases", new DataColumn("Cat " + category + " - cases", typeof(int)));
+                columns.Add("$cat_" + cc + "_Nweight", new DataColumn("Cat " + category + " - weighted", typeof(double)));
+                columns.Add("$cat_" + cc + "_perc_fmi", new DataColumn("Cat " + category + " - FMI", typeof(double)));
+            }
+
+            foreach (var column in columns.Values)
+            {
+                table.Columns.Add(column);
+            }
+
+            
+            foreach (var result in Analysis.Result)
+            {
+                var dataFrame = result["stat"].AsDataFrame();
+
+                var groupNameColumns = dataFrame.ColumnNames.Where(columnName => Regex.IsMatch(columnName, "^groupvar[0-9]*$")).ToArray();
+                var groupValColumns = dataFrame.ColumnNames.Where(columnName => Regex.IsMatch(columnName, "^groupval[0-9]*$")).ToArray();
+                Dictionary<string, string> groupColumns = new Dictionary<string, string>();
+                for (int i = 0; i < groupNameColumns.Length; i++)
+                {
+                    groupColumns.Add(dataFrame[groupNameColumns[i]].AsCharacter().First(), groupValColumns[i]);
+                }
+
+                foreach (var dataFrameRow in dataFrame.GetRows())
+                {
+                    bool repeat = true;
+                    while (repeat)
+                    {
+                        var existingTableRow = GetExistingDataRowFreq(table, dataFrameRow, groupColumns);
+
+                        if (existingTableRow != null)
+                        {
+                            var category = (double)dataFrameRow["varval"];
+
+                            existingTableRow["Cat " + category] = (double)dataFrameRow["perc"];
+                            existingTableRow["Cat " + category + " - standard error"] = (double)dataFrameRow["perc_SE"];
+                            existingTableRow["Cat " + category + " - cases"] = (double)dataFrameRow["Ncases"];
+                            existingTableRow["Cat " + category + " - weighted"] = (double)dataFrameRow["Nweight"];
+                            existingTableRow["Cat " + category + " - FMI"] = (double)dataFrameRow["perc_fmi"];
+
+                            repeat = false;
+                        }
+                        else
+                        {
+                            DataRow tableRow = table.NewRow();
+
+                            List<object?> cellValues = new();
+                            foreach (var column in columns.Keys)
+                            {
+                                if (Regex.IsMatch(column, "^groupval[0-9]*$") && groupColumns.ContainsKey(columns[column].ColumnName))
+                                {
+                                    cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                                }
+                                else if (Regex.IsMatch(column, "^\\$label_"))
+                                {
+                                    if ((double?)cellValues.Last() == null)
+                                    {
+                                        cellValues.Add(null);
+                                        continue;
+                                    }
+
+                                    var groupByVariable = column.Substring(column.IndexOf("_") + 1);
+                                    var valueLabels = analysisFreq.ValueLabels[groupByVariable];
+                                    // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
+                                    var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)cellValues.Last()!);
+
+                                    if (posValueLabel != -1)
+                                    {
+                                        var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
+                                        cellValues.Add(valueLabel);
+                                    }
+                                    else
+                                    {
+                                        cellValues.Add(null);
+                                    }
+                                }
+                                else if (dataFrame.ColumnNames.Contains(column))
+                                {
+                                    cellValues.Add(dataFrameRow[column]);
+                                }
+                                else
+                                {
+                                    cellValues.Add(null);
+                                }
+                            }
+
+                            tableRow.ItemArray = cellValues.ToArray();
+                            table.Rows.Add(tableRow);
+                        }
+                    }
+                }
+            }
+
+            foreach (DataRow row in table.Rows)
+            {
+                int Ncases = 0;
+                double Nweight = 0;
+                foreach (var category in categories) 
+                {
+                    Ncases += row["Cat " + category + " - cases"] != DBNull.Value ? (int)row["Cat " + category + " - cases"] : 0;
+                    Nweight += row["Cat " + category + " - weighted"] != DBNull.Value ? (double)row["Cat " + category + " - weighted"] : 0.0;
+                }
+                row["N - cases unweighted"] = Ncases;
+                row["N - weighted"] = Nweight;
+            }
+
+            HasPValues = false;
+            HasNcasesToggle = true;
+            HasNweightToggle = true;
+
+            string[] sortBy = { "variable" };
+            table.DefaultView.Sort = String.Join(", ", sortBy.Concat(analysisFreq.GroupBy.ConvertAll(var => var.Name)).ToArray());
+
+            return table;
+        }
+
+        private DataRow? GetExistingDataRowFreq(DataTable table, DataFrameRow dataFrameRow, Dictionary<string, string> groupColumns)
+        {
+            foreach (DataRow row in table.Rows)
+            {
+                if ((string)row["variable"] == (string)dataFrameRow["var"])
+                {
+                    bool match = true;
+
+                    foreach (var groupVar in Analysis.GroupBy)
+                    {
+                        if ((groupColumns.ContainsKey(groupVar.Name) && (row[groupVar.Name] == DBNull.Value || (double)row[groupVar.Name] != (double)dataFrameRow[groupColumns[groupVar.Name]])) ||
+                            (!groupColumns.ContainsKey(groupVar.Name) && row[groupVar.Name] != DBNull.Value))
+                        {
+                            match = false;
+                        }
+                    }
+
+                    if (match)
+                    {
+                        return row;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         private DataView DataTableViewUnivar(DataTable table)
         {
             DataView dataView = new(table.Copy());
@@ -540,6 +756,59 @@ namespace LSAnalyzer.ViewModels
             if (!ShowFMI) dataView.Table!.Columns.Remove("Cohens d - FMI");
 
             return dataView;
+        }
+
+        private DataView DataTableViewFreq(DataTable table)
+        {
+            DataView dataView = new(table.Copy());
+
+            Dictionary<string, string> toggles = new()
+            {
+                ["ShowPValues"] = "p\\svalue$",
+                ["ShowFMI"] = "FMI$",
+                ["ShowNcases"] = "^Cat.*\\-\\scases$",
+                ["ShowNweight"] = "^Cat.*\\-\\sweighted$",
+            };
+
+            foreach (KeyValuePair<string, string> toggle in toggles)
+            {
+                if (!(bool)this.GetType().GetProperty(toggle.Key)!.GetValue(this)!)
+                {
+                    List<DataColumn> columnsToRemove = new();
+                    foreach (DataColumn column in dataView.Table!.Columns)
+                    {
+                        if (Regex.IsMatch(column.ColumnName, toggle.Value))
+                        {
+                            columnsToRemove.Add(column);
+                        }
+                    }
+                    foreach (var pValueColumn in columnsToRemove)
+                    {
+                        dataView.Table!.Columns.Remove(pValueColumn);
+                    }
+                }
+            }
+            
+            return dataView;
+        }
+
+        private void ResetDataView()
+        {
+            switch (Analysis)
+            {
+                case AnalysisUnivar:
+                    DataView = DataTableViewUnivar(DataTable);
+                    break;
+                case AnalysisMeanDiff:
+                    DataView = DataTableViewMeanDiff(DataTable);
+                    break;
+                case AnalysisFreq:
+                    DataView = DataTableViewFreq(DataTable);
+                    break;
+                default:
+                    break;
+            }
+            NotifyPropertyChanged(nameof(DataView));
         }
 
         private RelayCommand<string?> _saveDataTableXlsxCommand;

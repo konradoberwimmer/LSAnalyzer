@@ -64,24 +64,74 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 0.5));
 
+            MainWindow mainWindowViewModel = new(rservice);
+
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
                 Vars = new() { new(1, "x", false), new(1, "y", false) },
                 GroupBy = new() { new(3, "cat", false) },
                 CalculateOverall = false,
             };
-            AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
+            AnalysisPresentation analysisPresentationViewModelUnivar = new(analysisUnivar);
 
-            MainWindow mainWindowViewModel = new(rservice);
+            mainWindowViewModel.Analyses.Add(analysisPresentationViewModelUnivar);
+            Assert.Empty(mainWindowViewModel.Analyses.Last().DataTable.Rows);
 
-            mainWindowViewModel.Analyses.Add(analysisPresentationViewModel);
-            Assert.Empty(mainWindowViewModel.Analyses.First().DataTable.Rows);
+            mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelUnivar);
+            await Task.Delay(500);
 
-            mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModel);
-            await Task.Delay(1000);
+            Assert.NotNull(mainWindowViewModel.Analyses.Last().DataTable);
+            Assert.NotEmpty(mainWindowViewModel.Analyses.Last().DataTable.Rows);
 
-            Assert.NotNull(mainWindowViewModel.Analyses.First().DataTable);
-            Assert.NotEmpty(mainWindowViewModel.Analyses.First().DataTable.Rows);
+            AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "x", false), new(1, "y", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateSeparately = false,
+            };
+            AnalysisPresentation analysisPresentationViewModelMeanDiff = new(analysisMeanDiff);
+
+            mainWindowViewModel.Analyses.Add(analysisPresentationViewModelMeanDiff);
+            Assert.Empty(mainWindowViewModel.Analyses.Last().DataTable.Rows);
+
+            mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelMeanDiff);
+            await Task.Delay(500);
+
+            Assert.NotNull(mainWindowViewModel.Analyses.Last().DataTable);
+            Assert.NotEmpty(mainWindowViewModel.Analyses.Last().DataTable.Rows);
+
+            analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisFreq analysisFreq = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "cat", false) },
+                GroupBy = new() { new(1, "instable", false) },
+                CalculateOverall = true,
+            };
+            AnalysisPresentation analysisPresentationViewModelFreq = new(analysisFreq);
+
+            mainWindowViewModel.Analyses.Add(analysisPresentationViewModelFreq);
+            Assert.Empty(mainWindowViewModel.Analyses.Last().DataTable.Rows);
+
+            mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelFreq);
+            await Task.Delay(500);
+
+            Assert.NotNull(mainWindowViewModel.Analyses.Last().DataTable);
+            Assert.NotEmpty(mainWindowViewModel.Analyses.Last().DataTable.Rows);
         }
 
         [Fact]

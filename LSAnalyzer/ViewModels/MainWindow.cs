@@ -228,6 +228,17 @@ namespace LSAnalyzer.ViewModels
                         }
                     }
                     break;
+                case AnalysisFreq analysisFreq:
+                    result = _rservice.CalculateFreq(analysisFreq);
+                    foreach (var groupByVariable in analysisFreq.GroupBy)
+                    {
+                        var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
+                        if (valueLabels != null)
+                        {
+                            analysisFreq.ValueLabels.Add(groupByVariable.Name, valueLabels);
+                        }
+                    }
+                    break;
                 default:
                     break;
             }

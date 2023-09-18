@@ -98,7 +98,33 @@
                                     </CheckBox>
                                     <Separator/>
                                 </StackPanel>
-                                <CheckBox Content="Show p values" IsChecked="{Binding ShowPValues}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
+                                <CheckBox Content="Show N cases (unweighted)" IsChecked="{Binding ShowNcases}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
+                                    <CheckBox.Visibility>
+                                        <Binding Path="HasNcasesToggle" Converter="{StaticResource BoolToVisibilityConverter}">
+                                            <Binding.ConverterParameter>
+                                                <sys:Boolean>true</sys:Boolean>
+                                            </Binding.ConverterParameter>
+                                        </Binding>
+                                    </CheckBox.Visibility>
+                                </CheckBox>
+                                <CheckBox Content="Show N weighted" IsChecked="{Binding ShowNweight}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
+                                    <CheckBox.Visibility>
+                                        <Binding Path="HasNweightToggle" Converter="{StaticResource BoolToVisibilityConverter}">
+                                            <Binding.ConverterParameter>
+                                                <sys:Boolean>true</sys:Boolean>
+                                            </Binding.ConverterParameter>
+                                        </Binding>
+                                    </CheckBox.Visibility>
+                                </CheckBox>
+                                <CheckBox Content="Show p values" IsChecked="{Binding ShowPValues}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
+                                    <CheckBox.Visibility>
+                                        <Binding Path="HasPValues" Converter="{StaticResource BoolToVisibilityConverter}">
+                                            <Binding.ConverterParameter>
+                                                <sys:Boolean>true</sys:Boolean>
+                                            </Binding.ConverterParameter>
+                                        </Binding>
+                                    </CheckBox.Visibility>
+                                </CheckBox>
                                 <CheckBox IsChecked="{Binding ShowFMI}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
                                     <CheckBox.Content>
                                         <StackPanel Orientation="Horizontal">
