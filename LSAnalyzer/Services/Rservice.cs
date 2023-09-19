@@ -4,6 +4,7 @@ using Microsoft.Win32;
 using RDotNet;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -48,6 +49,19 @@ namespace LSAnalyzer.Services
             }
 
             return true;
+        }
+
+        [ExcludeFromCodeCoverage]
+        public string? GetRVersion()
+        {
+            try
+            {
+                _engine!.Evaluate("lsanalyzer_full_version_string <- paste(R.Version()$version.string, R.Version()$nickname, R.Version()$platform, sep = ' - ')");
+                return _engine.GetSymbol("lsanalyzer_full_version_string").AsCharacter().First();
+            } catch
+            {
+                return null;
+            }
         }
 
         public bool CheckNecessaryRPackages()
@@ -102,6 +116,19 @@ namespace LSAnalyzer.Services
             } catch
             {
                 return false;
+            }
+        }
+
+        [ExcludeFromCodeCoverage]
+        public string? GetBifieSurveyVersion()
+        {
+            try
+            {
+                _engine!.Evaluate("lsanalyzer_bifiesurvey_version <- packageVersion('BIFIEsurvey')");
+                return _engine.GetSymbol("lsanalyzer_bifiesurvey_version").AsCharacter().First();
+            } catch
+            {
+                return null;
             }
         }
 

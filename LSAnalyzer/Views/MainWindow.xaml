@@ -157,6 +157,7 @@
             </MenuItem>
             <MenuItem Header="_Config">
                 <MenuItem x:Name="menuItemDatasetTypes" Header="_Dataset-Types ..." Click="MenuItemDatasetTypes_Click" />
+                <MenuItem x:Name="menuItemSystemSettings" Header="_System ..." Click="MenuItemSystemSettings_Click"/>
             </MenuItem>
         </Menu>
         <StatusBar DockPanel.Dock="Bottom">

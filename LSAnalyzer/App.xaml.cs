@@ -36,11 +36,13 @@ namespace LSAnalyzer
                 return new Configuration(userDatasetTypesConfigFile); 
             });
             services.AddTransient<ConfigDatasetTypes>();
+            services.AddTransient<SystemSettings>();
             services.AddTransient<SelectAnalysisFile>();
             services.AddTransient<Subsetting>();
             services.AddTransient<RequestAnalysis>();
             services.AddTransient<MainWindow>();
             services.AddTransient<Views.ConfigDatasetTypes>();
+            services.AddTransient<Views.SystemSettings>();
             services.AddTransient<Views.SelectAnalysisFile>();
             services.AddSingleton<Views.MainWindow>(provider =>
             {

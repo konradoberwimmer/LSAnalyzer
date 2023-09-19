@@ -1,0 +1,35 @@
+﻿<Window x:Class="LSAnalyzer.Views.SystemSettings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LSAnalyzer.Views"
+        xmlns:viewModels="clr-namespace:LSAnalyzer.ViewModels"
+        mc:Ignorable="d"
+        x:Name="windowSystemSettings" Title="System settings" MinHeight="105" MinWidth="300" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen">
+    <Window.DataContext>
+        <viewModels:SystemSettings/>
+    </Window.DataContext>
+    <StackPanel Orientation="Vertical">
+        <GroupBox Margin="10" Padding="5">
+            <GroupBox.Header>
+                <TextBlock FontWeight="Bold" Text="R / BIFIEsurvey"/>
+            </GroupBox.Header>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding RVersion}"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="BIFIEsurvey version:" Margin="0,0,5,0"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Center"  Text="{Binding BifieSurveyVersion}" Margin="0,0,20,0"/>
+                <Button Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" Content="Update" Width="80"/>
+            </Grid>
+        </GroupBox>
+    </StackPanel>
+</Window>

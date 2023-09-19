@@ -56,6 +56,12 @@ namespace LSAnalyzer.Views
             configDatasetTypesView.ShowDialog();
         }
 
+        private void MenuItemSystemSettings_Click (object sender, RoutedEventArgs e)
+        {
+            SystemSettings systemSettingsView = _serviceProvider.GetRequiredService<SystemSettings>();
+            systemSettingsView.ShowDialog();
+        }
+
         private void MenuItemAnalysisSelectFile_Click (object sender, RoutedEventArgs e)
         {
             SelectAnalysisFile selectAnalysisFileView = _serviceProvider.GetRequiredService<SelectAnalysisFile>();
