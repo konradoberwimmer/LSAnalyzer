@@ -25,10 +25,10 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding RVersion}"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,5" Text="{Binding RVersion}"/>
                 <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="BIFIEsurvey version:" Margin="0,0,5,0"/>
-                <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Center"  Text="{Binding BifieSurveyVersion}" Margin="0,0,20,0"/>
-                <Button Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" Content="Update" Width="80"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{Binding BifieSurveyVersion}" Margin="0,0,20,0"/>
+                <Button Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" Content="Update" Width="80" Command="{Binding UpdateBifieSurveyCommand}"/>
             </Grid>
         </GroupBox>
     </StackPanel>

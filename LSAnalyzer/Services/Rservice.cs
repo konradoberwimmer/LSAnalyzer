@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Windows.Media.Media3D;
 
 namespace LSAnalyzer.Services
 {
@@ -124,11 +125,35 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_bifiesurvey_version <- packageVersion('BIFIEsurvey')");
+                _engine!.Evaluate("lsanalyzer_bifiesurvey_version <- paste(utils::packageVersion('BIFIEsurvey'), sep = '.')");
                 return _engine.GetSymbol("lsanalyzer_bifiesurvey_version").AsCharacter().First();
             } catch
             {
                 return null;
+            }
+        }
+
+
+        public enum UpdateResult { Unavailable, Success, Failure }
+
+        [ExcludeFromCodeCoverage]
+        public UpdateResult UpdateBifieSurvey()
+        {
+            try
+            {
+                _engine!.Evaluate("lsanalyzer_old_packages <- data.frame(utils::old.packages(repos = 'https://cloud.r-project.org'))");
+                DataFrame? oldPackages = _engine.GetSymbol("lsanalyzer_old_packages").AsDataFrame();
+                if (oldPackages == null || !oldPackages["Package"].AsCharacter().Contains("BIFIEsurvey"))
+                {
+                    return UpdateResult.Unavailable;
+                }
+
+                _engine.Evaluate("utils::update.packages(repos = 'https://cloud.r-project.org', ask = FALSE, oldPkgs = 'BIFIEsurvey')");
+
+                return UpdateResult.Success;
+            } catch
+            {
+                return UpdateResult.Failure;
             }
         }
 

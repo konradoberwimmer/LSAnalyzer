@@ -19,9 +19,11 @@ namespace LSAnalyzer.Views
     /// </summary>
     public partial class SystemSettings : Window
     {
-        public SystemSettings()
+        public SystemSettings(ViewModels.SystemSettings systemSettingsViewModel)
         {
             InitializeComponent();
+
+            DataContext = systemSettingsViewModel;
         }
     }
 }
