@@ -143,6 +143,22 @@ namespace LSAnalyzer.Views
             requestAnalysisFreqView.ShowDialog();
         }
 
+        private void MenuItemAnalysisPercentiles_Click(object sender, RoutedEventArgs e)
+        {
+            var mainWindowViewModel = DataContext as ViewModels.MainWindow;
+
+            if (mainWindowViewModel!.AnalysisConfiguration == null)
+            {
+                return;
+            }
+
+            RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
+            requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+
+            RequestAnalysisPercentiles requestAnalysisPercentilesView = new(requestAnalysisViewModel);
+            requestAnalysisPercentilesView.ShowDialog();
+        }
+
         private void ButtonDownloadXlsx_Click (object sender, RoutedEventArgs e)
         {
             if (sender is not Button button || button.DataContext is not AnalysisPresentation analysisPresentationViewModel)

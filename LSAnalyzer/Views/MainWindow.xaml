@@ -149,7 +149,7 @@
                 <MenuItem x:Name="menuItemAnalysisUnivar" Header="_Univariate ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisUnivar_Click"/>
                 <MenuItem x:Name="menuItemAnalysisMeanDiff" Header="_Difference in mean ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisMeanDiff_Click"/>
                 <MenuItem x:Name="menuItemAnalysisFrequencies" Header="_Frequencies ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisFreq_Click"/>
-                <MenuItem x:Name="menuItemAnalysisPercentiles" Header="_Percentiles ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+                <MenuItem x:Name="menuItemAnalysisPercentiles" Header="_Percentiles ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisPercentiles_Click"/>
                 <MenuItem x:Name="menuItemAnalysisCorrelations" Header="_Correlations ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisRegression" Header="Linear _Regression ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisLogistReg" Header="_Logistic Regression ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>

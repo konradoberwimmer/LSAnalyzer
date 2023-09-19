@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
@@ -94,6 +95,39 @@ namespace LSAnalyzer.ViewModels
             {
                 _calculateSeparately = value;
                 NotifyPropertyChanged(nameof(CalculateSeparately));
+            }
+        }
+
+        private ObservableCollection<PercentileWrapper> _percentiles = new() { new() { Value = 0.25 }, new() { Value = 0.50 }, new() { Value = 0.75 } };
+        public ObservableCollection<PercentileWrapper> Percentiles
+        {
+            get => _percentiles;
+            set
+            {
+                _percentiles = value;
+                NotifyPropertyChanged(nameof(Percentiles));
+            }
+        }
+
+        private bool _calculateSE = true;
+        public bool CalculateSE
+        {
+            get => _calculateSE;
+            set
+            {
+                _calculateSE = value;
+                NotifyPropertyChanged(nameof(CalculateSE));
+            }
+        }
+
+        private bool _useInterpolation = true;
+        public bool UseInterpolation
+        {
+            get => _useInterpolation;
+            set
+            {
+                _useInterpolation = value;
+                NotifyPropertyChanged(nameof(UseInterpolation));
             }
         }
 
@@ -229,6 +263,15 @@ namespace LSAnalyzer.ViewModels
                     analysisFreq.CalculateOverall = this.CalculateOverall;
                     WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisFreq));
                     break;
+                case AnalysisPercentiles analysisPercentiles:
+                    analysisPercentiles.Percentiles = new(Percentiles.Select(val => val.Value));
+                    analysisPercentiles.CalculateSE = this.CalculateSE;
+                    analysisPercentiles.UseInterpolation = this.UseInterpolation;
+                    analysisPercentiles.Vars = new(AnalysisVariables);
+                    analysisPercentiles.GroupBy = new(GrouyByVariables);
+                    analysisPercentiles.CalculateOverall = this.CalculateOverall;
+                    WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisPercentiles));
+                    break;
             }
             
             if (analysis == null)
@@ -238,6 +281,11 @@ namespace LSAnalyzer.ViewModels
 
             window.Close();
         }
+    }
+
+    public class PercentileWrapper
+    {
+        public double Value { get; set; }
     }
 
     internal class RequestAnalysisMessage : ValueChangedMessage<Analysis>
