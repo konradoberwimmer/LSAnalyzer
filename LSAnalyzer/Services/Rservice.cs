@@ -103,7 +103,7 @@ namespace LSAnalyzer.Services
                     {
                         try
                         {
-                            _engine.Evaluate("install.packages('" + rPackage + "', lib = Sys.getenv('R_LIBS_USER'), repos = 'https://cloud.r-project.org')");
+                            _engine.Evaluate("utils::install.packages('" + rPackage + "', lib = Sys.getenv('R_LIBS_USER'), repos = 'https://cloud.r-project.org')");
                         }
                         catch
                         {

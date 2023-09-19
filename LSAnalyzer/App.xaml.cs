@@ -72,14 +72,11 @@ namespace LSAnalyzer
                     } else
                     {
                         MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart app afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        Shutdown(1);
-                        return;
                     }
-                } else
-                {
-                    Shutdown(1);
-                    return;
                 }
+
+                Shutdown(1);
+                return;
             }
 
             if (!rService.InjectAppFunctions())
