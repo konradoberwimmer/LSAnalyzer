@@ -8,7 +8,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Windows.Media.Media3D;
 
 namespace LSAnalyzer.Services
 {
@@ -154,6 +153,23 @@ namespace LSAnalyzer.Services
             } catch
             {
                 return UpdateResult.Failure;
+            }
+        }
+
+        public bool InjectAppFunctions()
+        {
+            try
+            {
+                _engine!.Evaluate("""
+                    lsanalyzer_func_quantile <- function(x, w) {
+                        
+                    }
+                    """);
+
+                return true;
+            } catch
+            {
+                return false;
             }
         }
 
@@ -661,6 +677,73 @@ namespace LSAnalyzer.Services
             catch
             {
                 return null;
+            }
+        }
+
+        public List<GenericVector>? CalculatePercentiles(AnalysisPercentiles analysis)
+        {
+            try
+            {
+                if (analysis.Vars.Count == 0 || analysis.Percentiles.Count == 0 ||
+                    analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
+                {
+                    return null;
+                }
+
+                List<GenericVector> resultList = new();
+
+                string baseCall = 
+                    analysis.CalculateSE ? 
+                    "" :
+                    "lsanalyzer_result_ecdf <- BIFIEsurvey::BIFIE.ecdf(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + "), breaks = c(" + string.Join(", ", analysis.Percentiles.ConvertAll(val => val.ToString(CultureInfo.InvariantCulture))) + ")";
+                string groupByArg = "";
+                
+                string quantTypeArg = "";
+                if (!analysis.UseInterpolation)
+                {
+                    quantTypeArg = ", quanttype=2";
+                }
+
+                if (analysis.GroupBy.Count == 0)
+                {
+                    _engine!.Evaluate(baseCall + groupByArg + quantTypeArg + ")");
+                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
+                }
+                else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
+                {
+                    groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                    _engine!.Evaluate(baseCall + groupByArg + quantTypeArg + ")");
+                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
+                }
+                else
+                {
+                    var groupByCombinations = Combinations.GetCombinations(analysis.GroupBy);
+
+                    for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
+                    {
+                        if (nGroups == 0)
+                        {
+                            groupByArg = "";
+                            _engine!.Evaluate(baseCall + groupByArg + quantTypeArg + ")");
+                            resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
+                        }
+                        else
+                        {
+                            var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
+                            foreach (var combination in groupByCombinationsN)
+                            {
+                                groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                                _engine!.Evaluate(baseCall + groupByArg + quantTypeArg + ")");
+                                resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
+                            }
+                        }
+                    }
+                }
+
+                return resultList;
+            } catch
+            { 
+                return null; 
             }
         }
 

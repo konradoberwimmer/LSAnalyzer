@@ -31,6 +31,15 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void TestInjectAppFunctions()
+        {
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+
+            Assert.True(rservice.InjectAppFunctions());
+        }
+
+        [Fact]
         public void TestLoadFileIntoGlobalEnvironment()
         {
             Rservice rservice = new();
@@ -619,6 +628,58 @@ namespace TestLSAnalyzer.Services
             Assert.Equal(2, result.Count);
             Assert.Equal(9, result.First()["stat"].AsDataFrame().RowCount);
             Assert.Equal(18, result.Last()["stat"].AsDataFrame().RowCount);
+        }
+
+        [Fact]
+        public void TestCalculatePercentialesWithoutSE()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 1));
+
+            AnalysisPercentiles analysisPercentiles = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "x", false), new(1, "y", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                Percentiles = new() { 0.25, 0.50, 0.75 },
+                CalculateOverall = false,
+                CalculateSE = false,
+            };
+
+            var result = rservice.CalculatePercentiles(analysisPercentiles);
+            Assert.NotNull(result);
+            Assert.Single(result);
+            var firstResult = result.First();
+            var stats = firstResult["stat"].AsDataFrame();
+            Assert.Equal(6, stats["groupval"].AsNumeric().Where(val => val == 2).ToList().Count);
+            Assert.Equal(4, stats["yval"].AsNumeric().Where(val => val == 0.5).ToList().Count);
+            Assert.True(Math.Abs((double)stats["quant"][0] - 5.836678) < 0.0001);
+
+            analysisPercentiles.UseInterpolation = false;
+            analysisPercentiles.CalculateOverall = true;
+
+            result = rservice.CalculatePercentiles(analysisPercentiles);
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count);
+            var lastResult = result.Last();
+            stats = lastResult["stat"].AsDataFrame();
+            Assert.True(Math.Abs((double)stats["quant"][0] - 4.420020) < 0.0001);
         }
 
         [Fact]
