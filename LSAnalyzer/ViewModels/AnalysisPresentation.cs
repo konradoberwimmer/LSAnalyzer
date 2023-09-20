@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -95,6 +96,17 @@ namespace LSAnalyzer.ViewModels
                 _showPValues = value;
                 NotifyPropertyChanged(nameof(ShowPValues));
                 ResetDataView();
+            }
+        }
+
+        private bool _hasFMI = true;
+        public bool HasFMI
+        {
+            get => _hasFMI;
+            set
+            {
+                _hasFMI = value;
+                NotifyPropertyChanged(nameof(HasFMI));
             }
         }
 
@@ -223,6 +235,10 @@ namespace LSAnalyzer.ViewModels
                     DataTable = CreateDataTableFromResultFreq(analysisFreq);
                     DataView = DataTableViewFreq(DataTable);
                     break;
+                case AnalysisPercentiles analysisPercentiles:
+                    DataTable = CreateDataTableFromResultPercentiles(analysisPercentiles);
+                    DataView = DataTableViewPercentiles(DataTable);
+                    break;
                 default:
                     break;
             }
@@ -271,14 +287,7 @@ namespace LSAnalyzer.ViewModels
             foreach (var result in Analysis.Result)
             {
                 var dataFrame = result["stat"].AsDataFrame();
-                
-                var groupNameColumns = dataFrame.ColumnNames.Where(columnName => Regex.IsMatch(columnName, "^groupvar[0-9]*$")).ToArray();
-                var groupValColumns = dataFrame.ColumnNames.Where(columnName => Regex.IsMatch(columnName, "^groupval[0-9]*$")).ToArray();
-                Dictionary<string, string> groupColumns = new Dictionary<string, string>();
-                for (int i = 0; i < groupNameColumns.Length; i++)
-                {
-                    groupColumns.Add(dataFrame[groupNameColumns[i]].AsCharacter().First(), groupValColumns[i]);
-                }
+                var groupColumns = GetGroupColumns(dataFrame);
 
                 foreach (var dataFrameRow in dataFrame.GetRows())
                 {
@@ -603,14 +612,7 @@ namespace LSAnalyzer.ViewModels
             foreach (var result in Analysis.Result)
             {
                 var dataFrame = result["stat"].AsDataFrame();
-
-                var groupNameColumns = dataFrame.ColumnNames.Where(columnName => Regex.IsMatch(columnName, "^groupvar[0-9]*$")).ToArray();
-                var groupValColumns = dataFrame.ColumnNames.Where(columnName => Regex.IsMatch(columnName, "^groupval[0-9]*$")).ToArray();
-                Dictionary<string, string> groupColumns = new Dictionary<string, string>();
-                for (int i = 0; i < groupNameColumns.Length; i++)
-                {
-                    groupColumns.Add(dataFrame[groupNameColumns[i]].AsCharacter().First(), groupValColumns[i]);
-                }
+                var groupColumns = GetGroupColumns(dataFrame);
 
                 foreach (var dataFrameRow in dataFrame.GetRows())
                 {
@@ -705,6 +707,144 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
+        public DataTable CreateDataTableFromResultPercentiles(AnalysisPercentiles analysisPercentiles)
+        {
+            if (analysisPercentiles.Result == null || analysisPercentiles.Result.Count == 0)
+            {
+                return new();
+            }
+
+            List<double> categories = new(analysisPercentiles.Percentiles);
+            categories.Sort();
+
+            DataTable table = new(analysisPercentiles.AnalysisName);
+
+            Dictionary<string, DataColumn> columns = new();
+
+            columns.Add("var", new DataColumn("variable", typeof(string)));
+
+            for (int cntGroupyBy = 0; cntGroupyBy < analysisPercentiles.GroupBy.Count; cntGroupyBy++)
+            {
+                columns.Add("groupval" + (cntGroupyBy + 1), new DataColumn(analysisPercentiles.GroupBy[cntGroupyBy].Name, typeof(double)));
+                if (analysisPercentiles.ValueLabels.ContainsKey(analysisPercentiles.GroupBy[cntGroupyBy].Name))
+                {
+                    columns.Add("$label_" + analysisPercentiles.GroupBy[cntGroupyBy].Name, new DataColumn(analysisPercentiles.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
+                }
+            }
+
+            for (int cc = 0; cc < categories.Count; cc++)
+            {
+                var category = categories[cc];
+                columns.Add("$cat_" + cc, new DataColumn("Perc " + Regex.Replace(category.ToString(CultureInfo.InvariantCulture), "\\.", "_."), typeof(double)));
+                if (analysisPercentiles.CalculateSE)
+                {
+                    columns.Add("$cat_" + cc + "_SE", new DataColumn("Perc " + Regex.Replace(category.ToString(CultureInfo.InvariantCulture), "\\.", "_.") + " - standard error", typeof(double)));
+                }
+            }
+
+            foreach (var column in columns.Values)
+            {
+                table.Columns.Add(column);
+            }
+
+            foreach (var result in Analysis.Result)
+            {
+                var dataFrame = result["stat"].AsDataFrame();
+                var groupColumns = GetGroupColumns(dataFrame);
+
+                foreach (var dataFrameRow in dataFrame.GetRows())
+                {
+                    bool repeat = true;
+                    while (repeat)
+                    {
+                        var existingTableRow = GetExistingDataRowFreq(table, dataFrameRow, groupColumns);
+
+                        if (existingTableRow != null)
+                        {
+                            var category = (double)dataFrameRow["yval"];
+
+                            existingTableRow["Perc " + Regex.Replace(category.ToString(CultureInfo.InvariantCulture), "\\.", "_.")] = (double)dataFrameRow["quant"];
+                            if (analysisPercentiles.CalculateSE)
+                            {
+                                existingTableRow["Perc " + Regex.Replace(category.ToString(CultureInfo.InvariantCulture), "\\.", "_.") + " - standard error"] = (double)dataFrameRow["quant_SE"];
+                            }
+
+                            repeat = false;
+                        }
+                        else
+                        {
+                            DataRow tableRow = table.NewRow();
+
+                            List<object?> cellValues = new();
+                            foreach (var column in columns.Keys)
+                            {
+                                if (Regex.IsMatch(column, "^groupval[0-9]*$") && groupColumns.ContainsKey(columns[column].ColumnName))
+                                {
+                                    cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                                }
+                                else if (Regex.IsMatch(column, "^\\$label_"))
+                                {
+                                    if ((double?)cellValues.Last() == null)
+                                    {
+                                        cellValues.Add(null);
+                                        continue;
+                                    }
+
+                                    var groupByVariable = column.Substring(column.IndexOf("_") + 1);
+                                    var valueLabels = analysisPercentiles.ValueLabels[groupByVariable];
+                                    // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
+                                    var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)cellValues.Last()!);
+
+                                    if (posValueLabel != -1)
+                                    {
+                                        var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
+                                        cellValues.Add(valueLabel);
+                                    }
+                                    else
+                                    {
+                                        cellValues.Add(null);
+                                    }
+                                }
+                                else if (dataFrame.ColumnNames.Contains(column))
+                                {
+                                    cellValues.Add(dataFrameRow[column]);
+                                }
+                                else
+                                {
+                                    cellValues.Add(null);
+                                }
+                            }
+
+                            tableRow.ItemArray = cellValues.ToArray();
+                            table.Rows.Add(tableRow);
+                        }
+                    }
+                }
+            }
+
+            HasPValues = false;
+            HasFMI = false;
+
+            string[] sortBy = { "variable" };
+            table.DefaultView.Sort = String.Join(", ", sortBy.Concat(analysisPercentiles.GroupBy.ConvertAll(var => var.Name)).ToArray());
+
+            return table;
+        }
+
+        private Dictionary<string, string> GetGroupColumns(DataFrame dataFrame)
+        {
+            Dictionary<string, string> groupColumns = new();
+
+            var groupNameColumns = dataFrame.ColumnNames.Where(columnName => Regex.IsMatch(columnName, "^groupvar[0-9]*$")).ToArray();
+            var groupValColumns = dataFrame.ColumnNames.Where(columnName => Regex.IsMatch(columnName, "^groupval[0-9]*$")).ToArray();
+            for (int i = 0; i < groupNameColumns.Length; i++)
+            {
+                groupColumns.Add(dataFrame[groupNameColumns[i]].AsCharacter().First(), groupValColumns[i]);
+            }
+
+            return groupColumns;
+        }
+
         private DataRow? GetExistingDataRowFreq(DataTable table, DataFrameRow dataFrameRow, Dictionary<string, string> groupColumns)
         {
             foreach (DataRow row in table.Rows)
@@ -792,6 +932,13 @@ namespace LSAnalyzer.ViewModels
             return dataView;
         }
 
+        private DataView DataTableViewPercentiles(DataTable table)
+        {
+            DataView dataView = new(table.Copy());
+
+            return dataView;
+        }
+
         private void ResetDataView()
         {
             switch (Analysis)
@@ -804,6 +951,9 @@ namespace LSAnalyzer.ViewModels
                     break;
                 case AnalysisFreq:
                     DataView = DataTableViewFreq(DataTable);
+                    break;
+                case AnalysisPercentiles:
+                    DataView = DataTableViewPercentiles(DataTable);
                     break;
                 default:
                     break;

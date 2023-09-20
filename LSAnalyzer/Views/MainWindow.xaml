@@ -132,6 +132,13 @@
                                             <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="FMI = fraction of missing information: Amount of variance in coefficient that comes from multiple imputation (or PVs) compared to replication."/>
                                         </StackPanel>
                                     </CheckBox.Content>
+                                    <CheckBox.Visibility>
+                                        <Binding Path="HasFMI" Converter="{StaticResource BoolToVisibilityConverter}">
+                                            <Binding.ConverterParameter>
+                                                <sys:Boolean>true</sys:Boolean>
+                                            </Binding.ConverterParameter>
+                                        </Binding>
+                                    </CheckBox.Visibility>
                                 </CheckBox>
                             </StackPanel>
                         </Grid>

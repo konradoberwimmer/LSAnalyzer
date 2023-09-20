@@ -239,6 +239,17 @@ namespace LSAnalyzer.ViewModels
                         }
                     }
                     break;
+                case AnalysisPercentiles analysisPercentiles:
+                    result = _rservice.CalculatePercentiles(analysisPercentiles);
+                    foreach (var groupByVariable in analysisPercentiles.GroupBy)
+                    {
+                        var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
+                        if (valueLabels != null)
+                        {
+                            analysisPercentiles.ValueLabels.Add(groupByVariable.Name, valueLabels);
+                        }
+                    }
+                    break;
                 default:
                     break;
             }
