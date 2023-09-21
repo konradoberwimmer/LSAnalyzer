@@ -16,6 +16,7 @@
     <Window.Resources>
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisModeConverter"/>
         <converter:BooleanAnd x:Key="BooleanAndConverter"/>
+        <converter:InverseBool x:Key="InverseBoolConverter"/>
         <CollectionViewSource x:Key="AvailableVariablesCollectionView" Source="{Binding AvailableVariables}" Filter="AvailableVariablesCollectionView_FilterSystemVariables">
             <CollectionViewSource.SortDescriptions>
                 <componentmodel:SortDescription PropertyName="Position" Direction="Ascending"/>
@@ -49,6 +50,20 @@
             <StackPanel Grid.Column="0" Orientation="Vertical">
                 <CheckBox Content="Calculate standard errors (non-BIFIEsurvey)" IsChecked="{Binding CalculateSE}"/>
                 <CheckBox Content="Use interpolation" IsChecked="{Binding UseInterpolation}"/>
+                <CheckBox IsChecked="{Binding MimicIdbAnalyzer}">
+                    <CheckBox.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Mimic IDB Analyzer"/>
+                            <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="Diverges from estimates received from BIFIEsurvey::BIFIE.ecdf() and mimics calculation done by IDB analyzer."/>
+                        </StackPanel>
+                    </CheckBox.Content>
+                    <CheckBox.IsEnabled>
+                        <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                            <Binding Path="CalculateSE"/>
+                            <Binding Path="UseInterpolation" Converter="{StaticResource InverseBoolConverter}"/>
+                        </MultiBinding>
+                    </CheckBox.IsEnabled>
+                </CheckBox>
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="15,0,0,0">
                 <TextBlock Text="Percentiles:"/>

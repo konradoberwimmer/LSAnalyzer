@@ -181,6 +181,12 @@ namespace LSAnalyzer.Views
 
         private void DataGridResults_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
         {
+            if (e.PropertyName.Contains('.') && e.Column is DataGridBoundColumn)
+            {
+                DataGridBoundColumn dataGridBoundColumn = (e.Column as DataGridBoundColumn)!;
+                dataGridBoundColumn.Binding = new Binding("[" + e.PropertyName + "]");
+            }
+
             if (e.PropertyType == typeof(double))
             {
                 if (e.Column is DataGridTextColumn dataGridTextColumn)

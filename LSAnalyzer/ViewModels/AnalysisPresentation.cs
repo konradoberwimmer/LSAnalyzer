@@ -735,10 +735,10 @@ namespace LSAnalyzer.ViewModels
             for (int cc = 0; cc < categories.Count; cc++)
             {
                 var category = categories[cc];
-                columns.Add("$cat_" + cc, new DataColumn("Perc " + Regex.Replace(category.ToString(CultureInfo.InvariantCulture), "\\.", "_."), typeof(double)));
+                columns.Add("$cat_" + cc, new DataColumn("Perc " + category.ToString(CultureInfo.InvariantCulture), typeof(double)));
                 if (analysisPercentiles.CalculateSE)
                 {
-                    columns.Add("$cat_" + cc + "_SE", new DataColumn("Perc " + Regex.Replace(category.ToString(CultureInfo.InvariantCulture), "\\.", "_.") + " - standard error", typeof(double)));
+                    columns.Add("$cat_" + cc + "_SE", new DataColumn("Perc " + category.ToString(CultureInfo.InvariantCulture) + " - standard error", typeof(double)));
                 }
             }
 
@@ -763,10 +763,10 @@ namespace LSAnalyzer.ViewModels
                         {
                             var category = (double)dataFrameRow["yval"];
 
-                            existingTableRow["Perc " + Regex.Replace(category.ToString(CultureInfo.InvariantCulture), "\\.", "_.")] = (double)dataFrameRow["quant"];
+                            existingTableRow["Perc " + category.ToString(CultureInfo.InvariantCulture)] = (double)dataFrameRow["quant"];
                             if (analysisPercentiles.CalculateSE)
                             {
-                                existingTableRow["Perc " + Regex.Replace(category.ToString(CultureInfo.InvariantCulture), "\\.", "_.") + " - standard error"] = (double)dataFrameRow["quant_SE"];
+                                existingTableRow["Perc " + category.ToString(CultureInfo.InvariantCulture) + " - standard error"] = (double)dataFrameRow["SE"];
                             }
 
                             repeat = false;

@@ -381,9 +381,61 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat (label)"));
-            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Perc 0_.25"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Perc 0.25"));
             Assert.Equal(2, analysisPresentationViewModel.DataTable.Select("[cat (label)] = 'Kategorie B'").Length);
-            Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("cat = 1")[0]["Perc 0_.75"] - 74.713136) < 0.0001);
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("cat = 1")[0]["Perc 0.75"] - 74.713136) < 0.0001);
+        }
+
+        [Fact]
+        public void TestSetAnalysisResultPercentilesWithSE()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.InjectAppFunctions());
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 1));
+
+            AnalysisPercentiles analysisPercentiles = new(analysisConfiguration)
+            {
+                Percentiles = new() { 0.25, 0.50, 0.75 },
+                CalculateSE = true,
+                Vars = new() { new(1, "x", false), new(1, "y", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = true,
+            };
+
+            analysisPercentiles.ValueLabels.Add("cat", rservice.GetValueLabels("cat")!);
+            var result = rservice.CalculatePercentiles(analysisPercentiles);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisPercentiles);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(6, analysisPresentationViewModel.DataTable.Rows.Count);
+            Assert.Equal(9, analysisPresentationViewModel.DataTable.Columns.Count);
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat (label)"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Perc 0.25"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Perc 0.25 - standard error"));
+            Assert.Equal(2, analysisPresentationViewModel.DataTable.Select("[cat (label)] = 'Kategorie B'").Length);
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("cat = 1")[0]["Perc 0.75"] - 74.713136) < 0.0001);
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("cat = 1")[0]["Perc 0.75 - standard error"] - 51.641681) < 0.0001);
         }
 
         [Fact]

@@ -131,6 +131,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _mimicIdbAnalyzer = false;
+        public bool MimicIdbAnalyzer
+        {
+            get => _mimicIdbAnalyzer;
+            set
+            {
+                _mimicIdbAnalyzer = value;
+                NotifyPropertyChanged(nameof(MimicIdbAnalyzer));
+            }
+        }
+
         [ExcludeFromCodeCoverage]
         public RequestAnalysis()
         {
@@ -267,6 +278,7 @@ namespace LSAnalyzer.ViewModels
                     analysisPercentiles.Percentiles = new(Percentiles.Select(val => val.Value));
                     analysisPercentiles.CalculateSE = this.CalculateSE;
                     analysisPercentiles.UseInterpolation = this.UseInterpolation;
+                    analysisPercentiles.MimicIdbAnalyzer = this.MimicIdbAnalyzer;
                     analysisPercentiles.Vars = new(AnalysisVariables);
                     analysisPercentiles.GroupBy = new(GrouyByVariables);
                     analysisPercentiles.CalculateOverall = this.CalculateOverall;
