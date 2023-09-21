@@ -12,6 +12,7 @@ namespace LSAnalyzer.Models
         public bool CalculateOverall { get; set; } = true;
         public bool UseInterpolation { get; set; } = true;
         public bool CalculateSE { get; set; } = true;
+        public bool MimicIdbAnalyzer { get; set; } = false;
 
         public AnalysisPercentiles(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
         {

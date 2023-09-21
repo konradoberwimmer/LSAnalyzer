@@ -161,8 +161,68 @@ namespace LSAnalyzer.Services
             try
             {
                 _engine!.Evaluate("""
-                    lsanalyzer_func_quantile <- function(x, w) {
-                        
+                    lsanalyzer_func_quantile <- function(BIFIEobj, vars, breaks, useInterpolation = TRUE, mimicIdbAnalyzer = FALSE, group=NULL, group_values=NULL)
+                    {
+                      userfct <- function(X,w)
+                      {
+                        params <- numeric()
+                        for (cc in 1:ncol(X))
+                        {
+                          vx <- X[,cc]
+                          vw <- w
+                          ord <- order(vx,na.last=TRUE)
+                          vx <- vx[ord]
+                          vw <- vw[ord]
+                          if (any(is.na(vx)))
+                          {
+                            first_na <- min(which(is.na(vx)))
+                            vx <- vx[1:(first_na-1)]
+                            vw <- vw[1:(first_na-1)]
+                          }
+                          if (length(vx)>0)
+                          {
+                            relw <- cumsum(vw)/sum(vw)
+                            agg <- data.frame(x=vx,w=relw)
+                            for (bb in breaks)
+                            {
+                              if (any(agg$w<bb) && !all(agg$w<bb))
+                              {
+                                pos <- max(which(agg$w<bb))
+                                lowx <- agg$x[pos]
+                                loww <- agg$w[pos]
+                                uppx <- agg$x[pos+1]
+                                uppw <- agg$w[pos+1]
+                                if (useInterpolation) param <- lowx + ((uppx-lowx) * (bb-loww) / (uppw - loww + 10^-20))
+                                if (!useInterpolation && !mimicIdbAnalyzer) param <- lowx
+                                if (!useInterpolation && mimicIdbAnalyzer) param <- uppx
+                                params <- c(params,param)
+                              } else
+                              {
+                                params <- c(params,NaN)
+                              }
+                            }
+                          } else
+                          {
+                            params <- c(params,rep(NaN,length(breaks)))
+                          }
+                        }
+                        return(params)
+                      }
+
+                      userparnames <- character()
+                      for (vv in vars) userparnames <- c(userparnames,paste0(vv,"_yval_",breaks))
+                      res <- BIFIEsurvey::BIFIE.by(BIFIEobj = BIFIEobj,
+                                      vars = vars,
+                                      userfct = userfct,
+                                      userparnames = userparnames,
+                                      group = group,
+                                      group_values = group_values)
+
+                      res$stat$var <- sub("\\_yval\\_([0-9]|\\.)*$", "", res$stat$parm)
+                      res$stat$yval <- as.numeric(sub("^.*\\_yval\\_", "", res$stat$parm))
+                      res$stat$quant <- res$stat$est
+
+                      return(res)
                     }
                     """);
 
@@ -692,27 +752,41 @@ namespace LSAnalyzer.Services
 
                 List<GenericVector> resultList = new();
 
-                string baseCall = 
-                    analysis.CalculateSE ? 
-                    "" :
-                    "lsanalyzer_result_ecdf <- BIFIEsurvey::BIFIE.ecdf(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + "), breaks = c(" + string.Join(", ", analysis.Percentiles.ConvertAll(val => val.ToString(CultureInfo.InvariantCulture))) + ")";
-                string groupByArg = "";
-                
-                string quantTypeArg = "";
-                if (!analysis.UseInterpolation)
+                string baseCall = string.Empty;
+                string varsArg = ", vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                string breaksArg = ", breaks = c(" + string.Join(", ", analysis.Percentiles.ConvertAll(val => val.ToString(CultureInfo.InvariantCulture))) + ")";
+
+                if (!analysis.CalculateSE)
                 {
-                    quantTypeArg = ", quanttype=2";
+                    baseCall = "lsanalyzer_result_ecdf <- BIFIEsurvey::BIFIE.ecdf(BIFIEobj = lsanalyzer_dat_BO" + varsArg + breaksArg;
+                    if (!analysis.UseInterpolation)
+                    {
+                        baseCall += ", quanttype = 2";
+                    }
+                } else
+                {
+                    baseCall = "lsanalyzer_result_ecdf <- lsanalyzer_func_quantile(BIFIEobj = lsanalyzer_dat_BO" + varsArg + breaksArg;
+                    if (!analysis.UseInterpolation)
+                    {
+                        baseCall += ", useInterpolation = FALSE";
+                    }
+                    if (analysis.MimicIdbAnalyzer)
+                    {
+                        baseCall += ", mimicIdbAnalyzer = TRUE";
+                    }
                 }
+
+                string groupByArg = "";
 
                 if (analysis.GroupBy.Count == 0)
                 {
-                    _engine!.Evaluate(baseCall + groupByArg + quantTypeArg + ")");
+                    _engine!.Evaluate(baseCall + groupByArg + ")");
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
                 }
                 else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
                 {
                     groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    _engine!.Evaluate(baseCall + groupByArg + quantTypeArg + ")");
+                    _engine!.Evaluate(baseCall + groupByArg + ")");
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
                 }
                 else
@@ -724,7 +798,7 @@ namespace LSAnalyzer.Services
                         if (nGroups == 0)
                         {
                             groupByArg = "";
-                            _engine!.Evaluate(baseCall + groupByArg + quantTypeArg + ")");
+                            _engine!.Evaluate(baseCall + groupByArg + ")");
                             resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
                         }
                         else
@@ -733,7 +807,7 @@ namespace LSAnalyzer.Services
                             foreach (var combination in groupByCombinationsN)
                             {
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                                _engine!.Evaluate(baseCall + groupByArg + quantTypeArg + ")");
+                                _engine!.Evaluate(baseCall + groupByArg + ")");
                                 resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
                             }
                         }
