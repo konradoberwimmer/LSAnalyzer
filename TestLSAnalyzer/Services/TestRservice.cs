@@ -747,6 +747,79 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void TestCalculateCorr()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisCorr analysisCorr = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "item1", false), new(2, "item2", false), new(3, "item3", false) },
+                GroupBy = new() { new(4, "cat", false) },
+                CalculateOverall = false,
+            };
+
+            var result = rservice.CalculateCorr(analysisCorr);
+            Assert.NotNull(result);
+            Assert.Single(result);
+            var firstResult = result.First();
+            var statsCor = firstResult["stat.cor"].AsDataFrame();
+            var statsCov = firstResult["stat.cov"].AsDataFrame();
+            Assert.Equal(5, Convert.ToInt32(statsCor["Ncases"][2]));
+            Assert.True(Math.Abs((double)statsCor["cor"][0] - 0.032219071) < 0.0001);
+            Assert.True(Math.Abs((double)statsCor["cor_SE"][0] - 0.2347620) < 0.0001);
+            Assert.True(Math.Abs((double)statsCov["cov"][0] - 1.583710407) < 0.0001);
+
+            AnalysisConfiguration analysisConfigurationModeBuild = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = false,
+            };
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationModeBuild.FileName));
+
+            AnalysisCorr analysisCorrModeBuild = new(analysisConfigurationModeBuild)
+            {
+                Vars = new() { new(1, "item1", false), new(2, "item2", false), new(3, "item3", false) },
+                GroupBy = new() { new(4, "cat", false) },
+                CalculateOverall = true,
+            };
+
+            var resultModeBuild = rservice.CalculateCorr(analysisCorrModeBuild);
+            Assert.NotNull(resultModeBuild);
+            Assert.Equal(2, resultModeBuild.Count);
+            var lastResultModeBuild = resultModeBuild.Last();
+            var statsCorModeBuild = lastResultModeBuild["stat.cor"].AsDataFrame();
+
+            for (int i = 0; i < 6; i++)
+            {
+                Assert.Equal((double)statsCorModeBuild["cor_SE"][i], (double)statsCor["cor_SE"][i]);
+            }
+        }
+
+        [Fact]
         public void TestGetDatasetVariables()
         {
             Rservice rservice = new();

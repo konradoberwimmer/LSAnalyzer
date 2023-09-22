@@ -203,6 +203,9 @@ namespace LSAnalyzer.ViewModels
                     CalculateSE = analysisPercentiles.CalculateSE;
                     MimicIdbAnalyzer = analysisPercentiles.MimicIdbAnalyzer;
                     break;
+                case AnalysisCorr analysisCorr:
+                    CalculateOverall = analysisCorr.CalculateOverall;
+                    break;
                 default:
                     break;
             }
@@ -337,6 +340,12 @@ namespace LSAnalyzer.ViewModels
                     analysisPercentiles.GroupBy = new(GroupByVariables);
                     analysisPercentiles.CalculateOverall = this.CalculateOverall;
                     WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisPercentiles));
+                    break;
+                case AnalysisCorr analysisCorr:
+                    analysisCorr.Vars = new(AnalysisVariables);
+                    analysisCorr.GroupBy = new(GroupByVariables);
+                    analysisCorr.CalculateOverall = this.CalculateOverall;
+                    WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisCorr));
                     break;
             }
             
