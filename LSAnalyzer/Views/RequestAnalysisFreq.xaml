@@ -73,9 +73,9 @@
                     </Grid.ColumnDefinitions>
                     <Button x:Name="buttonMoveToAndFromGroupByVariables" Grid.Column="0" Content="&#x21D4;" Margin="10,0,10,22" Height="50" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Command="{Binding MoveToAndFromGroupByVariablesCommand}" Click="ButtonMoveToAndFromGroupByVariables_Click"/>
                     <Border x:Name="HeightHelperPanelVariablesGroupBy" Grid.Column="1" Margin="0,0,10,22">
-                        <ListBox x:Name="listBoxVariablesGroupBy" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesGroupBy}" ItemsSource="{Binding GrouyByVariables}" DisplayMemberPath="Name" SelectionMode="Extended"/>
+                        <ListBox x:Name="listBoxVariablesGroupBy" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesGroupBy}" ItemsSource="{Binding GroupByVariables}" DisplayMemberPath="Name" SelectionMode="Extended"/>
                     </Border>
-                    <CheckBox x:Name="checkBoxCalculateOverall" Grid.Column="1" VerticalAlignment="Bottom" Content="Calculate overall frequencies" IsChecked="{Binding CalculateOverall}" IsEnabled="{Binding GrouyByVariables.Count}"/>
+                    <CheckBox x:Name="checkBoxCalculateOverall" Grid.Column="1" VerticalAlignment="Bottom" Content="Calculate overall frequencies" IsChecked="{Binding CalculateOverall}" IsEnabled="{Binding GroupByVariables.Count}"/>
                 </Grid>
             </Grid>
         </Grid>

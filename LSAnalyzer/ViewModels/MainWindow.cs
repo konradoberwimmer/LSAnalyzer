@@ -34,6 +34,7 @@ namespace LSAnalyzer.ViewModels
                 NotifyPropertyChanged(nameof(AnalysisConfiguration));
 
                 SubsettingExpression = null;
+                RecentAnalyses.Clear();
             }
         }
 
@@ -58,6 +59,8 @@ namespace LSAnalyzer.ViewModels
                 NotifyPropertyChanged(nameof(Analyses));
             }
         }
+
+        public Dictionary<Type, Analysis> RecentAnalyses { get; } = new();
 
         [ExcludeFromCodeCoverage]
         public MainWindow()
@@ -150,6 +153,11 @@ namespace LSAnalyzer.ViewModels
                 AnalysisPresentation analysisPresentation = new(m.Value);
 
                 Analyses.Add(analysisPresentation);
+                if (RecentAnalyses.ContainsKey(m.Value.GetType()))
+                {
+                    RecentAnalyses.Remove(m.Value.GetType());
+                }
+                RecentAnalyses.Add(m.Value.GetType(), m.Value);
 
                 StartAnalysisCommand.Execute(analysisPresentation);
             });

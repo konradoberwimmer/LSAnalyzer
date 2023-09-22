@@ -106,6 +106,10 @@ namespace LSAnalyzer.Views
 
             RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
             requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisUnivar))) 
+            {
+                requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisUnivar)]);
+            }
 
             RequestAnalysisUnivar requestAnalysisUnivarView = new(requestAnalysisViewModel);
             requestAnalysisUnivarView.ShowDialog();
@@ -122,6 +126,10 @@ namespace LSAnalyzer.Views
 
             RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
             requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisMeanDiff)))
+            {
+                requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisMeanDiff)]);
+            }
 
             RequestAnalysisMeanDiff requestAnalysisMeanDiffView = new(requestAnalysisViewModel);
             requestAnalysisMeanDiffView.ShowDialog();
@@ -138,6 +146,10 @@ namespace LSAnalyzer.Views
 
             RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
             requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisFreq)))
+            {
+                requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisFreq)]);
+            }
 
             RequestAnalysisFreq requestAnalysisFreqView = new(requestAnalysisViewModel);
             requestAnalysisFreqView.ShowDialog();
@@ -154,6 +166,10 @@ namespace LSAnalyzer.Views
 
             RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
             requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisPercentiles)))
+            {
+                requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisPercentiles)]);
+            }
 
             RequestAnalysisPercentiles requestAnalysisPercentilesView = new(requestAnalysisViewModel);
             requestAnalysisPercentilesView.ShowDialog();

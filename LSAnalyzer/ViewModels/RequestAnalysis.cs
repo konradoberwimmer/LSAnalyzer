@@ -66,13 +66,13 @@ namespace LSAnalyzer.ViewModels
         }
 
         private ObservableCollection<Variable> _groupByVariables = new();
-        public ObservableCollection<Variable> GrouyByVariables
+        public ObservableCollection<Variable> GroupByVariables
         {
             get => _groupByVariables;
             set
             {
                 _groupByVariables = value;
-                NotifyPropertyChanged(nameof(GrouyByVariables));
+                NotifyPropertyChanged(nameof(GroupByVariables));
             }
         }
 
@@ -154,6 +154,60 @@ namespace LSAnalyzer.ViewModels
             AvailableVariables = new ObservableCollection<Variable>();
         }
 
+        public void InitializeWithAnalysis(Analysis analysis)
+        {
+            MoveToAndFromAnalysisVariables(new()
+            {
+                SelectedTo = AnalysisVariables.ToList(),
+            });
+            MoveToAndFromGroupByVariables(new()
+            {
+                SelectedTo = GroupByVariables.ToList(),
+            });
+
+            foreach (var variable in analysis.Vars)
+            {
+                MoveToAndFromAnalysisVariables(new()
+                {
+                    SelectedFrom = AvailableVariables.Where(var => var.Name == variable.Name).ToList(),
+                });
+            }
+
+            foreach (var variable in analysis.GroupBy)
+            {
+                MoveToAndFromGroupByVariables(new()
+                {
+                    SelectedFrom = AvailableVariables.Where(var => var.Name == variable.Name).ToList(),
+                });
+            }
+
+            switch (analysis)
+            {
+                case AnalysisUnivar analysisUnivar:
+                    CalculateOverall = analysisUnivar.CalculateOverall;
+                    break;
+                case AnalysisMeanDiff analysisMeanDiff:
+                    CalculateSeparately = analysisMeanDiff.CalculateSeparately;
+                    break;
+                case AnalysisFreq analysisFreq:
+                    CalculateOverall = analysisFreq.CalculateOverall;
+                    break;
+                case AnalysisPercentiles analysisPercentiles:
+                    Percentiles = new();
+                    foreach (var percentile in analysisPercentiles.Percentiles)
+                    {
+                        Percentiles.Add(new() { Value = percentile });
+                    }
+                    CalculateOverall = analysisPercentiles.CalculateOverall;
+                    UseInterpolation = analysisPercentiles.UseInterpolation;
+                    CalculateSE = analysisPercentiles.CalculateSE;
+                    MimicIdbAnalyzer = analysisPercentiles.MimicIdbAnalyzer;
+                    break;
+                default:
+                    break;
+            }
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
@@ -221,7 +275,7 @@ namespace LSAnalyzer.ViewModels
             {
                 foreach (var variable in commandParams.SelectedFrom)
                 {
-                    GrouyByVariables.Add(variable);
+                    GroupByVariables.Add(variable);
                     AvailableVariables.Remove(variable);
                 }
             }
@@ -230,7 +284,7 @@ namespace LSAnalyzer.ViewModels
                 foreach (var variable in commandParams.SelectedTo)
                 {
                     AvailableVariables.Add(variable);
-                    GrouyByVariables.Remove(variable);
+                    GroupByVariables.Remove(variable);
                 }
             }
         }
@@ -258,19 +312,19 @@ namespace LSAnalyzer.ViewModels
             {
                 case AnalysisUnivar analysisUnivar:
                     analysisUnivar.Vars = new(AnalysisVariables);
-                    analysisUnivar.GroupBy = new(GrouyByVariables);
+                    analysisUnivar.GroupBy = new(GroupByVariables);
                     analysisUnivar.CalculateOverall = this.CalculateOverall;
                     WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisUnivar));
                     break;
                 case AnalysisMeanDiff analysisMeanDiff:
                     analysisMeanDiff.Vars = new(AnalysisVariables);
-                    analysisMeanDiff.GroupBy = new(GrouyByVariables);
+                    analysisMeanDiff.GroupBy = new(GroupByVariables);
                     analysisMeanDiff.CalculateSeparately = this.CalculateSeparately;
                     WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisMeanDiff));
                     break;
                 case AnalysisFreq analysisFreq:
                     analysisFreq.Vars = new(AnalysisVariables);
-                    analysisFreq.GroupBy = new(GrouyByVariables);
+                    analysisFreq.GroupBy = new(GroupByVariables);
                     analysisFreq.CalculateOverall = this.CalculateOverall;
                     WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisFreq));
                     break;
@@ -280,7 +334,7 @@ namespace LSAnalyzer.ViewModels
                     analysisPercentiles.UseInterpolation = this.UseInterpolation;
                     analysisPercentiles.MimicIdbAnalyzer = this.MimicIdbAnalyzer;
                     analysisPercentiles.Vars = new(AnalysisVariables);
-                    analysisPercentiles.GroupBy = new(GrouyByVariables);
+                    analysisPercentiles.GroupBy = new(GroupByVariables);
                     analysisPercentiles.CalculateOverall = this.CalculateOverall;
                     WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisPercentiles));
                     break;
