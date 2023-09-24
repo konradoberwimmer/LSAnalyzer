@@ -258,6 +258,17 @@ namespace LSAnalyzer.ViewModels
                         }
                     }
                     break;
+                case AnalysisCorr analysisCorr:
+                    result = _rservice.CalculateCorr(analysisCorr);
+                    foreach (var groupByVariable in analysisCorr.GroupBy)
+                    {
+                        var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
+                        if (valueLabels != null)
+                        {
+                            analysisCorr.ValueLabels.Add(groupByVariable.Name, valueLabels);
+                        }
+                    }
+                    break;
                 default:
                     break;
             }

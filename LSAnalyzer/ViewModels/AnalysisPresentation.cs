@@ -179,6 +179,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private DataTable? _tableCov;
+        public DataTable? TableCov
+        {
+            get => _tableCov;
+            set
+            {
+                _tableCov = value;
+                NotifyPropertyChanged(nameof(TableCov));
+            }
+        }
+
         private bool _busy = false;
         public bool IsBusy
         {
@@ -223,26 +234,26 @@ namespace LSAnalyzer.ViewModels
             {
                 case AnalysisUnivar analysisUnivar:
                     DataTable = CreateDataTableFromResultUnivar(analysisUnivar);
-                    DataView = DataTableViewUnivar(DataTable);
                     break;
                 case AnalysisMeanDiff analysisMeanDiff:
                     DataTable = CreateDataTableFromResultMeanDiff(analysisMeanDiff);
                     TableEta = CreateTableEtaFromResultMeanDiff(analysisMeanDiff);
                     ShowPValues = true;
-                    DataView = DataTableViewMeanDiff(DataTable);
                     break;
                 case AnalysisFreq analysisFreq:
                     DataTable = CreateDataTableFromResultFreq(analysisFreq);
-                    DataView = DataTableViewFreq(DataTable);
                     break;
                 case AnalysisPercentiles analysisPercentiles:
                     DataTable = CreateDataTableFromResultPercentiles(analysisPercentiles);
-                    DataView = DataTableViewPercentiles(DataTable);
+                    break;
+                case AnalysisCorr analysisCorr:
+                    DataTable = CreateDataTableFromResultCorr(analysisCorr);
+                    TableCov = CreateTableCovFromResultCorr(analysisCorr);
                     break;
                 default:
                     break;
             }
-            NotifyPropertyChanged(nameof(DataView));
+            ResetDataView();
 
             IsBusy = false;
         }
@@ -831,6 +842,192 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
+        public DataTable CreateDataTableFromResultCorr(AnalysisCorr analysisCorr)
+        {
+            if (analysisCorr.Result == null || analysisCorr.Result.Count == 0)
+            {
+                return new();
+            }
+
+            DataTable table = new(analysisCorr.AnalysisName);
+            Dictionary<string, DataColumn> columns = new();
+
+            for (int cntGroupyBy = 0; cntGroupyBy < analysisCorr.GroupBy.Count; cntGroupyBy++)
+            {
+                columns.Add("groupval" + (cntGroupyBy + 1), new DataColumn(analysisCorr.GroupBy[cntGroupyBy].Name, typeof(double)));
+                if (analysisCorr.ValueLabels.ContainsKey(analysisCorr.GroupBy[cntGroupyBy].Name))
+                {
+                    columns.Add("$label_" + analysisCorr.GroupBy[cntGroupyBy].Name, new DataColumn(analysisCorr.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
+                }
+            }
+
+            columns.Add("var1", new DataColumn("variable A", typeof(string)));
+            columns.Add("var2", new DataColumn("variable B", typeof(string)));
+
+            columns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
+            columns.Add("Nweight", new DataColumn("N - weighted", typeof(double)));
+            columns.Add("cor", new DataColumn("correlation", typeof(double)));
+            columns.Add("cor_SE", new DataColumn("correlation - standard error", typeof(double)));
+            columns.Add("p", new DataColumn("correlation - p value", typeof(double)));
+            columns.Add("cor_fmi", new DataColumn("correlation - FMI", typeof(double)));
+            
+            foreach (var column in columns.Values)
+            {
+                table.Columns.Add(column);
+            }
+
+            foreach (var result in Analysis.Result)
+            {
+                var dataFrame = result["stat.cor"].AsDataFrame();
+                var groupColumns = GetGroupColumns(dataFrame);
+
+                foreach (var dataFrameRow in dataFrame.GetRows())
+                {
+                    DataRow tableRow = table.NewRow();
+
+                    List<object?> cellValues = new();
+                    foreach (var column in columns.Keys)
+                    {
+                        if (Regex.IsMatch(column, "^groupval[0-9]*$") && groupColumns.ContainsKey(columns[column].ColumnName))
+                        {
+                            cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                        }
+                        else if (Regex.IsMatch(column, "^\\$label_"))
+                        {
+                            if ((double?)cellValues.Last() == null)
+                            {
+                                cellValues.Add(null);
+                                continue;
+                            }
+
+                            var groupByVariable = column.Substring(column.IndexOf("_") + 1);
+                            var valueLabels = analysisCorr.ValueLabels[groupByVariable];
+                            // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
+                            var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)cellValues.Last()!);
+
+                            if (posValueLabel != -1)
+                            {
+                                var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
+                                cellValues.Add(valueLabel);
+                            }
+                            else
+                            {
+                                cellValues.Add(null);
+                            }
+                        }
+                        else if (dataFrame.ColumnNames.Contains(column))
+                        {
+                            cellValues.Add(dataFrameRow[column]);
+                        }
+                        else
+                        {
+                            cellValues.Add(null);
+                        }
+                    }
+
+                    tableRow.ItemArray = cellValues.ToArray();
+                    table.Rows.Add(tableRow);
+                }
+            }
+
+            string[] sortBy = { "variable A", "variable B" };
+            table.DefaultView.Sort = String.Join(", ", analysisCorr.GroupBy.ConvertAll(var => var.Name).ToArray().Concat(sortBy));
+
+            return table;
+        }
+
+        public DataTable CreateTableCovFromResultCorr(AnalysisCorr analysisCorr)
+        {
+            if (analysisCorr.Result == null || analysisCorr.Result.Count == 0)
+            {
+                return new();
+            }
+
+            DataTable table = new("Covariances");
+            Dictionary<string, DataColumn> columns = new();
+
+            for (int cntGroupyBy = 0; cntGroupyBy < analysisCorr.GroupBy.Count; cntGroupyBy++)
+            {
+                columns.Add("groupval" + (cntGroupyBy + 1), new DataColumn(analysisCorr.GroupBy[cntGroupyBy].Name, typeof(double)));
+                if (analysisCorr.ValueLabels.ContainsKey(analysisCorr.GroupBy[cntGroupyBy].Name))
+                {
+                    columns.Add("$label_" + analysisCorr.GroupBy[cntGroupyBy].Name, new DataColumn(analysisCorr.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
+                }
+            }
+
+            columns.Add("var1", new DataColumn("variable A", typeof(string)));
+            columns.Add("var2", new DataColumn("variable B", typeof(string)));
+
+            columns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
+            columns.Add("Nweight", new DataColumn("N - weighted", typeof(double)));
+            columns.Add("cov", new DataColumn("covariance", typeof(double)));
+            columns.Add("cov_SE", new DataColumn("covariance - standard error", typeof(double)));
+
+            foreach (var column in columns.Values)
+            {
+                table.Columns.Add(column);
+            }
+
+            foreach (var result in Analysis.Result)
+            {
+                var dataFrame = result["stat.cov"].AsDataFrame();
+                var groupColumns = GetGroupColumns(dataFrame);
+
+                foreach (var dataFrameRow in dataFrame.GetRows())
+                {
+                    DataRow tableRow = table.NewRow();
+
+                    List<object?> cellValues = new();
+                    foreach (var column in columns.Keys)
+                    {
+                        if (Regex.IsMatch(column, "^groupval[0-9]*$") && groupColumns.ContainsKey(columns[column].ColumnName))
+                        {
+                            cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                        }
+                        else if (Regex.IsMatch(column, "^\\$label_"))
+                        {
+                            if ((double?)cellValues.Last() == null)
+                            {
+                                cellValues.Add(null);
+                                continue;
+                            }
+
+                            var groupByVariable = column.Substring(column.IndexOf("_") + 1);
+                            var valueLabels = analysisCorr.ValueLabels[groupByVariable];
+                            // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
+                            var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)cellValues.Last()!);
+
+                            if (posValueLabel != -1)
+                            {
+                                var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
+                                cellValues.Add(valueLabel);
+                            }
+                            else
+                            {
+                                cellValues.Add(null);
+                            }
+                        }
+                        else if (dataFrame.ColumnNames.Contains(column))
+                        {
+                            cellValues.Add(dataFrameRow[column]);
+                        }
+                        else
+                        {
+                            cellValues.Add(null);
+                        }
+                    }
+
+                    tableRow.ItemArray = cellValues.ToArray();
+                    table.Rows.Add(tableRow);
+                }
+            }
+
+            string[] sortBy = { "variable A", "variable B" };
+            table.DefaultView.Sort = String.Join(", ", analysisCorr.GroupBy.ConvertAll(var => var.Name).ToArray().Concat(sortBy));
+
+            return table;
+        }
+
         private Dictionary<string, string> GetGroupColumns(DataFrame dataFrame)
         {
             Dictionary<string, string> groupColumns = new();
@@ -939,6 +1136,38 @@ namespace LSAnalyzer.ViewModels
             return dataView;
         }
 
+        private DataView DataTableViewCorr(DataTable table)
+        {
+            DataView dataView = new(table.Copy());
+
+            Dictionary<string, string> toggles = new()
+            {
+                ["ShowPValues"] = "p\\svalue$",
+                ["ShowFMI"] = "FMI$",
+            };
+
+            foreach (KeyValuePair<string, string> toggle in toggles)
+            {
+                if (!(bool)this.GetType().GetProperty(toggle.Key)!.GetValue(this)!)
+                {
+                    List<DataColumn> columnsToRemove = new();
+                    foreach (DataColumn column in dataView.Table!.Columns)
+                    {
+                        if (Regex.IsMatch(column.ColumnName, toggle.Value))
+                        {
+                            columnsToRemove.Add(column);
+                        }
+                    }
+                    foreach (var pValueColumn in columnsToRemove)
+                    {
+                        dataView.Table!.Columns.Remove(pValueColumn);
+                    }
+                }
+            }
+
+            return dataView;
+        }
+
         private void ResetDataView()
         {
             switch (Analysis)
@@ -954,6 +1183,9 @@ namespace LSAnalyzer.ViewModels
                     break;
                 case AnalysisPercentiles:
                     DataView = DataTableViewPercentiles(DataTable);
+                    break;
+                case AnalysisCorr:
+                    DataView = DataTableViewCorr(DataTable);
                     break;
                 default:
                     break;
@@ -986,6 +1218,11 @@ namespace LSAnalyzer.ViewModels
             if (TableEta != null)
             {
                 wb.AddWorksheet(TableEta);
+            }
+
+            if (TableCov != null)
+            {
+                wb.AddWorksheet(TableCov);
             }
 
             if (File.Exists(filename))
