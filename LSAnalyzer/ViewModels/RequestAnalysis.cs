@@ -356,6 +356,35 @@ namespace LSAnalyzer.ViewModels
 
             window.Close();
         }
+
+        private RelayCommand<object?> _resetAnalysisRequestCommand;
+        public ICommand ResetAnalysisRequestCommand
+        {
+            get
+            {
+                if (_resetAnalysisRequestCommand == null)
+                    _resetAnalysisRequestCommand = new(this.ResetAnalysisRequest);
+                return _resetAnalysisRequestCommand;
+            }
+        }
+
+        private void ResetAnalysisRequest(object? dummy)
+        {
+            MoveToAndFromAnalysisVariables(new()
+            {
+                SelectedTo = AnalysisVariables.ToList(),
+            });
+            MoveToAndFromGroupByVariables(new()
+            {
+                SelectedTo = GroupByVariables.ToList(),
+            });
+            CalculateOverall = true;
+            CalculateSeparately = false;
+            Percentiles = new() { new() { Value = 0.25 }, new() { Value = 0.50 }, new() { Value = 0.75 } };
+            CalculateSE = true;
+            UseInterpolation = true;
+            MimicIdbAnalyzer = false;
+        }
     }
 
     public class PercentileWrapper

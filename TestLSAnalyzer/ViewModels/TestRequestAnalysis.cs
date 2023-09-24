@@ -140,6 +140,45 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
+        public void TestResetAnalysis()
+        {
+            MockRserviceForTestRequestAnalysis rservice = new();
+            RequestAnalysis requestAnalysisViewModel = new(rservice);
+
+            requestAnalysisViewModel.AnalysisConfiguration = new()
+            {
+                DatasetType = new(),
+                FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                ModeKeep = true,
+            };
+
+            AnalysisPercentiles analysisPercentiles = new(requestAnalysisViewModel.AnalysisConfiguration)
+            {
+                Percentiles = new() { 0.20, 0.40, 0.60, 0.80 },
+                Vars = new() { new(1, "x", false), new(2, "y", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = false,
+                UseInterpolation = false,
+            };
+
+            requestAnalysisViewModel.InitializeWithAnalysis(analysisPercentiles);
+            Assert.Equal(4, requestAnalysisViewModel.Percentiles.Count);
+            Assert.Equal(8, requestAnalysisViewModel.AvailableVariables.Count);
+            Assert.Equal(2, requestAnalysisViewModel.AnalysisVariables.Count);
+            Assert.Equal("cat", requestAnalysisViewModel.GroupByVariables[0].Name);
+            Assert.False(requestAnalysisViewModel.CalculateOverall);
+            Assert.False(requestAnalysisViewModel.UseInterpolation);
+
+            requestAnalysisViewModel.ResetAnalysisRequestCommand.Execute(null);
+            Assert.Equal(3, requestAnalysisViewModel.Percentiles.Count);
+            Assert.Equal(11, requestAnalysisViewModel.AvailableVariables.Count);
+            Assert.Empty(requestAnalysisViewModel.AnalysisVariables);
+            Assert.Empty(requestAnalysisViewModel.GroupByVariables);
+            Assert.True(requestAnalysisViewModel.CalculateOverall);
+            Assert.True(requestAnalysisViewModel.UseInterpolation);
+        }
+
+        [Fact]
         public void TestRequestAnalysisSendsMessage()
         {
             MockRserviceForTestRequestAnalysis rservice = new();

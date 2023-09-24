@@ -81,6 +81,7 @@
                 </Grid>
             </Grid>
         </Grid>
+        <Button Grid.Row="2" Content="Reset" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,10" Width="80" Height="22" Command="{Binding ResetAnalysisRequestCommand}"/>
         <Button Grid.Row="2" Content="Go !" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,10" Width="80" Height="22" Command="{Binding SendAnalysisRequestCommand}" CommandParameter="{Binding ElementName=windowRequestAnalysisCorr}">
             <Button.IsEnabled>
                 <Binding Path="AnalysisVariables.Count" Converter="{StaticResource AtLeastConverter}">
