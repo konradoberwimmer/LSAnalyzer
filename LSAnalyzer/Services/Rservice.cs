@@ -880,6 +880,165 @@ namespace LSAnalyzer.Services
             }
         }
 
+        public List<GenericVector>? CalculateLinreg(AnalysisLinreg analysis)
+        {
+            if (analysis.Dependent == null || analysis.Vars.Count == 0 ||
+                analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis, new() { analysis.Dependent.Name }))
+            {
+                return null;
+            }
+
+            if (analysis.Sequence == AnalysisLinreg.RegressionSequence.AllIn || analysis.Vars.Count == 1)
+            {
+                var result = CalculateLinregSingle(analysis.Dependent, analysis.Vars, analysis.WithIntercept, analysis.GroupBy, analysis.CalculateOverall);
+                if (result == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return result;
+                }
+            }
+
+            if (analysis.Sequence == AnalysisLinreg.RegressionSequence.Forward)
+            {
+                List<Variable> usedPredictors = new();
+                List<Variable> availablePredictors = new(analysis.Vars);
+                List<GenericVector> resultList = new();
+
+                while (availablePredictors.Count > 0)
+                {
+                    double maxR2 = double.MinValue;
+                    Variable? bestNextPredictor = null;
+                    GenericVector? bestNextModel = null;
+
+                    foreach (var predictor in availablePredictors)
+                    {
+                        var result = CalculateLinregSingle(analysis.Dependent, usedPredictors.Concat(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false);
+                        if (result == null)
+                        {
+                            return null;
+                        }
+
+                        var stats = result[0]["stat"].AsDataFrame();
+                        double R2 = (double)stats.GetRows().Where(row => (string)row["parameter"] == "R^2").First()["est"];
+
+                        if (R2 > maxR2)
+                        {
+                            maxR2 = R2;
+                            bestNextPredictor = predictor;
+                            bestNextModel = result[0];
+                        }
+                    }
+
+                    usedPredictors.Add(bestNextPredictor!);
+                    availablePredictors.Remove(bestNextPredictor!);
+                    resultList.Add(bestNextModel!);
+                }
+
+                return resultList;
+            }
+
+            if (analysis.Sequence == AnalysisLinreg.RegressionSequence.Backward)
+            {
+                var result = CalculateLinregSingle(analysis.Dependent, analysis.Vars, analysis.WithIntercept, new(), false);
+                if (result == null)
+                {
+                    return null;
+                }
+
+                List<Variable> usedPredictors = new(analysis.Vars);
+                List<GenericVector> resultList = new() { result[0] };
+
+                while (usedPredictors.Count > 1)
+                {
+                    double minR2 = double.MaxValue;
+                    Variable? bestNextPredictor = null;
+                    GenericVector? worstNextModel = null;
+
+                    foreach (var predictor in usedPredictors)
+                    {
+                        result = CalculateLinregSingle(analysis.Dependent, usedPredictors.Except(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false);
+                        if (result == null)
+                        {
+                            return null;
+                        }
+
+                        var stats = result[0]["stat"].AsDataFrame();
+                        double R2 = (double)stats.GetRows().Where(row => (string)row["parameter"] == "R^2").First()["est"];
+
+                        if (R2 < minR2)
+                        {
+                            minR2 = R2;
+                            bestNextPredictor = predictor;
+                            worstNextModel = result[0];
+                        }
+                    }
+
+                    usedPredictors.Remove(bestNextPredictor!);
+                    resultList.Add(worstNextModel!);
+                }
+
+                return resultList;
+            }
+
+            return null;
+        }
+
+        private List<GenericVector>? CalculateLinregSingle(Variable dependent, List<Variable> predictors, bool withIntercept, List<Variable> groups, bool calcualteOverall)
+        {
+            try
+            {
+                List<GenericVector> resultList = new();
+
+                string baseCall = "lsanalyzer_result_linreg <- BIFIEsurvey::BIFIE.linreg(BIFIEobj = lsanalyzer_dat_BO, dep = '" + dependent.Name + "', pre = c(" + (withIntercept ? "'one', " : "") + string.Join(", ", predictors.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                string groupByArg = "";
+
+                if (groups.Count == 0)
+                {
+                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_linreg").AsList());
+                }
+                else if (groups.Count > 0 && !calcualteOverall)
+                {
+                    groupByArg = ", group = c(" + string.Join(", ", groups.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_linreg").AsList());
+                }
+                else
+                {
+                    var groupByCombinations = Combinations.GetCombinations(groups);
+
+                    for (int nGroups = 0; nGroups <= groups.Count; nGroups++)
+                    {
+                        if (nGroups == 0)
+                        {
+                            groupByArg = "";
+                            _engine!.Evaluate(baseCall + groupByArg + ")");
+                            resultList.Add(_engine.GetSymbol("lsanalyzer_result_linreg").AsList());
+                        }
+                        else
+                        {
+                            var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
+                            foreach (var combination in groupByCombinationsN)
+                            {
+                                groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                                _engine!.Evaluate(baseCall + groupByArg + ")");
+                                resultList.Add(_engine.GetSymbol("lsanalyzer_result_linreg").AsList());
+                            }
+                        }
+                    }
+                }
+
+                return resultList;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         public List<Variable>? GetDatasetVariables(string filename)
         {
             try

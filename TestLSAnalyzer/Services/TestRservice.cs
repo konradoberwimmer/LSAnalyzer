@@ -820,6 +820,174 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void TestCalculateLinregAllIn()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisLinreg analysisLinreg = new(analysisConfiguration)
+            {
+                Dependent = new(1, "item1", false),
+                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
+                GroupBy = new() { new(4, "cat", false) },
+                CalculateOverall = false,
+            };
+
+            var result = rservice.CalculateLinreg(analysisLinreg);
+            Assert.NotNull(result);
+            Assert.Single(result);
+            var firstResult = result.First();
+            var stats = firstResult["stat"].AsDataFrame();
+            Assert.Equal(16, stats.RowCount);
+            Assert.Equal(5, Convert.ToInt32(stats["Ncases"][2]));
+            Assert.True(Math.Abs((double)stats["est"][0] - 2.70788043) < 0.0001);
+            Assert.True(Math.Abs((double)stats["SE"][1] - 0.01802513) < 0.0001);
+
+            AnalysisConfiguration analysisConfigurationModeBuild = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = false,
+            };
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationModeBuild.FileName));
+
+            AnalysisLinreg analysisLinregModeBuild = new(analysisConfigurationModeBuild)
+            {
+                Dependent = new(1, "item1", false),
+                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
+                GroupBy = new() { new(4, "cat", false) },
+                CalculateOverall = true,
+            };
+
+            var resultModeBuild = rservice.CalculateLinreg(analysisLinregModeBuild);
+            Assert.NotNull(resultModeBuild);
+            Assert.Equal(2, resultModeBuild.Count);
+            var lastResultModeBuild = resultModeBuild.Last();
+            var statsModeBuild = lastResultModeBuild["stat"].AsDataFrame();
+
+            for (int i = 0; i < 6; i++)
+            {
+                Assert.Equal((double)statsModeBuild["SE"][i], (double)stats["SE"][i]);
+            }
+        }
+
+        [Fact]
+        public void TestCalculateLinregForward()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisLinreg analysisLinregForward = new(analysisConfiguration)
+            {
+                Dependent = new(1, "item1", false),
+                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
+                GroupBy = new() { new(4, "cat", false) },
+                CalculateOverall = false,
+                Sequence = AnalysisLinreg.RegressionSequence.Forward,
+            };
+
+            var result = rservice.CalculateLinreg(analysisLinregForward);
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count);
+            var firstResult = result.First();
+            var stats = firstResult["stat"].AsDataFrame();
+            Assert.Equal(6, stats.RowCount);
+            Assert.Empty(stats["var"].Where(var => (string)var == "item2"));
+            Assert.Equal(2, stats["var"].Where(var => (string)var == "item3").Count());
+            Assert.True(Math.Abs((double)stats["est"][3] - 0.1771340) < 0.0001);
+            var lastResult = result.Last();
+            stats = lastResult["stat"].AsDataFrame();
+            Assert.Equal(8, stats.RowCount);
+            Assert.Equal(2, stats["var"].Where(var => (string)var == "item2").Count());
+            Assert.Equal(2, stats["var"].Where(var => (string)var == "item3").Count());
+            Assert.True(Math.Abs((double)stats["est"][4] - 0.28933320) < 0.0001);
+        }
+
+        [Fact]
+        public void TestCalculateLinregBackward()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisLinreg analysisLinregBackward = new(analysisConfiguration)
+            {
+                Dependent = new(1, "item1", false),
+                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
+                GroupBy = new() { new(4, "cat", false) },
+                CalculateOverall = false,
+                Sequence = AnalysisLinreg.RegressionSequence.Backward,
+            };
+
+            var result = rservice.CalculateLinreg(analysisLinregBackward);
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count);
+            var firstResult = result.First();
+            var stats = firstResult["stat"].AsDataFrame();
+            Assert.Equal(8, stats.RowCount);
+            Assert.Equal(2, stats["var"].Where(var => (string)var == "item2").Count());
+            Assert.Equal(2, stats["var"].Where(var => (string)var == "item3").Count());
+            Assert.True(Math.Abs((double)stats["est"][4] - 0.28933320) < 0.0001);
+            var lastResult = result.Last();
+            stats = lastResult["stat"].AsDataFrame();
+            Assert.Equal(6, stats.RowCount);
+            Assert.Empty(stats["var"].Where(var => (string)var == "item3"));
+            Assert.Equal(2, stats["var"].Where(var => (string)var == "item2").Count());
+            Assert.True(Math.Abs((double)stats["est"][3] - 0.006023262) < 0.0001);
+        }
+
+        [Fact]
         public void TestGetDatasetVariables()
         {
             Rservice rservice = new();
