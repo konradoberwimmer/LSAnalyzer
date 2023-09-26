@@ -175,7 +175,7 @@ namespace TestLSAnalyzer.ViewModels
                 Vars = new() { new(1, "x", false) },
                 GroupBy = new() { new(3, "cat", false) },
                 CalculateOverall = false,
-                Sequence = AnalysisLinreg.RegressionSequence.Forward,
+                Sequence = AnalysisRegression.RegressionSequence.Forward,
             };
 
             requestAnalysisViewModel.InitializeWithAnalysis(analysisLinreg);
@@ -184,7 +184,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Single(requestAnalysisViewModel.AnalysisVariables);
             Assert.Equal("cat", requestAnalysisViewModel.GroupByVariables[0].Name);
             Assert.False(requestAnalysisViewModel.CalculateOverall);
-            Assert.Equal(AnalysisLinreg.RegressionSequence.Forward, requestAnalysisViewModel.RegressionSequence);
+            Assert.Equal(AnalysisRegression.RegressionSequence.Forward, requestAnalysisViewModel.RegressionSequence);
         }
 
         [Fact]
@@ -225,9 +225,9 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(requestAnalysisViewModel.CalculateOverall);
             Assert.True(requestAnalysisViewModel.UseInterpolation);
 
-            requestAnalysisViewModel.RegressionSequence = AnalysisLinreg.RegressionSequence.Forward;
+            requestAnalysisViewModel.RegressionSequence = AnalysisRegression.RegressionSequence.Forward;
             requestAnalysisViewModel.ResetAnalysisRequestCommand.Execute(null);
-            Assert.Equal(AnalysisLinreg.RegressionSequence.AllIn, requestAnalysisViewModel.RegressionSequence);
+            Assert.Equal(AnalysisRegression.RegressionSequence.AllIn, requestAnalysisViewModel.RegressionSequence);
         }
 
         [Fact]

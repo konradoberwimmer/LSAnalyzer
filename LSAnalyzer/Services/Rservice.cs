@@ -882,15 +882,25 @@ namespace LSAnalyzer.Services
 
         public List<GenericVector>? CalculateLinreg(AnalysisLinreg analysis)
         {
+            return CalculateRegression("BIFIE.linreg", "R^2", analysis);
+        }
+
+        public List<GenericVector>? CalculateLogistreg(AnalysisLogistReg analysis)
+        {
+            return CalculateRegression("BIFIE.logistreg", "R2", analysis);
+        }
+
+        private List<GenericVector>? CalculateRegression(string method, string r2parameter, AnalysisRegression analysis)
+        {
             if (analysis.Dependent == null || analysis.Vars.Count == 0 ||
                 analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis, new() { analysis.Dependent.Name }))
             {
                 return null;
             }
 
-            if (analysis.Sequence == AnalysisLinreg.RegressionSequence.AllIn || analysis.Vars.Count == 1)
+            if (analysis.Sequence == AnalysisRegression.RegressionSequence.AllIn || analysis.Vars.Count == 1)
             {
-                var result = CalculateLinregSingle(analysis.Dependent, analysis.Vars, analysis.WithIntercept, analysis.GroupBy, analysis.CalculateOverall);
+                var result = CalculateRegressionSingle(method, analysis.Dependent, analysis.Vars, analysis.WithIntercept, analysis.GroupBy, analysis.CalculateOverall);
                 if (result == null)
                 {
                     return null;
@@ -901,7 +911,7 @@ namespace LSAnalyzer.Services
                 }
             }
 
-            if (analysis.Sequence == AnalysisLinreg.RegressionSequence.Forward)
+            if (analysis.Sequence == AnalysisRegression.RegressionSequence.Forward)
             {
                 List<Variable> usedPredictors = new();
                 List<Variable> availablePredictors = new(analysis.Vars);
@@ -915,14 +925,14 @@ namespace LSAnalyzer.Services
 
                     foreach (var predictor in availablePredictors)
                     {
-                        var result = CalculateLinregSingle(analysis.Dependent, usedPredictors.Concat(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false);
+                        var result = CalculateRegressionSingle(method, analysis.Dependent, usedPredictors.Concat(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false);
                         if (result == null)
                         {
                             return null;
                         }
 
                         var stats = result[0]["stat"].AsDataFrame();
-                        double R2 = (double)stats.GetRows().Where(row => (string)row["parameter"] == "R^2").First()["est"];
+                        double R2 = (double)stats.GetRows().Where(row => (string)row["parameter"] == r2parameter).First()["est"];
 
                         if (R2 > maxR2)
                         {
@@ -940,9 +950,9 @@ namespace LSAnalyzer.Services
                 return resultList;
             }
 
-            if (analysis.Sequence == AnalysisLinreg.RegressionSequence.Backward)
+            if (analysis.Sequence == AnalysisRegression.RegressionSequence.Backward)
             {
-                var result = CalculateLinregSingle(analysis.Dependent, analysis.Vars, analysis.WithIntercept, new(), false);
+                var result = CalculateRegressionSingle(method, analysis.Dependent, analysis.Vars, analysis.WithIntercept, new(), false);
                 if (result == null)
                 {
                     return null;
@@ -959,14 +969,14 @@ namespace LSAnalyzer.Services
 
                     foreach (var predictor in usedPredictors)
                     {
-                        result = CalculateLinregSingle(analysis.Dependent, usedPredictors.Except(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false);
+                        result = CalculateRegressionSingle(method, analysis.Dependent, usedPredictors.Except(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false);
                         if (result == null)
                         {
                             return null;
                         }
 
                         var stats = result[0]["stat"].AsDataFrame();
-                        double R2 = (double)stats.GetRows().Where(row => (string)row["parameter"] == "R^2").First()["est"];
+                        double R2 = (double)stats.GetRows().Where(row => (string)row["parameter"] == r2parameter).First()["est"];
 
                         if (R2 < minR2)
                         {
@@ -986,25 +996,25 @@ namespace LSAnalyzer.Services
             return null;
         }
 
-        private List<GenericVector>? CalculateLinregSingle(Variable dependent, List<Variable> predictors, bool withIntercept, List<Variable> groups, bool calcualteOverall)
+        private List<GenericVector>? CalculateRegressionSingle(string method, Variable dependent, List<Variable> predictors, bool withIntercept, List<Variable> groups, bool calcualteOverall)
         {
             try
             {
                 List<GenericVector> resultList = new();
 
-                string baseCall = "lsanalyzer_result_linreg <- BIFIEsurvey::BIFIE.linreg(BIFIEobj = lsanalyzer_dat_BO, dep = '" + dependent.Name + "', pre = c(" + (withIntercept ? "'one', " : "") + string.Join(", ", predictors.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                string baseCall = "lsanalyzer_result_regression <- BIFIEsurvey::" + method + "(BIFIEobj = lsanalyzer_dat_BO, dep = '" + dependent.Name + "', pre = c(" + (withIntercept ? "'one', " : "") + string.Join(", ", predictors.ConvertAll(var => "'" + var.Name + "'")) + ")";
                 string groupByArg = "";
 
                 if (groups.Count == 0)
                 {
                     _engine!.Evaluate(baseCall + groupByArg + ")");
-                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_linreg").AsList());
+                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_regression").AsList());
                 }
                 else if (groups.Count > 0 && !calcualteOverall)
                 {
                     groupByArg = ", group = c(" + string.Join(", ", groups.ConvertAll(var => "'" + var.Name + "'")) + ")";
                     _engine!.Evaluate(baseCall + groupByArg + ")");
-                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_linreg").AsList());
+                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_regression").AsList());
                 }
                 else
                 {
@@ -1016,7 +1026,7 @@ namespace LSAnalyzer.Services
                         {
                             groupByArg = "";
                             _engine!.Evaluate(baseCall + groupByArg + ")");
-                            resultList.Add(_engine.GetSymbol("lsanalyzer_result_linreg").AsList());
+                            resultList.Add(_engine.GetSymbol("lsanalyzer_result_regression").AsList());
                         }
                         else
                         {
@@ -1025,7 +1035,7 @@ namespace LSAnalyzer.Services
                             {
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
                                 _engine!.Evaluate(baseCall + groupByArg + ")");
-                                resultList.Add(_engine.GetSymbol("lsanalyzer_result_linreg").AsList());
+                                resultList.Add(_engine.GetSymbol("lsanalyzer_result_regression").AsList());
                             }
                         }
                     }

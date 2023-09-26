@@ -153,8 +153,8 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private AnalysisLinreg.RegressionSequence _regressionSequence = AnalysisLinreg.RegressionSequence.AllIn;
-        public AnalysisLinreg.RegressionSequence RegressionSequence
+        private AnalysisRegression.RegressionSequence _regressionSequence = AnalysisRegression.RegressionSequence.AllIn;
+        public AnalysisRegression.RegressionSequence RegressionSequence
         {
             get => _regressionSequence;
             set
@@ -491,7 +491,7 @@ namespace LSAnalyzer.ViewModels
             UseInterpolation = true;
             MimicIdbAnalyzer = false;
             WithIntercept = true;
-            RegressionSequence = AnalysisLinreg.RegressionSequence.AllIn;
+            RegressionSequence = AnalysisRegression.RegressionSequence.AllIn;
         }
     }
 

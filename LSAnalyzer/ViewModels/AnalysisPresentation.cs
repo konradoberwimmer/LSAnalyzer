@@ -1041,7 +1041,7 @@ namespace LSAnalyzer.ViewModels
             DataTable table = new(analysisLinreg.AnalysisName);
             Dictionary<string, DataColumn> columns = new();
 
-            if (analysisLinreg.Sequence == AnalysisLinreg.RegressionSequence.AllIn)
+            if (analysisLinreg.Sequence == AnalysisRegression.RegressionSequence.AllIn)
             {
                 for (int cntGroupyBy = 0; cntGroupyBy < analysisLinreg.GroupBy.Count; cntGroupyBy++)
                 {
@@ -1058,7 +1058,7 @@ namespace LSAnalyzer.ViewModels
             columns.Add("parameter", new DataColumn("coefficient", typeof(string)));
             columns.Add("var", new DataColumn("variable", typeof(string)));
 
-            if (analysisLinreg.Sequence == AnalysisLinreg.RegressionSequence.AllIn)
+            if (analysisLinreg.Sequence == AnalysisRegression.RegressionSequence.AllIn)
             {
                 columns.Add("est", new DataColumn("estimate", typeof(double)));
                 columns.Add("SE", new DataColumn("standard error", typeof(double)));
@@ -1080,9 +1080,9 @@ namespace LSAnalyzer.ViewModels
                 table.Columns.Add(column);
             }
 
-            if (analysisLinreg.Sequence != AnalysisLinreg.RegressionSequence.AllIn)
+            if (analysisLinreg.Sequence != AnalysisRegression.RegressionSequence.AllIn)
             {
-                var fullResult = analysisLinreg.Sequence == AnalysisLinreg.RegressionSequence.Forward ? Analysis.Result.Last() : Analysis.Result.First();
+                var fullResult = analysisLinreg.Sequence == AnalysisRegression.RegressionSequence.Forward ? Analysis.Result.Last() : Analysis.Result.First();
                 var fullDataFrame = fullResult["stat"].AsDataFrame();
 
                 foreach (var dataFrameRow in fullDataFrame.GetRows())
@@ -1112,7 +1112,7 @@ namespace LSAnalyzer.ViewModels
 
                 foreach (var dataFrameRow in dataFrame.GetRows())
                 {
-                    var existingTableRow = analysisLinreg.Sequence == AnalysisLinreg.RegressionSequence.AllIn ? null : GetExistingDataRowByCoefficient(table, dataFrameRow);
+                    var existingTableRow = analysisLinreg.Sequence == AnalysisRegression.RegressionSequence.AllIn ? null : GetExistingDataRowByCoefficient(table, dataFrameRow);
 
                     if (existingTableRow != null) 
                     {

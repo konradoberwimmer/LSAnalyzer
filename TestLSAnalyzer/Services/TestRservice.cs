@@ -920,7 +920,7 @@ namespace TestLSAnalyzer.Services
                 Vars = new() { new(2, "item2", false), new(3, "item3", false) },
                 GroupBy = new() { new(4, "cat", false) },
                 CalculateOverall = false,
-                Sequence = AnalysisLinreg.RegressionSequence.Forward,
+                Sequence = AnalysisRegression.RegressionSequence.Forward,
             };
 
             var result = rservice.CalculateLinreg(analysisLinregForward);
@@ -967,7 +967,7 @@ namespace TestLSAnalyzer.Services
                 Vars = new() { new(2, "item2", false), new(3, "item3", false) },
                 GroupBy = new() { new(4, "cat", false) },
                 CalculateOverall = false,
-                Sequence = AnalysisLinreg.RegressionSequence.Backward,
+                Sequence = AnalysisRegression.RegressionSequence.Backward,
             };
 
             var result = rservice.CalculateLinreg(analysisLinregBackward);

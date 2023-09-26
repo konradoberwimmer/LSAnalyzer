@@ -6,17 +6,8 @@ using System.Threading.Tasks;
 
 namespace LSAnalyzer.Models
 {
-    public class AnalysisLinreg : Analysis
+    public class AnalysisLinreg : AnalysisRegression
     {
-        public Variable? Dependent { get; set; }
-
-        public bool WithIntercept { get; set; } = true;
-
-        public enum RegressionSequence { AllIn, Forward, Backward };
-        public RegressionSequence Sequence { get; set; } = RegressionSequence.AllIn;
-
-        public bool CalculateOverall { get; set; } = true;
-
         public AnalysisLinreg(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
         {
         }

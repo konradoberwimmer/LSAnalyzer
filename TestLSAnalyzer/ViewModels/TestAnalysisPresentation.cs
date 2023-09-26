@@ -553,7 +553,7 @@ namespace TestLSAnalyzer.ViewModels
                 Dependent = new(1, "item1", false),
                 Vars = new() { new(2, "item2", false), new(3, "item3", false), },
                 CalculateOverall = true,
-                Sequence = AnalysisLinreg.RegressionSequence.Forward
+                Sequence = AnalysisRegression.RegressionSequence.Forward
             };
 
             analysisLinreg.ValueLabels.Add("cat", rservice.GetValueLabels("cat")!);
