@@ -142,6 +142,39 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _withIntercept = true;
+        public bool WithIntercept
+        {
+            get => _withIntercept;
+            set
+            {
+                _withIntercept = value;
+                NotifyPropertyChanged(nameof(WithIntercept));
+            }
+        }
+
+        private AnalysisLinreg.RegressionSequence _regressionSequence = AnalysisLinreg.RegressionSequence.AllIn;
+        public AnalysisLinreg.RegressionSequence RegressionSequence
+        {
+            get => _regressionSequence;
+            set
+            {
+                _regressionSequence = value;
+                NotifyPropertyChanged(nameof(RegressionSequence));
+            }
+        }
+
+        private ObservableCollection<Variable> _dependentVariables = new();
+        public ObservableCollection<Variable> DependentVariables
+        {
+            get => _dependentVariables;
+            set
+            {
+                _dependentVariables = value;
+                NotifyPropertyChanged(nameof(DependentVariables));
+            }
+        }
+
         [ExcludeFromCodeCoverage]
         public RequestAnalysis()
         {
@@ -163,6 +196,10 @@ namespace LSAnalyzer.ViewModels
             MoveToAndFromGroupByVariables(new()
             {
                 SelectedTo = GroupByVariables.ToList(),
+            });
+            MoveToAndFromDependentVariables(new()
+            {
+                SelectedTo = DependentVariables.ToList(),
             });
 
             foreach (var variable in analysis.Vars)
@@ -205,6 +242,18 @@ namespace LSAnalyzer.ViewModels
                     break;
                 case AnalysisCorr analysisCorr:
                     CalculateOverall = analysisCorr.CalculateOverall;
+                    break;
+                case AnalysisLinreg analysisLinreg:
+                    WithIntercept = analysisLinreg.WithIntercept;
+                    RegressionSequence = analysisLinreg.Sequence;
+                    if (analysisLinreg.Dependent != null)
+                    {
+                        MoveToAndFromDependentVariables(new()
+                        {
+                            SelectedFrom = new() { analysisLinreg.Dependent },
+                        });
+                    }
+                    CalculateOverall = analysisLinreg.CalculateOverall;
                     break;
                 default:
                     break;
@@ -290,6 +339,44 @@ namespace LSAnalyzer.ViewModels
                     GroupByVariables.Remove(variable);
                 }
             }
+
+            NotifyPropertyChanged(nameof(GroupByVariables));
+        }
+
+        private RelayCommand<MoveToAndFromVariablesCommandParameters?> _moveToAndFromDependentVariablesCommand;
+        public ICommand MoveToAndFromDependentVariablesCommand
+        {
+            get
+            {
+                if (_moveToAndFromDependentVariablesCommand == null)
+                    _moveToAndFromDependentVariablesCommand = new(this.MoveToAndFromDependentVariables);
+                return _moveToAndFromDependentVariablesCommand;
+            }
+        }
+
+        private void MoveToAndFromDependentVariables(MoveToAndFromVariablesCommandParameters? commandParams)
+        {
+            if (commandParams == null)
+            {
+                return;
+            }
+
+            if (commandParams.SelectedFrom.Count > 0)
+            {
+                foreach (var variable in commandParams.SelectedFrom)
+                {
+                    DependentVariables.Add(variable);
+                    AvailableVariables.Remove(variable);
+                }
+            }
+            if (commandParams.SelectedTo.Count > 0)
+            {
+                foreach (var variable in commandParams.SelectedTo)
+                {
+                    AvailableVariables.Add(variable);
+                    DependentVariables.Remove(variable);
+                }
+            }
         }
 
         private RelayCommand<IRequestingAnalysis?> _sendAnalysisRequestCommand;
@@ -347,6 +434,15 @@ namespace LSAnalyzer.ViewModels
                     analysisCorr.CalculateOverall = this.CalculateOverall;
                     WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisCorr));
                     break;
+                case AnalysisLinreg analysisLinreg:
+                    analysisLinreg.WithIntercept = this.WithIntercept;
+                    analysisLinreg.Sequence = RegressionSequence;
+                    analysisLinreg.Dependent = DependentVariables.First();
+                    analysisLinreg.Vars = new(AnalysisVariables);
+                    analysisLinreg.GroupBy = new(GroupByVariables);
+                    analysisLinreg.CalculateOverall = this.CalculateOverall;
+                    WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisLinreg));
+                    break;
             }
             
             if (analysis == null)
@@ -378,12 +474,18 @@ namespace LSAnalyzer.ViewModels
             {
                 SelectedTo = GroupByVariables.ToList(),
             });
+            MoveToAndFromDependentVariables(new()
+            {
+                SelectedTo = DependentVariables.ToList(),
+            });
             CalculateOverall = true;
             CalculateSeparately = false;
             Percentiles = new() { new() { Value = 0.25 }, new() { Value = 0.50 }, new() { Value = 0.75 } };
             CalculateSE = true;
             UseInterpolation = true;
             MimicIdbAnalyzer = false;
+            WithIntercept = true;
+            RegressionSequence = AnalysisLinreg.RegressionSequence.AllIn;
         }
     }
 
