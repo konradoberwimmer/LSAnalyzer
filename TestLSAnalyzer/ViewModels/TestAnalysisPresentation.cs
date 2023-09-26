@@ -484,6 +484,94 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
+        public void TestSetAnalysisResultLinregAllIn()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisLinreg analysisLinreg = new(analysisConfiguration)
+            {
+                Dependent = new(1, "item1", false),
+                Vars = new() { new(2, "item2", false), new(3, "item3", false), },
+                GroupBy = new() { new(4, "cat", false) },
+                CalculateOverall = true,
+            };
+
+            analysisLinreg.ValueLabels.Add("cat", rservice.GetValueLabels("cat")!);
+            var result = rservice.CalculateLinreg(analysisLinreg);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisLinreg);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(21, analysisPresentationViewModel.DataTable.Rows.Count);
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("coefficient"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat (label)"));
+            Assert.Equal(7, analysisPresentationViewModel.DataTable.Select("[cat (label)] = 'Kategorie B'").Length);
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("[cat (label)] = 'Kategorie B'")[0]["estimate"] - 2.66666667) < 0.0001);
+        }
+
+        [Fact]
+        public void TestSetAnalysisResultLinregForward()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisLinreg analysisLinreg = new(analysisConfiguration)
+            {
+                Dependent = new(1, "item1", false),
+                Vars = new() { new(2, "item2", false), new(3, "item3", false), },
+                CalculateOverall = true,
+                Sequence = AnalysisLinreg.RegressionSequence.Forward
+            };
+
+            analysisLinreg.ValueLabels.Add("cat", rservice.GetValueLabels("cat")!);
+            var result = rservice.CalculateLinreg(analysisLinreg);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisLinreg);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(7, analysisPresentationViewModel.DataTable.Rows.Count);
+            Assert.Equal(12, analysisPresentationViewModel.DataTable.Columns.Count);
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("coefficient"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("model 2 - FMI"));
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("[coefficient] = 'R^2'")[0]["model 1 - estimate"] - 0.1771340) < 0.0001);
+        }
+
+        [Fact]
         public void TestSaveDataTableXlsx()
         {
 

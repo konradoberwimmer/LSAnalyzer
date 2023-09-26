@@ -216,58 +216,21 @@ namespace LSAnalyzer.ViewModels
             {
                 case AnalysisUnivar analysisUnivar:
                     result = _rservice.CalculateUnivar(analysisUnivar);
-                    foreach (var groupByVariable in analysisUnivar.GroupBy)
-                    {
-                        var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
-                        if (valueLabels != null)
-                        {
-                            analysisUnivar.ValueLabels.Add(groupByVariable.Name, valueLabels);
-                        }
-                    }
                     break;
                 case AnalysisMeanDiff analysisMeanDiff:
                     result = _rservice.CalculateMeanDiff(analysisMeanDiff);
-                    foreach (var groupByVariable in analysisMeanDiff.GroupBy)
-                    {
-                        var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
-                        if (valueLabels != null)
-                        {
-                            analysisMeanDiff.ValueLabels.Add(groupByVariable.Name, valueLabels);
-                        }
-                    }
                     break;
                 case AnalysisFreq analysisFreq:
                     result = _rservice.CalculateFreq(analysisFreq);
-                    foreach (var groupByVariable in analysisFreq.GroupBy)
-                    {
-                        var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
-                        if (valueLabels != null)
-                        {
-                            analysisFreq.ValueLabels.Add(groupByVariable.Name, valueLabels);
-                        }
-                    }
                     break;
                 case AnalysisPercentiles analysisPercentiles:
                     result = _rservice.CalculatePercentiles(analysisPercentiles);
-                    foreach (var groupByVariable in analysisPercentiles.GroupBy)
-                    {
-                        var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
-                        if (valueLabels != null)
-                        {
-                            analysisPercentiles.ValueLabels.Add(groupByVariable.Name, valueLabels);
-                        }
-                    }
                     break;
                 case AnalysisCorr analysisCorr:
                     result = _rservice.CalculateCorr(analysisCorr);
-                    foreach (var groupByVariable in analysisCorr.GroupBy)
-                    {
-                        var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
-                        if (valueLabels != null)
-                        {
-                            analysisCorr.ValueLabels.Add(groupByVariable.Name, valueLabels);
-                        }
-                    }
+                    break;
+                case AnalysisLinreg analysisLinreg:
+                    result = _rservice.CalculateLinreg(analysisLinreg);
                     break;
                 default:
                     break;
@@ -278,6 +241,15 @@ namespace LSAnalyzer.ViewModels
                 WeakReferenceMessenger.Default.Send(new FailureWithAnalysisCalculationMessage(analysisPresentation.Analysis));
             } else
             {
+                foreach (var groupByVariable in analysisPresentation!.Analysis.GroupBy)
+                {
+                    var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
+                    if (valueLabels != null)
+                    {
+                        analysisPresentation!.Analysis.ValueLabels.Add(groupByVariable.Name, valueLabels);
+                    }
+                }
+
                 analysisPresentation.SetAnalysisResult(result);
             }
 

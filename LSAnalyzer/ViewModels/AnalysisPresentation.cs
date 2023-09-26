@@ -250,6 +250,9 @@ namespace LSAnalyzer.ViewModels
                     DataTable = CreateDataTableFromResultCorr(analysisCorr);
                     TableCov = CreateTableCovFromResultCorr(analysisCorr);
                     break;
+                case AnalysisLinreg analysisLinreg:
+                    DataTable = CreateDataTableFromResultLinreg(analysisLinreg);
+                    break;
                 default:
                     break;
             }
@@ -630,7 +633,7 @@ namespace LSAnalyzer.ViewModels
                     bool repeat = true;
                     while (repeat)
                     {
-                        var existingTableRow = GetExistingDataRowFreq(table, dataFrameRow, groupColumns);
+                        var existingTableRow = GetExistingDataRowByGroups(table, dataFrameRow, groupColumns);
 
                         if (existingTableRow != null)
                         {
@@ -768,7 +771,7 @@ namespace LSAnalyzer.ViewModels
                     bool repeat = true;
                     while (repeat)
                     {
-                        var existingTableRow = GetExistingDataRowFreq(table, dataFrameRow, groupColumns);
+                        var existingTableRow = GetExistingDataRowByGroups(table, dataFrameRow, groupColumns);
 
                         if (existingTableRow != null)
                         {
@@ -1028,6 +1031,175 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
+        public DataTable CreateDataTableFromResultLinreg(AnalysisLinreg analysisLinreg)
+        {
+            if (analysisLinreg.Result == null || analysisLinreg.Result.Count == 0)
+            {
+                return new();
+            }
+
+            DataTable table = new(analysisLinreg.AnalysisName);
+            Dictionary<string, DataColumn> columns = new();
+
+            if (analysisLinreg.Sequence == AnalysisLinreg.RegressionSequence.AllIn)
+            {
+                for (int cntGroupyBy = 0; cntGroupyBy < analysisLinreg.GroupBy.Count; cntGroupyBy++)
+                {
+                    columns.Add("groupval" + (cntGroupyBy + 1), new DataColumn(analysisLinreg.GroupBy[cntGroupyBy].Name, typeof(double)));
+                    if (analysisLinreg.ValueLabels.ContainsKey(analysisLinreg.GroupBy[cntGroupyBy].Name))
+                    {
+                        columns.Add("$label_" + analysisLinreg.GroupBy[cntGroupyBy].Name, new DataColumn(analysisLinreg.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
+                    }
+                }
+            }
+
+            columns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
+            columns.Add("Nweight", new DataColumn("N - weighted", typeof(double)));
+            columns.Add("parameter", new DataColumn("coefficient", typeof(string)));
+            columns.Add("var", new DataColumn("variable", typeof(string)));
+
+            if (analysisLinreg.Sequence == AnalysisLinreg.RegressionSequence.AllIn)
+            {
+                columns.Add("est", new DataColumn("estimate", typeof(double)));
+                columns.Add("SE", new DataColumn("standard error", typeof(double)));
+                columns.Add("p", new DataColumn("p value", typeof(double)));
+                columns.Add("fmi", new DataColumn("FMI", typeof(double)));
+            } else
+            {
+                for (int rr = 0; rr < analysisLinreg.Result.Count; rr++) 
+                {
+                    columns.Add("$model_" + (rr + 1) + "_est", new DataColumn("model " + (rr+1) + " - estimate", typeof(double)));
+                    columns.Add("$model_" + (rr + 1) + "_SE", new DataColumn("model " + (rr + 1) + " - standard error", typeof(double)));
+                    columns.Add("$model_" + (rr + 1) + "_p", new DataColumn("model " + (rr + 1) + " - p value", typeof(double)));
+                    columns.Add("$model_" + (rr + 1) + "_fmi", new DataColumn("model " + (rr + 1) + " - FMI", typeof(double)));
+                }
+            }
+
+            foreach (var column in columns.Values)
+            {
+                table.Columns.Add(column);
+            }
+
+            if (analysisLinreg.Sequence != AnalysisLinreg.RegressionSequence.AllIn)
+            {
+                var fullResult = analysisLinreg.Sequence == AnalysisLinreg.RegressionSequence.Forward ? Analysis.Result.Last() : Analysis.Result.First();
+                var fullDataFrame = fullResult["stat"].AsDataFrame();
+
+                foreach (var dataFrameRow in fullDataFrame.GetRows())
+                {                    
+                    DataRow tableRow = table.NewRow();
+
+                    List<object?> cellValues = new();
+                    foreach (var column in columns.Keys)
+                    {
+                        if (fullDataFrame.ColumnNames.Contains(column))
+                        {
+                            cellValues.Add(dataFrameRow[column]);
+                            continue;
+                        }
+                        cellValues.Add(null);
+                    }
+
+                    tableRow.ItemArray = cellValues.ToArray();
+                    table.Rows.Add(tableRow);
+                }
+            }
+
+            foreach (var result in Analysis.Result)
+            {
+                var dataFrame = result["stat"].AsDataFrame();
+                var groupColumns = GetGroupColumns(dataFrame);
+
+                foreach (var dataFrameRow in dataFrame.GetRows())
+                {
+                    var existingTableRow = analysisLinreg.Sequence == AnalysisLinreg.RegressionSequence.AllIn ? null : GetExistingDataRowByCoefficient(table, dataFrameRow);
+
+                    if (existingTableRow != null) 
+                    {
+                        var resultIndex = analysisLinreg.Result.IndexOf(result);
+
+                        foreach (var column in columns.Keys)
+                        {
+                            if (Regex.IsMatch(column, "^\\$model_" + (resultIndex+1) + "_"))
+                            {
+                                var content = column.Substring(column.LastIndexOf("_") + 1);
+                                existingTableRow[columns[column]] = (double)dataFrameRow[content];
+                            }
+                        }
+                    } else
+                    {
+                        DataRow tableRow = table.NewRow();
+
+                        List<object?> cellValues = new();
+                        foreach (var column in columns.Keys)
+                        {
+                            if (Regex.IsMatch(column, "^groupval[0-9]*$") && groupColumns.ContainsKey(columns[column].ColumnName))
+                            {
+                                cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                            }
+                            else if (Regex.IsMatch(column, "^\\$label_"))
+                            {
+                                if ((double?)cellValues.Last() == null)
+                                {
+                                    cellValues.Add(null);
+                                    continue;
+                                }
+
+                                var groupByVariable = column.Substring(column.IndexOf("_") + 1);
+                                var valueLabels = analysisLinreg.ValueLabels[groupByVariable];
+                                // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
+                                var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)cellValues.Last()!);
+
+                                if (posValueLabel != -1)
+                                {
+                                    var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
+                                    cellValues.Add(valueLabel);
+                                }
+                                else
+                                {
+                                    cellValues.Add(null);
+                                }
+                            }
+                            else if (dataFrame.ColumnNames.Contains(column))
+                            {
+                                cellValues.Add(dataFrameRow[column]);
+                            }
+                            else
+                            {
+                                cellValues.Add(null);
+                            }
+                        }
+
+                        tableRow.ItemArray = cellValues.ToArray();
+                        table.Rows.Add(tableRow);
+                    }
+                }
+            }
+
+            foreach (var rowOne in table.Select("variable = 'one'"))
+            {
+                rowOne["variable"] = "(intercept)";
+            }
+
+            foreach (var rowSigma in table.Select("coefficient = 'sigma'"))
+            {
+                rowSigma["variable"] = "";
+            }
+
+            foreach (var rowR2 in table.Select("coefficient = 'R^2'"))
+            {
+                rowR2["variable"] = "";
+            }
+
+            var betaInterceptRows = table.Select("coefficient = 'beta' AND variable = '(intercept)'");
+            foreach (var betaIntereptRow in betaInterceptRows)
+            {
+                table.Rows.Remove(betaIntereptRow);
+            }
+
+            return table;
+        }
+
         private Dictionary<string, string> GetGroupColumns(DataFrame dataFrame)
         {
             Dictionary<string, string> groupColumns = new();
@@ -1042,7 +1214,7 @@ namespace LSAnalyzer.ViewModels
             return groupColumns;
         }
 
-        private DataRow? GetExistingDataRowFreq(DataTable table, DataFrameRow dataFrameRow, Dictionary<string, string> groupColumns)
+        private DataRow? GetExistingDataRowByGroups(DataTable table, DataFrameRow dataFrameRow, Dictionary<string, string> groupColumns)
         {
             foreach (DataRow row in table.Rows)
             {
@@ -1068,6 +1240,20 @@ namespace LSAnalyzer.ViewModels
 
             return null;
         }
+
+        private DataRow? GetExistingDataRowByCoefficient(DataTable table, DataFrameRow dataFrameRow)
+        {
+            foreach (DataRow row in table.Rows)
+            {
+                if ((string)row["variable"] == (string)dataFrameRow["var"] && (string)row["coefficient"] == (string)dataFrameRow["parameter"])
+                {
+                    return row;
+                }
+            }
+
+            return null;
+        }
+
 
         private DataView DataTableViewUnivar(DataTable table)
         {
@@ -1168,6 +1354,38 @@ namespace LSAnalyzer.ViewModels
             return dataView;
         }
 
+        private DataView DataTableViewLinreg(DataTable table)
+        {
+            DataView dataView = new(table.Copy());
+
+            Dictionary<string, string> toggles = new()
+            {
+                ["ShowPValues"] = "p\\svalue$",
+                ["ShowFMI"] = "FMI$",
+            };
+
+            foreach (KeyValuePair<string, string> toggle in toggles)
+            {
+                if (!(bool)this.GetType().GetProperty(toggle.Key)!.GetValue(this)!)
+                {
+                    List<DataColumn> columnsToRemove = new();
+                    foreach (DataColumn column in dataView.Table!.Columns)
+                    {
+                        if (Regex.IsMatch(column.ColumnName, toggle.Value))
+                        {
+                            columnsToRemove.Add(column);
+                        }
+                    }
+                    foreach (var pValueColumn in columnsToRemove)
+                    {
+                        dataView.Table!.Columns.Remove(pValueColumn);
+                    }
+                }
+            }
+
+            return dataView;
+        }
+
         private void ResetDataView()
         {
             switch (Analysis)
@@ -1186,6 +1404,9 @@ namespace LSAnalyzer.ViewModels
                     break;
                 case AnalysisCorr:
                     DataView = DataTableViewCorr(DataTable);
+                    break;
+                case AnalysisLinreg:
+                    DataView = DataTableViewLinreg(DataTable);
                     break;
                 default:
                     break;

@@ -67,6 +67,24 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Single(requestAnalysisViewModel.GroupByVariables);
             Assert.Empty(requestAnalysisViewModel.GroupByVariables.Where(var => var.Name == "cat"));
             Assert.Single(requestAnalysisViewModel.GroupByVariables.Where(var => var.Name == "x"));
+
+            requestAnalysisViewModel.MoveToAndFromDependentVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
+            {
+                SelectedFrom = requestAnalysisViewModel.AvailableVariables.Where(var => var.Name == "cat").ToList(),
+                SelectedTo = new(),
+            });
+
+            Assert.Equal(8, requestAnalysisViewModel.AvailableVariables.Count());
+            Assert.Single(requestAnalysisViewModel.DependentVariables);
+
+            requestAnalysisViewModel.MoveToAndFromDependentVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
+            {
+                SelectedFrom = new(),
+                SelectedTo = requestAnalysisViewModel.DependentVariables.Where(var => var.Name == "cat").ToList(),
+            });
+
+            Assert.Equal(9, requestAnalysisViewModel.AvailableVariables.Count());
+            Assert.Empty(requestAnalysisViewModel.DependentVariables);
         }
 
         [Fact]
@@ -137,6 +155,36 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal("cat", requestAnalysisViewModel.GroupByVariables[0].Name);
             Assert.False(requestAnalysisViewModel.CalculateOverall);
             Assert.False(requestAnalysisViewModel.UseInterpolation);
+
+            AnalysisCorr analysisCorr = new(requestAnalysisViewModel.AnalysisConfiguration)
+            {
+                Vars = new() { new(1, "x", false), new(2, "y", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = false,
+            };
+
+            requestAnalysisViewModel.InitializeWithAnalysis(analysisCorr);
+            Assert.Equal(8, requestAnalysisViewModel.AvailableVariables.Count);
+            Assert.Equal(2, requestAnalysisViewModel.AnalysisVariables.Count);
+            Assert.Equal("cat", requestAnalysisViewModel.GroupByVariables[0].Name);
+            Assert.False(requestAnalysisViewModel.CalculateOverall);
+
+            AnalysisLinreg analysisLinreg = new(requestAnalysisViewModel.AnalysisConfiguration)
+            {
+                Dependent = new(2, "y", false),
+                Vars = new() { new(1, "x", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = false,
+                Sequence = AnalysisLinreg.RegressionSequence.Forward,
+            };
+
+            requestAnalysisViewModel.InitializeWithAnalysis(analysisLinreg);
+            Assert.Equal(8, requestAnalysisViewModel.AvailableVariables.Count);
+            Assert.Single(requestAnalysisViewModel.DependentVariables);
+            Assert.Single(requestAnalysisViewModel.AnalysisVariables);
+            Assert.Equal("cat", requestAnalysisViewModel.GroupByVariables[0].Name);
+            Assert.False(requestAnalysisViewModel.CalculateOverall);
+            Assert.Equal(AnalysisLinreg.RegressionSequence.Forward, requestAnalysisViewModel.RegressionSequence);
         }
 
         [Fact]
@@ -176,6 +224,10 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Empty(requestAnalysisViewModel.GroupByVariables);
             Assert.True(requestAnalysisViewModel.CalculateOverall);
             Assert.True(requestAnalysisViewModel.UseInterpolation);
+
+            requestAnalysisViewModel.RegressionSequence = AnalysisLinreg.RegressionSequence.Forward;
+            requestAnalysisViewModel.ResetAnalysisRequestCommand.Execute(null);
+            Assert.Equal(AnalysisLinreg.RegressionSequence.AllIn, requestAnalysisViewModel.RegressionSequence);
         }
 
         [Fact]
@@ -219,6 +271,34 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Empty(requestedAnalysis.GroupBy);
             Assert.Equal("wgt", requestedAnalysis.AnalysisConfiguration.DatasetType?.Weight);
             Assert.Equal(fileName, requestedAnalysis.AnalysisConfiguration.FileName);
+
+            messageSent = false;
+            requestAnalysisViewModel.SendAnalysisRequestCommand.Execute(new MockRequestingAnalysisMeanDiff());
+            Assert.True(messageSent);
+
+            messageSent = false;
+            requestAnalysisViewModel.SendAnalysisRequestCommand.Execute(new MockRequestingAnalysisFreq());
+            Assert.True(messageSent);
+
+            messageSent = false;
+            requestAnalysisViewModel.SendAnalysisRequestCommand.Execute(new MockRequestingAnalysisPercentiles());
+            Assert.True(messageSent);
+
+            messageSent = false;
+            requestAnalysisViewModel.SendAnalysisRequestCommand.Execute(new MockRequestingAnalysisCorr());
+            Assert.True(messageSent);
+
+            messageSent = false;
+            requestAnalysisViewModel.SendAnalysisRequestCommand.Execute(new MockRequestingAnalysisLinreg());
+            Assert.False(messageSent);
+
+            requestAnalysisViewModel.MoveToAndFromDependentVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
+            {
+                SelectedFrom = requestAnalysisViewModel.AvailableVariables.Where(var => var.Name == "cat").ToList(),
+                SelectedTo = new(),
+            });
+            requestAnalysisViewModel.SendAnalysisRequestCommand.Execute(new MockRequestingAnalysisLinreg());
+            Assert.True(messageSent);
         }
     }
 
@@ -253,6 +333,71 @@ namespace TestLSAnalyzer.ViewModels
         public Type GetAnalysisType()
         {
             return Type.GetType("LSAnalyzer.Models.AnalysisUnivar,LSAnalyzer")!;
+        }
+    }
+
+    internal class MockRequestingAnalysisMeanDiff : IRequestingAnalysis
+    {
+        public void Close()
+        {
+
+        }
+
+        public Type GetAnalysisType()
+        {
+            return Type.GetType("LSAnalyzer.Models.AnalysisMeanDiff,LSAnalyzer")!;
+        }
+    }
+
+    internal class MockRequestingAnalysisFreq : IRequestingAnalysis
+    {
+        public void Close()
+        {
+
+        }
+
+        public Type GetAnalysisType()
+        {
+            return Type.GetType("LSAnalyzer.Models.AnalysisFreq,LSAnalyzer")!;
+        }
+    }
+
+    internal class MockRequestingAnalysisPercentiles : IRequestingAnalysis
+    {
+        public void Close()
+        {
+
+        }
+
+        public Type GetAnalysisType()
+        {
+            return Type.GetType("LSAnalyzer.Models.AnalysisPercentiles,LSAnalyzer")!;
+        }
+    }
+
+    internal class MockRequestingAnalysisCorr : IRequestingAnalysis
+    {
+        public void Close()
+        {
+
+        }
+
+        public Type GetAnalysisType()
+        {
+            return Type.GetType("LSAnalyzer.Models.AnalysisCorr,LSAnalyzer")!;
+        }
+    }
+
+    internal class MockRequestingAnalysisLinreg : IRequestingAnalysis
+    {
+        public void Close()
+        {
+
+        }
+
+        public Type GetAnalysisType()
+        {
+            return Type.GetType("LSAnalyzer.Models.AnalysisLinreg,LSAnalyzer")!;
         }
     }
 }

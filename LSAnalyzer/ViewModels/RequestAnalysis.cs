@@ -250,7 +250,7 @@ namespace LSAnalyzer.ViewModels
                     {
                         MoveToAndFromDependentVariables(new()
                         {
-                            SelectedFrom = new() { analysisLinreg.Dependent },
+                            SelectedFrom = AvailableVariables.Where(var => var.Name == analysisLinreg.Dependent.Name).ToList(),
                         });
                     }
                     CalculateOverall = analysisLinreg.CalculateOverall;
@@ -398,6 +398,12 @@ namespace LSAnalyzer.ViewModels
             }
 
             Analysis analysis = (Analysis)Activator.CreateInstance(window.GetAnalysisType(), new object[] { new AnalysisConfiguration(AnalysisConfiguration) })!;
+
+            if (analysis is AnalysisLinreg && DependentVariables.Count == 0)
+            {
+                return;
+            }
+
             switch (analysis)
             {
                 case AnalysisUnivar analysisUnivar:
