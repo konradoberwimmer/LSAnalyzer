@@ -155,22 +155,27 @@
     </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_Analysis">
-                <MenuItem x:Name="menuItemAnalysisSelectFile" Header="_Select File ..." Click="MenuItemAnalysisSelectFile_Click"/>
-                <MenuItem x:Name="menuItemAnalysisSubsetting" Header="Su_bsetting ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisSubsetting_Click"/>
+            <MenuItem Header="_File">
+                <MenuItem x:Name="menuItemAnalysisSelectFile" Header="Select File ..." Click="MenuItemAnalysisSelectFile_Click"/>
+                <MenuItem x:Name="menuItemAnalysisSubsetting" Header="Subsetting ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisSubsetting_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Analysis" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}">
+                <MenuItem x:Name="menuItemAnalysisUnivar" Header="Univariate (means and SD) ..." Click="MenuItemAnalysisUnivar_Click"/>
+                <MenuItem x:Name="menuItemAnalysisFrequencies" Header="Frequencies ..." Click="MenuItemAnalysisFreq_Click"/>
+                <MenuItem x:Name="menuItemAnalysisPercentiles" Header="Percentiles ..." Click="MenuItemAnalysisPercentiles_Click"/>
                 <Separator/>
-                <MenuItem x:Name="menuItemAnalysisUnivar" Header="_Univariate ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisUnivar_Click"/>
-                <MenuItem x:Name="menuItemAnalysisMeanDiff" Header="_Difference in mean ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisMeanDiff_Click"/>
-                <MenuItem x:Name="menuItemAnalysisFrequencies" Header="_Frequencies ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisFreq_Click"/>
-                <MenuItem x:Name="menuItemAnalysisPercentiles" Header="_Percentiles ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisPercentiles_Click"/>
-                <MenuItem x:Name="menuItemAnalysisCorrelations" Header="_Correlations ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisCorrelations_Click"/>
-                <MenuItem x:Name="menuItemAnalysisRegression" Header="Linear _Regression ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisLinreg_Click"/>
-                <MenuItem x:Name="menuItemAnalysisLogistReg" Header="_Logistic Regression ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisLogistReg_Click"/>
-                <MenuItem x:Name="menuItemAnalysisMultilevel" Header="_Multilevel Regression ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+                <MenuItem x:Name="menuItemAnalysisCrosstabs" Header="Crosstabulation ..."/>
+                <MenuItem x:Name="menuItemAnalysisMeanDiff" Header="Difference in mean ..." Click="MenuItemAnalysisMeanDiff_Click"/>
+                <MenuItem x:Name="menuItemAnalysisCorrelations" Header="Correlations ..." Click="MenuItemAnalysisCorrelations_Click"/>
+                <Separator/>
+                <MenuItem x:Name="menuItemAnalysisRegression" Header="Linear Regression ..." Click="MenuItemAnalysisLinreg_Click"/>
+                <MenuItem x:Name="menuItemAnalysisLogistReg" Header="Logistic Regression ..." Click="MenuItemAnalysisLogistReg_Click"/>
+                <MenuItem x:Name="menuItemAnalysisMultilevel" Header="Multilevel Regression ..."/>
+                <MenuItem x:Name="menuItemAnalysisPathmodel" Header="Pathmodel ..."/>
             </MenuItem>
             <MenuItem Header="_Config">
-                <MenuItem x:Name="menuItemDatasetTypes" Header="_Dataset-Types ..." Click="MenuItemDatasetTypes_Click" />
-                <MenuItem x:Name="menuItemSystemSettings" Header="_System ..." Click="MenuItemSystemSettings_Click"/>
+                <MenuItem x:Name="menuItemDatasetTypes" Header="Dataset-Types ..." Click="MenuItemDatasetTypes_Click" />
+                <MenuItem x:Name="menuItemSystemSettings" Header="System ..." Click="MenuItemSystemSettings_Click"/>
             </MenuItem>
         </Menu>
         <StatusBar DockPanel.Dock="Bottom">
