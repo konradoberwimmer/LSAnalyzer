@@ -988,6 +988,128 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void TestCalculateLogistregAllIn()
+        {
+            // TODO: test should also assert correct values but at BIFIEsurvey version 3.4-15, logistic regression with grouping variable is broken
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_logistic.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisLogistReg analysisLogistReg = new(analysisConfiguration)
+            {
+                Dependent = new(1, "event", false),
+                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
+                GroupBy = new() { new(4, "cat", false) },
+                CalculateOverall = false,
+            };
+
+            var result = rservice.CalculateLogistReg(analysisLogistReg);
+            Assert.NotNull(result);
+            Assert.Single(result);
+            var firstResult = result.First();
+            var stats = firstResult["stat"].AsDataFrame();
+            Assert.Equal(8, stats.RowCount);
+            Assert.Equal(5, Convert.ToInt32(stats["Ncases"][2]));
+
+            AnalysisConfiguration analysisConfigurationModeBuild = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_logistic.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = false,
+            };
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationModeBuild.FileName));
+
+            AnalysisLogistReg analysisLogistRegModeBuild = new(analysisConfigurationModeBuild)
+            {
+                Dependent = new(1, "event", false),
+                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
+                GroupBy = new() { new(4, "cat", false) },
+                CalculateOverall = true,
+            };
+
+            var resultModeBuild = rservice.CalculateLogistReg(analysisLogistRegModeBuild);
+            Assert.NotNull(resultModeBuild);
+            Assert.Equal(2, resultModeBuild.Count);
+            var lastResultModeBuild = resultModeBuild.Last();
+            var statsModeBuild = lastResultModeBuild["stat"].AsDataFrame();
+
+            for (int i = 0; i < 8; i++)
+            {
+                Assert.Equal((double)statsModeBuild["SE"][i], (double)stats["SE"][i]);
+            }
+        }
+
+        [Fact]
+        public void TestCalculateLogistRegForward()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_logistic.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisLogistReg analysisLogistRegForward = new(analysisConfiguration)
+            {
+                Dependent = new(1, "event", false),
+                Vars = new() { new(2, "item1", false), new(3, "item2", false), new(4, "item3", false) },
+                GroupBy = new() { new(5, "cat", false) },
+                CalculateOverall = false,
+                Sequence = AnalysisRegression.RegressionSequence.Forward,
+            };
+
+            var result = rservice.CalculateLogistReg(analysisLogistRegForward);
+            Assert.NotNull(result);
+            Assert.Equal(3, result.Count);
+            var firstResult = result.First();
+            var stats = firstResult["stat"].AsDataFrame();
+            Assert.Equal(3, stats.RowCount);
+            Assert.Single(stats["var"].Where(var => (string)var == "item1"));
+            Assert.Empty(stats["var"].Where(var => (string)var == "item2"));
+            Assert.Empty(stats["var"].Where(var => (string)var == "item3"));
+            Assert.True(Math.Abs((double)stats["est"][2] - 0.2721460) < 0.0001);
+            var lastResult = result.Last();
+            stats = lastResult["stat"].AsDataFrame();
+            Assert.Equal(5, stats.RowCount);
+            Assert.Single(stats["var"].Where(var => (string)var == "item1"));
+            Assert.Single(stats["var"].Where(var => (string)var == "item2"));
+            Assert.Single(stats["var"].Where(var => (string)var == "item3"));
+            Assert.True(Math.Abs((double)stats["est"][4] - 0.8968274) < 0.0001);
+        }
+
+        [Fact]
         public void TestGetDatasetVariables()
         {
             Rservice rservice = new();

@@ -885,7 +885,7 @@ namespace LSAnalyzer.Services
             return CalculateRegression("BIFIE.linreg", "R^2", analysis);
         }
 
-        public List<GenericVector>? CalculateLogistreg(AnalysisLogistReg analysis)
+        public List<GenericVector>? CalculateLogistReg(AnalysisLogistReg analysis)
         {
             return CalculateRegression("BIFIE.logistreg", "R2", analysis);
         }
