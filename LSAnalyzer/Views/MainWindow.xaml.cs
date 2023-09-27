@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -254,7 +255,6 @@ namespace LSAnalyzer.Views
                 analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(saveFileDialog.FileName);
             }
         }
-
         private void DataGridResults_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
         {
             if (e.PropertyName.Contains('.') && e.Column is DataGridBoundColumn)
@@ -269,6 +269,14 @@ namespace LSAnalyzer.Views
                 {
                     dataGridTextColumn.Binding.StringFormat = "{0:0.###}";
                 }
+            }
+        }
+
+        private void ItemsControlAnalysesOutline_Click(object sender, RoutedEventArgs e) 
+        { 
+            if (e.Source is Button button && button.DataContext is AnalysisPresentation analysisPresentation)
+            {
+                ((ContentPresenter)itemsControlAnalysesFull.ItemContainerGenerator.ContainerFromItem(analysisPresentation)).BringIntoView();
             }
         }
     }

@@ -164,14 +164,14 @@
                 <MenuItem x:Name="menuItemAnalysisFrequencies" Header="Frequencies ..." Click="MenuItemAnalysisFreq_Click"/>
                 <MenuItem x:Name="menuItemAnalysisPercentiles" Header="Percentiles ..." Click="MenuItemAnalysisPercentiles_Click"/>
                 <Separator/>
-                <MenuItem x:Name="menuItemAnalysisCrosstabs" Header="Crosstabulation ..."/>
+                <!--<MenuItem x:Name="menuItemAnalysisCrosstabs" Header="Crosstabulation ..."/>-->
                 <MenuItem x:Name="menuItemAnalysisMeanDiff" Header="Difference in mean ..." Click="MenuItemAnalysisMeanDiff_Click"/>
                 <MenuItem x:Name="menuItemAnalysisCorrelations" Header="Correlations ..." Click="MenuItemAnalysisCorrelations_Click"/>
                 <Separator/>
                 <MenuItem x:Name="menuItemAnalysisRegression" Header="Linear Regression ..." Click="MenuItemAnalysisLinreg_Click"/>
                 <MenuItem x:Name="menuItemAnalysisLogistReg" Header="Logistic Regression ..." Click="MenuItemAnalysisLogistReg_Click"/>
-                <MenuItem x:Name="menuItemAnalysisMultilevel" Header="Multilevel Regression ..."/>
-                <MenuItem x:Name="menuItemAnalysisPathmodel" Header="Pathmodel ..."/>
+                <!--<MenuItem x:Name="menuItemAnalysisMultilevel" Header="Multilevel Regression ..."/>-->
+                <!--<MenuItem x:Name="menuItemAnalysisPathmodel" Header="Pathmodel ..."/>-->
             </MenuItem>
             <MenuItem Header="_Config">
                 <MenuItem x:Name="menuItemDatasetTypes" Header="Dataset-Types ..." Click="MenuItemDatasetTypes_Click" />
@@ -223,8 +223,25 @@
             </StatusBarItem>
         </StatusBar>
         <Grid>
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding Analyses}"/>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="200"/>
+            </Grid.ColumnDefinitions>
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="itemsControlAnalysesFull" ItemsSource="{Binding Analyses}"/>
+            </ScrollViewer>
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="itemsControlAnalysesOutline" ItemsSource="{Binding Analyses}" BorderThickness="0.5,0,0,0" BorderBrush="Gray">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Padding="5" BorderThickness="0,0,0,0.5" Background="Transparent" HorizontalContentAlignment="Left" Click="ItemsControlAnalysesOutline_Click">
+                                <Button.Content>
+                                    <TextBlock Text="{Binding Analysis.ShortInfo}" TextWrapping="Wrap"/>
+                                </Button.Content>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </ScrollViewer>
         </Grid>
     </DockPanel>
