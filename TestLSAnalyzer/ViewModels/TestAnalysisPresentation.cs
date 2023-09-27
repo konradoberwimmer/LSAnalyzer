@@ -572,6 +572,47 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
+        public void TestSetAnalysisResultLogistRegAllIn()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_logistic.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisLogistReg analysisLogistReg = new(analysisConfiguration)
+            {
+                Dependent = new(1, "event", false),
+                Vars = new() { new(2, "item2", false), new(3, "item3", false), },
+            };
+
+            var result = rservice.CalculateLogistReg(analysisLogistReg);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisLogistReg);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(4, analysisPresentationViewModel.DataTable.Rows.Count);
+            Assert.Equal(8, analysisPresentationViewModel.DataTable.Columns.Count);
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("coefficient"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
+            Assert.Equal("", (string)analysisPresentationViewModel.DataTable.Select("coefficient = 'R2'")[0]["variable"]);
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("coefficient = 'R2'")[0]["estimate"] - 0.244793) < 0.0001);
+        }
+
+        [Fact]
         public void TestSaveDataTableXlsx()
         {
 

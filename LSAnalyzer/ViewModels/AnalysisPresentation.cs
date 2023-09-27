@@ -250,8 +250,8 @@ namespace LSAnalyzer.ViewModels
                     DataTable = CreateDataTableFromResultCorr(analysisCorr);
                     TableCov = CreateTableCovFromResultCorr(analysisCorr);
                     break;
-                case AnalysisLinreg analysisLinreg:
-                    DataTable = CreateDataTableFromResultLinreg(analysisLinreg);
+                case AnalysisRegression analysisRegression:
+                    DataTable = CreateDataTableFromResultRegression(analysisRegression);
                     break;
                 default:
                     break;
@@ -1031,24 +1031,24 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
-        public DataTable CreateDataTableFromResultLinreg(AnalysisLinreg analysisLinreg)
+        public DataTable CreateDataTableFromResultRegression(AnalysisRegression analysisRegression)
         {
-            if (analysisLinreg.Result == null || analysisLinreg.Result.Count == 0)
+            if (analysisRegression.Result == null || analysisRegression.Result.Count == 0)
             {
                 return new();
             }
 
-            DataTable table = new(analysisLinreg.AnalysisName);
+            DataTable table = new(analysisRegression.AnalysisName);
             Dictionary<string, DataColumn> columns = new();
 
-            if (analysisLinreg.Sequence == AnalysisRegression.RegressionSequence.AllIn)
+            if (analysisRegression.Sequence == AnalysisRegression.RegressionSequence.AllIn)
             {
-                for (int cntGroupyBy = 0; cntGroupyBy < analysisLinreg.GroupBy.Count; cntGroupyBy++)
+                for (int cntGroupyBy = 0; cntGroupyBy < analysisRegression.GroupBy.Count; cntGroupyBy++)
                 {
-                    columns.Add("groupval" + (cntGroupyBy + 1), new DataColumn(analysisLinreg.GroupBy[cntGroupyBy].Name, typeof(double)));
-                    if (analysisLinreg.ValueLabels.ContainsKey(analysisLinreg.GroupBy[cntGroupyBy].Name))
+                    columns.Add("groupval" + (cntGroupyBy + 1), new DataColumn(analysisRegression.GroupBy[cntGroupyBy].Name, typeof(double)));
+                    if (analysisRegression.ValueLabels.ContainsKey(analysisRegression.GroupBy[cntGroupyBy].Name))
                     {
-                        columns.Add("$label_" + analysisLinreg.GroupBy[cntGroupyBy].Name, new DataColumn(analysisLinreg.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
+                        columns.Add("$label_" + analysisRegression.GroupBy[cntGroupyBy].Name, new DataColumn(analysisRegression.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
                     }
                 }
             }
@@ -1058,7 +1058,7 @@ namespace LSAnalyzer.ViewModels
             columns.Add("parameter", new DataColumn("coefficient", typeof(string)));
             columns.Add("var", new DataColumn("variable", typeof(string)));
 
-            if (analysisLinreg.Sequence == AnalysisRegression.RegressionSequence.AllIn)
+            if (analysisRegression.Sequence == AnalysisRegression.RegressionSequence.AllIn)
             {
                 columns.Add("est", new DataColumn("estimate", typeof(double)));
                 columns.Add("SE", new DataColumn("standard error", typeof(double)));
@@ -1066,7 +1066,7 @@ namespace LSAnalyzer.ViewModels
                 columns.Add("fmi", new DataColumn("FMI", typeof(double)));
             } else
             {
-                for (int rr = 0; rr < analysisLinreg.Result.Count; rr++) 
+                for (int rr = 0; rr < analysisRegression.Result.Count; rr++) 
                 {
                     columns.Add("$model_" + (rr + 1) + "_est", new DataColumn("model " + (rr+1) + " - estimate", typeof(double)));
                     columns.Add("$model_" + (rr + 1) + "_SE", new DataColumn("model " + (rr + 1) + " - standard error", typeof(double)));
@@ -1080,9 +1080,9 @@ namespace LSAnalyzer.ViewModels
                 table.Columns.Add(column);
             }
 
-            if (analysisLinreg.Sequence != AnalysisRegression.RegressionSequence.AllIn)
+            if (analysisRegression.Sequence != AnalysisRegression.RegressionSequence.AllIn)
             {
-                var fullResult = analysisLinreg.Sequence == AnalysisRegression.RegressionSequence.Forward ? Analysis.Result.Last() : Analysis.Result.First();
+                var fullResult = analysisRegression.Sequence == AnalysisRegression.RegressionSequence.Forward ? Analysis.Result.Last() : Analysis.Result.First();
                 var fullDataFrame = fullResult["stat"].AsDataFrame();
 
                 foreach (var dataFrameRow in fullDataFrame.GetRows())
@@ -1112,11 +1112,11 @@ namespace LSAnalyzer.ViewModels
 
                 foreach (var dataFrameRow in dataFrame.GetRows())
                 {
-                    var existingTableRow = analysisLinreg.Sequence == AnalysisRegression.RegressionSequence.AllIn ? null : GetExistingDataRowByCoefficient(table, dataFrameRow);
+                    var existingTableRow = analysisRegression.Sequence == AnalysisRegression.RegressionSequence.AllIn ? null : GetExistingDataRowByCoefficient(table, dataFrameRow);
 
                     if (existingTableRow != null) 
                     {
-                        var resultIndex = analysisLinreg.Result.IndexOf(result);
+                        var resultIndex = analysisRegression.Result.IndexOf(result);
 
                         foreach (var column in columns.Keys)
                         {
@@ -1146,7 +1146,7 @@ namespace LSAnalyzer.ViewModels
                                 }
 
                                 var groupByVariable = column.Substring(column.IndexOf("_") + 1);
-                                var valueLabels = analysisLinreg.ValueLabels[groupByVariable];
+                                var valueLabels = analysisRegression.ValueLabels[groupByVariable];
                                 // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
                                 var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)cellValues.Last()!);
 
@@ -1186,15 +1186,15 @@ namespace LSAnalyzer.ViewModels
                 rowSigma["variable"] = "";
             }
 
-            foreach (var rowR2 in table.Select("coefficient = 'R^2'"))
+            foreach (var rowR2 in table.Select("coefficient = 'R^2' OR coefficient = 'R2'"))
             {
                 rowR2["variable"] = "";
             }
 
             var betaInterceptRows = table.Select("coefficient = 'beta' AND variable = '(intercept)'");
-            foreach (var betaIntereptRow in betaInterceptRows)
+            foreach (var betaInterceptRow in betaInterceptRows)
             {
-                table.Rows.Remove(betaIntereptRow);
+                table.Rows.Remove(betaInterceptRow);
             }
 
             return table;
@@ -1354,7 +1354,7 @@ namespace LSAnalyzer.ViewModels
             return dataView;
         }
 
-        private DataView DataTableViewLinreg(DataTable table)
+        private DataView DataTableViewRegression(DataTable table)
         {
             DataView dataView = new(table.Copy());
 
@@ -1406,7 +1406,8 @@ namespace LSAnalyzer.ViewModels
                     DataView = DataTableViewCorr(DataTable);
                     break;
                 case AnalysisLinreg:
-                    DataView = DataTableViewLinreg(DataTable);
+                case AnalysisLogistReg:
+                    DataView = DataTableViewRegression(DataTable);
                     break;
                 default:
                     break;

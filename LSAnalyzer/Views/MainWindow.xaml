@@ -165,7 +165,7 @@
                 <MenuItem x:Name="menuItemAnalysisPercentiles" Header="_Percentiles ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisPercentiles_Click"/>
                 <MenuItem x:Name="menuItemAnalysisCorrelations" Header="_Correlations ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisCorrelations_Click"/>
                 <MenuItem x:Name="menuItemAnalysisRegression" Header="Linear _Regression ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisLinreg_Click"/>
-                <MenuItem x:Name="menuItemAnalysisLogistReg" Header="_Logistic Regression ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+                <MenuItem x:Name="menuItemAnalysisLogistReg" Header="_Logistic Regression ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisLogistReg_Click"/>
                 <MenuItem x:Name="menuItemAnalysisMultilevel" Header="_Multilevel Regression ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
             </MenuItem>
             <MenuItem Header="_Config">

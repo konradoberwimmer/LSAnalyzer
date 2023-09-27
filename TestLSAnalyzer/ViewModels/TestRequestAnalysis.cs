@@ -185,6 +185,22 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal("cat", requestAnalysisViewModel.GroupByVariables[0].Name);
             Assert.False(requestAnalysisViewModel.CalculateOverall);
             Assert.Equal(AnalysisRegression.RegressionSequence.Forward, requestAnalysisViewModel.RegressionSequence);
+
+            AnalysisLinreg analysisLogistReg = new(requestAnalysisViewModel.AnalysisConfiguration)
+            {
+                Dependent = new(1, "cat", false),
+                Vars = new() { new(2, "x", false), new(3, "y", false) },
+                CalculateOverall = false,
+                Sequence = AnalysisRegression.RegressionSequence.Backward,
+            };
+
+            requestAnalysisViewModel.InitializeWithAnalysis(analysisLogistReg);
+            Assert.Equal(8, requestAnalysisViewModel.AvailableVariables.Count);
+            Assert.Single(requestAnalysisViewModel.DependentVariables);
+            Assert.Equal(2, requestAnalysisViewModel.AnalysisVariables.Count);
+            Assert.Empty(requestAnalysisViewModel.GroupByVariables);
+            Assert.False(requestAnalysisViewModel.CalculateOverall);
+            Assert.Equal(AnalysisRegression.RegressionSequence.Backward, requestAnalysisViewModel.RegressionSequence);
         }
 
         [Fact]
@@ -299,6 +315,10 @@ namespace TestLSAnalyzer.ViewModels
             });
             requestAnalysisViewModel.SendAnalysisRequestCommand.Execute(new MockRequestingAnalysisLinreg());
             Assert.True(messageSent);
+
+            messageSent = false;
+            requestAnalysisViewModel.SendAnalysisRequestCommand.Execute(new MockRequestingAnalysisLogistReg());
+            Assert.True(messageSent);
         }
     }
 
@@ -398,6 +418,19 @@ namespace TestLSAnalyzer.ViewModels
         public Type GetAnalysisType()
         {
             return Type.GetType("LSAnalyzer.Models.AnalysisLinreg,LSAnalyzer")!;
+        }
+    }
+
+    internal class MockRequestingAnalysisLogistReg : IRequestingAnalysis
+    {
+        public void Close()
+        {
+
+        }
+
+        public Type GetAnalysisType()
+        {
+            return Type.GetType("LSAnalyzer.Models.AnalysisLogistReg,LSAnalyzer")!;
         }
     }
 }

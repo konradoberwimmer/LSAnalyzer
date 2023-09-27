@@ -232,6 +232,9 @@ namespace LSAnalyzer.ViewModels
                 case AnalysisLinreg analysisLinreg:
                     result = _rservice.CalculateLinreg(analysisLinreg);
                     break;
+                case AnalysisLogistReg analysisLogistReg:
+                    result = _rservice.CalculateLogistReg(analysisLogistReg);
+                    break;
                 default:
                     break;
             }

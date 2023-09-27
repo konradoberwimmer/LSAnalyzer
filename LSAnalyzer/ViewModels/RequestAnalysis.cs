@@ -255,6 +255,18 @@ namespace LSAnalyzer.ViewModels
                     }
                     CalculateOverall = analysisLinreg.CalculateOverall;
                     break;
+                case AnalysisLogistReg analysisLogistReg:
+                    WithIntercept = analysisLogistReg.WithIntercept;
+                    RegressionSequence = analysisLogistReg.Sequence;
+                    if (analysisLogistReg.Dependent != null)
+                    {
+                        MoveToAndFromDependentVariables(new()
+                        {
+                            SelectedFrom = AvailableVariables.Where(var => var.Name == analysisLogistReg.Dependent.Name).ToList(),
+                        });
+                    }
+                    CalculateOverall = analysisLogistReg.CalculateOverall;
+                    break;
                 default:
                     break;
             }
@@ -448,6 +460,15 @@ namespace LSAnalyzer.ViewModels
                     analysisLinreg.GroupBy = new(GroupByVariables);
                     analysisLinreg.CalculateOverall = this.CalculateOverall;
                     WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisLinreg));
+                    break;
+                case AnalysisLogistReg analysisLogistReg:
+                    analysisLogistReg.WithIntercept = this.WithIntercept;
+                    analysisLogistReg.Sequence = RegressionSequence;
+                    analysisLogistReg.Dependent = DependentVariables.First();
+                    analysisLogistReg.Vars = new(AnalysisVariables);
+                    analysisLogistReg.GroupBy = new(GroupByVariables);
+                    analysisLogistReg.CalculateOverall = this.CalculateOverall;
+                    WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisLogistReg));
                     break;
             }
             

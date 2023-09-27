@@ -215,6 +215,26 @@ namespace LSAnalyzer.Views
             requestAnalysisLinregView.ShowDialog();
         }
 
+        private void MenuItemAnalysisLogistReg_Click(object sender, RoutedEventArgs e)
+        {
+            var mainWindowViewModel = DataContext as ViewModels.MainWindow;
+
+            if (mainWindowViewModel!.AnalysisConfiguration == null)
+            {
+                return;
+            }
+
+            RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
+            requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisLogistReg)))
+            {
+                requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisLogistReg)]);
+            }
+
+            RequestAnalysisLogistReg requestAnalysisLogistRegView = new(requestAnalysisViewModel);
+            requestAnalysisLogistRegView.ShowDialog();
+        }
+
         private void ButtonDownloadXlsx_Click (object sender, RoutedEventArgs e)
         {
             if (sender is not Button button || button.DataContext is not AnalysisPresentation analysisPresentationViewModel)

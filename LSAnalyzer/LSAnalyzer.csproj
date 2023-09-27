@@ -27,6 +27,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Update="Views\RequestAnalysisLogistReg.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\RequestAnalysisLinreg.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
