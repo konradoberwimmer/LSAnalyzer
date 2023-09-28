@@ -48,6 +48,9 @@
     <None Update="_testData\test_nmi10_multiitem.sav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="_testData\test_nmi10_multiitem_resorted.sav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="_testData\test_nmi10_nrep5.sav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

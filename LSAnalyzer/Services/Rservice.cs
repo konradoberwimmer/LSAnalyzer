@@ -233,11 +233,15 @@ namespace LSAnalyzer.Services
             }
         }
 
-        public bool LoadFileIntoGlobalEnvironment(string fileName)
+        public bool LoadFileIntoGlobalEnvironment(string fileName, string? sortBy = null)
         {
             try
             {
                 _engine!.Evaluate("lsanalyzer_dat_raw_stored <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                if (!String.IsNullOrWhiteSpace(sortBy))
+                {
+                    _engine!.Evaluate("lsanalyzer_dat_raw_stored <- lsanalyzer_dat_raw_stored[order(lsanalyzer_dat_raw_stored$`" + sortBy + "`), ]");
+                }
                 _engine.Evaluate("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
                 var rawData = _engine.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
                 if (rawData == null)
@@ -468,7 +472,7 @@ namespace LSAnalyzer.Services
                 return false;
             }
 
-            if (!LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName))
+            if (!LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName, analysisConfiguration.DatasetType.IDvar))
             {
                 return false;
             }

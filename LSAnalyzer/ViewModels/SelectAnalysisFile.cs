@@ -144,6 +144,7 @@ namespace LSAnalyzer.ViewModels
                 if (variables.Where(var => var.Name == datasetType.Weight).Count() == 0) continue;
 
                 if (!String.IsNullOrWhiteSpace(datasetType.MIvar) && variables.Where(var => var.Name == datasetType.MIvar).Count() == 0) continue;
+                if (!String.IsNullOrWhiteSpace(datasetType.IDvar) && variables.Where(var => var.Name == datasetType.IDvar).Count() == 0) continue;
                 if (!String.IsNullOrWhiteSpace(datasetType.PVvars))
                 {
                     string[] pvVarsSplit = datasetType.PVvars.Split(';');

@@ -1142,6 +1142,50 @@ namespace TestLSAnalyzer.Services
             Assert.Equal("Kategorie B", valueLabels["label"].AsCharacter()[valueLabels["value"].AsInteger().ToList().IndexOf(2)]);
         }
 
+        [Fact]
+        public void TestIdVariableRepairsMIdamage()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisCorr analysisCorr = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "item1", false), new(2, "item2", false), new(3, "item3", false) },
+                GroupBy = new() { new(4, "cat", false) },
+                CalculateOverall = false,
+            };
+
+            var result = rservice.CalculateCorr(analysisCorr);
+
+            analysisConfiguration.FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem_resorted.sav");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            var resultCorrupt = rservice.CalculateCorr(analysisCorr);
+            Assert.NotEqual((double)result![0]["stat.cor"].AsDataFrame()["cor_SE"][1], (double)resultCorrupt![0]["stat.cor"].AsDataFrame()["cor_SE"][1]);
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName, "id"));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            var resultCorrect = rservice.CalculateCorr(analysisCorr);
+            Assert.Equal((double)result![0]["stat.cor"].AsDataFrame()["cor_SE"][1], (double)resultCorrect![0]["stat.cor"].AsDataFrame()["cor_SE"][1]);
+        }
+
         public static string AssemblyDirectory
         {
             get

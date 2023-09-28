@@ -47,7 +47,7 @@
         </TextBox>
         <Label Content="Description:" Grid.Row="1" HorizontalAlignment="Left" Margin="10,26,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="textBoxDescription" Grid.Row="1" Margin="106,30,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Description, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top"/>
-        <Label Content="Weight Variable:" Grid.Row="1" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top"/>
+        <Label Content="Weight variable:" Grid.Row="1" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="textBoxWeightVariable" Grid.Row="1" Margin="106,56,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Weight, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top">
             <ToolTipService.ToolTip>
                 <TextBlock Text="{Binding SelectedDatasetType.Errors[Weight]}" Foreground="Red"/>
@@ -56,6 +56,11 @@
                 <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Weight"/>
             </ToolTipService.IsEnabled>
         </TextBox>
+        <StackPanel Grid.Row="1" Margin="10,78,0,0" VerticalAlignment="Top" Orientation="Horizontal">
+            <Label Content="ID variable:"/>
+            <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="Providing a unique ID variable is not necessary but will guarantee sorting and correct associations between cases when using MI indicator variable."/>
+        </StackPanel>
+        <TextBox x:Name="textBoxIdVariable" Grid.Row="1" Margin="106,82,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.IDvar, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top"/>
         <GroupBox Grid.Row="2" Margin="10,10,10,0" VerticalAlignment="Top">
             <GroupBox.Header>
                 <TextBlock FontWeight="DemiBold"><Run Text="Multiple Imputation / Plausible Values"/></TextBlock>

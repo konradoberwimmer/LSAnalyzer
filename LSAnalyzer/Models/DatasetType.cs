@@ -22,6 +22,7 @@ namespace LSAnalyzer.Models
         public int? NMI { get; set; }
         [RequiredInsteadOf(nameof(PVvars), "Either indicator variable for multiple imputations or plausible value variables are requried! If there is no MI/PV involved, add a constant of one to the dataset.")]
         public string? MIvar { get; set; }
+        public string? IDvar { get; set; }
         [MutuallyExclusive(nameof(MIvar), "Cannot specify both indicator variable for multiple imputations and plausible value variables!")]
         public string? PVvars { get; set; }
         [Required(ErrorMessage = "Number of replications is required!")]
@@ -69,6 +70,7 @@ namespace LSAnalyzer.Models
             Weight = datasetType.Weight;
             NMI = datasetType.NMI;
             MIvar = datasetType.MIvar;
+            IDvar = datasetType.IDvar;
             PVvars = datasetType.PVvars;
             Nrep = datasetType.Nrep;
             RepWgts = datasetType.RepWgts;
@@ -90,7 +92,7 @@ namespace LSAnalyzer.Models
                 return false;
             }
 
-            if (Weight == name || MIvar == name)
+            if (Weight == name || MIvar == name || IDvar == name)
             {
                 return true;
             }
@@ -112,6 +114,7 @@ namespace LSAnalyzer.Models
             regexNecessaryVariables.Add("^" + Weight + "$");
             
             if (!string.IsNullOrWhiteSpace(MIvar)) regexNecessaryVariables.Add("^" + MIvar + "$");
+            if (!string.IsNullOrWhiteSpace(IDvar)) regexNecessaryVariables.Add("^" + IDvar + "$");
             if (!string.IsNullOrWhiteSpace(PVvars))
             {
                 string[] pvVarsSplit = PVvars.Split(';');
@@ -135,6 +138,7 @@ namespace LSAnalyzer.Models
                     Name = "PIRLS 2016 - student level",
                     Description = "PIRLS 2016 - student level",
                     Weight = "TOTWGT",
+                    IDvar = "IDSTUD",
                     NMI = 5,
                     PVvars = "ASRREA;ASRLIT;ASRINF;ASRIIE;ASRRSI;ASRIBM",
                     Nrep = 150,
@@ -149,6 +153,7 @@ namespace LSAnalyzer.Models
                     Name = "PISA 2018 - student level",
                     Description = "PISA 2018 - student level",
                     Weight = "W_FSTUWT",
+                    IDvar = "CNTSTUID",
                     NMI = 10,
                     PVvars = "PV[0-9]+MATH;PV[0-9]+READ;PV[0-9]+SCIE;PV[0-9]+GLCM;PV[0-9]+RCLI;PV[0-9]+RCUN;PV[0-9]+RCER;PV[0-9]+RTSN;PV[0-9]+RTML",
                     Nrep = 80,
