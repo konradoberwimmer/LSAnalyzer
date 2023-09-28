@@ -1062,6 +1062,10 @@ namespace LSAnalyzer.ViewModels
             {
                 columns.Add("est", new DataColumn("estimate", typeof(double)));
                 columns.Add("SE", new DataColumn("standard error", typeof(double)));
+                if (analysisRegression is AnalysisLogistReg)
+                {
+                    columns.Add("$exp_est", new DataColumn("exp(estimate)", typeof(double)));
+                }
                 columns.Add("p", new DataColumn("p value", typeof(double)));
                 columns.Add("fmi", new DataColumn("FMI", typeof(double)));
             } else
@@ -1070,6 +1074,10 @@ namespace LSAnalyzer.ViewModels
                 {
                     columns.Add("$model_" + (rr + 1) + "_est", new DataColumn("model " + (rr+1) + " - estimate", typeof(double)));
                     columns.Add("$model_" + (rr + 1) + "_SE", new DataColumn("model " + (rr + 1) + " - standard error", typeof(double)));
+                    if (analysisRegression is AnalysisLogistReg)
+                    {
+                        columns.Add("$model_" + (rr + 1) + "_expest", new DataColumn("model " + (rr + 1) + " - exp(estimate)", typeof(double)));
+                    }
                     columns.Add("$model_" + (rr + 1) + "_p", new DataColumn("model " + (rr + 1) + " - p value", typeof(double)));
                     columns.Add("$model_" + (rr + 1) + "_fmi", new DataColumn("model " + (rr + 1) + " - FMI", typeof(double)));
                 }
@@ -1123,7 +1131,13 @@ namespace LSAnalyzer.ViewModels
                             if (Regex.IsMatch(column, "^\\$model_" + (resultIndex+1) + "_"))
                             {
                                 var content = column.Substring(column.LastIndexOf("_") + 1);
-                                existingTableRow[columns[column]] = (double)dataFrameRow[content];
+                                if (content != "expest")
+                                {
+                                    existingTableRow[columns[column]] = (double)dataFrameRow[content];
+                                } else if ((string)existingTableRow["coefficient"] == "b")
+                                {
+                                    existingTableRow[columns[column]] = Math.Exp((double)dataFrameRow["est"]);
+                                }
                             }
                         }
                     } else
@@ -1159,6 +1173,10 @@ namespace LSAnalyzer.ViewModels
                                 {
                                     cellValues.Add(null);
                                 }
+                            }
+                            else if (Regex.IsMatch(column, "^\\$exp_") && (string)dataFrameRow["parameter"] == "b")
+                            {
+                                cellValues.Add(Math.Exp((double)dataFrameRow["est"]));
                             }
                             else if (dataFrame.ColumnNames.Contains(column))
                             {

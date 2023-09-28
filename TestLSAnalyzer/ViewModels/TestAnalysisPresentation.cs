@@ -605,7 +605,7 @@ namespace TestLSAnalyzer.ViewModels
 
             Assert.NotNull(analysisPresentationViewModel.DataTable);
             Assert.Equal(4, analysisPresentationViewModel.DataTable.Rows.Count);
-            Assert.Equal(8, analysisPresentationViewModel.DataTable.Columns.Count);
+            Assert.Equal(9, analysisPresentationViewModel.DataTable.Columns.Count);
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("coefficient"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
             Assert.Equal("", (string)analysisPresentationViewModel.DataTable.Select("coefficient = 'R2'")[0]["variable"]);
