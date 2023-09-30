@@ -281,6 +281,7 @@ namespace TestLSAnalyzer.ViewModels
             };
 
             analysisFreq.ValueLabels.Add("instable", rservice.GetValueLabels("instable")!);
+            analysisFreq.BivariateResult = rservice.CalculateBivariate(analysisFreq);
             var result = rservice.CalculateFreq(analysisFreq);
 
             AnalysisPresentation analysisPresentationViewModel = new(analysisFreq);
@@ -295,6 +296,11 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Cat 5 - standard error"));
             Assert.Equal(2, analysisPresentationViewModel.DataTable.Select("[instable (label)] = 'Kategorie B'").Length);
             Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("instable = 1")[0]["Cat 1"] - 0.2971394) < 0.0001);
+
+            Assert.NotNull(analysisPresentationViewModel.TableBivariate);
+            Assert.Equal(2 * 9, analysisPresentationViewModel.TableBivariate.Rows.Count);
+            Assert.Equal(6, analysisPresentationViewModel.TableBivariate.Columns.Count);
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.TableBivariate.Select("Y = 'item1' and coefficient = 'w'")[0]["estimate"] - 0.395625) < 0.0001);
         }
 
         [Fact]

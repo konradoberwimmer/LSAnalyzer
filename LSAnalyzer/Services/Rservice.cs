@@ -744,6 +744,41 @@ namespace LSAnalyzer.Services
             }
         }
 
+        public List<GenericVector>? CalculateBivariate(AnalysisFreq analysis)
+        {
+            try
+            {
+                if (analysis.Vars.Count == 0 || analysis.GroupBy.Count == 0 ||
+                    analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
+                {
+                    return null;
+                }
+
+                List<GenericVector> resultList = new();
+
+                string baseCall = "lsanalyzer_result_crosstab <- BIFIEsurvey::BIFIE.crosstab(BIFIEobj = lsanalyzer_dat_BO";
+                
+                foreach (var group in analysis.GroupBy)
+                {
+                    foreach (var variable in analysis.Vars)
+                    {
+                        string vars1arg = ", vars1 = '" + group.Name + "'";
+                        string vars2arg = ", vars2 = '" + variable.Name + "'";
+                        string finalCall = baseCall + vars1arg + vars2arg + ");";
+
+                        _engine!.Evaluate(finalCall);
+                        resultList.Add(_engine.GetSymbol("lsanalyzer_result_crosstab").AsList());
+                    }
+                }
+
+                return resultList;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         public List<GenericVector>? CalculatePercentiles(AnalysisPercentiles analysis)
         {
             try

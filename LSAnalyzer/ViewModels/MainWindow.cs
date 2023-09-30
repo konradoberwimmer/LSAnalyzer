@@ -244,6 +244,11 @@ namespace LSAnalyzer.ViewModels
                 WeakReferenceMessenger.Default.Send(new FailureWithAnalysisCalculationMessage(analysisPresentation.Analysis));
             } else
             {
+                if (analysisPresentation.Analysis is AnalysisFreq analysisFreq && analysisFreq.CalculateBivariate)
+                {
+                    analysisFreq.BivariateResult = _rservice.CalculateBivariate(analysisFreq);
+                }
+
                 foreach (var groupByVariable in analysisPresentation!.Analysis.GroupBy)
                 {
                     var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);

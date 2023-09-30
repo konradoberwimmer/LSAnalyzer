@@ -84,6 +84,12 @@
 
                                     </DataGrid>
                                 </StackPanel>
+                                <StackPanel Grid.Row="1" Margin="0,10,0,0"  Orientation="Vertical" VerticalAlignment="Top" Visibility="{Binding TableBivariate, Converter={StaticResource NullToVisibilityCollapsedConverter}}">
+                                    <TextBlock Text="Bivariate measures of association:"/>
+                                    <DataGrid x:Name="dataGridBivariate" IsReadOnly="True" ItemsSource="{Binding TableBivariate}" AutoGeneratingColumn="DataGridResults_AutoGeneratingColumn" MinHeight="22" MaxHeight="450">
+
+                                    </DataGrid>
+                                </StackPanel>
                             </Grid>
                             <StackPanel Grid.Column="1" Margin="10,0,0,0">
                                 <StackPanel>

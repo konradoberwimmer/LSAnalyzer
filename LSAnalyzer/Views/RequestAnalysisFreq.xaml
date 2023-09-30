@@ -9,7 +9,7 @@
         xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
         x:Name="windowRequestAnalysisFreq"
         mc:Ignorable="d"
-        Title="Frequencies" Height="450" MinHeight="450" Width="800" MinWidth="800" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight">
+        Title="Frequencies" Height="465" MinHeight="465" Width="800" MinWidth="800" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight">
     <Window.DataContext>
         <ViewModels:RequestAnalysis/>
     </Window.DataContext>
@@ -72,10 +72,13 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Button x:Name="buttonMoveToAndFromGroupByVariables" Grid.Column="0" Content="&#x21D4;" Margin="10,0,10,22" Height="50" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Command="{Binding MoveToAndFromGroupByVariablesCommand}" Click="ButtonMoveToAndFromGroupByVariables_Click"/>
-                    <Border x:Name="HeightHelperPanelVariablesGroupBy" Grid.Column="1" Margin="0,0,10,22">
+                    <Border x:Name="HeightHelperPanelVariablesGroupBy" Grid.Column="1" Margin="0,0,10,37">
                         <ListBox x:Name="listBoxVariablesGroupBy" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesGroupBy}" ItemsSource="{Binding GroupByVariables}" DisplayMemberPath="Name" SelectionMode="Extended"/>
                     </Border>
-                    <CheckBox x:Name="checkBoxCalculateOverall" Grid.Column="1" VerticalAlignment="Bottom" Content="Calculate overall frequencies" IsChecked="{Binding CalculateOverall}" IsEnabled="{Binding GroupByVariables.Count}"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Orientation="Vertical">
+                        <CheckBox x:Name="checkBoxCalculateOverall" Content="Calculate overall frequencies" IsChecked="{Binding CalculateOverall}" IsEnabled="{Binding GroupByVariables.Count}"/>
+                        <CheckBox x:Name="checkBoxCalculateBivariate" Content="Calculate bivariate measures of association" IsChecked="{Binding CalculateBivariate}" IsEnabled="{Binding GroupByVariables.Count}"/>
+                    </StackPanel>
                 </Grid>
             </Grid>
         </Grid>

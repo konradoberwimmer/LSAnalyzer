@@ -168,6 +168,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private DataTable? _tableBivariate;
+        public DataTable? TableBivariate
+        {
+            get => _tableBivariate;
+            set
+            {
+                _tableBivariate = value;
+                NotifyPropertyChanged(nameof(TableBivariate));
+            }
+        }
+
         private DataTable? _tableEta;
         public DataTable? TableEta
         {
@@ -242,6 +253,10 @@ namespace LSAnalyzer.ViewModels
                     break;
                 case AnalysisFreq analysisFreq:
                     DataTable = CreateDataTableFromResultFreq(analysisFreq);
+                    if (analysisFreq.CalculateBivariate)
+                    {
+                        TableBivariate = CreateTableBivariate(analysisFreq);
+                    }
                     break;
                 case AnalysisPercentiles analysisPercentiles:
                     DataTable = CreateDataTableFromResultPercentiles(analysisPercentiles);
@@ -621,7 +636,6 @@ namespace LSAnalyzer.ViewModels
             {
                 table.Columns.Add(column);
             }
-
             
             foreach (var result in Analysis.Result)
             {
@@ -717,6 +731,67 @@ namespace LSAnalyzer.ViewModels
 
             string[] sortBy = { "variable" };
             table.DefaultView.Sort = String.Join(", ", sortBy.Concat(analysisFreq.GroupBy.ConvertAll(var => var.Name)).ToArray());
+
+            return table;
+        }
+
+        public DataTable CreateTableBivariate(AnalysisFreq analysisFreq)
+        {
+            if (analysisFreq.BivariateResult == null || analysisFreq.BivariateResult.Count == 0)
+            {
+                return new();
+            }
+
+            DataTable table = new(analysisFreq.AnalysisName);
+
+            Dictionary<string, DataColumn> columns = new();
+
+            columns.Add("$varname_X", new DataColumn("X", typeof(string)));
+            columns.Add("$varname_Y", new DataColumn("Y", typeof(string)));
+            columns.Add("parm", new DataColumn("coefficient", typeof(string)));
+            columns.Add("est", new DataColumn("estimate", typeof(double)));
+            columns.Add("SE", new DataColumn("estimate - standard error", typeof(double)));
+            columns.Add("fmi", new DataColumn("estimate - FMI", typeof(double)));
+
+            foreach (var column in columns.Values)
+            {
+                table.Columns.Add(column);
+            }
+
+            foreach (var result in analysisFreq.BivariateResult)
+            {
+                var dataFrame = result["stat.es"].AsDataFrame();
+                var dataFrameProbs = result["stat.probs"].AsDataFrame();
+
+                foreach (var dataFrameRow in dataFrame.GetRows())
+                {
+                    DataRow tableRow = table.NewRow();
+
+                    List<object?> cellValues = new();
+                    foreach (var column in columns.Keys)
+                    {
+                        if (column == "$varname_X")
+                        {
+                            cellValues.Add(dataFrameProbs["var1"].AsCharacter().First());
+                        } 
+                        else if (column == "$varname_Y")
+                        {
+                            cellValues.Add(dataFrameProbs["var2"].AsCharacter().First());
+                        }
+                        else if (dataFrame.ColumnNames.Contains(column))
+                        {
+                            cellValues.Add(dataFrameRow[column]);
+                        }
+                        else
+                        {
+                            cellValues.Add(null);
+                        }
+                    }
+
+                    tableRow.ItemArray = cellValues.ToArray();
+                    table.Rows.Add(tableRow);
+                }
+            }
 
             return table;
         }

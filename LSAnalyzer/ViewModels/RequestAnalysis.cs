@@ -87,6 +87,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _calculateBivariate = true;
+        public bool CalculateBivariate
+        {
+            get => _calculateBivariate;
+            set
+            {
+                _calculateBivariate = value;
+                NotifyPropertyChanged(nameof(CalculateBivariate));
+            }
+        }
+
         private bool _calculateSeparately = false;
         public bool CalculateSeparately
         {
@@ -228,6 +239,7 @@ namespace LSAnalyzer.ViewModels
                     break;
                 case AnalysisFreq analysisFreq:
                     CalculateOverall = analysisFreq.CalculateOverall;
+                    CalculateBivariate = analysisFreq.CalculateBivariate;
                     break;
                 case AnalysisPercentiles analysisPercentiles:
                     Percentiles = new();
@@ -434,6 +446,7 @@ namespace LSAnalyzer.ViewModels
                     analysisFreq.Vars = new(AnalysisVariables);
                     analysisFreq.GroupBy = new(GroupByVariables);
                     analysisFreq.CalculateOverall = this.CalculateOverall;
+                    analysisFreq.CalculateBivariate = this.CalculateBivariate;
                     WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisFreq));
                     break;
                 case AnalysisPercentiles analysisPercentiles:
@@ -506,6 +519,7 @@ namespace LSAnalyzer.ViewModels
                 SelectedTo = DependentVariables.ToList(),
             });
             CalculateOverall = true;
+            CalculateBivariate = true;
             CalculateSeparately = false;
             Percentiles = new() { new() { Value = 0.25 }, new() { Value = 0.50 }, new() { Value = 0.75 } };
             CalculateSE = true;
