@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using GalaSoft.MvvmLight.Threading;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
@@ -13,6 +14,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace LSAnalyzer.ViewModels
@@ -86,6 +88,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _isBusy = false;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set
+            {
+                _isBusy = value;
+                NotifyPropertyChanged(nameof(IsBusy));
+            }
+        }
+
         [ExcludeFromCodeCoverage]
         public Subsetting()
         {
@@ -127,16 +140,38 @@ namespace LSAnalyzer.ViewModels
 
         private void ClearSubsetting(ICloseable? window)
         {
+            if (AnalysisConfiguration == null)
+            {
+                return;
+            }
+
             SubsetExpression = null;
 
+            BackgroundWorker clearSubsettingWorker = new();
+            clearSubsettingWorker.WorkerReportsProgress = false;
+            clearSubsettingWorker.WorkerSupportsCancellation = false;
+            clearSubsettingWorker.DoWork += ClearSubsettingWorker_DoWork;
+            clearSubsettingWorker.RunWorkerAsync(window);
+        }
+
+        private void ClearSubsettingWorker_DoWork(object? sender, DoWorkEventArgs e)
+        {
+            IsBusy = true;
             if (AnalysisConfiguration?.ModeKeep == true)
             {
                 _rservice.TestAnalysisConfiguration(AnalysisConfiguration);
             }
 
             WeakReferenceMessenger.Default.Send(new SetSubsettingExpressionMessage(SubsetExpression));
+            IsBusy = false;
 
-            window?.Close();
+            if (e.Argument is ICloseable window)
+            {
+                DispatcherHelper.CheckBeginInvokeOnUI(() =>
+                {
+                    window.Close();
+                });
+            }
         }
 
         private RelayCommand<object?> _testSubsettingCommand;
@@ -154,8 +189,19 @@ namespace LSAnalyzer.ViewModels
         {
             if (SubsetExpression != null)
             {
-                SubsettingInformation = _rservice.TestSubsetting(SubsetExpression, AnalysisConfiguration?.DatasetType?.MIvar);
+                BackgroundWorker testSubsettingWorker = new();
+                testSubsettingWorker.WorkerReportsProgress = false;
+                testSubsettingWorker.WorkerSupportsCancellation = false;
+                testSubsettingWorker.DoWork += TestSubsettingWorker_DoWork;
+                testSubsettingWorker.RunWorkerAsync();
             }
+        }
+
+        private void TestSubsettingWorker_DoWork(object? sender, DoWorkEventArgs e)
+        {
+            IsBusy = true;
+            SubsettingInformation = _rservice.TestSubsetting(SubsetExpression!, AnalysisConfiguration?.DatasetType?.MIvar);
+            IsBusy = false;
         }
 
         private RelayCommand<ICloseable?> _useSubsettingCommand;
@@ -176,16 +222,28 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
-            var testResult = _rservice.TestSubsetting(SubsetExpression);
+            BackgroundWorker useSubsettingWorker = new();
+            useSubsettingWorker.WorkerReportsProgress = false;
+            useSubsettingWorker.WorkerSupportsCancellation = false;
+            useSubsettingWorker.DoWork += UseSubsettingWorker_DoWork;
+            useSubsettingWorker.RunWorkerAsync(window);
+        }
+
+        private void UseSubsettingWorker_DoWork(object? sender, DoWorkEventArgs e)
+        {
+            IsBusy = true;
+
+            var testResult = _rservice.TestSubsetting(SubsetExpression!);
             if (!testResult.ValidSubset)
             {
                 SubsettingInformation = testResult;
+                IsBusy = false;
                 return;
             }
 
-            if (AnalysisConfiguration.ModeKeep == true)
+            if (AnalysisConfiguration!.ModeKeep == true)
             {
-                if (!_rservice.TestAnalysisConfiguration(AnalysisConfiguration, SubsetExpression))
+                if (!_rservice.TestAnalysisConfiguration(AnalysisConfiguration!, SubsetExpression))
                 {
                     SubsettingInformation = new()
                     {
@@ -193,13 +251,21 @@ namespace LSAnalyzer.ViewModels
                         NCases = 0,
                         NSubset = 0,
                     };
+                    IsBusy = false;
                     return;
                 }
             }
-            
-            WeakReferenceMessenger.Default.Send(new SetSubsettingExpressionMessage(SubsetExpression));
 
-            window?.Close();
+            WeakReferenceMessenger.Default.Send(new SetSubsettingExpressionMessage(SubsetExpression));
+            IsBusy = false;
+
+            if (e.Argument is ICloseable window)
+            {
+                DispatcherHelper.CheckBeginInvokeOnUI(() =>
+                {
+                    window.Close();
+                });
+            }
         }
     }
 

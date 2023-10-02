@@ -292,6 +292,11 @@ namespace LSAnalyzer.Services
 
                 _engine!.Evaluate("rm(lsanalyzer_dat_raw_stored_subset)");
 
+                if (nSubset == 0)
+                {
+                    return new SubsettingInformation() { ValidSubset = false, EmptySubset = true };
+                }
+
                 return new SubsettingInformation() { ValidSubset = true, NCases = nCases, NSubset = nSubset };
             } catch (Exception)
             {
@@ -1133,12 +1138,15 @@ namespace LSAnalyzer.Services
     {
         public bool ValidSubset { get; set; }
         public bool MIvariance { get; set; } = false;
+        public bool EmptySubset { get; set; } = false;
         public int NCases { get; set; }
         public int NSubset { get; set; }
 
         public string Stringify
         {
-            get => ValidSubset ? "Subset has " + NSubset + " cases, data has " + NCases + " cases." : (MIvariance ? "Subsetting is not supported for variables with MI variance." : "Invalid subsetting expression.");
+            get => ValidSubset ? "Subset has " + NSubset + " cases, data has " + NCases + " cases." : 
+                (MIvariance ? "Subsetting is not supported for variables with MI variance." : 
+                (EmptySubset ? "Empty subset." : "Invalid subsetting expression."));
         }
     }
 }

@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:LSAnalyzer.Views"
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" 
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
-        xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
+        xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
         mc:Ignorable="d" x:Name="windowSubsetting" Title="Subsetting" Height="450" MinHeight="450" Width="800" MinWidth="800" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen">
     <Window.DataContext>
         <ViewModels:Subsetting/>
@@ -14,12 +15,17 @@
     <Window.Resources>
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisModeConverter"/>
         <converter:BoolToRedGreen x:Key="BoolToRedGreenConverter"/>
+        <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
+        <converter:InverseBool x:Key="InverseBoolConverter"/>
         <CollectionViewSource x:Key="AvailableVariablesCollectionView" Source="{Binding AvailableVariables}" Filter="AvailableVariablesCollectionView_FilterSystemVariables">
             <CollectionViewSource.SortDescriptions>
                 <componentmodel:SortDescription PropertyName="Position" Direction="Ascending"/>
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
     </Window.Resources>
+    <Window.IsEnabled>
+        <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
+    </Window.IsEnabled>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="82"/>
@@ -57,5 +63,6 @@
             <Button Content="Test" Width="80" Height="22" Margin="0,0,10,0" Command="{Binding TestSubsettingCommand}" IsEnabled="{Binding ElementName=textBoxSubsettingExpression, Path=Text.Length}"/>
             <Button Content="OK" Width="80" Height="22" Command="{Binding UseSubsettingCommand}" CommandParameter="{Binding ElementName=windowSubsetting}" IsEnabled="{Binding ElementName=textBoxSubsettingExpression, Path=Text.Length}"/>
         </StackPanel>
+        <fa:ImageAwesome Grid.RowSpan="3" Icon="SunOutline" Spin="True" VerticalAlignment="Center" Height="100" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
     </Grid>
 </Window>

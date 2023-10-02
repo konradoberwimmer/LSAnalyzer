@@ -84,6 +84,11 @@ namespace TestLSAnalyzer.Services
             Assert.False(subsetInformationWithMIvariance.ValidSubset);
             Assert.True(subsetInformationWithMIvariance.MIvariance);
             Assert.Contains("variance", subsetInformationWithMIvariance.Stringify);
+
+            var subsetInformationWithEmptySubset = rservice.TestSubsetting("cat == 3");
+            Assert.False(subsetInformationWithEmptySubset.ValidSubset);
+            Assert.True(subsetInformationWithEmptySubset.EmptySubset);
+            Assert.Contains("Empty subset.", subsetInformationWithEmptySubset.Stringify);
         }
 
         [Fact]
