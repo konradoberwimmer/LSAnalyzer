@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -17,6 +18,7 @@ namespace LSAnalyzer.ViewModels
     public class SystemSettings : INotifyPropertyChanged
     {
         private readonly Rservice _rservice;
+        private readonly Logging _logger;
 
         private string? _rVersion;
         public string? RVersion
@@ -40,19 +42,28 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        public string? SessionLog
+        {
+            get => _logger.Stringify();
+        }
+
         [ExcludeFromCodeCoverage]
         public SystemSettings() 
         {
             // design-time only, parameterless constructor
             RVersion = "R version 4.3.1";
             BifieSurveyVersion = "3.4-15";
+            _logger = new();
+            _logger.AddEntry(new LogEntry(DateTime.Now, "stats::sd(c(1,2,3))"));
+            _logger.AddEntry(new LogEntry(DateTime.Now, "rm(dummy_result)"));
         }
 
-        public SystemSettings(Rservice rservice)
+        public SystemSettings(Rservice rservice, Logging logger)
         {
             _rservice = rservice;
             RVersion = _rservice.GetRVersion();
             BifieSurveyVersion = _rservice.GetBifieSurveyVersion();
+            _logger = logger;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -94,6 +105,28 @@ namespace LSAnalyzer.ViewModels
                 default: 
                     break;
             }
+        }
+
+        private RelayCommand<string?> _saveSessionLogCommand;
+        public ICommand SaveSessionLogCommand
+        {
+            get
+            {
+                if (_saveSessionLogCommand == null)
+                    _saveSessionLogCommand = new RelayCommand<string?>(this.SaveSessionLog);
+                return _saveSessionLogCommand;
+            }
+        }
+
+        private void SaveSessionLog(string? filename)
+        {
+            if (filename == null)
+            {
+                return;
+            }
+
+            using StreamWriter streamWriter = new(filename, false);
+            streamWriter.Write(_logger.Stringify());
         }
     }
 }

@@ -13,17 +13,32 @@ namespace LSAnalyzer.Services
 {
     public class Rservice
     {
+        private Logging _logger;
         private string? _rPath;
         private REngine? _engine;
         private readonly string[] _rPackages = new string[] { "BIFIEsurvey", "foreign" };
 
-        public Rservice() 
+        [ExcludeFromCodeCoverage]
+        public Rservice()
+        {
+            // parameter-less constructor for mocking only
+        }
+
+        public Rservice(Logging logger) 
         {
             var rPathObject = Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\R-core\\R64", "InstallPath", null);
             if (rPathObject != null)
             {
                 _rPath = rPathObject.ToString()!.Replace("\\", "/");
             }
+
+            _logger = logger;
+        }
+
+        private SymbolicExpression EvaluateAndLog(string what, string? analysisName = null, bool oneLiner = false)
+        {
+            _logger.AddEntry(new LogEntry(DateTime.Now, oneLiner ? what.Substring(0, what.IndexOf("\n")) : what, analysisName));
+            return _engine!.Evaluate(what);
         }
 
         public bool Connect()
@@ -37,8 +52,8 @@ namespace LSAnalyzer.Services
             {
                 _engine = REngine.GetInstance();
                 _engine.ClearGlobalEnvironment();
-                _engine.Evaluate("Sys.setenv(PATH = paste(\"" + _rPath + "/bin/x64\", Sys.getenv(\"PATH\"), sep=\";\"))"); //ugly workaround for now!
-                string[] a = _engine.Evaluate("paste0('Result: ', stats::sd(c(1,2,3)))").AsCharacter().ToArray();
+                EvaluateAndLog("Sys.setenv(PATH = paste(\"" + _rPath + "/bin/x64\", Sys.getenv(\"PATH\"), sep=\";\"))"); //ugly workaround for now!
+                string[] a = EvaluateAndLog("paste0('Result: ', stats::sd(c(1,2,3)))").AsCharacter().ToArray();
                 if (a.Length == 0 || a[0] != "Result: 1")
                 {
                     return false;
@@ -56,7 +71,7 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_full_version_string <- paste(R.Version()$version.string, R.Version()$nickname, R.Version()$platform, sep = ' - ')");
+                EvaluateAndLog("lsanalyzer_full_version_string <- paste(R.Version()$version.string, R.Version()$nickname, R.Version()$platform, sep = ' - ')");
                 return _engine.GetSymbol("lsanalyzer_full_version_string").AsCharacter().First();
             } catch
             {
@@ -70,7 +85,7 @@ namespace LSAnalyzer.Services
             {
                 foreach (string rPackage in _rPackages)
                 {
-                    bool available = _engine!.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
+                    bool available = EvaluateAndLog("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
                     if (!available)
                     {
                         return false;
@@ -88,22 +103,22 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                bool userLibraryFolderConfigured = _engine!.Evaluate("nzchar(Sys.getenv('R_LIBS_USER'))").AsLogical().First();
+                bool userLibraryFolderConfigured = EvaluateAndLog("nzchar(Sys.getenv('R_LIBS_USER'))").AsLogical().First();
                 if (!userLibraryFolderConfigured)
                 {
                     return false;
                 }
 
-                _engine.Evaluate("if (!dir.exists(Sys.getenv('R_LIBS_USER'))) { dir.create(Sys.getenv('R_LIBS_USER')) }");
+                EvaluateAndLog("if (!dir.exists(Sys.getenv('R_LIBS_USER'))) { dir.create(Sys.getenv('R_LIBS_USER')) }");
 
                 foreach (string rPackage in _rPackages)
                 {
-                    bool available = _engine.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
+                    bool available = EvaluateAndLog("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
                     if (!available)
                     {
                         try
                         {
-                            _engine.Evaluate("utils::install.packages('" + rPackage + "', lib = Sys.getenv('R_LIBS_USER'), repos = 'https://cloud.r-project.org')");
+                            EvaluateAndLog("utils::install.packages('" + rPackage + "', lib = Sys.getenv('R_LIBS_USER'), repos = 'https://cloud.r-project.org')");
                         }
                         catch
                         {
@@ -124,7 +139,7 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_bifiesurvey_version <- paste(utils::packageVersion('BIFIEsurvey'), sep = '.')");
+                EvaluateAndLog("lsanalyzer_bifiesurvey_version <- paste(utils::packageVersion('BIFIEsurvey'), sep = '.')");
                 return _engine.GetSymbol("lsanalyzer_bifiesurvey_version").AsCharacter().First();
             } catch
             {
@@ -140,14 +155,14 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_old_packages <- data.frame(utils::old.packages(repos = 'https://cloud.r-project.org'))");
+                EvaluateAndLog("lsanalyzer_old_packages <- data.frame(utils::old.packages(repos = 'https://cloud.r-project.org'))");
                 DataFrame? oldPackages = _engine.GetSymbol("lsanalyzer_old_packages").AsDataFrame();
                 if (oldPackages == null || !oldPackages["Package"].AsCharacter().Contains("BIFIEsurvey"))
                 {
                     return UpdateResult.Unavailable;
                 }
 
-                _engine.Evaluate("utils::update.packages(repos = 'https://cloud.r-project.org', ask = FALSE, oldPkgs = 'BIFIEsurvey')");
+                EvaluateAndLog("utils::update.packages(repos = 'https://cloud.r-project.org', ask = FALSE, oldPkgs = 'BIFIEsurvey')");
 
                 return UpdateResult.Success;
             } catch
@@ -160,7 +175,7 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("""
+                EvaluateAndLog("""
                     lsanalyzer_func_quantile <- function(BIFIEobj, vars, breaks, useInterpolation = TRUE, mimicIdbAnalyzer = FALSE, group=NULL, group_values=NULL)
                     {
                       userfct <- function(X,w)
@@ -224,7 +239,7 @@ namespace LSAnalyzer.Services
 
                       return(res)
                     }
-                    """);
+                    """, null, true);
 
                 return true;
             } catch
@@ -237,12 +252,12 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_dat_raw_stored <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                EvaluateAndLog("lsanalyzer_dat_raw_stored <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
                 if (!String.IsNullOrWhiteSpace(sortBy))
                 {
-                    _engine!.Evaluate("lsanalyzer_dat_raw_stored <- lsanalyzer_dat_raw_stored[order(lsanalyzer_dat_raw_stored$`" + sortBy + "`), ]");
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored <- lsanalyzer_dat_raw_stored[order(lsanalyzer_dat_raw_stored$`" + sortBy + "`), ]");
                 }
-                _engine.Evaluate("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
+                EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
                 var rawData = _engine.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
                 if (rawData == null)
                 {
@@ -260,37 +275,37 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_dat_raw_stored_subset <- subset(lsanalyzer_dat_raw_stored, " + subsettingExpression + ")");
+                EvaluateAndLog("lsanalyzer_dat_raw_stored_subset <- subset(lsanalyzer_dat_raw_stored, " + subsettingExpression + ")");
 
                 int nCases;
                 int nSubset;
 
                 if (string.IsNullOrWhiteSpace(MIvar))
                 {
-                    _engine!.Evaluate("lsanalyzer_dat_raw_stored_ncases <- nrow(lsanalyzer_dat_raw_stored)");
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored_ncases <- nrow(lsanalyzer_dat_raw_stored)");
                     nCases = _engine.GetSymbol("lsanalyzer_dat_raw_stored_ncases").AsInteger().First();
 
-                    _engine.Evaluate("lsanalyzer_dat_raw_stored_nsubset <- nrow(lsanalyzer_dat_raw_stored_subset)");
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored_nsubset <- nrow(lsanalyzer_dat_raw_stored_subset)");
                     nSubset = _engine.GetSymbol("lsanalyzer_dat_raw_stored_nsubset").AsInteger().First();
                 } else
                 {
-                    _engine!.Evaluate("lsanalyzer_cnt_subset_mi <- table(lsanalyzer_dat_raw_stored_subset$" + MIvar + ")");
-                    _engine!.Evaluate("lsanalyzer_cnt_subset_mi_max <- max(lsanalyzer_cnt_subset_mi)");
-                    _engine!.Evaluate("lsanalyzer_cnt_subset_mi_all_equal <- all(lsanalyzer_cnt_subset_mi == lsanalyzer_cnt_subset_mi_max)");
+                    EvaluateAndLog("lsanalyzer_cnt_subset_mi <- table(lsanalyzer_dat_raw_stored_subset$" + MIvar + ")");
+                    EvaluateAndLog("lsanalyzer_cnt_subset_mi_max <- max(lsanalyzer_cnt_subset_mi)");
+                    EvaluateAndLog("lsanalyzer_cnt_subset_mi_all_equal <- all(lsanalyzer_cnt_subset_mi == lsanalyzer_cnt_subset_mi_max)");
                     var allMIEqual = _engine.GetSymbol("lsanalyzer_cnt_subset_mi_all_equal").AsLogical().First();
                     if (!allMIEqual)
                     {
                         return new SubsettingInformation() { ValidSubset = false, MIvariance = true };
                     }
 
-                    _engine.Evaluate("lsanalyzer_dat_raw_stored_ncases_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored[, '" + MIvar + "'])[1])");
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored_ncases_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored[, '" + MIvar + "'])[1])");
                     nCases = _engine.GetSymbol("lsanalyzer_dat_raw_stored_ncases_mi1").AsInteger().First();
 
-                    _engine.Evaluate("lsanalyzer_dat_raw_stored_nsubset_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'])[1])");
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored_nsubset_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'])[1])");
                     nSubset = _engine.GetSymbol("lsanalyzer_dat_raw_stored_nsubset_mi1").AsInteger().First();
                 }
 
-                _engine!.Evaluate("rm(lsanalyzer_dat_raw_stored_subset)");
+                EvaluateAndLog("rm(lsanalyzer_dat_raw_stored_subset)");
 
                 if (nSubset == 0)
                 {
@@ -308,7 +323,7 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_dat_raw <- subset(lsanalyzer_dat_raw, " + subsettingExpression + ")");
+                EvaluateAndLog("lsanalyzer_dat_raw <- subset(lsanalyzer_dat_raw, " + subsettingExpression + ")");
                 return true;
             } catch
             {
@@ -320,17 +335,17 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
+                EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
 
-                _engine.Evaluate("lsanalyzer_necessary_variables <- numeric(0)");
+                EvaluateAndLog("lsanalyzer_necessary_variables <- numeric(0)");
                 foreach (string regexNecessaryVariable in regexNecessaryVariables)
                 {
-                    _engine.Evaluate("lsanalyzer_necessary_variable <- grep('" + regexNecessaryVariable + "', colnames(lsanalyzer_dat_raw))");
+                    EvaluateAndLog("lsanalyzer_necessary_variable <- grep('" + regexNecessaryVariable + "', colnames(lsanalyzer_dat_raw))");
                     if (_engine.GetSymbol("lsanalyzer_necessary_variable").AsNumeric().Length == 0)
                     {
                         return false;
                     }
-                    _engine.Evaluate("lsanalyzer_necessary_variables <- unique(c(lsanalyzer_necessary_variables, lsanalyzer_necessary_variable))");
+                    EvaluateAndLog("lsanalyzer_necessary_variables <- unique(c(lsanalyzer_necessary_variables, lsanalyzer_necessary_variable))");
                 }
 
                 if (!string.IsNullOrWhiteSpace(subsettingExpression) && !ApplySubsetting(subsettingExpression))
@@ -338,7 +353,7 @@ namespace LSAnalyzer.Services
                     return false;
                 }
 
-                _engine.Evaluate("lsanalyzer_dat_raw <- lsanalyzer_dat_raw[, lsanalyzer_necessary_variables]");
+                EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw[, lsanalyzer_necessary_variables]");
                 var rawData = _engine.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
                 if (rawData == null)
                 {
@@ -379,21 +394,21 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_jk_zones <- sort(unique(lsanalyzer_dat_raw_stored[,'" + jkzone + "']))");
-                _engine.Evaluate(
+                EvaluateAndLog("lsanalyzer_jk_zones <- sort(unique(lsanalyzer_dat_raw_stored[,'" + jkzone + "']))");
+                EvaluateAndLog(
                     "for (lsanalyzer_jk_zone in lsanalyzer_jk_zones) " +
                     "   lsanalyzer_dat_raw[, paste0('lsanalyzer_repwgt_', lsanalyzer_jk_zone)] <- " +
                     "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] != lsanalyzer_jk_zone) + " +
                     "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] == lsanalyzer_jk_zone) * lsanalyzer_dat_raw[, '" + jkrep + "'] * 2;");
                 if (jkreverse)
                 {
-                    _engine.Evaluate(
+                    EvaluateAndLog(
                         "for (lsanalyzer_jk_zone in lsanalyzer_jk_zones) " +
                         "   lsanalyzer_dat_raw[, paste0('lsanalyzer_repwgt_', lsanalyzer_jk_zone + max(lsanalyzer_jk_zones))] <- " +
                         "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] != lsanalyzer_jk_zone) + " +
                         "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] == lsanalyzer_jk_zone) * (1 - lsanalyzer_dat_raw[, '" + jkrep + "']) * 2;");
                 }
-                _engine.Evaluate("lsanalyzer_repwgts <- grep('lsanalyzer_repwgt_', colnames(lsanalyzer_dat_raw), value = TRUE);");
+                EvaluateAndLog("lsanalyzer_repwgts <- grep('lsanalyzer_repwgt_', colnames(lsanalyzer_dat_raw), value = TRUE);");
                 var repWgts = _engine.GetSymbol("lsanalyzer_repwgts").AsCharacter();
                 if (repWgts.Length != nrep)
                 {
@@ -415,7 +430,7 @@ namespace LSAnalyzer.Services
                 string rawDataVariableName = "lsanalyzer_dat_raw";
                 if (mivar != null && mivar.Length > 0)
                 {
-                    _engine!.Evaluate("lsanalyzer_dat_raw_list <- split(lsanalyzer_dat_raw, lsanalyzer_dat_raw[, '" + mivar + "'])");
+                    EvaluateAndLog("lsanalyzer_dat_raw_list <- split(lsanalyzer_dat_raw, lsanalyzer_dat_raw[, '" + mivar + "'])");
                     rawDataVariableName = "lsanalyzer_dat_raw_list";
                 }
 
@@ -447,7 +462,7 @@ namespace LSAnalyzer.Services
                 }
 
                 string finalCall = baseCall + repwgtArg + fayfacArg + pvvarsArg + ", cdata = TRUE)";
-                _engine!.Evaluate(finalCall);
+                EvaluateAndLog(finalCall);
 
                 var bifieDataObject = _engine.GetSymbol("lsanalyzer_dat_BO").AsList();
                 var nmiReported = (int)bifieDataObject["Nimp"].AsNumeric().First();
@@ -558,10 +573,10 @@ namespace LSAnalyzer.Services
                 DataFrame? variables = null;
                 if (analysisConfiguration.ModeKeep == true)
                 {
-                    variables = _engine!.Evaluate("lsanalyzer_dat_BO$variables").AsDataFrame();
+                    variables = EvaluateAndLog("lsanalyzer_dat_BO$variables").AsDataFrame();
                 } else
                 {
-                    variables = _engine!.Evaluate("data.frame(variable = colnames(lsanalyzer_dat_raw_stored))").AsDataFrame();
+                    variables = EvaluateAndLog("data.frame(variable = colnames(lsanalyzer_dat_raw_stored))").AsDataFrame();
                 }
 
                 List<Variable> variableList = new();
@@ -612,12 +627,12 @@ namespace LSAnalyzer.Services
 
                 if (analysis.GroupBy.Count == 0)
                 {
-                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar").AsList());
                 } else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
                 {
                     groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar").AsList());
                 } else
                 {
@@ -628,7 +643,7 @@ namespace LSAnalyzer.Services
                         if (nGroups == 0)
                         {
                             groupByArg = "";
-                            _engine!.Evaluate(baseCall + groupByArg + ")");
+                            EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                             resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar").AsList());
                         } else
                         {
@@ -636,7 +651,7 @@ namespace LSAnalyzer.Services
                             foreach (var combination in groupByCombinationsN)
                             {
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                                _engine!.Evaluate(baseCall + groupByArg + ")");
+                                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                                 resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar").AsList());
                             }
                         }
@@ -668,16 +683,16 @@ namespace LSAnalyzer.Services
                 if (!analysis.CalculateSeparately)
                 {
                     string groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    _engine!.Evaluate(baseCall + groupByArg + ")");
-                    _engine!.Evaluate("lsanalyzer_result_univar_test <- BIFIEsurvey::BIFIE.univar.test(lsanalyzer_result_univar)");
+                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                    EvaluateAndLog("lsanalyzer_result_univar_test <- BIFIEsurvey::BIFIE.univar.test(lsanalyzer_result_univar)", analysis.AnalysisName);
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar_test").AsList());
                 } else
                 {
                     foreach (var groupByVar in analysis.GroupBy)
                     {
                         string groupByArg = ", group = '" + groupByVar.Name + "'";
-                        _engine!.Evaluate(baseCall + groupByArg + ")");
-                        _engine!.Evaluate("lsanalyzer_result_univar_test <- BIFIEsurvey::BIFIE.univar.test(lsanalyzer_result_univar)");
+                        EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                        EvaluateAndLog("lsanalyzer_result_univar_test <- BIFIEsurvey::BIFIE.univar.test(lsanalyzer_result_univar)", analysis.AnalysisName);
                         resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar_test").AsList());
                     }
                 }
@@ -707,13 +722,13 @@ namespace LSAnalyzer.Services
 
                 if (analysis.GroupBy.Count == 0)
                 {
-                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
                 }
                 else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
                 {
                     groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
                 }
                 else
@@ -725,7 +740,7 @@ namespace LSAnalyzer.Services
                         if (nGroups == 0)
                         {
                             groupByArg = "";
-                            _engine!.Evaluate(baseCall + groupByArg + ")");
+                            EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                             resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
                         }
                         else
@@ -734,7 +749,7 @@ namespace LSAnalyzer.Services
                             foreach (var combination in groupByCombinationsN)
                             {
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                                _engine!.Evaluate(baseCall + groupByArg + ")");
+                                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                                 resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
                             }
                         }
@@ -771,7 +786,7 @@ namespace LSAnalyzer.Services
                         string vars2arg = ", vars2 = '" + variable.Name + "'";
                         string finalCall = baseCall + vars1arg + vars2arg + ");";
 
-                        _engine!.Evaluate(finalCall);
+                        EvaluateAndLog(finalCall, analysis.AnalysisName);
                         resultList.Add(_engine.GetSymbol("lsanalyzer_result_crosstab").AsList());
                     }
                 }
@@ -824,13 +839,13 @@ namespace LSAnalyzer.Services
 
                 if (analysis.GroupBy.Count == 0)
                 {
-                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
                 }
                 else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
                 {
                     groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
                 }
                 else
@@ -842,7 +857,7 @@ namespace LSAnalyzer.Services
                         if (nGroups == 0)
                         {
                             groupByArg = "";
-                            _engine!.Evaluate(baseCall + groupByArg + ")");
+                            EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                             resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
                         }
                         else
@@ -851,7 +866,7 @@ namespace LSAnalyzer.Services
                             foreach (var combination in groupByCombinationsN)
                             {
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                                _engine!.Evaluate(baseCall + groupByArg + ")");
+                                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                                 resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
                             }
                         }
@@ -882,13 +897,13 @@ namespace LSAnalyzer.Services
 
                 if (analysis.GroupBy.Count == 0)
                 {
-                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_corr").AsList());
                 }
                 else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
                 {
                     groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_corr").AsList());
                 }
                 else
@@ -900,7 +915,7 @@ namespace LSAnalyzer.Services
                         if (nGroups == 0)
                         {
                             groupByArg = "";
-                            _engine!.Evaluate(baseCall + groupByArg + ")");
+                            EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                             resultList.Add(_engine.GetSymbol("lsanalyzer_result_corr").AsList());
                         }
                         else
@@ -909,7 +924,7 @@ namespace LSAnalyzer.Services
                             foreach (var combination in groupByCombinationsN)
                             {
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                                _engine!.Evaluate(baseCall + groupByArg + ")");
+                                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                                 resultList.Add(_engine.GetSymbol("lsanalyzer_result_corr").AsList());
                             }
                         }
@@ -1051,13 +1066,13 @@ namespace LSAnalyzer.Services
 
                 if (groups.Count == 0)
                 {
-                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_regression").AsList());
                 }
                 else if (groups.Count > 0 && !calcualteOverall)
                 {
                     groupByArg = ", group = c(" + string.Join(", ", groups.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    _engine!.Evaluate(baseCall + groupByArg + ")");
+                    EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_regression").AsList());
                 }
                 else
@@ -1069,7 +1084,7 @@ namespace LSAnalyzer.Services
                         if (nGroups == 0)
                         {
                             groupByArg = "";
-                            _engine!.Evaluate(baseCall + groupByArg + ")");
+                            EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
                             resultList.Add(_engine.GetSymbol("lsanalyzer_result_regression").AsList());
                         }
                         else
@@ -1078,7 +1093,7 @@ namespace LSAnalyzer.Services
                             foreach (var combination in groupByCombinationsN)
                             {
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                                _engine!.Evaluate(baseCall + groupByArg + ")");
+                                EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
                                 resultList.Add(_engine.GetSymbol("lsanalyzer_result_regression").AsList());
                             }
                         }
@@ -1097,8 +1112,8 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_some_file_raw <- foreign::read.spss('" + filename.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
-                var variables = _engine.Evaluate("colnames(lsanalyzer_some_file_raw)").AsCharacter();
+                EvaluateAndLog("lsanalyzer_some_file_raw <- foreign::read.spss('" + filename.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                var variables = EvaluateAndLog("colnames(lsanalyzer_some_file_raw)").AsCharacter();
 
                 List<Variable> variableList = new();
                 int vv = 0;
@@ -1119,13 +1134,13 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                _engine!.Evaluate("lsanalyzer_value_labels <- attr(lsanalyzer_dat_raw_stored[, '" + variable + "'], 'value.labels')");
+                EvaluateAndLog("lsanalyzer_value_labels <- attr(lsanalyzer_dat_raw_stored[, '" + variable + "'], 'value.labels')");
                 if (!_engine.GetSymbol("lsanalyzer_value_labels").IsVector())
                 {
                     return null;
                 }
 
-                _engine.Evaluate("lsanalyzer_value_labels_df <- data.frame(value = lsanalyzer_value_labels, label = names(lsanalyzer_value_labels))");
+                EvaluateAndLog("lsanalyzer_value_labels_df <- data.frame(value = lsanalyzer_value_labels, label = names(lsanalyzer_value_labels))");
                 return _engine.GetSymbol("lsanalyzer_value_labels_df").AsDataFrame();
             } catch 
             { 

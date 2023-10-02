@@ -17,7 +17,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestConstructorAndMoveVariablesBackAndForth()
         {
-            MockRserviceForTestRequestAnalysis rservice = new();
+            MockRserviceForTestRequestAnalysis rservice = new(new());
             RequestAnalysis requestAnalysisViewModel = new(rservice);
 
             requestAnalysisViewModel.AnalysisConfiguration = new()
@@ -90,7 +90,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestInitializeWithAnalysis()
         {
-            MockRserviceForTestRequestAnalysis rservice = new();
+            MockRserviceForTestRequestAnalysis rservice = new(new());
             RequestAnalysis requestAnalysisViewModel = new(rservice);
 
             requestAnalysisViewModel.AnalysisConfiguration = new()
@@ -206,7 +206,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestResetAnalysis()
         {
-            MockRserviceForTestRequestAnalysis rservice = new();
+            MockRserviceForTestRequestAnalysis rservice = new(new());
             RequestAnalysis requestAnalysisViewModel = new(rservice);
 
             requestAnalysisViewModel.AnalysisConfiguration = new()
@@ -249,7 +249,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestRequestAnalysisSendsMessage()
         {
-            MockRserviceForTestRequestAnalysis rservice = new();
+            MockRserviceForTestRequestAnalysis rservice = new(new());
             RequestAnalysis requestAnalysisViewModel = new(rservice);
 
             DatasetType datasetType = new()
@@ -324,6 +324,10 @@ namespace TestLSAnalyzer.ViewModels
 
     internal class MockRserviceForTestRequestAnalysis : Rservice
     {
+        public MockRserviceForTestRequestAnalysis(Logging logger) : base(logger)
+        {
+        }
+
         public override List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration)
         {
             return new()

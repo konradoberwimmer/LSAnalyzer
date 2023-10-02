@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +12,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace LSAnalyzer.Views
 {
@@ -24,6 +25,26 @@ namespace LSAnalyzer.Views
             InitializeComponent();
 
             DataContext = systemSettingsViewModel;
+        }
+
+        private void ButtonSaveSessionLog_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button button || DataContext is not ViewModels.SystemSettings systemSettingsViewModel)
+            {
+                return;
+            }
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Text File (*.txt)|*.txt";
+            saveFileDialog.InitialDirectory = Properties.Settings.Default.lastResultOutFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var wantsSave = saveFileDialog.ShowDialog(this);
+
+            if (wantsSave == true)
+            {
+                Properties.Settings.Default.lastResultOutFileLocation = Path.GetDirectoryName(saveFileDialog.FileName);
+                Properties.Settings.Default.Save();
+                systemSettingsViewModel.SaveSessionLogCommand.Execute(saveFileDialog.FileName);
+            }
         }
     }
 }

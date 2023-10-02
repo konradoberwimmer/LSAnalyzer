@@ -30,6 +30,7 @@ namespace LSAnalyzer
 
         private void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<Logging>();
             services.AddSingleton<Rservice>();
             services.AddTransient<Configuration>(provider => { 
                 var userDatasetTypesConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");

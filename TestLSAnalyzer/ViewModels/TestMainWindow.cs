@@ -31,7 +31,7 @@ namespace TestLSAnalyzer.ViewModels
                 ModeKeep = false,
             };
 
-            Rservice rservice = new();
+            Rservice rservice = new(new());
             MainWindow mainWindowViewModel = new(rservice);
 
             mainWindowViewModel.AnalysisConfiguration = analysisConfigurationA;
@@ -59,7 +59,7 @@ namespace TestLSAnalyzer.ViewModels
                 ModeKeep = true,
             };
 
-            Rservice rservice = new();
+            Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 0.5));
@@ -152,7 +152,7 @@ namespace TestLSAnalyzer.ViewModels
                 ModeKeep = true,
             };
 
-            Rservice rservice = new();
+            Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 0.5));

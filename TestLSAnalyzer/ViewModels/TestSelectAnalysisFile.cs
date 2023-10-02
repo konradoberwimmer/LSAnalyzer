@@ -23,7 +23,7 @@ namespace TestLSAnalyzer.ViewModels
             {
                 datasetTypesConfiguration.StoreDatasetType(datasetType);
             }
-            Rservice rservice = new();
+            Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice);
@@ -106,7 +106,7 @@ namespace TestLSAnalyzer.ViewModels
             {
                 datasetTypesConfiguration.StoreDatasetType(datasetType);
             }
-            Rservice rservice = new();
+            Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice);
@@ -160,7 +160,7 @@ namespace TestLSAnalyzer.ViewModels
             {
                 datasetTypesConfiguration.StoreDatasetType(datasetType);
             }
-            Rservice rservice = new();
+            Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice);
