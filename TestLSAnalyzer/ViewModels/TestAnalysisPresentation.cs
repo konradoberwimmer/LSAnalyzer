@@ -688,8 +688,12 @@ namespace TestLSAnalyzer.ViewModels
             };
 
             analysisUnivar.ValueLabels.Add("cat", rservice.GetValueLabels("cat")!);
+            DateTime before = DateTime.Now;
             var result = rservice.CalculateUnivar(analysisUnivar);
-
+            DateTime after = DateTime.Now;
+            analysisUnivar.ResultAt = after;
+            analysisUnivar.ResultDuration = (after - before).TotalSeconds;
+            
             AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
             analysisPresentationViewModel.SetAnalysisResult(result!);
 
@@ -710,6 +714,8 @@ namespace TestLSAnalyzer.ViewModels
             using XLWorkbook wb = new(filename);
 
             Assert.Equal(13, wb.Worksheets.First().ColumnsUsed().Count());
+            Assert.Equal(2, wb.Worksheets.Count);
+            Assert.Equal("Univariate", (string)wb.Worksheet("Meta").Cell("B1").Value);
         }
 
         public static string AssemblyDirectory

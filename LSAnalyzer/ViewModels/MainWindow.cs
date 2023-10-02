@@ -209,6 +209,8 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
+            DateTime beforeCalculation = DateTime.Now;
+
             var analysisPresentation = e.Argument as AnalysisPresentation;
 
             List<GenericVector>? result = null;
@@ -258,6 +260,8 @@ namespace LSAnalyzer.ViewModels
                     }
                 }
 
+                analysisPresentation.Analysis.ResultAt = DateTime.Now;
+                analysisPresentation.Analysis.ResultDuration = (analysisPresentation.Analysis.ResultAt! - beforeCalculation).Value.TotalSeconds;
                 analysisPresentation.SetAnalysisResult(result);
             }
 

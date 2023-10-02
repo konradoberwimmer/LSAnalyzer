@@ -20,5 +20,14 @@ namespace LSAnalyzer.Models
         protected AnalysisRegression(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
         {
         }
+
+        public override string ShortInfo
+        {
+            get =>
+                AnalysisName +
+                " (" + (Dependent?.Name ?? "undefined") + " by " + String.Join(", ", Vars.ConvertAll(var => var.Name).ToArray()) +
+                " - " + AnalysisConfiguration.DatasetType?.Name +
+                ")";
+        }
     }
 }
