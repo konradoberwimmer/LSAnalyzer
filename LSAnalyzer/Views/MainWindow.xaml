@@ -170,7 +170,6 @@
                 <MenuItem x:Name="menuItemAnalysisFrequencies" Header="Frequencies ..." Click="MenuItemAnalysisFreq_Click"/>
                 <MenuItem x:Name="menuItemAnalysisPercentiles" Header="Percentiles ..." Click="MenuItemAnalysisPercentiles_Click"/>
                 <Separator/>
-                <!--<MenuItem x:Name="menuItemAnalysisCrosstabs" Header="Crosstabulation ..."/>-->
                 <MenuItem x:Name="menuItemAnalysisMeanDiff" Header="Difference in mean ..." Click="MenuItemAnalysisMeanDiff_Click"/>
                 <MenuItem x:Name="menuItemAnalysisCorrelations" Header="Correlations ..." Click="MenuItemAnalysisCorrelations_Click"/>
                 <Separator/>
