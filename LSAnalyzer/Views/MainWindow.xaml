@@ -71,22 +71,22 @@
                                     <RowDefinition/>
                                     <RowDefinition/>
                                 </Grid.RowDefinitions>
-                                <DataGrid Grid.Row="0" x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataView}" AutoGeneratingColumn="DataGridResults_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top">
+                                <DataGrid Grid.Row="0" x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataView}" AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top">
 
                                 </DataGrid>
                                 <fa:ImageAwesome Grid.Row="0" Icon="SunOutline" Spin="True" VerticalAlignment="Top" Height="20" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                <DataGrid Grid.Row="1" Margin="0,10,0,0" x:Name="dataGridEta" IsReadOnly="True" ItemsSource="{Binding TableEta}" AutoGeneratingColumn="DataGridResults_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top" Visibility="{Binding TableEta, Converter={StaticResource NullToVisibilityCollapsedConverter}}">
+                                <DataGrid Grid.Row="1" Margin="0,10,0,0" x:Name="dataGridEta" IsReadOnly="True" ItemsSource="{Binding TableEta}" AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top" Visibility="{Binding TableEta, Converter={StaticResource NullToVisibilityCollapsedConverter}}">
 
                                 </DataGrid>
                                 <StackPanel Grid.Row="1" Margin="0,10,0,0"  Orientation="Vertical" VerticalAlignment="Top" Visibility="{Binding TableCov, Converter={StaticResource NullToVisibilityCollapsedConverter}}">
                                     <TextBlock Text="(Co)variances:"/>
-                                    <DataGrid x:Name="dataGridCov" IsReadOnly="True" ItemsSource="{Binding TableCov}" AutoGeneratingColumn="DataGridResults_AutoGeneratingColumn" MinHeight="22" MaxHeight="450">
+                                    <DataGrid x:Name="dataGridCov" IsReadOnly="True" ItemsSource="{Binding TableCov}" AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" MinHeight="22" MaxHeight="450">
 
                                     </DataGrid>
                                 </StackPanel>
                                 <StackPanel Grid.Row="1" Margin="0,10,0,0"  Orientation="Vertical" VerticalAlignment="Top" Visibility="{Binding TableBivariate, Converter={StaticResource NullToVisibilityCollapsedConverter}}">
                                     <TextBlock Text="Bivariate measures of association:"/>
-                                    <DataGrid x:Name="dataGridBivariate" IsReadOnly="True" ItemsSource="{Binding TableBivariate}" AutoGeneratingColumn="DataGridResults_AutoGeneratingColumn" MinHeight="22" MaxHeight="450">
+                                    <DataGrid x:Name="dataGridBivariate" IsReadOnly="True" ItemsSource="{Binding TableBivariate}" AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" MinHeight="22" MaxHeight="450">
 
                                     </DataGrid>
                                 </StackPanel>

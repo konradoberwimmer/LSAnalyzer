@@ -736,11 +736,11 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
-        public DataTable CreateTableBivariate(AnalysisFreq analysisFreq)
+        public DataTable? CreateTableBivariate(AnalysisFreq analysisFreq)
         {
             if (analysisFreq.BivariateResult == null || analysisFreq.BivariateResult.Count == 0)
             {
-                return new();
+                return null;
             }
 
             DataTable table = new(analysisFreq.AnalysisName + " - Bivariate");

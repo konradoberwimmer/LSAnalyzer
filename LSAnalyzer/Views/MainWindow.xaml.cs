@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
@@ -8,6 +9,7 @@ using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -255,20 +257,25 @@ namespace LSAnalyzer.Views
                 analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(saveFileDialog.FileName);
             }
         }
-        private void DataGridResults_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
+        private void DataGrid_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
         {
+            if (sender is not DataGrid dataGrid)
+            {
+                return;
+            }
+
             if (e.PropertyName.Contains('.') && e.Column is DataGridBoundColumn)
             {
                 DataGridBoundColumn dataGridBoundColumn = (e.Column as DataGridBoundColumn)!;
                 dataGridBoundColumn.Binding = new Binding("[" + e.PropertyName + "]");
             }
 
-            if (e.PropertyType == typeof(double))
+            if (e.PropertyType == typeof(double) && e.Column is DataGridTextColumn dataGridTextColumn)
             {
-                if (e.Column is DataGridTextColumn dataGridTextColumn)
-                {
-                    dataGridTextColumn.Binding.StringFormat = "{0:0.###}";
-                }
+                var columnIndex = dataGrid.Columns.Count; // because this is done before adding the new column
+                var values = dataGrid.Items.Cast<DataRowView>().Select(row => row.Row.ItemArray[columnIndex]).Where(val => val != DBNull.Value).Cast<double>().ToArray();
+                var maxRelevantDigits = StringFormats.getMaxRelevantDigits(values, 3);
+                dataGridTextColumn.Binding.StringFormat = "{0:0" + (maxRelevantDigits > 0 ? ("." + new string('0', maxRelevantDigits)) : "") + "}";
             }
         }
 
