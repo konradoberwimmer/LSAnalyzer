@@ -264,6 +264,8 @@ namespace LSAnalyzer.Views
                 return;
             }
 
+            e.Column.HeaderStyle = (Style)Resources["WrappedColumnHeader"];
+
             if (e.PropertyName.Contains('.') && e.Column is DataGridBoundColumn)
             {
                 DataGridBoundColumn dataGridBoundColumn = (e.Column as DataGridBoundColumn)!;
@@ -276,6 +278,11 @@ namespace LSAnalyzer.Views
                 var values = dataGrid.Items.Cast<DataRowView>().Select(row => row.Row.ItemArray[columnIndex]).Where(val => val != DBNull.Value).Cast<double>().ToArray();
                 var maxRelevantDigits = StringFormats.getMaxRelevantDigits(values, 3);
                 dataGridTextColumn.Binding.StringFormat = "{0:0" + (maxRelevantDigits > 0 ? ("." + new string('0', maxRelevantDigits)) : "") + "}";
+
+                if (maxRelevantDigits > 0)
+                {
+                    e.Column.CellStyle = (Style)Resources["ColumnRight"];
+                }
             }
         }
 
