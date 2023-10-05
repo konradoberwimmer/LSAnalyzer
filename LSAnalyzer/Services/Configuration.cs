@@ -1,6 +1,7 @@
 ﻿using LSAnalyzer.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,12 @@ namespace LSAnalyzer.Services
         public string DatasetTypesConfigFile
         {
             get => _datasetTypesConfigFile;
+        }
+
+        [ExcludeFromCodeCoverage]
+        public Configuration()
+        {
+            // parameter-less constructor for testing only
         }
 
         public Configuration(string datasetTypesConfigFile) 

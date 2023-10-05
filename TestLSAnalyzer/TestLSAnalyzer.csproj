@@ -27,7 +27,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="_testData\test_asgautr4.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="_testData\test_asgautr4.rds">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="_testData\test_asgautr4.sav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="_testData\test_asgautr4.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="_testData\test_create_repwgts.sav">

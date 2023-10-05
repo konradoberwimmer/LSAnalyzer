@@ -1224,11 +1224,86 @@ namespace TestLSAnalyzer.Services
             var resultCorrupt = rservice.CalculateCorr(analysisCorr);
             Assert.NotEqual((double)result![0]["stat.cor"].AsDataFrame()["cor_SE"][1], (double)resultCorrupt![0]["stat.cor"].AsDataFrame()["cor_SE"][1]);
 
-            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName, "id"));
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName, null, "id"));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
 
             var resultCorrect = rservice.CalculateCorr(analysisCorr);
             Assert.Equal((double)result![0]["stat.cor"].AsDataFrame()["cor_SE"][1], (double)resultCorrect![0]["stat.cor"].AsDataFrame()["cor_SE"][1]);
+        }
+
+        [Fact]
+        public void TestAnalysisResultIsSameForMultipleDataFormats()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvars = "ASRREA",
+                    Nrep = 150,
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "ASRREA", false) },
+                GroupBy = new() { new(2, "ITSEX", false) },
+                CalculateSeparately = true,
+            };
+
+            var resultSav = rservice.CalculateMeanDiff(analysisMeanDiff);
+            Assert.NotNull(resultSav);
+            var dataFrameSav = resultSav.First()["stat.dstat"].AsDataFrame();
+
+            analysisConfiguration.FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.rds");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            var resultRds = rservice.CalculateMeanDiff(analysisMeanDiff);
+            Assert.NotNull(resultRds);
+            var dataFrameRds = resultRds.First()["stat.dstat"].AsDataFrame();
+
+            var valuesRds = dataFrameRds["d"].AsNumeric();
+            for (int vv = 0; vv < valuesRds.Length; vv++)
+            {
+                Assert.Equal(valuesRds[vv], dataFrameSav["d"].AsNumeric()[vv]);
+            }
+
+            analysisConfiguration.FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.csv");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName, "csv2"));
+
+            var resultCsv2 = rservice.CalculateMeanDiff(analysisMeanDiff);
+            Assert.NotNull(resultCsv2);
+            var dataFrameCsv2 = resultCsv2.First()["stat.dstat"].AsDataFrame();
+
+            var valuesCsv2 = dataFrameCsv2["d"].AsNumeric();
+            for (int vv = 0; vv < valuesCsv2.Length; vv++)
+            {
+                Assert.Equal(valuesCsv2[vv], dataFrameSav["d"].AsNumeric()[vv]);
+            }
+
+            analysisConfiguration.FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.xlsx");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            var resultXlsx = rservice.CalculateMeanDiff(analysisMeanDiff);
+            Assert.NotNull(resultXlsx);
+            var dataFrameXlsx = resultXlsx.First()["stat.dstat"].AsDataFrame();
+
+            var valuesXlsx = dataFrameXlsx["d"].AsNumeric();
+            for (int vv = 0; vv < valuesXlsx.Length; vv++)
+            {
+                Assert.Equal(valuesXlsx[vv], dataFrameSav["d"].AsNumeric()[vv]);
+            }
         }
 
         public static string AssemblyDirectory

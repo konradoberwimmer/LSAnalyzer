@@ -32,6 +32,36 @@ namespace LSAnalyzer.ViewModels
             {
                 _fileName = value;
                 NotifyPropertyChanged(nameof(FileName));
+                
+                if (!String.IsNullOrWhiteSpace(FileName) && FileName.Substring(FileName.LastIndexOf(".") + 1).ToLower() == "csv")
+                {
+                    IsCsv = true;
+                } else
+                {
+                    IsCsv = false;
+                }
+            }
+        }
+
+        private bool _isCsv = false;
+        public bool IsCsv
+        {
+            get => _isCsv;
+            set
+            {
+                _isCsv = value;
+                NotifyPropertyChanged(nameof(IsCsv));
+            }
+        }
+
+        private bool _useCsv2 = true;
+        public bool UseCsv2
+        {
+            get => _useCsv2;
+            set
+            {
+                _useCsv2 = value;
+                NotifyPropertyChanged(nameof(UseCsv2));
             }
         }
 
@@ -129,10 +159,11 @@ namespace LSAnalyzer.ViewModels
 
         private void GuessDatasetTypeWorker_DoWork(object? sender, DoWorkEventArgs e)
         {
-            var variables = _rservice.GetDatasetVariables((string)e.Argument!);
+            var variables = _rservice.GetDatasetVariables((string)e.Argument!, IsCsv && UseCsv2 ? "csv2" : null);
 
             if (variables == null)
             {
+                WeakReferenceMessenger.Default.Send(new FailureAnalysisFileMessage((string)e.Argument!));
                 IsBusy = false;
                 return;
             }
@@ -218,6 +249,7 @@ namespace LSAnalyzer.ViewModels
             AnalysisConfiguration analysisConfiguration = new()
             {
                 FileName = this.FileName,
+                FileType = IsCsv && UseCsv2 ? "csv2" : null,
                 DatasetType = SelectedDatasetType,
                 ModeKeep = (SelectedAnalysisMode == AnalysisModes.Keep),
             };
@@ -256,6 +288,14 @@ namespace LSAnalyzer.ViewModels
     internal class SetAnalysisConfigurationMessage : ValueChangedMessage<AnalysisConfiguration>
     {
         public SetAnalysisConfigurationMessage(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
+        {
+
+        }
+    }
+
+    internal class FailureAnalysisFileMessage : ValueChangedMessage<string>
+    {
+        public FailureAnalysisFileMessage(string fileName) : base(fileName)
         {
 
         }

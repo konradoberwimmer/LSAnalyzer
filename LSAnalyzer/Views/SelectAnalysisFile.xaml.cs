@@ -32,6 +32,11 @@ namespace LSAnalyzer.Views
 
             DataContext = selectAnalysisFileViewModel;
 
+            WeakReferenceMessenger.Default.Register<FailureAnalysisFileMessage>(this, (r, m) =>
+            {
+                MessageBox.Show("Unable to read column names from data file '" + m.Value + "'.\n\nTake note:\n- Supported file types are R data frames (.rds), SPSS (.sav), CSV (.csv) and Excel (.xlsx)\n- File ending must match file type\n- All formats have to provide column headers (in first row for Excel and CSV)\n- With Excel (.xlsx), package openxlsx has to be installed\n- With Excel (.xlsx), data has to be on the first worksheet", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
+
             WeakReferenceMessenger.Default.Register<FailureAnalysisConfigurationMessage>(this, (r, m) =>
             {
                 MessageBox.Show("Unable to create BIFIEdata object from file '" + m.Value.FileName + "' when applying dataset type '" + m.Value.DatasetType?.Name + "'.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -47,7 +52,7 @@ namespace LSAnalyzer.Views
         private void ButtonSelectFile_Click (object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new();
-            openFileDialog.Filter = "SPSS Data Files (*.sav)|*.sav";
+            openFileDialog.Filter = "Data File (*.csv;*.rds;*.sav;*.xlsx)|*.csv;*.rds;*.sav;*.xlsx";
             openFileDialog.InitialDirectory = InitialDirectory ?? Properties.Settings.Default.lastDataFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             var result = openFileDialog.ShowDialog(this);
 

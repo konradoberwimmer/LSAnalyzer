@@ -9,6 +9,7 @@ namespace LSAnalyzer.Models
     public class AnalysisConfiguration
     {
         public string? FileName { get; set; }
+        public string? FileType { get; set; }
         public DatasetType? DatasetType { get; set; }
         public bool? ModeKeep { get; set; }
 

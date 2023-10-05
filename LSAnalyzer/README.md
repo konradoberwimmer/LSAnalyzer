@@ -1,6 +1,5 @@
 ﻿# ToDo-List
 * add two-level regression (with/without assumption of sorted cluster variable) 
-* allow to read in other data file types besides .sav
 * dataset types:
 	* allow semi-colon separated list of weights in dataset type config and add ability to choose one when selecting analysis file
 	* allow optional plausible values that may or may not be present in data file, thereby enabling more general dataset types

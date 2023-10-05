@@ -248,17 +248,43 @@ namespace LSAnalyzer.Services
             }
         }
 
-        public bool LoadFileIntoGlobalEnvironment(string fileName, string? sortBy = null)
+        public bool LoadFileIntoGlobalEnvironment(string fileName, string? fileType = null, string? sortBy = null)
         {
             try
             {
-                EvaluateAndLog("lsanalyzer_dat_raw_stored <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                if (fileType  == null)
+                {
+                    fileType = fileName.Substring(fileName.LastIndexOf('.') + 1);
+                }
+
+                switch (fileType!.ToLower())
+                {
+                    case "sav":
+                        EvaluateAndLog("lsanalyzer_dat_raw_stored <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                        break;
+                    case "rds":
+                        EvaluateAndLog("lsanalyzer_dat_raw_stored <- readRDS('" + fileName.Replace("\\", "/") + "')");
+                        break;
+                    case "csv":
+                        EvaluateAndLog("lsanalyzer_dat_raw_stored <- utils::read.csv('" + fileName.Replace("\\", "/") + "')");
+                        break;
+                    case "csv2":
+                        EvaluateAndLog("lsanalyzer_dat_raw_stored <- utils::read.csv2('" + fileName.Replace("\\", "/") + "')");
+                        break;
+                    case "xlsx":
+                        EvaluateAndLog("lsanalyzer_dat_raw_stored <- openxlsx::read.xlsx('" + fileName.Replace("\\", "/") + "', sheet = 1)");
+                        break;
+                    default:
+                        return false;
+                }
+                
                 if (!String.IsNullOrWhiteSpace(sortBy))
                 {
                     EvaluateAndLog("lsanalyzer_dat_raw_stored <- lsanalyzer_dat_raw_stored[order(lsanalyzer_dat_raw_stored$`" + sortBy + "`), ]");
                 }
                 EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
-                var rawData = _engine.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
+
+                var rawData = _engine!.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
                 if (rawData == null)
                 {
                     return false;
@@ -492,7 +518,7 @@ namespace LSAnalyzer.Services
                 return false;
             }
 
-            if (!LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName, analysisConfiguration.DatasetType.IDvar))
+            if (!LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName, analysisConfiguration.FileType, analysisConfiguration.DatasetType.IDvar))
             {
                 return false;
             }
@@ -1108,11 +1134,36 @@ namespace LSAnalyzer.Services
             }
         }
 
-        public List<Variable>? GetDatasetVariables(string filename)
+        public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null)
         {
             try
             {
-                EvaluateAndLog("lsanalyzer_some_file_raw <- foreign::read.spss('" + filename.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                if (fileType == null)
+                {
+                    fileType = fileName.Substring(fileName.LastIndexOf('.') + 1);
+                }
+
+                switch (fileType!.ToLower())
+                {
+                    case "sav":
+                        EvaluateAndLog("lsanalyzer_some_file_raw <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                        break;
+                    case "rds":
+                        EvaluateAndLog("lsanalyzer_some_file_raw <- readRDS('" + fileName.Replace("\\", "/") + "')");
+                        break;
+                    case "csv":
+                        EvaluateAndLog("lsanalyzer_some_file_raw <- utils::read.csv('" + fileName.Replace("\\", "/") + "')");
+                        break;
+                    case "csv2":
+                        EvaluateAndLog("lsanalyzer_some_file_raw <- utils::read.csv2('" + fileName.Replace("\\", "/") + "')");
+                        break;
+                    case "xlsx":
+                        EvaluateAndLog("lsanalyzer_some_file_raw <- openxlsx::read.xlsx('" + fileName.Replace("\\", "/") + "', sheet = 1)");
+                        break;
+                    default:
+                        return new();
+                }
+
                 var variables = EvaluateAndLog("colnames(lsanalyzer_some_file_raw)").AsCharacter();
 
                 List<Variable> variableList = new();

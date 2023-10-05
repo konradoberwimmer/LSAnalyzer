@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using TestLSAnalyzer.Services;
 using GalaSoft.MvvmLight.Threading;
+using Moq;
 
 namespace TestLSAnalyzer.ViewModels
 {
@@ -94,6 +95,30 @@ namespace TestLSAnalyzer.ViewModels
 
             Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType);
             Assert.Equal(selectAnalysisFileViewModel.DatasetTypes.Last(), selectAnalysisFileViewModel.SelectedDatasetType);
+        }
+
+        [Fact]
+        public async Task TestGuessDatasetTypeSendsFileTypeError()
+        {
+            var datasetTypesConfiguration = new Mock<Configuration>();
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+
+            SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration.Object, rservice);
+            selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_asgautr4.csv");
+            selectAnalysisFileViewModel.UseCsv2 = false;
+
+            bool messageSent = false;
+            WeakReferenceMessenger.Default.Register<FailureAnalysisFileMessage>(this, (r, m) =>
+            {
+                messageSent = true;
+            });
+
+            selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
+            await Task.Delay(500);
+
+            Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType);
+            Assert.True(messageSent);
         }
 
         [Fact]
