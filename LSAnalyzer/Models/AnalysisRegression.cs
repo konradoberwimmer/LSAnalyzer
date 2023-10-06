@@ -27,6 +27,7 @@ namespace LSAnalyzer.Models
                 AnalysisName +
                 " (" + (Dependent?.Name ?? "undefined") + " by " + String.Join(", ", Vars.ConvertAll(var => var.Name).ToArray()) +
                 " - " + AnalysisConfiguration.DatasetType?.Name +
+                "; " + AnalysisConfiguration.DatasetType?.Weight +
                 ")";
         }
     }

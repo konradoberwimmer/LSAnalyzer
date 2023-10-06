@@ -12,7 +12,7 @@ namespace TestLSAnalyzer.Models
         [Fact]
         public void TestShortInfo()
         {
-            AnalysisUnivar analysisUnivar = new(new() { DatasetType = new() { Name = "BIST-UE" } })
+            AnalysisUnivar analysisUnivar = new(new() { DatasetType = new() { Name = "BIST-UE", Weight = "wgt" } })
             {
                 Vars = new()
                 {
@@ -21,7 +21,7 @@ namespace TestLSAnalyzer.Models
                 },
             };
 
-            Assert.Equal("Univariate (x, y - BIST-UE)", analysisUnivar.ShortInfo);
+            Assert.Equal("Univariate (x, y - BIST-UE; wgt)", analysisUnivar.ShortInfo);
         }
     }
 }

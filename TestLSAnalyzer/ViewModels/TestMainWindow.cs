@@ -2,6 +2,7 @@
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -217,6 +218,75 @@ namespace TestLSAnalyzer.ViewModels
                 mainWindowViewModel.RemoveAnalysisCommand.Execute(mainWindowViewModel.Analyses.First());
             }
             Assert.Empty(mainWindowViewModel.Analyses);
+        }
+
+        [Fact]
+        public async Task TestAnalysisWithDifferentWeights()
+        {
+            // will also test ViewModels.SelectAnalysisFile
+            var fileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiwgt.sav");
+            DatasetType datasetType = new()
+            {
+                Weight = "wgt;wgt100",
+                NMI = 10,
+                MIvar = "mi",
+                Nrep = 1,
+                FayFac = 1
+            };
+
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+
+            MainWindow mainWindowViewModel = new(rservice);
+
+            SelectAnalysisFile selectAnalysisFileViewModel = new(new Mock<Configuration>().Object, rservice);
+            selectAnalysisFileViewModel.FileName = fileName;
+            selectAnalysisFileViewModel.SelectedDatasetType = datasetType;
+            selectAnalysisFileViewModel.SelectedWeightVariable = selectAnalysisFileViewModel.PossibleWeightVariables.First();
+            selectAnalysisFileViewModel.SelectedAnalysisMode = SelectAnalysisFile.AnalysisModes.Build;
+            selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
+
+            await Task.Delay(5000);
+            Assert.NotNull(mainWindowViewModel.AnalysisConfiguration);
+            Assert.Equal("wgt", mainWindowViewModel.AnalysisConfiguration.DatasetType!.Weight);
+
+            AnalysisCorr analysisCorrWgt = new(mainWindowViewModel.AnalysisConfiguration)
+            {
+                Vars = new() { new(1, "item1", false), new(2, "item2", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = false,
+            };
+            AnalysisPresentation analysisPresentationViewModelWgt = new(analysisCorrWgt);
+
+            mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelWgt);
+            await Task.Delay(500);
+            Assert.NotEmpty(analysisPresentationViewModelWgt.DataTable.Rows);
+
+            selectAnalysisFileViewModel.SelectedWeightVariable = selectAnalysisFileViewModel.PossibleWeightVariables.Last();
+            selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
+
+            await Task.Delay(5000);
+            Assert.Equal("wgt100", mainWindowViewModel.AnalysisConfiguration.DatasetType!.Weight);
+
+            AnalysisCorr analysisCorrWgt100 = new(mainWindowViewModel.AnalysisConfiguration)
+            {
+                Vars = new() { new(1, "item1", false), new(2, "item2", false) },
+                GroupBy = new() { new(3, "cat", false) },
+                CalculateOverall = false,
+            };
+            AnalysisPresentation analysisPresentationViewModelWgt100 = new(analysisCorrWgt100);
+
+            mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelWgt100);
+            await Task.Delay(500);
+            Assert.NotEmpty(analysisPresentationViewModelWgt100.DataTable.Rows);
+
+            var columnNweight = analysisPresentationViewModelWgt100.DataTable.Columns.IndexOf("N - weighted");
+            var columnEstimate = analysisPresentationViewModelWgt100.DataTable.Columns.IndexOf("correlation");
+            for (int rr = 0; rr < analysisPresentationViewModelWgt100.DataTable.Rows.Count; rr++)
+            {
+                Assert.True(Math.Abs((double)analysisPresentationViewModelWgt100.DataTable.Rows[rr].ItemArray[columnEstimate]! - (double)analysisPresentationViewModelWgt.DataTable.Rows[rr].ItemArray[columnEstimate]!) < 0.000001);
+                Assert.True(Math.Abs((double)analysisPresentationViewModelWgt100.DataTable.Rows[rr].ItemArray[columnNweight]! / 100.0 - (double)analysisPresentationViewModelWgt.DataTable.Rows[rr].ItemArray[columnNweight]!) < 0.000001);
+            }
         }
 
         public static string AssemblyDirectory

@@ -26,6 +26,7 @@ namespace LSAnalyzer.Models
                 AnalysisName +
                 " (" + (UseInterpolation ? "interpolation" : (MimicIdbAnalyzer ? "like IDBanalyzer" : "no interpolation")) + "; " + String.Join(", ", Vars.ConvertAll(var => var.Name).ToArray()) +
                 " - " + AnalysisConfiguration.DatasetType?.Name +
+                "; " + AnalysisConfiguration.DatasetType?.Weight +
                 ")";
         }
 

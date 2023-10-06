@@ -12,7 +12,7 @@ namespace TestLSAnalyzer.Models
         [Fact]
         public void TestShortInfo()
         {
-            AnalysisLinreg analysisLinreg = new(new() { DatasetType = new() { Name = "BIST-UE" } })
+            AnalysisLinreg analysisLinreg = new(new() { DatasetType = new() { Name = "BIST-UE", Weight = "wgt" } })
             {
                 Vars = new()
                     {
@@ -22,7 +22,7 @@ namespace TestLSAnalyzer.Models
                 Dependent = new(3, "y", false),
             };
 
-            Assert.Equal("Linear regression (y by x1, x2 - BIST-UE)", analysisLinreg.ShortInfo);
+            Assert.Equal("Linear regression (y by x1, x2 - BIST-UE; wgt)", analysisLinreg.ShortInfo);
         }
     }
 }

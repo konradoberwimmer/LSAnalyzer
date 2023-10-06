@@ -84,6 +84,40 @@ namespace LSAnalyzer.ViewModels
             {
                 _selectedDatasetType = value;
                 NotifyPropertyChanged(nameof(SelectedDatasetType));
+
+                if (SelectedDatasetType != null)
+                {
+                    SelectedWeightVariable = null;
+                    List<string> possibleWeights = new();
+                    foreach (var weight in SelectedDatasetType.Weight.Split(";"))
+                    {
+                        possibleWeights.Add(weight);
+                    }
+                    PossibleWeightVariables = possibleWeights;
+                    SelectedWeightVariable = PossibleWeightVariables.FirstOrDefault();
+                }
+            }
+        }
+
+        private List<string> _possibleWeightVariables;
+        public List<string> PossibleWeightVariables
+        {
+            get => _possibleWeightVariables;
+            set
+            {
+                _possibleWeightVariables = value;
+                NotifyPropertyChanged(nameof(PossibleWeightVariables));
+            }
+        }
+
+        private string? _selectedWeightVariable;
+        public string? SelectedWeightVariable
+        {
+            get => _selectedWeightVariable;
+            set
+            {
+                _selectedWeightVariable = value;
+                NotifyPropertyChanged(nameof(SelectedWeightVariable));
             }
         }
 
@@ -172,7 +206,16 @@ namespace LSAnalyzer.ViewModels
 
             foreach (var datasetType in _datasetTypes)
             {
-                if (variables.Where(var => var.Name == datasetType.Weight).Count() == 0) continue;
+                bool foundAllWeightVariables = true;
+                var weightVariables = datasetType.Weight.Split(";");
+                foreach (var weightVariable in weightVariables)
+                {
+                    if (variables.Where(var => var.Name == weightVariable).Count() == 0) continue;
+                }
+                if (!foundAllWeightVariables)
+                {
+                    continue;
+                }
 
                 if (!String.IsNullOrWhiteSpace(datasetType.MIvar) && variables.Where(var => var.Name == datasetType.MIvar).Count() == 0) continue;
                 if (!String.IsNullOrWhiteSpace(datasetType.IDvar) && variables.Where(var => var.Name == datasetType.IDvar).Count() == 0) continue;
@@ -250,10 +293,14 @@ namespace LSAnalyzer.ViewModels
             {
                 FileName = this.FileName,
                 FileType = IsCsv && UseCsv2 ? "csv2" : null,
-                DatasetType = SelectedDatasetType,
+                DatasetType = SelectedDatasetType != null ? new(SelectedDatasetType) : null,
                 ModeKeep = (SelectedAnalysisMode == AnalysisModes.Keep),
             };
-
+            if (analysisConfiguration.DatasetType != null)
+            {
+                analysisConfiguration.DatasetType.Weight = SelectedWeightVariable ?? String.Empty;
+            }
+            
             var testAnalysisConfiguration = _rservice.TestAnalysisConfiguration(analysisConfiguration);
 
             if (!testAnalysisConfiguration)

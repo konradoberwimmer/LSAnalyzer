@@ -137,7 +137,7 @@ namespace LSAnalyzer.Models
                     Id = 1,
                     Name = "PIRLS 2016 - student level",
                     Description = "PIRLS 2016 - student level",
-                    Weight = "TOTWGT",
+                    Weight = "TOTWGT;SENWGT",
                     IDvar = "IDSTUD",
                     NMI = 5,
                     PVvars = "ASRREA;ASRLIT;ASRINF;ASRIIE;ASRRSI;ASRIBM",

@@ -8,7 +8,7 @@
         xmlns:local="clr-namespace:LSAnalyzer.Views"
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" x:Name="windowSelectAnalysisFile" x:Class="LSAnalyzer.Views.SelectAnalysisFile"
         mc:Ignorable="d"
-        Title="Select file for analyses" Height="auto" MinHeight="215" Width="auto" MinWidth="665" WindowStartupLocation="CenterScreen" Closed="Window_Closed" SizeToContent="WidthAndHeight">
+        Title="Select file for analyses" Height="auto" MinHeight="247" Width="auto" MinWidth="665" WindowStartupLocation="CenterScreen" Closed="Window_Closed" SizeToContent="WidthAndHeight">
     <Window.DataContext>
         <ViewModels:SelectAnalysisFile/>
     </Window.DataContext>
@@ -33,6 +33,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <TextBlock Text="File:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Center"/>
@@ -42,12 +43,14 @@
         <TextBlock Grid.Row="2" Text="Dataset Type:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Center"/>
         <ComboBox Grid.Row="2" x:Name="comboBoxDatasetType" Grid.Column="1" HorizontalAlignment="Stretch" Margin="10,10,0,0" VerticalAlignment="Top" Height="22" ItemsSource="{Binding DatasetTypes}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedDatasetType}"/>
         <Button Grid.Row="2" Grid.Column="2" ContentTemplate="{StaticResource MagicWand}" HorizontalAlignment="Left" Margin="10,10,10,0" VerticalAlignment="Top" Width="80" Height="22" Command="{Binding GuessDatasetTypeCommand}" IsEnabled="{Binding Path=Text.Length, ElementName=textBoxFileName}"/>
-        <TextBlock Grid.Row="3" Text="Mode:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Vertical" Margin="10,10,0,0">
+        <TextBlock Grid.Row="3" Text="Weight variable:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Center"/>
+        <ComboBox Grid.Row="3" Grid.Column="1" x:Name="comboBoxWeightVariable" HorizontalAlignment="Stretch" Margin="10,10,0,0" VerticalAlignment="Top" Height="22" ItemsSource="{Binding PossibleWeightVariables}" SelectedItem="{Binding SelectedWeightVariable}" IsEnabled="{Binding ElementName=comboBoxDatasetType, Path=SelectedIndex, Converter={StaticResource IndexToBoolConverter}}"/>
+        <TextBlock Grid.Row="4" Text="Mode:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Vertical" Margin="10,10,0,0">
             <RadioButton x:Name="radioButtonAnalysisModeKeep" Content="Keep BIFIEdata object between analyses (recommended if memory limit allows it)" HorizontalAlignment="Left" Height="15" GroupName="AnalysisMode" IsChecked="{Binding SelectedAnalysisMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Keep}"/>
             <RadioButton x:Name="radioButtonAnalysisModeBuild" Content="Build BIFIEdata object for each analysis (Use only in case of reaching memory limit!)" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="AnalysisMode" IsChecked="{Binding SelectedAnalysisMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Build}"/>
         </StackPanel>
-        <Button Grid.Row="4" Grid.Column="2" Content="Go!" HorizontalAlignment="Left" Margin="10,10,10,10" VerticalAlignment="Bottom" Height="22" Width="80" Command="{Binding UseFileForAnalysisCommand, Mode=OneWay}" CommandParameter="{Binding ElementName=windowSelectAnalysisFile}">
+        <Button Grid.Row="5" Grid.Column="2" Content="Go!" HorizontalAlignment="Left" Margin="10,10,10,10" VerticalAlignment="Bottom" Height="22" Width="80" Command="{Binding UseFileForAnalysisCommand, Mode=OneWay}" CommandParameter="{Binding ElementName=windowSelectAnalysisFile}">
             <Button.IsEnabled>
                 <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                     <Binding Path="Text.Length" ElementName="textBoxFileName"/>
