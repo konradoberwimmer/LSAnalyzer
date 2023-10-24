@@ -605,10 +605,45 @@ namespace LSAnalyzer.Services
                     variables = EvaluateAndLog("data.frame(variable = colnames(lsanalyzer_dat_raw_stored))").AsDataFrame();
                 }
 
+                var variableLabelsExpression = EvaluateAndLog("attr(lsanalyzer_dat_raw_stored, 'variable.labels')");
+                Dictionary<string, string> variableLabels = new();
+                if (variableLabelsExpression != null && variableLabelsExpression.AsCharacter() != null)
+                {
+                    var variableLabelsVector = variableLabelsExpression.AsCharacter();
+                    for (int ll = 0; ll < variableLabelsVector.Length; ll++)
+                    {
+                        variableLabels.Add(variableLabelsVector.Names[ll], variableLabelsVector[ll]);
+                    }
+                }
+
                 List<Variable> variableList = new();
                 foreach (var variable in variables.GetRows())
                 {
-                    variableList.Add(new(variable.RowIndex, (string)variable["variable"], analysisConfiguration.HasSystemVariable((string)variable["variable"])));
+                    Variable newVariable = new(variable.RowIndex, (string)variable["variable"], analysisConfiguration.HasSystemVariable((string)variable["variable"]));
+
+                    if (variableLabels.Keys.Contains(newVariable.Name))
+                    {
+                        newVariable.Label = variableLabels[newVariable.Name];
+                    } else
+                    {
+                        for (int ll = 0; ll < variableLabels.Count; ll++)
+                        {
+                            try
+                            {
+                                if (Regex.IsMatch(variableLabels.Keys.ToList()[ll], newVariable.Name))
+                                {
+                                    newVariable.Label = variableLabels[variableLabels.Keys.ToList()[ll]];
+                                    break;
+                                }
+                            }
+                            catch
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    variableList.Add(newVariable);
                 }
 
                 if (analysisConfiguration.ModeKeep == false)
@@ -620,8 +655,12 @@ namespace LSAnalyzer.Services
                         var pvVars = analysisConfiguration.DatasetType.PVvars.Split(";");
                         foreach (var pvVar in pvVars)
                         {
+                            var firstMatch = variableList.Where(var => Regex.IsMatch(var.Name, pvVar)).FirstOrDefault();
+
                             variableList.RemoveAll(var => Regex.IsMatch(var.Name, pvVar));
-                            variableList.Add(new(maxPosition++, pvVar, false));
+                            Variable newVariable = new(maxPosition++, pvVar, false);
+                            newVariable.Label = firstMatch?.Label;
+                            variableList.Add(newVariable);
                         }
                     }
                     

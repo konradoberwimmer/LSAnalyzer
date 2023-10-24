@@ -10,6 +10,7 @@ namespace LSAnalyzer.Models
     {
         public int Position { get; set; }
         public string Name { get; set; }
+        public string? Label { get; set; }
         public bool IsSystemVariable { get; set; }
 
         public Variable(int position, string name, bool isSystemVariable)
@@ -17,6 +18,11 @@ namespace LSAnalyzer.Models
             Position = position;
             Name = name;
             IsSystemVariable = isSystemVariable;
+        }
+
+        public string Info
+        {
+            get => Name + (Label != null ? " (" + Label + ")" : "");
         }
     }
 }

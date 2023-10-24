@@ -202,6 +202,7 @@ namespace TestLSAnalyzer.Services
             Assert.NotNull(variablesList);
             Assert.True(variablesList.Count == 11);
             Assert.True(variablesList.Where(var => var.Name == "repwgt1").First().IsSystemVariable);
+            Assert.Equal("my categories", variablesList.Where(var => var.Name == "cat").First().Label);
 
             AnalysisConfiguration analysisConfigurationModeBuild = new()
             {
@@ -226,6 +227,30 @@ namespace TestLSAnalyzer.Services
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "x").ToList());
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "y[0-9]+").ToList());
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "one").ToList());
+            Assert.Equal("PV Mathematics 1", variablesListModeBuild.Where(var => var.Name == "y[0-9]+").First().Label);
+
+            AnalysisConfiguration analysisConfigurationKeepPV = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    PVvars = "x;y[0-9]+",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 0.5,
+                },
+                ModeKeep = true,
+            };
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationModeBuild.FileName));
+            var variablesListKeepPV = rservice.GetCurrentDatasetVariables(analysisConfigurationKeepPV);
+
+            Assert.NotNull(variablesListKeepPV);
+            Assert.True(variablesListKeepPV.Count == 11);
+            Assert.Single(variablesListKeepPV.Where(var => var.Name == "y").ToList());
+            Assert.Equal("PV Mathematics 1", variablesListKeepPV.Where(var => var.Name == "y").First().Label);
         }
 
         [Fact]
