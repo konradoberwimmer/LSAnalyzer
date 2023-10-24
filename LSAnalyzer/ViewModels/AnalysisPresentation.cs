@@ -1507,51 +1507,44 @@ namespace LSAnalyzer.ViewModels
 
             using XLWorkbook wb = new();
 
-            var worksheet = wb.AddWorksheet(DataView.Table);
+            wb.AddWorksheet(DataView.Table);
 
             if (TableSecondary != null)
             {
                 wb.AddWorksheet(TableSecondary);
             }
 
-            var wsMeta = wb.AddWorksheet("Meta");
-            Dictionary<string, object?> metaInformation = new()
+            var metaInformation = Analysis?.MetaInformation;
+            
+            if (metaInformation != null)
             {
-                { "Analysis:", Analysis?.AnalysisName },
-                { "Dependent variable:", Analysis is AnalysisRegression analysisRegression ? analysisRegression.Dependent?.Name : null },
-                { "Type of percentiles:", Analysis is AnalysisPercentiles analysisPercentiles ? analysisPercentiles.PercentileTypeInfo : null },
-                { "Dataset type:", Analysis?.AnalysisConfiguration.DatasetType?.Name},
-                { "File:", Analysis?.AnalysisConfiguration.FileName },
-                { "Subset:", Analysis?.SubsettingExpression },
-                { "Mode:", (new BoolToAnalysisMode()).Convert(Analysis?.AnalysisConfiguration.ModeKeep == true, Type.GetType("bool")!, "", CultureInfo.InvariantCulture).ToString() },
-                { "Calculation finished:", Analysis?.ResultAt?.ToString() },
-                { "Duration in seconds:", Analysis?.ResultDuration },
-            };
-            int rowCount = 1;
-            foreach (var key in metaInformation.Keys)
-            {
-                if (metaInformation[key] != null)
+                var wsMeta = wb.AddWorksheet("Meta");
+                int rowCount = 1;
+                foreach (var key in metaInformation.Keys)
                 {
-                    wsMeta.Cell(rowCount, 1).Value = key;
-                    switch (metaInformation[key])
+                    if (metaInformation[key] != null)
                     {
-                        case string aString:
-                            wsMeta.Cell(rowCount, 2).Value = aString;
-                            break;
-                        case int aInt:
-                            wsMeta.Cell(rowCount, 2).Value = aInt;
-                            break;
-                        case double aDouble:
-                            wsMeta.Cell(rowCount, 2).Value = aDouble;
-                            break;
-                        default:
-                            wsMeta.Cell(rowCount, 2).Value = metaInformation[key]!.ToString();
-                            break;
+                        wsMeta.Cell(rowCount, 1).Value = key;
+                        switch (metaInformation[key])
+                        {
+                            case string aString:
+                                wsMeta.Cell(rowCount, 2).Value = aString;
+                                break;
+                            case int aInt:
+                                wsMeta.Cell(rowCount, 2).Value = aInt;
+                                break;
+                            case double aDouble:
+                                wsMeta.Cell(rowCount, 2).Value = aDouble;
+                                break;
+                            default:
+                                wsMeta.Cell(rowCount, 2).Value = metaInformation[key]!.ToString();
+                                break;
+                        }
+                        rowCount++;
                     }
-                    rowCount++;
                 }
+                wsMeta.Column("A").Width = 25;
             }
-            wsMeta.Column("A").Width = 25;
 
             if (File.Exists(filename))
             {

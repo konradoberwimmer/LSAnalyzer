@@ -1,6 +1,8 @@
-﻿using RDotNet;
+﻿using LSAnalyzer.ViewModels.ValueConverter;
+using RDotNet;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,6 +39,22 @@ namespace LSAnalyzer.Models
                 " - " + AnalysisConfiguration.DatasetType?.Name +
                 "; " + AnalysisConfiguration.DatasetType?.Weight +
                 ")";
+        }
+
+        public Dictionary<string, object?> MetaInformation
+        {
+            get => new()
+            {
+                { "Analysis:", AnalysisName },
+                { "Dependent variable:", this is AnalysisRegression analysisRegression ? analysisRegression.Dependent?.Name : null },
+                { "Type of percentiles:", this is AnalysisPercentiles analysisPercentiles ? analysisPercentiles.PercentileTypeInfo : null },
+                { "Dataset type:", AnalysisConfiguration.DatasetType?.Name},
+                { "File:", AnalysisConfiguration.FileName },
+                { "Subset:", SubsettingExpression },
+                { "Mode:", (new BoolToAnalysisMode()).Convert(AnalysisConfiguration.ModeKeep == true, Type.GetType("bool")!, "", CultureInfo.InvariantCulture).ToString() },
+                { "Calculation finished:", ResultAt?.ToString() },
+                { "Duration in seconds:", ResultDuration },
+            };
         }
     }
 }
