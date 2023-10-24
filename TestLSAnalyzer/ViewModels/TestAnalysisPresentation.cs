@@ -191,10 +191,10 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal(8, analysisPresentationViewModel.DataTable.Select("[group A - ITSEX (label)] = 'Girl'").Length);
             Assert.Equal(10, analysisPresentationViewModel.DataTable.Select("[group B - ASBG05C] = 2").Length);
 
-            Assert.NotNull(analysisPresentationViewModel.TableEta);
-            Assert.Equal(2, analysisPresentationViewModel.TableEta.Rows.Count);
-            Assert.False(analysisPresentationViewModel.TableEta.Columns.Contains("groups by"));
-            Assert.True(Math.Abs(analysisPresentationViewModel.TableEta.AsEnumerable().Where(row => row.Field<string>("variable") == "ASRREA").Select(row => row.Field<double>("eta")).First() - 0.1770158) < 0.0001);
+            Assert.NotNull(analysisPresentationViewModel.TableSecondary);
+            Assert.Equal(2, analysisPresentationViewModel.TableSecondary.Rows.Count);
+            Assert.False(analysisPresentationViewModel.TableSecondary.Columns.Contains("groups by"));
+            Assert.True(Math.Abs(analysisPresentationViewModel.TableSecondary.AsEnumerable().Where(row => row.Field<string>("variable") == "ASRREA").Select(row => row.Field<double>("eta")).First() - 0.1770158) < 0.0001);
         }
 
         [Fact]
@@ -244,11 +244,11 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal(4, analysisPresentationViewModel.DataTable.Select("[group B - value] = 2").Length);
 
 
-            Assert.NotNull(analysisPresentationViewModel.TableEta);
-            Assert.Equal(4, analysisPresentationViewModel.TableEta.Rows.Count);
-            Assert.True(analysisPresentationViewModel.TableEta.Columns.Contains("groups by"));
-            Assert.Equal(2, analysisPresentationViewModel.TableEta.Select("[groups by] = 'ITSEX'").Length);
-            Assert.True(Math.Abs(analysisPresentationViewModel.TableEta.AsEnumerable().Where(row => row.Field<string>("variable") == "ASRLIT" && row.Field<string>("groups by") == "ITSEX").Select(row => row.Field<double>("eta - standard error")).First() - 0.01758326) < 0.0001);
+            Assert.NotNull(analysisPresentationViewModel.TableSecondary);
+            Assert.Equal(4, analysisPresentationViewModel.TableSecondary.Rows.Count);
+            Assert.True(analysisPresentationViewModel.TableSecondary.Columns.Contains("groups by"));
+            Assert.Equal(2, analysisPresentationViewModel.TableSecondary.Select("[groups by] = 'ITSEX'").Length);
+            Assert.True(Math.Abs(analysisPresentationViewModel.TableSecondary.AsEnumerable().Where(row => row.Field<string>("variable") == "ASRLIT" && row.Field<string>("groups by") == "ITSEX").Select(row => row.Field<double>("eta - standard error")).First() - 0.01758326) < 0.0001);
         }
 
         [Fact]
@@ -297,10 +297,10 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal(2, analysisPresentationViewModel.DataTable.Select("[instable (label)] = 'Kategorie B'").Length);
             Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("instable = 1")[0]["Cat 1"] - 0.2971394) < 0.0001);
 
-            Assert.NotNull(analysisPresentationViewModel.TableBivariate);
-            Assert.Equal(2 * 9, analysisPresentationViewModel.TableBivariate.Rows.Count);
-            Assert.Equal(6, analysisPresentationViewModel.TableBivariate.Columns.Count);
-            Assert.True(Math.Abs((double)analysisPresentationViewModel.TableBivariate.Select("Y = 'item1' and coefficient = 'w'")[0]["estimate"] - 0.395625) < 0.0001);
+            Assert.NotNull(analysisPresentationViewModel.TableSecondary);
+            Assert.Equal(2 * 9, analysisPresentationViewModel.TableSecondary.Rows.Count);
+            Assert.Equal(6, analysisPresentationViewModel.TableSecondary.Columns.Count);
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.TableSecondary.Select("Y = 'item1' and coefficient = 'w'")[0]["estimate"] - 0.395625) < 0.0001);
         }
 
         [Fact]
@@ -479,14 +479,14 @@ namespace TestLSAnalyzer.ViewModels
             analysisPresentationViewModel.SetAnalysisResult(result!);
 
             Assert.NotNull(analysisPresentationViewModel.DataTable);
-            Assert.NotNull(analysisPresentationViewModel.TableCov);
+            Assert.NotNull(analysisPresentationViewModel.TableSecondary);
             Assert.Equal(9, analysisPresentationViewModel.DataTable.Rows.Count);
-            Assert.Equal(18, analysisPresentationViewModel.TableCov.Rows.Count);
+            Assert.Equal(18, analysisPresentationViewModel.TableSecondary.Rows.Count);
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable A"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat (label)"));
             Assert.Equal(3, analysisPresentationViewModel.DataTable.Select("[cat (label)] = 'Kategorie B'").Length);
-            Assert.True(Math.Abs((double)analysisPresentationViewModel.TableCov.Select("[cat (label)] = 'Kategorie B'")[0]["covariance"] - 1.441647597) < 0.0001);
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.TableSecondary.Select("[cat (label)] = 'Kategorie B'")[0]["covariance"] - 1.441647597) < 0.0001);
         }
 
         [Fact]

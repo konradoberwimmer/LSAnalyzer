@@ -116,7 +116,7 @@ namespace LSAnalyzer.ViewModels
                         }
                     },
                     HasTableAverage = true,
-                    TableEta = new()
+                    TableSecondary = new("Explained variance")
                     {
                         Columns = { { "var", typeof(string) }, { "eta2" , typeof(double) }, { "eta", typeof(double) }, { "eta__se", typeof(double) } },
                         Rows =

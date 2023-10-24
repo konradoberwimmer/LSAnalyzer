@@ -169,36 +169,14 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private DataTable? _tableBivariate;
-        public DataTable? TableBivariate
+        private DataTable? _secondaryTable;
+        public DataTable? TableSecondary
         {
-            get => _tableBivariate;
+            get => _secondaryTable;
             set
             {
-                _tableBivariate = value;
-                NotifyPropertyChanged(nameof(TableBivariate));
-            }
-        }
-
-        private DataTable? _tableEta;
-        public DataTable? TableEta
-        {
-            get => _tableEta;
-            set
-            {
-                _tableEta = value;
-                NotifyPropertyChanged(nameof(TableEta));
-            }
-        }
-
-        private DataTable? _tableCov;
-        public DataTable? TableCov
-        {
-            get => _tableCov;
-            set
-            {
-                _tableCov = value;
-                NotifyPropertyChanged(nameof(TableCov));
+                _secondaryTable = value;
+                NotifyPropertyChanged(nameof(TableSecondary));
             }
         }
 
@@ -249,14 +227,14 @@ namespace LSAnalyzer.ViewModels
                     break;
                 case AnalysisMeanDiff analysisMeanDiff:
                     DataTable = CreateDataTableFromResultMeanDiff(analysisMeanDiff);
-                    TableEta = CreateTableEtaFromResultMeanDiff(analysisMeanDiff);
+                    TableSecondary = CreateTableSecondaryFromResultMeanDiff(analysisMeanDiff);
                     ShowPValues = true;
                     break;
                 case AnalysisFreq analysisFreq:
                     DataTable = CreateDataTableFromResultFreq(analysisFreq);
                     if (analysisFreq.CalculateBivariate)
                     {
-                        TableBivariate = CreateTableBivariate(analysisFreq);
+                        TableSecondary = CreateTableSecondary(analysisFreq);
                     }
                     break;
                 case AnalysisPercentiles analysisPercentiles:
@@ -264,7 +242,7 @@ namespace LSAnalyzer.ViewModels
                     break;
                 case AnalysisCorr analysisCorr:
                     DataTable = CreateDataTableFromResultCorr(analysisCorr);
-                    TableCov = CreateTableCovFromResultCorr(analysisCorr);
+                    TableSecondary = CreateTableSecondaryFromResultCorr(analysisCorr);
                     break;
                 case AnalysisRegression analysisRegression:
                     DataTable = CreateDataTableFromResultRegression(analysisRegression);
@@ -527,14 +505,14 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
-        public DataTable CreateTableEtaFromResultMeanDiff(AnalysisMeanDiff analysisMeanDiff)
+        public DataTable CreateTableSecondaryFromResultMeanDiff(AnalysisMeanDiff analysisMeanDiff)
         {
             if (analysisMeanDiff.Result == null || analysisMeanDiff.Result.Count == 0)
             {
                 return new();
             }
 
-            DataTable table = new(analysisMeanDiff.AnalysisName + " - eta");
+            DataTable table = new("Explained variance");
             Dictionary<string, DataColumn> columns = new();
 
             columns.Add("var", new DataColumn("variable", typeof(string)));
@@ -736,14 +714,14 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
-        public DataTable? CreateTableBivariate(AnalysisFreq analysisFreq)
+        public DataTable? CreateTableSecondary(AnalysisFreq analysisFreq)
         {
             if (analysisFreq.BivariateResult == null || analysisFreq.BivariateResult.Count == 0)
             {
                 return null;
             }
 
-            DataTable table = new(analysisFreq.AnalysisName + " - Bivariate");
+            DataTable table = new("Bivariate measures");
 
             Dictionary<string, DataColumn> columns = new();
 
@@ -1015,7 +993,7 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
-        public DataTable CreateTableCovFromResultCorr(AnalysisCorr analysisCorr)
+        public DataTable CreateTableSecondaryFromResultCorr(AnalysisCorr analysisCorr)
         {
             if (analysisCorr.Result == null || analysisCorr.Result.Count == 0)
             {
@@ -1531,19 +1509,9 @@ namespace LSAnalyzer.ViewModels
 
             var worksheet = wb.AddWorksheet(DataView.Table);
 
-            if (TableEta != null)
+            if (TableSecondary != null)
             {
-                wb.AddWorksheet(TableEta);
-            }
-
-            if (TableCov != null)
-            {
-                wb.AddWorksheet(TableCov);
-            }
-
-            if (TableBivariate != null)
-            {
-                wb.AddWorksheet(TableBivariate);
+                wb.AddWorksheet(TableSecondary);
             }
 
             var wsMeta = wb.AddWorksheet("Meta");
