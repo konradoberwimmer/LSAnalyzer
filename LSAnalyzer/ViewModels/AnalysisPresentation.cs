@@ -1515,11 +1515,11 @@ namespace LSAnalyzer.ViewModels
             }
 
             var metaInformation = Analysis?.MetaInformation;
-            
+            int rowCount = 1;
+            var wsMeta = wb.AddWorksheet("Meta");
+
             if (metaInformation != null)
             {
-                var wsMeta = wb.AddWorksheet("Meta");
-                int rowCount = 1;
                 foreach (var key in metaInformation.Keys)
                 {
                     if (metaInformation[key] != null)
@@ -1544,6 +1544,22 @@ namespace LSAnalyzer.ViewModels
                     }
                 }
                 wsMeta.Column("A").Width = 25;
+            }
+
+            var variableLabels = Analysis?.VariableLabels;
+
+            if (variableLabels != null && variableLabels.Count > 0)
+            {
+                rowCount++;
+                wsMeta.Cell(rowCount, 1).Value = "Variables with labels:";
+                rowCount++;
+
+                foreach (var variableLabel in variableLabels)
+                {
+                    wsMeta.Cell(rowCount, 1).Value = variableLabel.Key;
+                    wsMeta.Cell(rowCount, 2).Value = variableLabel.Value;
+                    rowCount++;
+                }
             }
 
             if (File.Exists(filename))

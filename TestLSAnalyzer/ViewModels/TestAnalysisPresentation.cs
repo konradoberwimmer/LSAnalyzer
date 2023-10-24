@@ -718,6 +718,58 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal("Univariate", (string)wb.Worksheet("Meta").Cell("B1").Value);
         }
 
+        [Fact]
+        public void TestSaveDataTableWithLabels()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    Nrep = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+
+            AnalysisLinreg analysisLinreg = new(analysisConfiguration)
+            {
+                Dependent = new(1, "item1", false) { Label = "what ever?" },
+                Vars = new() { new(2, "item2", false), new(3, "item3", false), },
+                Sequence = AnalysisRegression.RegressionSequence.AllIn
+            };
+
+            var result = rservice.CalculateLinreg(analysisLinreg);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisLinreg);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            var filename = Path.Combine(Path.GetTempPath(), "TestSaveDataTableWithLabels.xlsx");
+
+            if (File.Exists(filename))
+            {
+                File.Delete(filename);
+            }
+
+            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(filename);
+
+            Assert.True(File.Exists(filename));
+
+            using XLWorkbook wb = new(filename);
+
+            Assert.Equal(2, wb.Worksheets.Count);
+            Assert.Equal("Linear regression", (string)wb.Worksheet("Meta").Cell("B1").Value);
+            Assert.Equal("Variables with labels:", (string)wb.Worksheet("Meta").Cell("A7").Value);
+            Assert.Equal("what ever?", (string)wb.Worksheet("Meta").Cell("B8").Value);
+        }
+
         public static string AssemblyDirectory
         {
             get

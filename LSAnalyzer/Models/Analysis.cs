@@ -56,5 +56,39 @@ namespace LSAnalyzer.Models
                 { "Duration in seconds:", ResultDuration },
             };
         }
+
+        public Dictionary<string, string> VariableLabels
+        {
+            get
+            {
+                Dictionary<string, string> variableLabels = new();
+
+                if (this is AnalysisRegression analysisRegression)
+                {
+                    if (analysisRegression?.Dependent?.Label != null)
+                    {
+                        variableLabels.Add(analysisRegression.Dependent.Name, analysisRegression.Dependent.Label);
+                    }
+                }
+
+                foreach (var variable in Vars)
+                {
+                    if (variable.Label != null)
+                    {
+                        variableLabels.Add(variable.Name, variable.Label);
+                    }
+                }
+
+                foreach (var variable in GroupBy)
+                {
+                    if (variable.Label != null)
+                    {
+                        variableLabels.Add(variable.Name, variable.Label);
+                    }
+                }
+
+                return variableLabels;
+            }
+        }
     }
 }
