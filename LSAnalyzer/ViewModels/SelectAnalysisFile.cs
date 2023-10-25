@@ -226,6 +226,11 @@ namespace LSAnalyzer.ViewModels
                     bool foundAllPvVars = true;
                     foreach (var pvVar in pvVarsSplit)
                     {
+                        if (Regex.IsMatch(pvVar, "^\\(.*\\)$"))
+                        {
+                            continue;
+                        }
+
                         if (variables.Where(var => Regex.IsMatch(var.Name, pvVar)).Count() != datasetType.NMI)
                         {
                             foundAllPvVars = false;

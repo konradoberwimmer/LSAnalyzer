@@ -366,10 +366,18 @@ namespace LSAnalyzer.Services
                 EvaluateAndLog("lsanalyzer_necessary_variables <- numeric(0)");
                 foreach (string regexNecessaryVariable in regexNecessaryVariables)
                 {
-                    EvaluateAndLog("lsanalyzer_necessary_variable <- grep('" + regexNecessaryVariable + "', colnames(lsanalyzer_dat_raw))");
-                    if (_engine.GetSymbol("lsanalyzer_necessary_variable").AsNumeric().Length == 0)
+                    var isOptionalVariable = Regex.IsMatch(regexNecessaryVariable, "^\\(.*\\)$");
+                    EvaluateAndLog("lsanalyzer_necessary_variable <- grep('" + (isOptionalVariable ? regexNecessaryVariable.Substring(1, regexNecessaryVariable.Length - 2) : regexNecessaryVariable) + "', colnames(lsanalyzer_dat_raw))");
+                    if (_engine!.GetSymbol("lsanalyzer_necessary_variable").AsNumeric().Length == 0)
                     {
-                        return false;
+                        if (isOptionalVariable)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     }
                     EvaluateAndLog("lsanalyzer_necessary_variables <- unique(c(lsanalyzer_necessary_variables, lsanalyzer_necessary_variable))");
                 }
@@ -482,9 +490,33 @@ namespace LSAnalyzer.Services
                 string pvvarsArg = "";
                 if (pvvars != null && pvvars.Length > 0)
                 {
-                    var pvvarsArray = pvvars.Split(";");
-                    pvvarsArray = Array.ConvertAll(pvvarsArray, pvvar => "'" + pvvar + "'");
-                    pvvarsArg = ", pv_vars = c(" + String.Join(", ", pvvarsArray) + ")";
+                    var pvvarsSplit = pvvars.Split(";");
+                    List<string> pvvarsList = new();
+
+                    foreach (var pvvar in pvvarsSplit)
+                    {
+                        var pvvarTrimmed = pvvar.Trim();
+                        if (Regex.IsMatch(pvvarTrimmed, "^\\(.*\\)$"))
+                        {
+                            var optionalPvvar = pvvarTrimmed.Substring(1, pvvarTrimmed.Length - 2);
+                            var optionalPvExists = EvaluateAndLog("any(grepl('" + optionalPvvar + "', colnames(lsanalyzer_dat_raw)))").AsLogical().First();
+
+                            if (optionalPvExists)
+                            {
+                                pvvarsList.Add(optionalPvvar);
+                            }
+                        } else
+                        {
+                            pvvarsList.Add(pvvarTrimmed);
+                        }
+                    }
+
+                    if (pvvarsList.Count > 0)
+                    {
+                        var pvvarsArray = pvvarsList.ToArray();
+                        pvvarsArray = Array.ConvertAll(pvvarsArray, pvvar => "'" + pvvar + "'");
+                        pvvarsArg = ", pv_vars = c(" + String.Join(", ", pvvarsArray) + ")";
+                    }
                 }
 
                 string finalCall = baseCall + repwgtArg + fayfacArg + pvvarsArg + ", cdata = TRUE)";
@@ -655,12 +687,18 @@ namespace LSAnalyzer.Services
                         var pvVars = analysisConfiguration.DatasetType.PVvars.Split(";");
                         foreach (var pvVar in pvVars)
                         {
-                            var firstMatch = variableList.Where(var => Regex.IsMatch(var.Name, pvVar)).FirstOrDefault();
+                            var isOptionalPv = Regex.IsMatch(pvVar, "^\\(.*\\)$");
+                            var pvVarRegex = isOptionalPv ? pvVar.Substring(1, pvVar.Length - 2) : pvVar;
 
-                            variableList.RemoveAll(var => Regex.IsMatch(var.Name, pvVar));
-                            Variable newVariable = new(maxPosition++, pvVar, false);
-                            newVariable.Label = firstMatch?.Label;
-                            variableList.Add(newVariable);
+                            var firstMatch = variableList.Where(var => Regex.IsMatch(var.Name, pvVarRegex)).FirstOrDefault();
+
+                            if (firstMatch != null)
+                            {
+                                variableList.RemoveAll(var => Regex.IsMatch(var.Name, pvVarRegex));
+                                Variable newVariable = new(maxPosition++, pvVarRegex, false);
+                                newVariable.Label = firstMatch?.Label;
+                                variableList.Add(newVariable);
+                            }
                         }
                     }
                     

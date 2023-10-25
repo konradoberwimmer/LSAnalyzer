@@ -69,6 +69,9 @@
     <None Update="_testData\test_pv10_nrep5.sav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="_testData\test_pv10_nrep5_missing_pvs.sav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

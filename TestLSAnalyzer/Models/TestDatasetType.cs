@@ -78,7 +78,7 @@ namespace TestLSAnalyzer.Models
 
             Assert.Equal(4, regexNecessaryVariables.Count);
             Assert.Contains("^W_FSTUWT$", regexNecessaryVariables);
-            Assert.Contains("^ASRREA", regexNecessaryVariables);
+            Assert.Contains("ASRREA", regexNecessaryVariables);
             Assert.Contains("W_STURWT", regexNecessaryVariables);
         }
     }

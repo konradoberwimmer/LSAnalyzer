@@ -118,7 +118,7 @@ namespace LSAnalyzer.Models
             if (!string.IsNullOrWhiteSpace(PVvars))
             {
                 string[] pvVarsSplit = PVvars.Split(';');
-                foreach (var pvVar in pvVarsSplit) regexNecessaryVariables.Add("^" + pvVar);
+                foreach (var pvVar in pvVarsSplit) regexNecessaryVariables.Add(pvVar);
             }
 
             if (!string.IsNullOrWhiteSpace(RepWgts)) regexNecessaryVariables.Add(RepWgts);

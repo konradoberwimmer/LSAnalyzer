@@ -1331,6 +1331,78 @@ namespace TestLSAnalyzer.Services
             }
         }
 
+        [Fact]
+        public void TestOptionalPVs()
+        {
+            AnalysisConfiguration analysisConfigurationAll = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    PVvars = "x;y",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 0.5,
+                },
+                ModeKeep = true,
+            };
+            AnalysisConfiguration analysisConfigurationSome = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    PVvars = "x;(y)",
+                    Nrep = 5,
+                    RepWgts = "repwgt",
+                    FayFac = 0.5,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+
+            var fileFullPVs = Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav");
+            var fileMissingPVs = Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5_missing_pvs.sav");
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileFullPVs));
+            Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationAll)));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, "x;y", 5, "repwgt", 0.5));
+            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.Contains("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileFullPVs));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, "x;(y)", 5, "repwgt", 0.5));
+            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.Contains("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationSome)));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, "x;(y)", 5, "repwgt", 0.5));
+            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.Contains("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileMissingPVs));
+            Assert.False(rservice.CreateBIFIEdataObject("wgt", 10, null, "x;y", 5, "repwgt", 0.5));
+            Assert.False(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationAll)));
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileMissingPVs));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, "x;(y)", 5, "repwgt", 0.5));
+            Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationSome)));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, "x;(y)", 5, "repwgt", 0.5));
+            Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+
+            analysisConfigurationSome.ModeKeep = false;
+            analysisConfigurationSome.DatasetType.PVvars = "(x);(y)";
+            Assert.DoesNotContain("(y)", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+        }
+
         public static string AssemblyDirectory
         {
             get
