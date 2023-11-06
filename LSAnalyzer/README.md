@@ -1,5 +1,6 @@
 ﻿# ToDo-List
 * add two-level regression (with/without assumption of sorted cluster variable) 
-* expand the list of default dataset types
 * implement variable display name to hide away regex in PVs
-* think of a way of storing analysis requests and applying them again if possible
+* storing analysis requests and applying them again
+	* let analyses (all or selected) be saved to json from main window
+	* re-applying analyses on current file or file from analysis configuration in json

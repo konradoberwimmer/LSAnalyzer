@@ -280,7 +280,9 @@ namespace LSAnalyzer.Services
                 
                 if (!String.IsNullOrWhiteSpace(sortBy))
                 {
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored_attributes <- lapply(lsanalyzer_dat_raw_stored, attributes)");
                     EvaluateAndLog("lsanalyzer_dat_raw_stored <- lsanalyzer_dat_raw_stored[order(lsanalyzer_dat_raw_stored$`" + sortBy + "`), ]");
+                    EvaluateAndLog("for (vv in colnames(lsanalyzer_dat_raw_stored)) attributes(lsanalyzer_dat_raw_stored[,vv]) <- lsanalyzer_dat_raw_stored_attributes[[vv]]");
                 }
                 EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
 

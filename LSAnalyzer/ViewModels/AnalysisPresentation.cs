@@ -227,14 +227,14 @@ namespace LSAnalyzer.ViewModels
                     break;
                 case AnalysisMeanDiff analysisMeanDiff:
                     DataTable = CreateDataTableFromResultMeanDiff(analysisMeanDiff);
-                    TableSecondary = CreateTableSecondaryFromResultMeanDiff(analysisMeanDiff);
+                    TableSecondary = CreateTableEtaFromResultMeanDiff(analysisMeanDiff);
                     ShowPValues = true;
                     break;
                 case AnalysisFreq analysisFreq:
                     DataTable = CreateDataTableFromResultFreq(analysisFreq);
                     if (analysisFreq.CalculateBivariate)
                     {
-                        TableSecondary = CreateTableSecondary(analysisFreq);
+                        TableSecondary = CreateTableBivariateFromResultFreq(analysisFreq);
                     }
                     break;
                 case AnalysisPercentiles analysisPercentiles:
@@ -242,7 +242,7 @@ namespace LSAnalyzer.ViewModels
                     break;
                 case AnalysisCorr analysisCorr:
                     DataTable = CreateDataTableFromResultCorr(analysisCorr);
-                    TableSecondary = CreateTableSecondaryFromResultCorr(analysisCorr);
+                    TableSecondary = CreateTableCovarianceFromResultCorr(analysisCorr);
                     break;
                 case AnalysisRegression analysisRegression:
                     DataTable = CreateDataTableFromResultRegression(analysisRegression);
@@ -505,7 +505,7 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
-        public DataTable CreateTableSecondaryFromResultMeanDiff(AnalysisMeanDiff analysisMeanDiff)
+        public DataTable CreateTableEtaFromResultMeanDiff(AnalysisMeanDiff analysisMeanDiff)
         {
             if (analysisMeanDiff.Result == null || analysisMeanDiff.Result.Count == 0)
             {
@@ -636,7 +636,10 @@ namespace LSAnalyzer.ViewModels
                             existingTableRow["Cat " + category + " - standard error"] = (double)dataFrameRow["perc_SE"];
                             existingTableRow["Cat " + category + " - cases"] = (double)dataFrameRow["Ncases"];
                             existingTableRow["Cat " + category + " - weighted"] = (double)dataFrameRow["Nweight"];
-                            existingTableRow["Cat " + category + " - FMI"] = (double)dataFrameRow["perc_fmi"];
+                            if (dataFrame.ColumnNames.Contains("perc_fmi"))
+                            {
+                                existingTableRow["Cat " + category + " - FMI"] = (double)dataFrameRow["perc_fmi"];
+                            }
 
                             repeat = false;
                         }
@@ -714,7 +717,7 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
-        public DataTable? CreateTableSecondary(AnalysisFreq analysisFreq)
+        public DataTable? CreateTableBivariateFromResultFreq(AnalysisFreq analysisFreq)
         {
             if (analysisFreq.BivariateResult == null || analysisFreq.BivariateResult.Count == 0)
             {
@@ -993,7 +996,7 @@ namespace LSAnalyzer.ViewModels
             return table;
         }
 
-        public DataTable CreateTableSecondaryFromResultCorr(AnalysisCorr analysisCorr)
+        public DataTable CreateTableCovarianceFromResultCorr(AnalysisCorr analysisCorr)
         {
             if (analysisCorr.Result == null || analysisCorr.Result.Count == 0)
             {
@@ -1185,7 +1188,7 @@ namespace LSAnalyzer.ViewModels
                             if (Regex.IsMatch(column, "^\\$model_" + (resultIndex+1) + "_"))
                             {
                                 var content = column.Substring(column.LastIndexOf("_") + 1);
-                                if (content != "expest")
+                                if (content != "expest" && dataFrame.ColumnNames.Contains(content))
                                 {
                                     existingTableRow[columns[column]] = (double)dataFrameRow[content];
                                 } else if ((string)existingTableRow["coefficient"] == "b")
