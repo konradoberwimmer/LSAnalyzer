@@ -11,9 +11,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -285,6 +287,27 @@ namespace LSAnalyzer.ViewModels
             {
                 Analyses.Remove(analysisPresentation);
             }
+        }
+
+        private RelayCommand<string?> _saveAnalysesDefinitionsCommand;
+        public ICommand SaveAnalysesDefintionsCommand
+        {
+            get
+            {
+                if (_saveAnalysesDefinitionsCommand == null)
+                    _saveAnalysesDefinitionsCommand = new RelayCommand<string?>(this.SaveAnalysesDefinitions);
+                return _saveAnalysesDefinitionsCommand;
+            }
+        }
+
+        private void SaveAnalysesDefinitions(string? fileName)
+        {
+            if (fileName == null || Analyses.Count == 0)
+            {
+                return;
+            }
+
+            File.WriteAllText(fileName, JsonSerializer.Serialize(Analyses.Select(analysisPresentation => analysisPresentation.Analysis).ToArray()));
         }
     }
 

@@ -289,6 +289,59 @@ namespace TestLSAnalyzer.ViewModels
             }
         }
 
+        [Fact]
+        public void TestSaveAnalysesDefintionsCommand()
+        {
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+
+            MainWindow mainWindowViewModel = new(rservice);
+            
+            var tmpFile = Path.Combine(Path.GetTempPath(), "TestSaveAnalysesDefintionsCommand.json");
+            if (File.Exists(tmpFile))
+            {
+                File.Delete(tmpFile);
+            }
+
+            mainWindowViewModel.SaveAnalysesDefintionsCommand.Execute(tmpFile);
+            Assert.False(File.Exists(tmpFile));
+
+            DatasetType dummyType = new()
+            {
+                Id = 1,
+                Name = "Dummy",
+                Description = "Test",
+                NMI = 1,
+                Nrep = 1,
+            };
+
+            AnalysisConfiguration dummyAnalysisConfiguration = new()
+            {
+                DatasetType = dummyType,
+                FileName = "dummyFile.sav",
+                FileType = "sav",
+                ModeKeep = true,
+            };
+
+            mainWindowViewModel.Analyses.Add(new(new AnalysisUnivar(dummyAnalysisConfiguration)
+            {
+                Vars = new() { new(1, "y1", false), new(2, "y2", false) },
+                GroupBy = new() { new(3, "x", false) },
+                CalculateOverall = false,
+            }));
+
+            mainWindowViewModel.Analyses.Add(new(new AnalysisFreq(dummyAnalysisConfiguration)
+            {
+                Vars = new() { new(1, "item1", false), new(2, "item2", false) },
+                GroupBy = new() { new(3, "x", false) },
+                CalculateOverall = false,
+                CalculateBivariate = false,
+            }));
+
+            mainWindowViewModel.SaveAnalysesDefintionsCommand.Execute(tmpFile);
+            Assert.True(File.Exists(tmpFile));
+        }
+
         public static string AssemblyDirectory
         {
             get

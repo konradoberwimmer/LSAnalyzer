@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace LSAnalyzer.Models
@@ -20,9 +21,11 @@ namespace LSAnalyzer.Models
         }
         public List<Variable> Vars { get; set; } = new();
         public List<Variable> GroupBy { get; set; } = new();
+        [JsonIgnore]
         public List<GenericVector> Result { get; set; } = new();
         public DateTime? ResultAt { get; set; }
         public double? ResultDuration { get; set; }
+        [JsonIgnore]
         public Dictionary<string, DataFrame> ValueLabels { get; set; } = new();
         public string? SubsettingExpression { get; set; } = null;
 
@@ -31,6 +34,7 @@ namespace LSAnalyzer.Models
             _analysisConfiguration = analysisConfiguration;
         }
 
+        [JsonIgnore]
         public virtual string ShortInfo
         {
             get => 
@@ -41,6 +45,7 @@ namespace LSAnalyzer.Models
                 ")";
         }
 
+        [JsonIgnore]
         public Dictionary<string, object?> MetaInformation
         {
             get => new()
@@ -57,6 +62,7 @@ namespace LSAnalyzer.Models
             };
         }
 
+        [JsonIgnore]
         public Dictionary<string, string> VariableLabels
         {
             get

@@ -293,5 +293,24 @@ namespace LSAnalyzer.Views
                 ((ContentPresenter)itemsControlAnalysesFull.ItemContainerGenerator.ContainerFromItem(analysisPresentation)).BringIntoView();
             }
         }
+
+        private void ButtonDownloadAnalysesDefinitions_Click(object? sender, RoutedEventArgs e)
+        {
+            var mainWindowViewModel = DataContext as ViewModels.MainWindow;
+            if (mainWindowViewModel == null || mainWindowViewModel.Analyses.Count == 0)
+            {
+                return;
+            }
+
+            SaveFileDialog saveFileDialog = new();
+            saveFileDialog.Filter = "JSON File (*.json)|*.json";
+            saveFileDialog.InitialDirectory = Properties.Settings.Default.lastResultOutFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var wantsSave = saveFileDialog.ShowDialog(this);
+
+            if (wantsSave == true)
+            {
+                mainWindowViewModel.SaveAnalysesDefintionsCommand.Execute(saveFileDialog.FileName);
+            }
+        }
     }
 }
