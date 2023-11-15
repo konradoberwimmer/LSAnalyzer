@@ -299,6 +299,31 @@ namespace LSAnalyzer.Services
             return true;
         }
 
+        public bool ReplaceCharacterVariables()
+        {
+            try
+            {
+                EvaluateAndLog("""
+                    for (colname in colnames(lsanalyzer_dat_raw_stored)) {
+                        if (is.character(lsanalyzer_dat_raw_stored[, colname]) &&
+                            any(is.na(as.numeric(lsanalyzer_dat_raw_stored[, colname])) != is.na(lsanalyzer_dat_raw_stored[, colname]))) {
+                            lsanalyzer_factor1 <- factor(lsanalyzer_dat_raw_stored[, colname])
+                            lsanalyzer_labels1 <- 1:length(levels(lsanalyzer_factor1))
+                            attr(lsanalyzer_labels1, 'names') <- levels(lsanalyzer_factor1)
+                            lsanalyzer_dat_raw_stored[, colname] <- as.numeric(lsanalyzer_factor1)
+                            attr(lsanalyzer_dat_raw_stored[, colname], 'value.labels') <- lsanalyzer_labels1
+                        }
+                    }
+                """, null, true);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public virtual SubsettingInformation TestSubsetting(string subsettingExpression, string? MIvar = null)
         {
             try

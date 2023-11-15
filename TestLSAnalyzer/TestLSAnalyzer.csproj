@@ -39,6 +39,9 @@
     <None Update="_testData\test_asgautr4.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="_testData\test_characters.sav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="_testData\test_create_repwgts.sav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

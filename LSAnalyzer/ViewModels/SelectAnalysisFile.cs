@@ -65,6 +65,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _replaceCharacterVectors = true;
+        public bool ReplaceCharacterVectors
+        {
+            get => _replaceCharacterVectors;
+            set
+            {
+                _replaceCharacterVectors = value;
+                NotifyPropertyChanged(nameof(ReplaceCharacterVectors));
+            }
+        }
+
         private List<DatasetType> _datasetTypes = new();
         public List<DatasetType> DatasetTypes
         {
@@ -309,6 +320,13 @@ namespace LSAnalyzer.ViewModels
             var testAnalysisConfiguration = _rservice.TestAnalysisConfiguration(analysisConfiguration);
 
             if (!testAnalysisConfiguration)
+            {
+                WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
+                IsBusy = false;
+                return;
+            }
+
+            if (ReplaceCharacterVectors && !_rservice.ReplaceCharacterVariables())
             {
                 WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
                 IsBusy = false;

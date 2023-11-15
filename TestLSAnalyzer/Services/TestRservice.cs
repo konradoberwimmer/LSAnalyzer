@@ -50,6 +50,23 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void TestReplaceCharacterVariables()
+        {
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+
+            Assert.False(rservice.ReplaceCharacterVariables());
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_characters.sav")));
+
+            var engine = REngine.GetInstance();
+
+            Assert.False(engine.Evaluate("is.numeric(lsanalyzer_dat_raw_stored$text)").AsLogical().First());
+            Assert.True(rservice.ReplaceCharacterVariables());
+            Assert.True(engine.Evaluate("is.numeric(lsanalyzer_dat_raw_stored$text)").AsLogical().First());
+        }
+
+        [Fact]
         public void TestTestSubsetting()
         {
             Rservice rservice = new(new());
