@@ -238,6 +238,18 @@ namespace LSAnalyzer.Views
             requestAnalysisLogistRegView.ShowDialog();
         }
 
+        private void MenuItemBatchAnalyze_Click(object sender, RoutedEventArgs e)
+        {
+            var mainWindowViewModel = DataContext as ViewModels.MainWindow;
+
+            ViewModels.BatchAnalyze batchAnalyzeViewModel = _serviceProvider.GetRequiredService<ViewModels.BatchAnalyze>();
+            batchAnalyzeViewModel.HasCurrentFile = mainWindowViewModel!.AnalysisConfiguration != null;
+            batchAnalyzeViewModel.CurrentModeKeep = mainWindowViewModel.AnalysisConfiguration?.ModeKeep != false;
+
+            Views.BatchAnalyze batchAnalyzeView = new(batchAnalyzeViewModel);
+            batchAnalyzeView.ShowDialog();
+        }
+
         private void ButtonDownloadXlsx_Click (object sender, RoutedEventArgs e)
         {
             if (sender is not Button button || button.DataContext is not AnalysisPresentation analysisPresentationViewModel)

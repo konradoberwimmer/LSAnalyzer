@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace LSAnalyzer.Models
@@ -12,6 +13,7 @@ namespace LSAnalyzer.Models
         public bool CalculateOverall { get; set; } = true;
         public bool CalculateBivariate { get; set; } = true;
 
+        [JsonIgnore]
         public List<GenericVector>? BivariateResult { get; set; }
 
         public AnalysisFreq(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)

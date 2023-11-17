@@ -10,6 +10,13 @@ using System.Threading.Tasks;
 
 namespace LSAnalyzer.Models
 {
+    [JsonDerivedType(typeof(AnalysisUnivar), typeDiscriminator: "univar")]
+    [JsonDerivedType(typeof(AnalysisFreq), typeDiscriminator: "freq")]
+    [JsonDerivedType(typeof(AnalysisPercentiles), typeDiscriminator: "perc")]
+    [JsonDerivedType(typeof(AnalysisCorr), typeDiscriminator: "corr")]
+    [JsonDerivedType(typeof(AnalysisMeanDiff), typeDiscriminator: "meandiff")]
+    [JsonDerivedType(typeof(AnalysisLinreg), typeDiscriminator: "linreg")]
+    [JsonDerivedType(typeof(AnalysisLogistReg), typeDiscriminator: "logistreg")]
     public abstract class Analysis
     {
         public abstract string AnalysisName { get; }

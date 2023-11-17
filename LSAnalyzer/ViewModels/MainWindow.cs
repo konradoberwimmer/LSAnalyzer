@@ -163,6 +163,15 @@ namespace LSAnalyzer.ViewModels
 
                 StartAnalysisCommand.Execute(analysisPresentation);
             });
+
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (r, m) =>
+            {
+                AnalysisPresentation analysisPresentation = new(m.Analysis);
+
+                Analyses.Add(analysisPresentation);
+
+                analysisPresentation.SetAnalysisResult(m.Analysis.Result);
+            });
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -168,18 +168,18 @@
                 <MenuItem x:Name="menuItemAnalysisSelectFile" Header="Select File ..." Click="MenuItemAnalysisSelectFile_Click"/>
                 <MenuItem x:Name="menuItemAnalysisSubsetting" Header="Subsetting ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisSubsetting_Click"/>
             </MenuItem>
-            <MenuItem Header="_Analysis" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}">
-                <MenuItem x:Name="menuItemAnalysisUnivar" Header="Univariate (means and SD) ..." Click="MenuItemAnalysisUnivar_Click"/>
-                <MenuItem x:Name="menuItemAnalysisFrequencies" Header="Frequencies ..." Click="MenuItemAnalysisFreq_Click"/>
-                <MenuItem x:Name="menuItemAnalysisPercentiles" Header="Percentiles ..." Click="MenuItemAnalysisPercentiles_Click"/>
+            <MenuItem Header="_Analysis">
+                <MenuItem x:Name="menuItemAnalysisUnivar" Header="Univariate (means and SD) ..." Click="MenuItemAnalysisUnivar_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+                <MenuItem x:Name="menuItemAnalysisFrequencies" Header="Frequencies ..." Click="MenuItemAnalysisFreq_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+                <MenuItem x:Name="menuItemAnalysisPercentiles" Header="Percentiles ..." Click="MenuItemAnalysisPercentiles_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <Separator/>
-                <MenuItem x:Name="menuItemAnalysisMeanDiff" Header="Difference in mean ..." Click="MenuItemAnalysisMeanDiff_Click"/>
-                <MenuItem x:Name="menuItemAnalysisCorrelations" Header="Correlations ..." Click="MenuItemAnalysisCorrelations_Click"/>
+                <MenuItem x:Name="menuItemAnalysisMeanDiff" Header="Difference in mean ..." Click="MenuItemAnalysisMeanDiff_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+                <MenuItem x:Name="menuItemAnalysisCorrelations" Header="Correlations ..." Click="MenuItemAnalysisCorrelations_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <Separator/>
-                <MenuItem x:Name="menuItemAnalysisRegression" Header="Linear Regression ..." Click="MenuItemAnalysisLinreg_Click"/>
-                <MenuItem x:Name="menuItemAnalysisLogistReg" Header="Logistic Regression ..." Click="MenuItemAnalysisLogistReg_Click"/>
-                <!--<MenuItem x:Name="menuItemAnalysisMultilevel" Header="Multilevel Regression ..."/>-->
-                <!--<MenuItem x:Name="menuItemAnalysisPathmodel" Header="Pathmodel ..."/>-->
+                <MenuItem x:Name="menuItemAnalysisRegression" Header="Linear Regression ..." Click="MenuItemAnalysisLinreg_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+                <MenuItem x:Name="menuItemAnalysisLogistReg" Header="Logistic Regression ..." Click="MenuItemAnalysisLogistReg_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+                <Separator/>
+                <MenuItem x:Name="menuItemBatchAnalyze" Header="Batch analyze ..." Click="MenuItemBatchAnalyze_Click"/>
             </MenuItem>
             <MenuItem Header="_Config">
                 <MenuItem x:Name="menuItemDatasetTypes" Header="Dataset-Types ..." Click="MenuItemDatasetTypes_Click" />

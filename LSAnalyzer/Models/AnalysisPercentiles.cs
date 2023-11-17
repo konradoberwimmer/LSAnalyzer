@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace LSAnalyzer.Models
@@ -20,6 +21,7 @@ namespace LSAnalyzer.Models
 
         public override string AnalysisName => "Percentiles";
 
+        [JsonIgnore]
         public override string ShortInfo
         {
             get =>
@@ -30,6 +32,7 @@ namespace LSAnalyzer.Models
                 ")";
         }
 
+        [JsonIgnore]
         public string PercentileTypeInfo
         {
             get => !CalculateSE ?
