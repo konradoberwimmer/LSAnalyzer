@@ -55,8 +55,11 @@ namespace LSAnalyzer.ViewModels
             get => _useCurrentFile;
             set
             {
-                _useCurrentFile = value;
-                NotifyPropertyChanged(nameof(UseCurrentFile));
+                if (_useCurrentFile != value)
+                {
+                    _useCurrentFile = value;
+                    NotifyPropertyChanged(nameof(UseCurrentFile));
+                }
             }
         }
 
@@ -97,8 +100,11 @@ namespace LSAnalyzer.ViewModels
 
         [ExcludeFromCodeCoverage]
         public BatchAnalyze() 
-        { 
+        {
             // design-time only, parameterless constructor
+            HasCurrentFile = false;
+            UseCurrentFile = false;
+            CurrentModeKeep = true;
         }
 
         public BatchAnalyze(Services.BatchAnalyze batchAnalyzeService)
