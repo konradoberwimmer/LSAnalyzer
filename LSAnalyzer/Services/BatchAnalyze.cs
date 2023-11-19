@@ -27,6 +27,12 @@ namespace LSAnalyzer.Services
             _useCurrentFile = useCurrentFile;
             _currentModeKeep = currentModeKeep;
 
+
+            if (analyses.Count > 0 && !_useCurrentFile)
+            {
+                WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedStoredRawDataFileMessage());
+            }
+
             BackgroundWorker worker = new();
             worker.WorkerReportsProgress = false;
             worker.WorkerSupportsCancellation = true;
@@ -164,5 +170,10 @@ namespace LSAnalyzer.Services
         public int Id { get; set; }
         public bool Success { get; set; }
         public string Message { get; set; } = String.Empty;
+    }
+
+    public class BatchAnalyzeChangedStoredRawDataFileMessage
+    {
+
     }
 }

@@ -164,6 +164,11 @@ namespace LSAnalyzer.ViewModels
                 StartAnalysisCommand.Execute(analysisPresentation);
             });
 
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeChangedStoredRawDataFileMessage>(this, (r, m) =>
+            {
+                AnalysisConfiguration = null;
+            });
+
             WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (r, m) =>
             {
                 AnalysisPresentation analysisPresentation = new(m.Analysis);

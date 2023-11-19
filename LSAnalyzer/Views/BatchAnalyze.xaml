@@ -7,6 +7,8 @@
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels"
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         mc:Ignorable="d"
+        x:Name="windowBatchAnalyze"
+        Closing="Window_Closing"
         Title="Batch analyze" Height="auto" MinHeight="450" Width="auto" MinWidth="665" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight">
     <Window.DataContext>
         <ViewModels:BatchAnalyze/>
@@ -14,6 +16,9 @@
     <Window.Resources>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
     </Window.Resources>
+    <Window.IsEnabled>
+        <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
+    </Window.IsEnabled>
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -41,6 +46,6 @@
 
             </DataGrid>
         </Border>
-        <Button Grid.Row="4" Grid.Column="2" Content="OK" HorizontalAlignment="Left" Margin="10,10,0,0" Height="22" Width="80" Command="{Binding TransferResultsCommand}" IsEnabled="{Binding FinishedAllCalculations}"/>
+        <Button Grid.Row="4" Grid.Column="2" Content="OK" HorizontalAlignment="Left" Margin="10,10,0,0" Height="22" Width="80" Command="{Binding TransferResultsCommand}" CommandParameter="{Binding ElementName=windowBatchAnalyze}" IsEnabled="{Binding FinishedAllCalculations}"/>
     </Grid>
 </Window>

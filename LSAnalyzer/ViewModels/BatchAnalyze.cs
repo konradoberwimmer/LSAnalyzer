@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using GalaSoft.MvvmLight.Threading;
+using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using System;
@@ -87,6 +88,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _isBusy = false;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set
+            {
+                _isBusy = value;
+                NotifyPropertyChanged(nameof(IsBusy));
+            }
+        }
+
         private bool _finishedAllCalculations = false;
         public bool FinishedAllCalculations
         {
@@ -124,6 +136,7 @@ namespace LSAnalyzer.ViewModels
 
                 if (m.Id == _analysesDictionary?.Keys.Last())
                 {
+                    IsBusy = false;
                     FinishedAllCalculations = true;
                 }
             });
@@ -187,21 +200,23 @@ namespace LSAnalyzer.ViewModels
 
             AnalysesTable = analysesTable;
 
+            IsBusy = true;
+
             _batchAnalyzeService.RunBatch(_analysesDictionary, UseCurrentFile, CurrentModeKeep);
         }
 
-        private RelayCommand<object?>? _transferResultsCommand;
+        private RelayCommand<ICloseable?>? _transferResultsCommand;
         public ICommand TransferResultsCommand
         {
             get
             {
                 if (_transferResultsCommand == null)
-                    _transferResultsCommand = new RelayCommand<object?>(this.TransferResults);
+                    _transferResultsCommand = new RelayCommand<ICloseable?>(this.TransferResults);
                 return _transferResultsCommand;
             }
         }
 
-        private void TransferResults(object? dummy)
+        private void TransferResults(ICloseable? window)
         {
             if (AnalysesTable == null || _analysesDictionary == null)
             {
@@ -216,6 +231,8 @@ namespace LSAnalyzer.ViewModels
                     WeakReferenceMessenger.Default.Send(new BatchAnalyzeAnalysisReadyMessage(_analysesDictionary[(int)dataRow["Number"]]));
                 }
             }
+
+            window?.Close();
         }
     }
 

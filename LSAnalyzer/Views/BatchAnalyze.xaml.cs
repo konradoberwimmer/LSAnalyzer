@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using LSAnalyzer.Helper;
 using LSAnalyzer.ViewModels;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -20,7 +22,7 @@ namespace LSAnalyzer.Views
     /// <summary>
     /// Interaktionslogik für BatchAnalyze.xaml
     /// </summary>
-    public partial class BatchAnalyze : Window
+    public partial class BatchAnalyze : Window, ICloseable
     {
         public BatchAnalyze(ViewModels.BatchAnalyze batchAnalyzeViewModel)
         {
@@ -47,6 +49,16 @@ namespace LSAnalyzer.Views
                 Properties.Settings.Default.Save();
                 var batchAnalyzeViewModel = DataContext as ViewModels.BatchAnalyze;
                 batchAnalyzeViewModel!.FileName = openFileDialog.FileName;
+            }
+        }
+
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            var batchAnalyzeViewModel = DataContext as ViewModels.BatchAnalyze;
+
+            if (batchAnalyzeViewModel?.IsBusy == true)
+            {
+                e.Cancel = true;
             }
         }
     }

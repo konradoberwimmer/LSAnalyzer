@@ -244,9 +244,9 @@ namespace LSAnalyzer.Views
 
             ViewModels.BatchAnalyze batchAnalyzeViewModel = _serviceProvider.GetRequiredService<ViewModels.BatchAnalyze>();
             batchAnalyzeViewModel.HasCurrentFile = mainWindowViewModel!.AnalysisConfiguration != null;
-            if (!batchAnalyzeViewModel.HasCurrentFile)
+            if (batchAnalyzeViewModel.HasCurrentFile)
             {
-                batchAnalyzeViewModel.UseCurrentFile = false;
+                batchAnalyzeViewModel.UseCurrentFile = true;
             }
             batchAnalyzeViewModel.CurrentModeKeep = mainWindowViewModel.AnalysisConfiguration?.ModeKeep != false;
 
