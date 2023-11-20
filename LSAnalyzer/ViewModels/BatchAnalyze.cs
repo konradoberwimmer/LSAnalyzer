@@ -130,7 +130,7 @@ namespace LSAnalyzer.ViewModels
                     var row = AnalysesTable.Select("Number = " + m.Id).FirstOrDefault();
                     if (row != null)
                     {
-                        row["Success"] = m.Success ? "OK" : "X";
+                        row["Success"] = m.Success;
                     }
                 }
 
@@ -190,12 +190,13 @@ namespace LSAnalyzer.ViewModels
 
             DataTable analysesTable = new();
             analysesTable.Columns.Add("Number", typeof(int));
-            analysesTable.Columns.Add("Success", typeof(string));
+            var successColumn = analysesTable.Columns.Add("Success", typeof(bool));
+            successColumn.AllowDBNull = true;
             analysesTable.Columns.Add("Info", typeof(string));
             
             foreach (var analysis in _analysesDictionary)
             {
-                analysesTable.Rows.Add(new object?[] { analysis.Key, String.Empty, analysis.Value.ShortInfo });
+                analysesTable.Rows.Add(new object?[] { analysis.Key, DBNull.Value, analysis.Value.ShortInfo });
             }
 
             AnalysesTable = analysesTable;
@@ -226,7 +227,7 @@ namespace LSAnalyzer.ViewModels
             foreach (var row in AnalysesTable.Rows)
             {
                 var dataRow = row as DataRow;
-                if ((string)dataRow!["Success"] == "OK" && _analysesDictionary.ContainsKey((int)dataRow["Number"]))
+                if ((bool)dataRow!["Success"] && _analysesDictionary.ContainsKey((int)dataRow["Number"]))
                 {
                     WeakReferenceMessenger.Default.Send(new BatchAnalyzeAnalysisReadyMessage(_analysesDictionary[(int)dataRow["Number"]]));
                 }

@@ -95,7 +95,7 @@ namespace TestLSAnalyzer.ViewModels
             foreach (var row in batchAnalyzeViewModel.AnalysesTable.Rows)
             {
                 var dataRow = row as DataRow;
-                Assert.Equal("OK", (string)(dataRow!["Success"]));
+                Assert.True((bool)(dataRow!["Success"]));
             }
         }
 
