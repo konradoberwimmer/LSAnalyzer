@@ -45,7 +45,7 @@ namespace LSAnalyzer.Views
 
             if (result == true)
             {
-                Properties.Settings.Default.lastDataFileLocation = Path.GetDirectoryName(openFileDialog.FileName);
+                Properties.Settings.Default.lastResultOutFileLocation = Path.GetDirectoryName(openFileDialog.FileName);
                 Properties.Settings.Default.Save();
                 var batchAnalyzeViewModel = DataContext as ViewModels.BatchAnalyze;
                 batchAnalyzeViewModel!.FileName = openFileDialog.FileName;
