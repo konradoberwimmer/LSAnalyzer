@@ -214,9 +214,12 @@ namespace LSAnalyzer.ViewModels
             }
 
             List<DatasetType> possibleDatasetTypes = new();
+            int maxPriority = 0;
 
             foreach (var datasetType in _datasetTypes)
             {
+                int priority = 0;
+                    
                 bool foundAllWeightVariables = true;
                 var weightVariables = datasetType.Weight.Split(";");
                 foreach (var weightVariable in weightVariables)
@@ -234,7 +237,7 @@ namespace LSAnalyzer.ViewModels
                 {
                     string[] pvVarsSplit = datasetType.PVvars.Split(';');
 
-                    bool foundAllPvVars = true;
+                    bool foundAllNecessaryPvVars = true;
                     foreach (var pvVar in pvVarsSplit)
                     {
                         if (Regex.IsMatch(pvVar, "^\\(.*\\)$"))
@@ -244,19 +247,36 @@ namespace LSAnalyzer.ViewModels
 
                         if (variables.Where(var => Regex.IsMatch(var.Name, pvVar)).Count() != datasetType.NMI)
                         {
-                            foundAllPvVars = false;
+                            foundAllNecessaryPvVars = false;
                             break;
                         }
                     }
 
-                    if (!foundAllPvVars) continue;
+                    if (!foundAllNecessaryPvVars) continue;
                 }
 
-                if (!String.IsNullOrWhiteSpace(datasetType.RepWgts) && variables.Where(var => Regex.IsMatch(var.Name, datasetType.RepWgts)).Count() != datasetType.Nrep) continue;
+                if (!String.IsNullOrWhiteSpace(datasetType.RepWgts))
+                {
+                    if (variables.Where(var => Regex.IsMatch(var.Name, datasetType.RepWgts)).Count() != datasetType.Nrep)
+                    {
+                        continue;
+                    } else
+                    {
+                        priority++;
+                    }
+                }
+
                 if (!String.IsNullOrWhiteSpace(datasetType.JKzone) && variables.Where(var => var.Name == datasetType.JKzone).Count() == 0) continue;
                 if (!String.IsNullOrWhiteSpace(datasetType.JKrep) && variables.Where(var => var.Name == datasetType.JKrep).Count() == 0) continue;
 
-                possibleDatasetTypes.Add(datasetType);
+                if (priority == maxPriority)
+                {
+                    possibleDatasetTypes.Add(datasetType);
+                } else if (priority > maxPriority)
+                {
+                    possibleDatasetTypes = new() { datasetType };
+                    maxPriority = priority;
+                }
             }
 
             if (possibleDatasetTypes.Count == 0)
@@ -265,7 +285,7 @@ namespace LSAnalyzer.ViewModels
             }
             else if (possibleDatasetTypes.Count == 1)
             {
-                SelectedDatasetType = possibleDatasetTypes.FirstOrDefault();
+                SelectedDatasetType = possibleDatasetTypes.First();
             }
             else
             {

@@ -62,7 +62,7 @@ namespace TestLSAnalyzer.ViewModels
 
             selectAnalysisFileViewModel.DatasetTypes.Add(new()
             {
-                Id = 999991,
+                Id = 999992,
                 Name = "Test with NMI 10 and NREP 5 (duplicate)",
                 Weight = "wgt",
                 NMI = 10,
@@ -80,7 +80,7 @@ namespace TestLSAnalyzer.ViewModels
             selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_pv10_nrep5.sav");
             selectAnalysisFileViewModel.DatasetTypes.Add(new()
             {
-                Id = 999991,
+                Id = 999993,
                 Name = "Test with PV 10 and NREP 5",
                 Weight = "wgt",
                 NMI = 10,
@@ -95,6 +95,23 @@ namespace TestLSAnalyzer.ViewModels
 
             Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType);
             Assert.Equal(selectAnalysisFileViewModel.DatasetTypes.Last(), selectAnalysisFileViewModel.SelectedDatasetType);
+
+            selectAnalysisFileViewModel.DatasetTypes.Add(new()
+            {
+                Id = 999994,
+                Name = "Test with PV 10 and NREP 5",
+                Weight = "wgt",
+                NMI = 10,
+                PVvars = "x;y[0-9]+",
+                Nrep = 1,
+            });
+
+            selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
+            await Task.Delay(100);
+
+            Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType);
+            Assert.NotEqual(selectAnalysisFileViewModel.DatasetTypes.Last(), selectAnalysisFileViewModel.SelectedDatasetType);
+            Assert.Equal(999993, selectAnalysisFileViewModel.SelectedDatasetType.Id);
         }
 
         [Fact]
