@@ -162,7 +162,14 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Button Grid.Column="0" x:Name="buttonExportDatasetType" Content="Export ..." IsEnabled="{Binding SelectedIndex, ElementName=comboBoxSelectDatasetType, Converter={StaticResource IndexToBoolConverter}}" HorizontalAlignment="Left" Height="22" Width="78" Click="ButtonExportDatasetType_Click"/>
-            <Button Grid.Column="1" Content="Save" HorizontalAlignment="Right" VerticalAlignment="Top" Height="22" Width="78" Command="{Binding SaveSelectedDatasetTypeCommand, Mode=OneWay}" IsEnabled="{Binding SelectedIndex, ElementName=comboBoxSelectDatasetType, Converter={StaticResource IndexToBoolConverter}}"/>
+            <Button Grid.Column="1" Content="Save" HorizontalAlignment="Right" VerticalAlignment="Top" Height="22" Width="78" Command="{Binding SaveSelectedDatasetTypeCommand, Mode=OneWay}">
+                <Button.IsEnabled>
+                    <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                        <Binding Path="SelectedIndex" ElementName="comboBoxSelectDatasetType" Converter="{StaticResource IndexToBoolConverter}"/>
+                        <Binding Path="SelectedDatasetType.IsChanged" FallbackValue="false"/>
+                    </MultiBinding>
+                </Button.IsEnabled>
+            </Button>
         </Grid>
     </Grid>
 </Window>

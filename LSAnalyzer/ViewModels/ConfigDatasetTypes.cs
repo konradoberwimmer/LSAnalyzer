@@ -111,7 +111,6 @@ namespace LSAnalyzer.ViewModels
             }
 
             DatasetType newDatasetType = new() { Id = maxDatasetTypeId + 1, Name = "New dataset type", JKreverse = false };
-            newDatasetType.AcceptChanges();
 
             DatasetTypes.Add(newDatasetType);
             SelectedDatasetType = newDatasetType;

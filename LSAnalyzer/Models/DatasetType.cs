@@ -1,43 +1,96 @@
-﻿using LSAnalyzer.Helper;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using LSAnalyzer.Helper;
 using LSAnalyzer.Models.ValidationAttributes;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace LSAnalyzer.Models
 {
-    public class DatasetType : ObservableValidatorExtended, IChangeTracking
+    public partial class DatasetType : ObservableValidatorExtended, IChangeTracking
     {
         public int Id { get; set; }
         [MinLength(3, ErrorMessage = "Name must have length of at least three characters!")]
-        public string Name { get; set; }
-        public string? Description { get; set; }
+        [ObservableProperty] private string _name;
+        partial void OnNameChanged(string value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
+        [ObservableProperty] private string? _description;
+        partial void OnDescriptionChanged(string? value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [Required(ErrorMessage = "Weight variable is required! If there is none, add a constant of one to the dataset.")]
-        public string Weight { get; set; }
+        [ObservableProperty] private string _weight;
+        partial void OnWeightChanged(string value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [Required(ErrorMessage = "Number of multiple imputations / plausible values is required!")]
         [Range(1, int.MaxValue, ErrorMessage = "Number of multiple imputations / plausible values has to be at least 1!")]
-        public int? NMI { get; set; }
+        [ObservableProperty] private int? _NMI;
+        partial void OnNMIChanged(int? value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [RequiredInsteadOf(nameof(PVvars), "Either indicator variable for multiple imputations or plausible value variables are requried! If there is no MI/PV involved, add a constant of one to the dataset.")]
-        public string? MIvar { get; set; }
-        public string? IDvar { get; set; }
+        [ObservableProperty] private string? _MIvar;
+        partial void OnMIvarChanged(string? value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
+        [ObservableProperty] private string? _IDvar;
+        partial void OnIDvarChanged(string? value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [MutuallyExclusive(nameof(MIvar), "Cannot specify both indicator variable for multiple imputations and plausible value variables!")]
-        public string? PVvars { get; set; }
+        [ObservableProperty] private string? _PVvars;
+        partial void OnPVvarsChanged(string? value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [Required(ErrorMessage = "Number of replications is required!")]
         [Range(1, int.MaxValue, ErrorMessage = "Number of replications has to be at least 1!")]
-        public int? Nrep { get; set; }
+        [ObservableProperty] private int? _Nrep;
+        partial void OnNrepChanged(int? value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [ValidRegex("Invalid regex pattern!")]
-        public string? RepWgts { get; set; }
+        [ObservableProperty] private string? _repWgts;
+        partial void OnRepWgtsChanged(string? value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [Range(0, double.MaxValue, ErrorMessage = "Variance adjustment factor must not be negative!")]
-        public double? FayFac { get; set; }
+        [ObservableProperty] private double? _fayFac;
+        partial void OnFayFacChanged(double? value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [MutuallyExclusive(nameof(RepWgts), "Cannot specify both replicate weight variables and jackknife zone variables!")]
-        public string? JKzone { get; set; }
+        [ObservableProperty] private string? _JKzone;
+        partial void OnJKzoneChanged(string? value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [MutuallyExclusive(nameof(RepWgts), "Cannot specify both replicate weight variables and jackknife zone variables!")]
-        public string? JKrep { get; set; }
-        public bool JKreverse { get; set; }
-
+        [ObservableProperty] private string? _JKrep;
+        partial void OnJKrepChanged(string? value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
+        [ObservableProperty] private bool _JKreverse;
+        partial void OnJKreverseChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
 
         private DatasetType? _savedState;
         [NotMapped]
@@ -48,7 +101,7 @@ namespace LSAnalyzer.Models
             {
                 if (_savedState == null)
                 {
-                    return false;
+                    return true;
                 }
 
                 return !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, new string[] { "Errors", "IsChanged" });
@@ -83,6 +136,7 @@ namespace LSAnalyzer.Models
         public void AcceptChanges()
         {
             _savedState = new DatasetType(this);
+            OnPropertyChanged(nameof(IsChanged));
         }
 
         public bool HasSystemVariable(string name)

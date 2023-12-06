@@ -1,8 +1,6 @@
 ﻿# ToDo-List
 Test and debug!
 
-* Fix and improve GUI for dataset type config
-
 # Would-be-nice-but-hard-to-implement
 * implement variable display name to hide away regex in PVs
 
