@@ -50,7 +50,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.NotNull(datasetTypesViewModel.SelectedDatasetType);
             Assert.Equal("New dataset type", datasetTypesViewModel.SelectedDatasetType.Name);
             Assert.Equal(maxId + 1, datasetTypesViewModel.SelectedDatasetType.Id);
-            Assert.DoesNotContain("New dataset type", datasetTypesViewModel.UnsavedDatasetTypeNames);
+            Assert.Contains("New dataset type", datasetTypesViewModel.UnsavedDatasetTypeNames);
 
             datasetTypesViewModel.SelectedDatasetType.Weight = "wgt";
             Assert.Contains("New dataset type", datasetTypesViewModel.UnsavedDatasetTypeNames);

@@ -16,7 +16,7 @@ namespace LSAnalyzer.Services
         private Logging _logger;
         private string? _rPath;
         private REngine? _engine;
-        private readonly string[] _rPackages = new string[] { "BIFIEsurvey", "foreign" };
+        private readonly string[] _rPackages = new string[] { "BIFIEsurvey", "foreign", "openxlsx" };
 
         [ExcludeFromCodeCoverage]
         public Rservice()

@@ -33,7 +33,7 @@ namespace TestLSAnalyzer.Models
                 RepWgts = "W_STURWT",
             };
 
-            Assert.False(datasetType.IsChanged);
+            Assert.True(datasetType.IsChanged);
 
             datasetType.AcceptChanges();
             Assert.False(datasetType.IsChanged);
