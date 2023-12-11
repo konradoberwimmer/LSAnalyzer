@@ -55,6 +55,29 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _hasVariableLabels = false;
+        public bool HasVariableLabels
+        {
+            get => _hasVariableLabels;
+            set 
+            {
+                _hasVariableLabels = value;
+                NotifyPropertyChanged(nameof(HasVariableLabels));
+            }
+        }
+
+        private bool _showVariableLabels = true;
+        public bool ShowVariableLabels
+        {
+            get => _showVariableLabels;
+            set
+            {
+                _showVariableLabels = value;
+                NotifyPropertyChanged(nameof(ShowVariableLabels));
+                ResetDataView();
+            }
+        }
+
         private bool _hasTableAverage = false;
         public bool HasTableAverage
         {
@@ -266,7 +289,7 @@ namespace LSAnalyzer.ViewModels
             DataTable table = new(analysisUnivar.AnalysisName);
             Dictionary<string, DataColumn> columns = new();
 
-            columns.Add("var", new DataColumn("variable", typeof(string)));
+            AddVariableLabelColumn(analysisUnivar, columns, "var", "variable");
 
             for (int cntGroupyBy = 0; cntGroupyBy < analysisUnivar.GroupBy.Count; cntGroupyBy++)
             {
@@ -329,6 +352,15 @@ namespace LSAnalyzer.ViewModels
                             {
                                 cellValues.Add(null);
                             }
+                        } else if (Regex.IsMatch(column, "^\\$varlabel_"))
+                        {
+                            if (dataFrameRow["var"] is string varName && analysisUnivar.VariableLabels.ContainsKey(varName))
+                            {
+                                cellValues.Add(analysisUnivar.VariableLabels[varName]);
+                            } else
+                            {
+                                cellValues.Add(null);
+                            }
                         } else if (dataFrame.ColumnNames.Contains(column))
                         {
                             cellValues.Add(dataFrameRow[column]);
@@ -378,7 +410,7 @@ namespace LSAnalyzer.ViewModels
             DataTable table = new(analysisMeanDiff.AnalysisName);
             Dictionary<string, DataColumn> columns = new();
 
-            columns.Add("var", new DataColumn("variable", typeof(string)));
+            AddVariableLabelColumn(analysisMeanDiff, columns, "var", "variable");
 
             if (analysisMeanDiff.CalculateSeparately)
             {
@@ -487,8 +519,17 @@ namespace LSAnalyzer.ViewModels
                             {
                                 cellValues.Add(null);
                             }
-                        }
-                        else if (dataFrame.ColumnNames.Contains(column))
+                        } else if (Regex.IsMatch(column, "^\\$varlabel_"))
+                        {
+                            if (dataFrameRow["var"] is string varName && analysisMeanDiff.VariableLabels.ContainsKey(varName))
+                            {
+                                cellValues.Add(analysisMeanDiff.VariableLabels[varName]);
+                            }
+                            else
+                            {
+                                cellValues.Add(null);
+                            }
+                        } else if (dataFrame.ColumnNames.Contains(column))
                         {
                             cellValues.Add(dataFrameRow[column]);
                         }
@@ -516,7 +557,7 @@ namespace LSAnalyzer.ViewModels
             DataTable table = new("Explained variance");
             Dictionary<string, DataColumn> columns = new();
 
-            columns.Add("var", new DataColumn("variable", typeof(string)));
+            AddVariableLabelColumn(analysisMeanDiff, columns, "var", "variable");
 
             if (analysisMeanDiff.CalculateSeparately)
             {
@@ -544,7 +585,17 @@ namespace LSAnalyzer.ViewModels
                     List<object?> cellValues = new();
                     foreach (var column in columns.Keys)
                     {
-                        if (dataFrame.ColumnNames.Contains(column))
+                        if (Regex.IsMatch(column, "^\\$varlabel_"))
+                        {
+                            if (dataFrameRow["var"] is string varName && analysisMeanDiff.VariableLabels.ContainsKey(varName))
+                            {
+                                cellValues.Add(analysisMeanDiff.VariableLabels[varName]);
+                            }
+                            else
+                            {
+                                cellValues.Add(null);
+                            }
+                        } else if (dataFrame.ColumnNames.Contains(column))
                         {
                             cellValues.Add(dataFrameRow[column]);
                         }
@@ -588,7 +639,7 @@ namespace LSAnalyzer.ViewModels
 
             Dictionary<string, DataColumn> columns = new();
 
-            columns.Add("var", new DataColumn("variable", typeof(string)));
+            AddVariableLabelColumn(analysisFreq, columns, "var", "variable");
 
             for (int cntGroupyBy = 0; cntGroupyBy < analysisFreq.GroupBy.Count; cntGroupyBy++)
             {
@@ -678,6 +729,17 @@ namespace LSAnalyzer.ViewModels
                                         cellValues.Add(null);
                                     }
                                 }
+                                else if (Regex.IsMatch(column, "^\\$varlabel_"))
+                                {
+                                    if (dataFrameRow["var"] is string varName && analysisFreq.VariableLabels.ContainsKey(varName))
+                                    {
+                                        cellValues.Add(analysisFreq.VariableLabels[varName]);
+                                    }
+                                    else
+                                    {
+                                        cellValues.Add(null);
+                                    }
+                                }
                                 else if (dataFrame.ColumnNames.Contains(column))
                                 {
                                     cellValues.Add(dataFrameRow[column]);
@@ -729,8 +791,9 @@ namespace LSAnalyzer.ViewModels
 
             Dictionary<string, DataColumn> columns = new();
 
-            columns.Add("$varname_X", new DataColumn("X", typeof(string)));
-            columns.Add("$varname_Y", new DataColumn("Y", typeof(string)));
+            AddVariableLabelColumn(analysisFreq, columns, "$varname_X", "X");
+            AddVariableLabelColumn(analysisFreq, columns, "$varname_Y", "Y");
+            
             columns.Add("parm", new DataColumn("coefficient", typeof(string)));
             columns.Add("est", new DataColumn("estimate", typeof(double)));
             columns.Add("SE", new DataColumn("estimate - standard error", typeof(double)));
@@ -760,6 +823,18 @@ namespace LSAnalyzer.ViewModels
                         else if (column == "$varname_Y")
                         {
                             cellValues.Add(dataFrameProbs["var2"].AsCharacter().First());
+                        }
+                        else if (Regex.IsMatch(column, "^\\$varlabel_"))
+                        {
+                            string varVariable = column == "$varlabel_$varname_X" ? "var1" : "var2";
+                            if (dataFrameProbs[varVariable].AsCharacter().First() is string varName && analysisFreq.VariableLabels.ContainsKey(varName))
+                            {
+                                cellValues.Add(analysisFreq.VariableLabels[varName]);
+                            }
+                            else
+                            {
+                                cellValues.Add(null);
+                            }
                         }
                         else if (dataFrame.ColumnNames.Contains(column))
                         {
@@ -793,7 +868,7 @@ namespace LSAnalyzer.ViewModels
 
             Dictionary<string, DataColumn> columns = new();
 
-            columns.Add("var", new DataColumn("variable", typeof(string)));
+            AddVariableLabelColumn(analysisPercentiles, columns, "var", "variable");
 
             for (int cntGroupyBy = 0; cntGroupyBy < analysisPercentiles.GroupBy.Count; cntGroupyBy++)
             {
@@ -877,6 +952,17 @@ namespace LSAnalyzer.ViewModels
                                         cellValues.Add(null);
                                     }
                                 }
+                                else if (Regex.IsMatch(column, "^\\$varlabel_"))
+                                {
+                                    if (dataFrameRow["var"] is string varName && analysisPercentiles.VariableLabels.ContainsKey(varName))
+                                    {
+                                        cellValues.Add(analysisPercentiles.VariableLabels[varName]);
+                                    }
+                                    else
+                                    {
+                                        cellValues.Add(null);
+                                    }
+                                }
                                 else if (dataFrame.ColumnNames.Contains(column))
                                 {
                                     cellValues.Add(dataFrameRow[column]);
@@ -922,8 +1008,8 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            columns.Add("var1", new DataColumn("variable A", typeof(string)));
-            columns.Add("var2", new DataColumn("variable B", typeof(string)));
+            AddVariableLabelColumn(analysisCorr, columns, "var1", "variable A");
+            AddVariableLabelColumn(analysisCorr, columns, "var2", "variable B");
 
             columns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
             columns.Add("Nweight", new DataColumn("N - weighted", typeof(double)));
@@ -976,6 +1062,18 @@ namespace LSAnalyzer.ViewModels
                                 cellValues.Add(null);
                             }
                         }
+                        else if (Regex.IsMatch(column, "^\\$varlabel_"))
+                        {
+                            string varVariable = column == "$varlabel_var1" ? "var1" : "var2";
+                            if (dataFrameRow[varVariable] is string varName && analysisCorr.VariableLabels.ContainsKey(varName))
+                            {
+                                cellValues.Add(analysisCorr.VariableLabels[varName]);
+                            }
+                            else
+                            {
+                                cellValues.Add(null);
+                            }
+                        }
                         else if (dataFrame.ColumnNames.Contains(column))
                         {
                             cellValues.Add(dataFrameRow[column]);
@@ -1016,8 +1114,8 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            columns.Add("var1", new DataColumn("variable A", typeof(string)));
-            columns.Add("var2", new DataColumn("variable B", typeof(string)));
+            AddVariableLabelColumn(analysisCorr, columns, "var1", "variable A");
+            AddVariableLabelColumn(analysisCorr, columns, "var2", "variable B");
 
             columns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
             columns.Add("Nweight", new DataColumn("N - weighted", typeof(double)));
@@ -1062,6 +1160,18 @@ namespace LSAnalyzer.ViewModels
                             {
                                 var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
                                 cellValues.Add(valueLabel);
+                            }
+                            else
+                            {
+                                cellValues.Add(null);
+                            }
+                        }
+                        else if (Regex.IsMatch(column, "^\\$varlabel_"))
+                        {
+                            string varVariable = column == "$varlabel_var1" ? "var1" : "var2";
+                            if (dataFrameRow[varVariable] is string varName && analysisCorr.VariableLabels.ContainsKey(varName))
+                            {
+                                cellValues.Add(analysisCorr.VariableLabels[varName]);
                             }
                             else
                             {
@@ -1114,7 +1224,7 @@ namespace LSAnalyzer.ViewModels
             columns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
             columns.Add("Nweight", new DataColumn("N - weighted", typeof(double)));
             columns.Add("parameter", new DataColumn("coefficient", typeof(string)));
-            columns.Add("var", new DataColumn("variable", typeof(string)));
+            AddVariableLabelColumn(analysisRegression, columns, "var", "variable");
 
             if (analysisRegression.Sequence == AnalysisRegression.RegressionSequence.AllIn)
             {
@@ -1232,6 +1342,17 @@ namespace LSAnalyzer.ViewModels
                                     cellValues.Add(null);
                                 }
                             }
+                            else if (Regex.IsMatch(column, "^\\$varlabel_"))
+                            {
+                                if (dataFrameRow["var"] is string varName && analysisRegression.VariableLabels.ContainsKey(varName))
+                                {
+                                    cellValues.Add(analysisRegression.VariableLabels[varName]);
+                                }
+                                else
+                                {
+                                    cellValues.Add(null);
+                                }
+                            }
                             else if (Regex.IsMatch(column, "^\\$exp_") && (string)dataFrameRow["parameter"] == "b")
                             {
                                 cellValues.Add(Math.Exp((double)dataFrameRow["est"]));
@@ -1274,6 +1395,16 @@ namespace LSAnalyzer.ViewModels
             }
 
             return table;
+        }
+
+        private void AddVariableLabelColumn(Analysis analysis, Dictionary<string, DataColumn> columns, string resultColumnName, string tableColumnName)
+        {
+            columns.Add(resultColumnName, new DataColumn(tableColumnName, typeof(string)));
+            if (analysis.VariableLabels.Count > 0)
+            {
+                columns.Add("$varlabel_" + resultColumnName, new DataColumn(tableColumnName + " (label)", typeof(string)));
+                HasVariableLabels = true;
+            }
         }
 
         private Dictionary<string, string> GetGroupColumns(DataFrame dataFrame)
@@ -1339,6 +1470,10 @@ namespace LSAnalyzer.ViewModels
             {
                 dataView.Table!.Rows.RemoveAt(dataView.Table!.Rows.Count - 1);
             }
+            if (HasVariableLabels && !ShowVariableLabels)
+            {
+                dataView.Table!.Columns.Remove("variable (label)");
+            }
             if (!ShowPValues) dataView.Table!.Columns.Remove("mean - p value");
             if (!ShowFMI) dataView.Table!.Columns.Remove("mean - FMI");
             if (!ShowPValues) dataView.Table!.Columns.Remove("standard deviation - p value");
@@ -1351,6 +1486,10 @@ namespace LSAnalyzer.ViewModels
         {
             DataView dataView = new(table.Copy());
 
+            if (HasVariableLabels && !ShowVariableLabels)
+            {
+                dataView.Table!.Columns.Remove("variable (label)");
+            }
             if (!ShowPValues) dataView.Table!.Columns.Remove("Cohens d - p value");
             if (!ShowFMI) dataView.Table!.Columns.Remove("Cohens d - FMI");
 
@@ -1363,6 +1502,7 @@ namespace LSAnalyzer.ViewModels
 
             Dictionary<string, string> toggles = new()
             {
+                ["ShowVariableLabels"] = "variable\\s\\(label\\)",
                 ["ShowPValues"] = "p\\svalue$",
                 ["ShowFMI"] = "FMI$",
                 ["ShowNcases"] = "^Cat.*\\-\\scases$",
@@ -1395,6 +1535,11 @@ namespace LSAnalyzer.ViewModels
         {
             DataView dataView = new(table.Copy());
 
+            if (HasVariableLabels && !ShowVariableLabels)
+            {
+                dataView.Table!.Columns.Remove("variable (label)");
+            }
+
             return dataView;
         }
 
@@ -1404,6 +1549,7 @@ namespace LSAnalyzer.ViewModels
 
             Dictionary<string, string> toggles = new()
             {
+                ["ShowVariableLabels"] = "variable\\s(A|B)\\s\\(label\\)",
                 ["ShowPValues"] = "p\\svalue$",
                 ["ShowFMI"] = "FMI$",
             };
@@ -1436,6 +1582,7 @@ namespace LSAnalyzer.ViewModels
 
             Dictionary<string, string> toggles = new()
             {
+                ["ShowVariableLabels"] = "variable\\s\\(label\\)",
                 ["ShowPValues"] = "p\\svalue$",
                 ["ShowFMI"] = "FMI$",
             };
