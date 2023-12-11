@@ -1,5 +1,6 @@
 ﻿using ClosedXML.Excel;
 using CommunityToolkit.Mvvm.Input;
+using ExcelNumberFormat;
 using LSAnalyzer.Models;
 using LSAnalyzer.ViewModels.ValueConverter;
 using RDotNet;
@@ -19,7 +20,7 @@ using System.Windows.Input;
 
 namespace LSAnalyzer.ViewModels
 {
-    public class AnalysisPresentation : INotifyPropertyChanged
+    public partial class AnalysisPresentation : INotifyPropertyChanged
     {
         private Analysis _analysis;
         public Analysis Analysis
@@ -1512,6 +1513,17 @@ namespace LSAnalyzer.ViewModels
 
             wb.AddWorksheet(DataView.Table);
 
+            if (Analysis is AnalysisFreq analysisFreq)
+            {
+                for (int columnIndex = 1; columnIndex <= DataView.Table!.Columns.Count; columnIndex++)
+                {
+                    if (RegexCategoryHeader().IsMatch(DataView.Table.Columns[columnIndex - 1].ColumnName))
+                    {
+                        wb.Worksheet(DataView.Table.TableName).Columns(columnIndex, columnIndex).Style.NumberFormat.Format = "0.0%";
+                    }
+                }
+            }
+
             if (TableSecondary != null)
             {
                 wb.AddWorksheet(TableSecondary);
@@ -1571,5 +1583,8 @@ namespace LSAnalyzer.ViewModels
             }
             wb.SaveAs(filename);
         }
+
+        [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\sstandard\\serror)?$")]
+        public static partial Regex RegexCategoryHeader();
     }
 }

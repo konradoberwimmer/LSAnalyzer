@@ -13,6 +13,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -290,14 +291,21 @@ namespace LSAnalyzer.Views
 
             if (e.PropertyType == typeof(double) && e.Column is DataGridTextColumn dataGridTextColumn)
             {
-                var columnIndex = dataGrid.Columns.Count; // because this is done before adding the new column
-                var values = dataGrid.Items.Cast<DataRowView>().Select(row => row.Row.ItemArray[columnIndex]).Where(val => val != DBNull.Value).Cast<double>().ToArray();
-                var maxRelevantDigits = StringFormats.getMaxRelevantDigits(values, 3);
-                dataGridTextColumn.Binding.StringFormat = "{0:0" + (maxRelevantDigits > 0 ? ("." + new string('0', maxRelevantDigits)) : "") + "}";
-
-                if (maxRelevantDigits > 0)
+                if (dataGrid.DataContext is AnalysisPresentation analysisPresentation && analysisPresentation.Analysis is AnalysisFreq && e.Column.Header is string headerText && AnalysisPresentation.RegexCategoryHeader().IsMatch(headerText))
                 {
+                    dataGridTextColumn.Binding.StringFormat = "{0:0.0%}";
                     e.Column.CellStyle = (Style)Resources["ColumnRight"];
+                } else
+                {
+                    var columnIndex = dataGrid.Columns.Count; // because this is done before adding the new column
+                    var values = dataGrid.Items.Cast<DataRowView>().Select(row => row.Row.ItemArray[columnIndex]).Where(val => val != DBNull.Value).Cast<double>().ToArray();
+                    var maxRelevantDigits = StringFormats.getMaxRelevantDigits(values, 3);
+                    dataGridTextColumn.Binding.StringFormat = "{0:0" + (maxRelevantDigits > 0 ? ("." + new string('0', maxRelevantDigits)) : "") + "}";
+
+                    if (maxRelevantDigits > 0)
+                    {
+                        e.Column.CellStyle = (Style)Resources["ColumnRight"];
+                    }
                 }
             }
         }
