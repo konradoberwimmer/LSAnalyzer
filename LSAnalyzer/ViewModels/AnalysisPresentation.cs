@@ -204,6 +204,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private DataView? _secondaryDataView;
+        public DataView? SecondaryDataView
+        {
+            get => _secondaryDataView;
+            set
+            {
+                _secondaryDataView = value;
+                NotifyPropertyChanged(nameof(SecondaryDataView));
+            }
+        }
+
         private bool _busy = false;
         public bool IsBusy
         {
@@ -1462,9 +1473,9 @@ namespace LSAnalyzer.ViewModels
         }
 
 
-        private DataView DataTableViewUnivar(DataTable table)
+        private void SetDataTableViewUnivar()
         {
-            DataView dataView = new(table.Copy());
+            DataView dataView = new(DataTable.Copy());
 
             if (HasTableAverage && !UseTableAverage)
             {
@@ -1479,12 +1490,12 @@ namespace LSAnalyzer.ViewModels
             if (!ShowPValues) dataView.Table!.Columns.Remove("standard deviation - p value");
             if (!ShowFMI) dataView.Table!.Columns.Remove("standard deviation - FMI");
 
-            return dataView;
+            DataView = dataView;
         }
 
-        private DataView DataTableViewMeanDiff(DataTable table)
+        private void SetDataTableViewMeanDiff()
         {
-            DataView dataView = new(table.Copy());
+            DataView dataView = new(DataTable.Copy());
 
             if (HasVariableLabels && !ShowVariableLabels)
             {
@@ -1493,12 +1504,25 @@ namespace LSAnalyzer.ViewModels
             if (!ShowPValues) dataView.Table!.Columns.Remove("Cohens d - p value");
             if (!ShowFMI) dataView.Table!.Columns.Remove("Cohens d - FMI");
 
-            return dataView;
+            DataView = dataView;
+            
+            if (TableSecondary != null)
+            {
+                DataView secondaryDataView = new(TableSecondary.Copy());
+
+                if (HasVariableLabels && !ShowVariableLabels)
+                {
+                    secondaryDataView.Table!.Columns.Remove("variable (label)");
+                }
+                if (!ShowFMI) secondaryDataView.Table!.Columns.Remove("eta - FMI");
+
+                SecondaryDataView = secondaryDataView;
+            }
         }
 
-        private DataView DataTableViewFreq(DataTable table)
+        private void SetDataTableViewFreq()
         {
-            DataView dataView = new(table.Copy());
+            DataView dataView = new(DataTable.Copy());
 
             Dictionary<string, string> toggles = new()
             {
@@ -1528,24 +1552,38 @@ namespace LSAnalyzer.ViewModels
                 }
             }
             
-            return dataView;
+            DataView = dataView;
+
+            if (TableSecondary != null)
+            {
+                DataView secondaryDataView = new(TableSecondary.Copy());
+
+                if (HasVariableLabels && !ShowVariableLabels)
+                {
+                    secondaryDataView.Table!.Columns.Remove("X (label)");
+                    secondaryDataView.Table!.Columns.Remove("Y (label)");
+                }
+                if (!ShowFMI) secondaryDataView.Table!.Columns.Remove("estimate - FMI");
+
+                SecondaryDataView = secondaryDataView;
+            }
         }
 
-        private DataView DataTableViewPercentiles(DataTable table)
+        private void SetDataTableViewPercentiles()
         {
-            DataView dataView = new(table.Copy());
+            DataView dataView = new(DataTable.Copy());
 
             if (HasVariableLabels && !ShowVariableLabels)
             {
                 dataView.Table!.Columns.Remove("variable (label)");
             }
 
-            return dataView;
+            DataView = dataView;
         }
 
-        private DataView DataTableViewCorr(DataTable table)
+        private void SetDataTableViewCorr()
         {
-            DataView dataView = new(table.Copy());
+            DataView dataView = new(DataTable.Copy());
 
             Dictionary<string, string> toggles = new()
             {
@@ -1573,12 +1611,25 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            return dataView;
+            DataView = dataView;
+
+            if (TableSecondary != null)
+            {
+                DataView secondaryDataView = new(TableSecondary.Copy());
+
+                if (HasVariableLabels && !ShowVariableLabels)
+                {
+                    secondaryDataView.Table!.Columns.Remove("variable A (label)");
+                    secondaryDataView.Table!.Columns.Remove("variable B (label)");
+                }
+
+                SecondaryDataView = secondaryDataView;
+            }
         }
 
-        private DataView DataTableViewRegression(DataTable table)
+        private void SetDataTableViewRegression()
         {
-            DataView dataView = new(table.Copy());
+            DataView dataView = new(DataTable.Copy());
 
             Dictionary<string, string> toggles = new()
             {
@@ -1606,7 +1657,7 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            return dataView;
+            DataView = dataView;
         }
 
         private void ResetDataView()
@@ -1614,28 +1665,27 @@ namespace LSAnalyzer.ViewModels
             switch (Analysis)
             {
                 case AnalysisUnivar:
-                    DataView = DataTableViewUnivar(DataTable);
+                    SetDataTableViewUnivar();
                     break;
                 case AnalysisMeanDiff:
-                    DataView = DataTableViewMeanDiff(DataTable);
+                    SetDataTableViewMeanDiff();
                     break;
                 case AnalysisFreq:
-                    DataView = DataTableViewFreq(DataTable);
+                    SetDataTableViewFreq();
                     break;
                 case AnalysisPercentiles:
-                    DataView = DataTableViewPercentiles(DataTable);
+                    SetDataTableViewPercentiles();
                     break;
                 case AnalysisCorr:
-                    DataView = DataTableViewCorr(DataTable);
+                    SetDataTableViewCorr();
                     break;
                 case AnalysisLinreg:
                 case AnalysisLogistReg:
-                    DataView = DataTableViewRegression(DataTable);
+                    SetDataTableViewRegression();
                     break;
                 default:
                     break;
             }
-            NotifyPropertyChanged(nameof(DataView));
         }
 
         private RelayCommand<string?> _saveDataTableXlsxCommand;
@@ -1671,9 +1721,9 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            if (TableSecondary != null)
+            if (SecondaryDataView != null)
             {
-                wb.AddWorksheet(TableSecondary);
+                wb.AddWorksheet(SecondaryDataView.Table);
             }
 
             var metaInformation = Analysis?.MetaInformation;

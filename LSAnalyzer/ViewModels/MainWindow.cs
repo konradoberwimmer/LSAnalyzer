@@ -131,6 +131,7 @@ namespace LSAnalyzer.ViewModels
             };
 
             Analyses.First().DataView = new(Analyses.First().DataTable);
+            Analyses.First().SecondaryDataView = new(Analyses.First().TableSecondary);
 
             AnalysisConfiguration = dummyConfiguration;
             SubsettingExpression = "cat == 1";

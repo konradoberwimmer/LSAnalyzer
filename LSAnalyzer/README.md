@@ -1,7 +1,6 @@
 ﻿# ToDo-List
 Test and debug!
 
-* toggle variable labels on/off in secondary tble
 * add value labels (if any) to frequency table if all variables have same same value labels
 * add "rank" to univariate statistics (order of means) and frequencies (order of relative frequency of lowest category, only if all variables have the same categories)
 * make openxlsx an optional requirement
