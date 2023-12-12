@@ -31,6 +31,16 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void TestInstallAndCheckOptionalRPackages()
+        {
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.False(rservice.CheckNecessaryRPackages("sinnlos123"));
+            Assert.True(rservice.InstallNecessaryRPackages("jsonlite"));
+            Assert.True(rservice.CheckNecessaryRPackages("jsonlite"));
+        }
+
+        [Fact]
         public void TestInjectAppFunctions()
         {
             Rservice rservice = new(new());

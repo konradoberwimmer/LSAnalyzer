@@ -3,7 +3,6 @@ Test and debug!
 
 * add value labels (if any) to frequency table if all variables have same same value labels
 * add "rank" to univariate statistics (order of means) and frequencies (order of relative frequency of lowest category, only if all variables have the same categories)
-* make openxlsx an optional requirement
 
 # Would-be-nice-but-hard-to-implement
 * implement variable display name to hide away regex in PVs

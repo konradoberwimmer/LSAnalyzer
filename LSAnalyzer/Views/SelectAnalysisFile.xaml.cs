@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using GalaSoft.MvvmLight.Threading;
 using LSAnalyzer.Helper;
+using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using Microsoft.Win32;
 using System;
@@ -47,6 +49,37 @@ namespace LSAnalyzer.Views
                 var listPossibleDatasetTypeNames = m.Value.ConvertAll(datasetType => datasetType.Name).ToArray();
                 MessageBox.Show("Unable to determine dataset type exactly. May be one of:\n\n" + String.Join("\n", listPossibleDatasetTypeNames), "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             });
+
+            WeakReferenceMessenger.Default.Register<MissingRPackageMessage>(this, (r, m) =>
+            {
+                if (m.PackageName == "openxlsx")
+                {
+                    var result = MessageBox.Show("Using XLSX files requires package 'openxls'. Do you want to install it now?", "Info", MessageBoxButton.YesNo, MessageBoxImage.Information);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        DispatcherHelper.CheckBeginInvokeOnUI(() =>
+                        {
+                            InstallOpenXlsx();
+                        });
+                    }
+                }
+            });
+        }
+
+        private void InstallOpenXlsx()
+        {
+            var viewModel = DataContext as ViewModels.SelectAnalysisFile;
+
+            var succesfulInstall = viewModel!.InstallOpenXlsx();
+            if (succesfulInstall)
+            {
+                MessageBox.Show("R package installation successful. Please restart application!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart app afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void ButtonSelectFile_Click (object sender, RoutedEventArgs e)

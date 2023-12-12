@@ -204,7 +204,17 @@ namespace LSAnalyzer.ViewModels
 
         private void GuessDatasetTypeWorker_DoWork(object? sender, DoWorkEventArgs e)
         {
-            var variables = _rservice.GetDatasetVariables((string)e.Argument!, IsCsv && UseCsv2 ? "csv2" : null);
+            var fileName = (string)e.Argument!;
+            var fileTypeFromFile = fileName.Substring(fileName.LastIndexOf('.') + 1);
+
+            if (fileTypeFromFile.ToLower() == "xlsx" && !_rservice.CheckNecessaryRPackages("openxlsx"))
+            {
+                WeakReferenceMessenger.Default.Send(new MissingRPackageMessage("openxlsx"));
+                IsBusy = false;
+                return;
+            }
+
+            var variables = _rservice.GetDatasetVariables(fileName, IsCsv && UseCsv2 ? "csv2" : null);
 
             if (variables == null)
             {
@@ -320,11 +330,21 @@ namespace LSAnalyzer.ViewModels
             useFileForAnalysisWorker.WorkerReportsProgress = false;
             useFileForAnalysisWorker.WorkerSupportsCancellation = false;
             useFileForAnalysisWorker.DoWork += UseFileForAnalysisWorker_DoWork;
+            useFileForAnalysisWorker.RunWorkerCompleted += UseFileForAnalysisWorker_Completed;
             useFileForAnalysisWorker.RunWorkerAsync(window);
         }
 
         private void UseFileForAnalysisWorker_DoWork(object? sender, DoWorkEventArgs e)
         {
+            var fileTypeFromFile = FileName!.Substring(FileName.LastIndexOf('.') + 1);
+
+            if (fileTypeFromFile.ToLower() == "xlsx" && !_rservice.CheckNecessaryRPackages("openxlsx"))
+            {
+                e.Result = new MissingRPackageMessage("openxlsx");
+                IsBusy = false;
+                return;
+            }
+
             AnalysisConfiguration analysisConfiguration = new()
             {
                 FileName = this.FileName,
@@ -363,6 +383,19 @@ namespace LSAnalyzer.ViewModels
                     window.Close();
                 });
             }
+        }
+
+        private void UseFileForAnalysisWorker_Completed(object? sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Result is MissingRPackageMessage)
+            {
+                WeakReferenceMessenger.Default.Send(e.Result);
+            }
+        }
+
+        public bool InstallOpenXlsx()
+        {
+            return _rservice.InstallNecessaryRPackages("openxlsx");
         }
     }
 

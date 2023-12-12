@@ -16,7 +16,7 @@ namespace LSAnalyzer.Services
         private Logging _logger;
         private string? _rPath;
         private REngine? _engine;
-        private readonly string[] _rPackages = new string[] { "BIFIEsurvey", "foreign", "openxlsx" };
+        private readonly string[] _rPackagesNecessary = new string[] { "BIFIEsurvey", "foreign" };
 
         [ExcludeFromCodeCoverage]
         public Rservice()
@@ -79,11 +79,13 @@ namespace LSAnalyzer.Services
             }
         }
 
-        public bool CheckNecessaryRPackages()
+        public bool CheckNecessaryRPackages(string? packageName = null)
         {
+            string[] rPackagesToCheck = (packageName == null ? _rPackagesNecessary : new string[] { packageName });
+
             try
             {
-                foreach (string rPackage in _rPackages)
+                foreach (string rPackage in rPackagesToCheck)
                 {
                     bool available = EvaluateAndLog("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
                     if (!available)
@@ -99,8 +101,10 @@ namespace LSAnalyzer.Services
             }
         }
 
-        public bool InstallNecessaryRPackages()
+        public bool InstallNecessaryRPackages(string? packageName = null)
         {
+            string[] rPackagesToInstall = (packageName == null ? _rPackagesNecessary : new string[] { packageName });
+
             try
             {
                 bool userLibraryFolderConfigured = EvaluateAndLog("nzchar(Sys.getenv('R_LIBS_USER'))").AsLogical().First();
@@ -111,7 +115,7 @@ namespace LSAnalyzer.Services
 
                 EvaluateAndLog("if (!dir.exists(Sys.getenv('R_LIBS_USER'))) { dir.create(Sys.getenv('R_LIBS_USER')) }");
 
-                foreach (string rPackage in _rPackages)
+                foreach (string rPackage in rPackagesToInstall)
                 {
                     bool available = EvaluateAndLog("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
                     if (!available)
