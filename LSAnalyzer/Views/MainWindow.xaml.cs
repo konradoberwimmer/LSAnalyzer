@@ -17,6 +17,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -281,7 +282,15 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            e.Column.HeaderStyle = (Style)Resources["WrappedColumnHeader"];
+            var headerStyle = new Style(typeof(DataGridColumnHeader), (Style)Resources["WrappedColumnHeader"]);
+            if (dataGrid.DataContext is AnalysisPresentation analysisPresentationViewModel && e.Column.Header is string columnName && analysisPresentationViewModel.ColumnTooltips.ContainsKey(columnName))
+            {
+                headerStyle.Setters.Add(new Setter(ToolTipService.ToolTipProperty, analysisPresentationViewModel.ColumnTooltips[columnName]));
+            } else
+            {
+                headerStyle.Setters.Add(new Setter(ToolTipService.ToolTipProperty, e.Column.Header));
+            }
+            e.Column.HeaderStyle = headerStyle;
 
             if (e.PropertyName.Contains('.') && e.Column is DataGridBoundColumn)
             {

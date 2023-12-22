@@ -281,6 +281,8 @@ namespace TestLSAnalyzer.ViewModels
             };
 
             analysisFreq.ValueLabels.Add("instable", rservice.GetValueLabels("instable")!);
+            analysisFreq.ValueLabels.Add("item1", rservice.GetValueLabels("item1")!);
+            analysisFreq.ValueLabels.Add("item2", rservice.GetValueLabels("item2")!);
             analysisFreq.BivariateResult = rservice.CalculateBivariate(analysisFreq);
             var result = rservice.CalculateFreq(analysisFreq);
 
@@ -294,6 +296,8 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("instable (label)"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Cat 1"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Cat 5 - standard error"));
+            Assert.True(analysisPresentationViewModel.ColumnTooltips.ContainsKey("Cat 3 - standard error"));
+            Assert.Equal("Cat 3 - Value C - standard error", analysisPresentationViewModel.ColumnTooltips["Cat 3 - standard error"]);
             Assert.Equal(2, analysisPresentationViewModel.DataTable.Select("[instable (label)] = 'Kategorie B'").Length);
             Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("instable = 1")[0]["Cat 1"] - 0.2971394) < 0.0001);
 
@@ -301,6 +305,14 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal(2 * 9, analysisPresentationViewModel.TableSecondary.Rows.Count);
             Assert.Equal(6, analysisPresentationViewModel.TableSecondary.Columns.Count);
             Assert.True(Math.Abs((double)analysisPresentationViewModel.TableSecondary.Select("Y = 'item1' and coefficient = 'w'")[0]["estimate"] - 0.395625) < 0.0001);
+
+            analysisFreq.ValueLabels.Remove("item1");
+            AnalysisPresentation analysisPresentationViewModelNoValueLabels = new(analysisFreq);
+            analysisPresentationViewModelNoValueLabels.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModelNoValueLabels.DataTable);
+            Assert.Equal(4, analysisPresentationViewModelNoValueLabels.DataTable.Rows.Count);
+            Assert.Empty(analysisPresentationViewModelNoValueLabels.ColumnTooltips);
         }
 
         [Fact]

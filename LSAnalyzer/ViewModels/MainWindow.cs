@@ -268,12 +268,18 @@ namespace LSAnalyzer.ViewModels
                     analysisFreq.BivariateResult = _rservice.CalculateBivariate(analysisFreq);
                 }
 
-                foreach (var groupByVariable in analysisPresentation!.Analysis.GroupBy)
+                var variablesToConsiderForValueLabels = new List<Variable>(analysisPresentation!.Analysis.GroupBy);
+                if (analysisPresentation.Analysis is AnalysisFreq)
                 {
-                    var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
+                    variablesToConsiderForValueLabels.AddRange(analysisPresentation!.Analysis.Vars);
+                }
+
+                foreach (var variable in variablesToConsiderForValueLabels)
+                {
+                    var valueLabels = _rservice.GetValueLabels(variable.Name);
                     if (valueLabels != null)
                     {
-                        analysisPresentation!.Analysis.ValueLabels.Add(groupByVariable.Name, valueLabels);
+                        analysisPresentation!.Analysis.ValueLabels.Add(variable.Name, valueLabels);
                     }
                 }
 

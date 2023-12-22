@@ -215,6 +215,12 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private Dictionary<string, string> _columnTooltips = new();
+        public Dictionary<string, string> ColumnTooltips
+        {
+            get => _columnTooltips;
+        }
+
         private bool _busy = false;
         public bool IsBusy
         {
@@ -254,6 +260,8 @@ namespace LSAnalyzer.ViewModels
 
             Analysis.Result = result;
             NotifyPropertyChanged(nameof(Analysis));
+
+            ColumnTooltips.Clear();
             
             switch (Analysis)
             {
@@ -664,6 +672,8 @@ namespace LSAnalyzer.ViewModels
             columns.Add("$overall_Ncases", new DataColumn("N - cases unweighted", typeof(int)));
             columns.Add("$overall_Nweight", new DataColumn("N - weighted", typeof(double)));
 
+            var commonValueLabels = GetCommonValueLabels(analysisFreq, categories);
+
             for (int cc = 0; cc < categories.Count; cc++)
             {
                 var category = categories[cc];
@@ -672,6 +682,15 @@ namespace LSAnalyzer.ViewModels
                 columns.Add("$cat_" + cc + "_Ncases", new DataColumn("Cat " + category + " - cases", typeof(int)));
                 columns.Add("$cat_" + cc + "_Nweight", new DataColumn("Cat " + category + " - weighted", typeof(double)));
                 columns.Add("$cat_" + cc + "_perc_fmi", new DataColumn("Cat " + category + " - FMI", typeof(double)));
+
+                if (commonValueLabels.ContainsKey(category))
+                {
+                    ColumnTooltips.Add("Cat " + category, "Cat " + category + " - " + commonValueLabels[category]);
+                    ColumnTooltips.Add("Cat " + category + " - standard error", "Cat " + category + " - " + commonValueLabels[category] + " - standard error");
+                    ColumnTooltips.Add("Cat " + category + " - cases", "Cat " + category + " - " + commonValueLabels[category] + " - cases");
+                    ColumnTooltips.Add("Cat " + category + " - weighted", "Cat " + category + " - " + commonValueLabels[category] + " - weighted");
+                    ColumnTooltips.Add("Cat " + category + " - FMI", "Cat " + category + " - " + commonValueLabels[category] + " - FMI");
+                }
             }
 
             foreach (var column in columns.Values)
@@ -1406,6 +1425,46 @@ namespace LSAnalyzer.ViewModels
             }
 
             return table;
+        }
+
+        private Dictionary<double, string> GetCommonValueLabels(AnalysisFreq analysisFreq, List<double> categories)
+        {
+            Dictionary<double, string> commonValueLabels = new();
+
+            foreach (var category in categories)
+            {
+                foreach (var variable in analysisFreq.Vars)
+                {
+                    if (!analysisFreq.ValueLabels.ContainsKey(variable.Name))
+                    {
+                        commonValueLabels.Remove(category);
+                        break;
+                    }
+
+                    var valueLabels = analysisFreq.ValueLabels[variable.Name];
+                    var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf(category);
+
+                    if (posValueLabel != -1)
+                    {
+                        var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
+                        
+                        if (!commonValueLabels.ContainsKey(category)) 
+                        {
+                            commonValueLabels.Add(category, valueLabel);
+                        } else if (commonValueLabels[category] != valueLabel)
+                        {
+                            commonValueLabels.Remove(category);
+                            break;
+                        }
+                    } else
+                    {
+                        commonValueLabels.Remove(category);
+                        break;
+                    }
+                }
+            }
+
+            return commonValueLabels;
         }
 
         private void AddVariableLabelColumn(Analysis analysis, Dictionary<string, DataColumn> columns, string resultColumnName, string tableColumnName)
