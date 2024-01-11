@@ -58,7 +58,7 @@ namespace TestLSAnalyzer
 
             // analzye univariate PVs by sex and overall
             var analyzeUnivariateDialog = OpenWindowFromMenuItem(automation, mainWindow, "Analysis", "Univariate (means and SD) ...", "Univariate statistics");
-            SelectVariablesInListBox(analyzeUnivariateDialog, "listBoxVariablesDataset", new string[] { "ASRREA", "ASRLIT", "ASRINF", "ASRIIE", "ASRRSI" }, analyzeUnivariateDialog);
+            SelectVariablesInListBox(analyzeUnivariateDialog, "listBoxVariablesDataset", new string[] { "ASRREA", "ASRLIT", "ASRINF", "ASRIIE", "ASRRSI" }, true);
             MoveVariablesBetweenLists(analyzeUnivariateDialog, "listBoxVariablesDataset", "buttonMoveToAndFromAnalysisVariables", "listBoxVariablesAnalyze");
             SelectVariablesInListBox(analyzeUnivariateDialog, "listBoxVariablesDataset", new string[] { "ITSEX" });
             MoveVariablesBetweenLists(analyzeUnivariateDialog, "listBoxVariablesDataset", "buttonMoveToAndFromGroupByVariables", "listBoxVariablesGroupBy");
@@ -67,12 +67,37 @@ namespace TestLSAnalyzer
 
             // analyze frequencies of benchmark by sex and overall
             var analyzeFreqDialog = OpenWindowFromMenuItem(automation, mainWindow, "Analysis", "Frequencies ...", "Frequencies");
-            SelectVariablesInListBox(analyzeFreqDialog, "listBoxVariablesDataset", new string[] { "ASRIBM" }, analyzeFreqDialog);
+            SelectVariablesInListBox(analyzeFreqDialog, "listBoxVariablesDataset", new string[] { "ASRIBM" }, true);
             MoveVariablesBetweenLists(analyzeFreqDialog, "listBoxVariablesDataset", "buttonMoveToAndFromAnalysisVariables", "listBoxVariablesAnalyze");
             SelectVariablesInListBox(analyzeFreqDialog, "listBoxVariablesDataset", new string[] { "ITSEX" });
             MoveVariablesBetweenLists(analyzeFreqDialog, "listBoxVariablesDataset", "buttonMoveToAndFromGroupByVariables", "listBoxVariablesGroupBy");
             StartAnalysisFromDialog(automation, analyzeFreqDialog);
             SaveLastAnalysisAsXlsx(mainWindow, 9, "test_workflow_pirls_austria_freq.xlsx");
+
+            // analyze quartiles of main PV by sex and overall like IDBanalyzer
+            var analyzePercDialog = OpenWindowFromMenuItem(automation, mainWindow, "Analysis", "Percentiles ...", "Percentiles");
+            SelectVariablesInListBox(analyzePercDialog, "listBoxVariablesDataset", new string[] { "ASRREA" }, true);
+            MoveVariablesBetweenLists(analyzePercDialog, "listBoxVariablesDataset", "buttonMoveToAndFromAnalysisVariables", "listBoxVariablesAnalyze");
+            SelectVariablesInListBox(analyzePercDialog, "listBoxVariablesDataset", new string[] { "ITSEX" });
+            MoveVariablesBetweenLists(analyzePercDialog, "listBoxVariablesDataset", "buttonMoveToAndFromGroupByVariables", "listBoxVariablesGroupBy");
+            var checkboxUseInterpolation = analyzePercDialog.FindFirstDescendant(cf.ByControlType(ControlType.CheckBox).And(cf.ByName("Use interpolation"))).AsCheckBox();
+            checkboxUseInterpolation.Click();
+            var checkBoxMimicIDBanalyzer = analyzePercDialog.FindFirstDescendant(cf.ByControlType(ControlType.CheckBox).And(cf.ByName(""))).AsCheckBox();
+            checkBoxMimicIDBanalyzer.WaitUntilEnabled();
+            checkBoxMimicIDBanalyzer.Click();
+            StartAnalysisFromDialog(automation, analyzePercDialog);
+            SaveLastAnalysisAsXlsx(mainWindow, 3, "test_workflow_pirls_austria_perc.xlsx");
+
+            // do a forward linear regression for main PV using some predictors
+            var analyzeLinregDialog = OpenWindowFromMenuItem(automation, mainWindow, "Analysis", "Linear Regression ...", "Linear Regression");
+            SelectVariablesInListBox(analyzeLinregDialog, "listBoxVariablesDataset", new string[] { "ASRREA" }, true);
+            MoveVariablesBetweenLists(analyzeLinregDialog, "listBoxVariablesDataset", "buttonMoveToAndFromDependentVariable", "listBoxVariablesDependent");
+            SelectVariablesInListBox(analyzeLinregDialog, "listBoxVariablesDataset", new string[] { "ITSEX", "ASBG03", "ASBG04" });
+            MoveVariablesBetweenLists(analyzeLinregDialog, "listBoxVariablesDataset", "buttonMoveToAndFromAnalysisVariables", "listBoxVariablesAnalyze");
+            var buttonSequenceForward = analyzeLinregDialog.FindFirstDescendant("radioButtonSequenceForward").AsRadioButton();
+            buttonSequenceForward.Click();
+            StartAnalysisFromDialog(automation, analyzeLinregDialog);
+            SaveLastAnalysisAsXlsx(mainWindow, 9, "test_workflow_pirls_austria_linreg.xlsx");
 
             // close app
             mainWindow.Close();
@@ -92,21 +117,15 @@ namespace TestLSAnalyzer
             return dialog;
         }
 
-        /// <summary>
-        /// When a Window object is passed as third parameter it will right click on the list box to open up the context menu and click on "Show Labels".
-        /// </summary>
-        /// <param name="listBox"></param>
-        /// <param name="variables"></param>
-        /// <param name="clickShowLabels"></param>
-        private void SelectVariablesInListBox(Window dialog, string listBoxAutomationID, string[] variables, Window? clickShowLabels = null)
+        private void SelectVariablesInListBox(Window dialog, string listBoxAutomationID, string[] variables, bool clickShowLabels = false)
         {
             var listBox = dialog.FindFirstChild(listBoxAutomationID).AsListBox();
             Assert.NotNull(listBox);
 
-            if (clickShowLabels != null)
+            if (clickShowLabels)
             {
                 listBox.RightClick();
-                clickShowLabels.ContextMenu.Items.Where(item => item.Name == "Show Labels").First().Click();
+                dialog.ContextMenu.Items.Where(item => item.Name == "Show Labels").FirstOrDefault()?.Click();
             }
 
             while (listBox.Patterns.Scroll.Pattern.VerticalScrollPercent > 0)
