@@ -236,6 +236,65 @@ namespace LSAnalyzer.ViewModels
         public AnalysisPresentation()
         {
             // design-time only parameter-less constructor
+            AnalysisConfiguration dummyConfiguration = new()
+            {
+                FileName = "C:\\dummyDirectory\\dummyDataset.sav",
+                DatasetType = new()
+                {
+                    Name = "Dummy Dataset Type",
+                    Weight = "dummyWgt",
+                    NMI = 10,
+                    MIvar = "dummyMiwar",
+                    Nrep = 5,
+                    RepWgts = "dummyRepwgts",
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Analysis = new AnalysisUnivar(dummyConfiguration)
+            {
+                Vars = new()
+                        {
+                            new(1, "x1", false),
+                            new(2, "x2", false),
+                            new(3, "x3", false),
+                        },
+                GroupBy = new()
+                        {
+                            new(4, "y1", false),
+                        },
+                SubsettingExpression = "cat == 1 & val < 0.5",
+            };
+
+            DataTable = new()
+            {
+                Columns = { { "var", typeof(string) }, { "y1", typeof(int) }, { "mean", typeof(double) }, { "mean__se", typeof(double) }, { "sd", typeof(double) }, { "sd__se", typeof(double) } },
+                Rows =
+                {
+                    { "x1", 1, 0.5, 0.01, 0.1, 0.001 },
+                    { "x1", 2, 0.6, 0.006, 0.12, 0.0011 },
+                    { "x1", 3, 0.7, 0.012, 0.09, 0.0009 },
+                    { "x1", 4, 0.8, 0.011, 0.11, 0.0011 },
+                    { "x2", 1, 12.5, 0.12, 1.41, 0.023 },
+                    { "x2", 2, 11.3, 0.13, 1.02, 0.064 },
+                    { "x2", 3, 9.8, 0.22, 2.01, 0.044 },
+                    { "x2", 4, 12.1, 0.21, 2.01, 0.031 },
+                }
+            };
+            HasTableAverage = true;
+            DataView = new(DataTable);
+
+            TableSecondary = new("Explained variance")
+            {
+                Columns = { { "var", typeof(string) }, { "eta2", typeof(double) }, { "eta", typeof(double) }, { "eta__se", typeof(double) } },
+                Rows =
+                {
+                    { "x", 0.25, 0.50, 0.02 },
+                    { "y", 0.16, 0.40, 0.15 },
+                },
+            };
+            SecondaryDataView = new(TableSecondary);
         }
 
         public AnalysisPresentation(Analysis analysis)

@@ -256,69 +256,6 @@ namespace LSAnalyzer.Views
             batchAnalyzeView.ShowDialog();
         }
 
-        private void ButtonDownloadXlsx_Click (object sender, RoutedEventArgs e)
-        {
-            if (sender is not Button button || button.DataContext is not AnalysisPresentation analysisPresentationViewModel)
-            {
-                return;
-            }
-
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "Excel File (*.xlsx)|*.xlsx";
-            saveFileDialog.InitialDirectory = Properties.Settings.Default.lastResultOutFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var wantsSave = saveFileDialog.ShowDialog(this);
-
-            if (wantsSave == true)
-            {
-                Properties.Settings.Default.lastResultOutFileLocation = Path.GetDirectoryName(saveFileDialog.FileName);
-                Properties.Settings.Default.Save();
-                analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(saveFileDialog.FileName);
-            }
-        }
-        private void DataGrid_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
-        {
-            if (sender is not DataGrid dataGrid)
-            {
-                return;
-            }
-
-            var headerStyle = new Style(typeof(DataGridColumnHeader), (Style)Resources["WrappedColumnHeader"]);
-            if (dataGrid.DataContext is AnalysisPresentation analysisPresentationViewModel && e.Column.Header is string columnName && analysisPresentationViewModel.ColumnTooltips.ContainsKey(columnName))
-            {
-                headerStyle.Setters.Add(new Setter(ToolTipService.ToolTipProperty, analysisPresentationViewModel.ColumnTooltips[columnName]));
-            } else
-            {
-                headerStyle.Setters.Add(new Setter(ToolTipService.ToolTipProperty, e.Column.Header));
-            }
-            e.Column.HeaderStyle = headerStyle;
-
-            if (e.PropertyName.Contains('.') && e.Column is DataGridBoundColumn)
-            {
-                DataGridBoundColumn dataGridBoundColumn = (e.Column as DataGridBoundColumn)!;
-                dataGridBoundColumn.Binding = new Binding("[" + e.PropertyName + "]");
-            }
-
-            if (e.PropertyType == typeof(double) && e.Column is DataGridTextColumn dataGridTextColumn)
-            {
-                if (dataGrid.DataContext is AnalysisPresentation analysisPresentation && analysisPresentation.Analysis is AnalysisFreq && e.Column.Header is string headerText && AnalysisPresentation.RegexCategoryPercentageHeader().IsMatch(headerText))
-                {
-                    dataGridTextColumn.Binding.StringFormat = "{0:0.0%}";
-                    e.Column.CellStyle = (Style)Resources["ColumnRight"];
-                } else
-                {
-                    var columnIndex = dataGrid.Columns.Count; // because this is done before adding the new column
-                    var values = dataGrid.Items.Cast<DataRowView>().Select(row => row.Row.ItemArray[columnIndex]).Where(val => val != DBNull.Value).Cast<double>().ToArray();
-                    var maxRelevantDigits = StringFormats.getMaxRelevantDigits(values, 3);
-                    dataGridTextColumn.Binding.StringFormat = "{0:0" + (maxRelevantDigits > 0 ? ("." + new string('0', maxRelevantDigits)) : "") + "}";
-
-                    if (maxRelevantDigits > 0)
-                    {
-                        e.Column.CellStyle = (Style)Resources["ColumnRight"];
-                    }
-                }
-            }
-        }
-
         private void ItemsControlAnalysesOutline_Click(object sender, RoutedEventArgs e) 
         { 
             if (e.Source is Button button && button.DataContext is AnalysisPresentation analysisPresentation)
