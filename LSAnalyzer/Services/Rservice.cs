@@ -1293,8 +1293,35 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                EvaluateAndLog("lsanalyzer_value_labels <- attr(lsanalyzer_dat_raw_stored[, '" + variable + "'], 'value.labels')");
-                if (!_engine.GetSymbol("lsanalyzer_value_labels").IsVector())
+                if (EvaluateAndLog("'" + variable + "' %in% colnames(lsanalyzer_dat_raw_stored)").AsLogical().First()) 
+                {
+                    EvaluateAndLog("lsanalyzer_value_labels <- attr(lsanalyzer_dat_raw_stored[, '" + variable + "'], 'value.labels')");
+                } else
+                {
+                    // try to use variable name as regex but only return value labels if they are the same for all matches
+                    EvaluateAndLog(@"# try to fetch value labels per variable name regex
+                        lsanalyzer_value_labels <- NULL
+                        lsanalyzer_possible_variables <- grep('" + variable + @"', colnames(lsanalyzer_dat_raw_stored), value = TRUE)
+                        for (lsanalyzer_possible_variable in lsanalyzer_possible_variables) {
+                            lsanalyzer_value_labels1 <- attr(lsanalyzer_dat_raw_stored[, lsanalyzer_possible_variable], 'value.labels')
+
+                            if (!is.vector(lsanalyzer_value_labels1)) {
+                                lsanalyzer_value_labels <- NULL
+                                break
+                            }
+
+                            if (is.null(lsanalyzer_value_labels)) {
+                                lsanalyzer_value_labels <- lsanalyzer_value_labels1
+                            } else if (!identical(lsanalyzer_value_labels, lsanalyzer_value_labels1)) {
+                                lsanalyzer_value_labels <- NULL
+                                break
+                            }
+                        }
+                    ", null, true);
+
+                }
+
+                if (!_engine!.GetSymbol("lsanalyzer_value_labels").IsVector())
                 {
                     return null;
                 }

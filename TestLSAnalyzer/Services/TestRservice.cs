@@ -250,7 +250,7 @@ namespace TestLSAnalyzer.Services
             var variablesListModeBuild = rservice.GetCurrentDatasetVariables(analysisConfigurationModeBuild);
 
             Assert.NotNull(variablesListModeBuild);
-            Assert.True(variablesListModeBuild.Count == 10);
+            Assert.True(variablesListModeBuild.Count == 20);
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "x").ToList());
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "y[0-9]+").ToList());
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "one").ToList());
@@ -1237,6 +1237,14 @@ namespace TestLSAnalyzer.Services
             Assert.NotNull(valueLabels);
             Assert.Equal(2, valueLabels.RowCount);
             Assert.Equal("Kategorie B", valueLabels["label"].AsCharacter()[valueLabels["value"].AsInteger().ToList().IndexOf(2)]);
+
+            var filenamePvs = Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(filenamePvs));
+
+            var pvValueLabels = rservice.GetValueLabels("ibm");
+            Assert.NotNull(pvValueLabels);
+            Assert.Equal(3, pvValueLabels.RowCount);
+            Assert.Equal("surpassed", pvValueLabels["label"].AsCharacter()[pvValueLabels["value"].AsInteger().ToList().IndexOf(3)]);
         }
 
         [Fact]
