@@ -215,6 +215,17 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _hasColumnTooltips = false;
+        public bool HasColumnTooltips
+        {
+            get => _hasColumnTooltips;
+            set
+            {
+                _hasColumnTooltips = value;
+                NotifyPropertyChanged(nameof(HasColumnTooltips));
+            }
+        }
+
         private Dictionary<string, string> _columnTooltips = new();
         public Dictionary<string, string> ColumnTooltips
         {
@@ -283,6 +294,7 @@ namespace LSAnalyzer.ViewModels
                 }
             };
             HasTableAverage = true;
+            HasColumnTooltips = true;
             DataView = new(DataTable);
 
             TableSecondary = new("Explained variance")
@@ -321,6 +333,7 @@ namespace LSAnalyzer.ViewModels
             NotifyPropertyChanged(nameof(Analysis));
 
             ColumnTooltips.Clear();
+            HasColumnTooltips = false;
             
             switch (Analysis)
             {
@@ -744,6 +757,7 @@ namespace LSAnalyzer.ViewModels
 
                 if (commonValueLabels.ContainsKey(category))
                 {
+                    HasColumnTooltips = true;
                     ColumnTooltips.Add("Cat " + category, "Cat " + category + " - " + commonValueLabels[category]);
                     ColumnTooltips.Add("Cat " + category + " - standard error", "Cat " + category + " - " + commonValueLabels[category] + " - standard error");
                     ColumnTooltips.Add("Cat " + category + " - cases", "Cat " + category + " - " + commonValueLabels[category] + " - cases");

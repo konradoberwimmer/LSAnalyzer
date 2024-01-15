@@ -67,9 +67,20 @@
                             <RowDefinition/>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
-                        <DataGrid Grid.Row="0" x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataView}" AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top" MinColumnWidth="100" ColumnWidth="SizeToCells">
-
-                        </DataGrid>
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal">
+                                <StackPanel.Visibility>
+                                    <Binding Path="HasColumnTooltips" Converter="{StaticResource BoolToVisibilityConverter}">
+                                        <Binding.ConverterParameter>
+                                            <sys:Boolean>true</sys:Boolean>
+                                        </Binding.ConverterParameter>
+                                    </Binding>
+                                </StackPanel.Visibility>
+                                <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="Move mouse cursor above column headers to see value labels"/>
+                                <TextBlock Text="Point mouse at column headers to read value labels"/>
+                            </StackPanel>
+                            <DataGrid Grid.Row="0" x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataView}" AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top" MinColumnWidth="100" ColumnWidth="SizeToCells"/>
+                        </StackPanel>
                         <fa:ImageAwesome Grid.Row="0" Icon="SunOutline" Spin="True" VerticalAlignment="Top" Height="20" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
                         <StackPanel Grid.Row="1" Margin="0,10,0,0"  Orientation="Vertical" VerticalAlignment="Top" Visibility="{Binding TableSecondary, Converter={StaticResource NullToVisibilityCollapsedConverter}}">
                             <TextBlock Text="{Binding TableSecondary.TableName}"/>
