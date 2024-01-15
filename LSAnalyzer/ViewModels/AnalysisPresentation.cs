@@ -1771,12 +1771,48 @@ namespace LSAnalyzer.ViewModels
 
             if (Analysis is AnalysisFreq analysisFreq)
             {
+                var worksheetPrimary = wb.Worksheet(DataView.Table!.TableName);
+
                 for (int columnIndex = 1; columnIndex <= DataView.Table!.Columns.Count; columnIndex++)
                 {
-                    if (RegexCategoryHeader().IsMatch(DataView.Table.Columns[columnIndex - 1].ColumnName))
+                    if (RegexCategoryPercentageHeader().IsMatch(DataView.Table.Columns[columnIndex - 1].ColumnName))
                     {
-                        wb.Worksheet(DataView.Table.TableName).Columns(columnIndex, columnIndex).Style.NumberFormat.Format = "0.0%";
+                        worksheetPrimary.Columns(columnIndex, columnIndex).Style.NumberFormat.Format = "0.0%";
                     }
+                }
+
+                worksheetPrimary.FirstRow().InsertRowsAbove(1);
+                for (int columnIndex = 1; columnIndex <= DataView.Table!.Columns.Count; columnIndex++)
+                {
+                    var columnName = DataView.Table.Columns[columnIndex - 1].ColumnName;
+                    if (RegexCategoryHeader().IsMatch(columnName))
+                    {
+                        var categoryHeader = ColumnTooltips.ContainsKey(columnName) ? RegexCategoryHeaderStart().Replace(ColumnTooltips[columnName], String.Empty) : columnName;
+                        categoryHeader = RegexCategoryHeaderEnd().Replace(categoryHeader, String.Empty);
+                        worksheetPrimary.Cell(1, columnIndex).Value = categoryHeader;
+                    }
+                }
+
+                worksheetPrimary.Range(1, 1, 1, DataView.Table!.Columns.Count).Style.Alignment.WrapText = true;
+                worksheetPrimary.Range(1, 1, 1, DataView.Table!.Columns.Count).Style.Fill.BackgroundColor = XLColor.LightBlue;
+
+                Dictionary<string, List<int>> superHeaderPositions = new();
+                for (int columnIndex = 1; columnIndex <= DataView.Table!.Columns.Count; columnIndex++)
+                {
+                    var superHeaderValue = worksheetPrimary.Cell(1, columnIndex).Value;
+                    if (superHeaderValue.IsText && (string)superHeaderValue != String.Empty)
+                    {
+                        if (!superHeaderPositions.ContainsKey((string)superHeaderValue))
+                        {
+                            superHeaderPositions.Add((string)superHeaderValue, new());
+                        }
+                        superHeaderPositions[(string)superHeaderValue].Add(columnIndex);
+                    }
+                }
+                foreach (var superHeaderPosition in superHeaderPositions)
+                {
+                    worksheetPrimary.Range(1, superHeaderPosition.Value.Min(), 1, superHeaderPosition.Value.Max()).Merge();
+                    worksheetPrimary.Cell(1, superHeaderPosition.Value.Min()).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
                 }
             }
 
@@ -1841,6 +1877,15 @@ namespace LSAnalyzer.ViewModels
         }
 
         [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\sstandard\\serror)?$")]
+        public static partial Regex RegexCategoryPercentageHeader();
+
+        [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\s.*)?$")]
         public static partial Regex RegexCategoryHeader();
+
+        [GeneratedRegex("^Cat\\s")]
+        private static partial Regex RegexCategoryHeaderStart();
+
+        [GeneratedRegex("\\s-\\s(standard\\serror|weighted|cases|FMI)$")]
+        private static partial Regex RegexCategoryHeaderEnd();
     }
 }

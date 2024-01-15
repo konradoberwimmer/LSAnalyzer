@@ -300,7 +300,7 @@ namespace LSAnalyzer.Views
 
             if (e.PropertyType == typeof(double) && e.Column is DataGridTextColumn dataGridTextColumn)
             {
-                if (dataGrid.DataContext is AnalysisPresentation analysisPresentation && analysisPresentation.Analysis is AnalysisFreq && e.Column.Header is string headerText && AnalysisPresentation.RegexCategoryHeader().IsMatch(headerText))
+                if (dataGrid.DataContext is AnalysisPresentation analysisPresentation && analysisPresentation.Analysis is AnalysisFreq && e.Column.Header is string headerText && AnalysisPresentation.RegexCategoryPercentageHeader().IsMatch(headerText))
                 {
                     dataGridTextColumn.Binding.StringFormat = "{0:0.0%}";
                     e.Column.CellStyle = (Style)Resources["ColumnRight"];
