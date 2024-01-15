@@ -1839,9 +1839,10 @@ namespace LSAnalyzer.ViewModels
             }
 
             using XLWorkbook wb = new();
+            wb.ColumnWidth = 22.14;
 
             wb.AddWorksheet(DataView.Table);
-
+            
             if (Analysis is AnalysisFreq analysisFreq)
             {
                 var worksheetPrimary = wb.Worksheet(DataView.Table!.TableName);
@@ -1863,6 +1864,13 @@ namespace LSAnalyzer.ViewModels
                         var categoryHeader = ColumnTooltips.ContainsKey(columnName) ? RegexCategoryHeaderStart().Replace(ColumnTooltips[columnName], String.Empty) : columnName;
                         categoryHeader = RegexCategoryHeaderEnd().Replace(categoryHeader, String.Empty);
                         worksheetPrimary.Cell(1, columnIndex).Value = categoryHeader;
+
+                        var coefficientHeader = RegexCategoryHeaderStart().Replace(columnName, String.Empty);
+                        if (RegexJustCategoryValue().IsMatch(coefficientHeader))
+                        {
+                            coefficientHeader += " - %";
+                        }
+                        worksheetPrimary.Cell(2, columnIndex).Value = coefficientHeader;
                     }
                 }
 
@@ -1960,5 +1968,8 @@ namespace LSAnalyzer.ViewModels
 
         [GeneratedRegex("\\s-\\s(standard\\serror|weighted|cases|FMI)$")]
         private static partial Regex RegexCategoryHeaderEnd();
+
+        [GeneratedRegex("^[0-9\\.]+$")]
+        private static partial Regex RegexJustCategoryValue();
     }
 }
