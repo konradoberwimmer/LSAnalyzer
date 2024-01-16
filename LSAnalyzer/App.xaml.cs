@@ -3,6 +3,7 @@ using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using RDotNet;
 using System;
@@ -30,6 +31,7 @@ namespace LSAnalyzer
 
         private void ConfigureServices(IServiceCollection services)
         {
+            services.AddLogging(builder => builder.AddEventLog());
             services.AddSingleton<Logging>();
             services.AddSingleton<Rservice>();
             services.AddTransient<Services.BatchAnalyze>();
