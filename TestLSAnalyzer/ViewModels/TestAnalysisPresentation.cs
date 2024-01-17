@@ -54,6 +54,8 @@ namespace TestLSAnalyzer.ViewModels
             Assert.NotNull(analysisPresentationViewModel.DataTable);
             Assert.Equal(4, analysisPresentationViewModel.DataTable.Rows.Count);
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("rank of mean (per variable)"));
+            Assert.False(analysisPresentationViewModel.DataView.Table!.Columns.Contains("rank of mean (per variable)"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat (label)"));
             Assert.Equal(2, analysisPresentationViewModel.DataTable.Select("[cat (label)] = 'Kategorie B'").Length);

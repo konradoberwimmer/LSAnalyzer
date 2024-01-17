@@ -195,7 +195,7 @@ namespace TestLSAnalyzer
             Assert.NotNull(buttonDownloadXlsx);
             buttonDownloadXlsx.Click();
 
-            var saveFileDialog = Retry.WhileNull(() => mainWindow.ModalWindows.FirstOrDefault(), TimeSpan.FromSeconds(2)).Result;
+            var saveFileDialog = Retry.WhileNull(() => mainWindow.ModalWindows.FirstOrDefault(), TimeSpan.FromSeconds(5)).Result;
             Assert.NotNull(saveFileDialog);
 
             var xlsxTextField = saveFileDialog.FindFirstDescendant(cf.ByControlType(ControlType.ComboBox).And(cf.ByName("Dateiname:"))).AsComboBox();

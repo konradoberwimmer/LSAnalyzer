@@ -388,6 +388,7 @@ namespace TestLSAnalyzer.Services
             var firstResult = result.First();
             var stats = firstResult["stat"].AsDataFrame();
             Assert.Equal(5, Convert.ToInt32(stats["Ncases"][2]));
+            Assert.Equal(1, Convert.ToInt32(stats["lsanalyzer_rank"][1]));
             Assert.True(Math.Abs((double)stats["SD"][0] - 44.54742) < 0.0001);
             Assert.True(Math.Abs((double)stats["SD_SE"][0] - 13.24182) < 0.0001);
 

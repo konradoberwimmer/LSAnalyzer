@@ -151,6 +151,29 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _hasRank = false;
+        public bool HasRank
+        {
+            get => _hasRank;
+            set
+            {
+                _hasRank = value;
+                NotifyPropertyChanged(nameof(HasRank));
+            }
+        }
+
+        private bool _showRank = false;
+        public bool ShowRank
+        {
+            get => _showRank;
+            set
+            {
+                _showRank = value;
+                NotifyPropertyChanged(nameof(ShowRank));
+                ResetDataView();
+            }
+        }
+
         private bool _hasNcasesToggle = false;
         public bool HasNcasesToggle
         {
@@ -398,6 +421,7 @@ namespace LSAnalyzer.ViewModels
 
             columns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
             columns.Add("Nweight", new DataColumn("N - weighted", typeof(double)));
+            columns.Add("lsanalyzer_rank", new DataColumn("rank of mean (per variable)", typeof(double)));
             columns.Add("M", new DataColumn("mean", typeof(double)));
             columns.Add("M_SE", new DataColumn("mean - standard error", typeof(double)));
             columns.Add("M_p", new DataColumn("mean - p value", typeof(double)));
@@ -488,6 +512,11 @@ namespace LSAnalyzer.ViewModels
                 table.Rows.Add(newRow);
 
                 HasTableAverage = true;
+            }
+
+            if (Analysis.GroupBy.Count >= 1)
+            {
+                HasRank = true;
             }
 
             string[] sortBy = { "variable" };
@@ -1622,6 +1651,7 @@ namespace LSAnalyzer.ViewModels
             {
                 dataView.Table!.Columns.Remove("variable (label)");
             }
+            if (!ShowRank) dataView.Table!.Columns.Remove("rank of mean (per variable)");
             if (!ShowPValues) dataView.Table!.Columns.Remove("mean - p value");
             if (!ShowFMI) dataView.Table!.Columns.Remove("mean - FMI");
             if (!ShowPValues) dataView.Table!.Columns.Remove("standard deviation - p value");

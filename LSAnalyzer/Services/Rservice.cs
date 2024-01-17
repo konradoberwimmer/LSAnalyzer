@@ -767,6 +767,7 @@ namespace LSAnalyzer.Services
                 {
                     groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
                     EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                    EvaluateAndLog("lsanalyzer_result_univar$stat$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_univar$stat$M, factor(lsanalyzer_result_univar$stat$var, levels = unique(lsanalyzer_result_univar$stat$var))), rank, ties.method = 'min'))");
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar").AsList());
                 } else
                 {
@@ -786,6 +787,7 @@ namespace LSAnalyzer.Services
                             {
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
                                 EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                                EvaluateAndLog("lsanalyzer_result_univar$stat$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_univar$stat$M, factor(lsanalyzer_result_univar$stat$var, levels = unique(lsanalyzer_result_univar$stat$var))), rank, ties.method = 'min'))");
                                 resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar").AsList());
                             }
                         }

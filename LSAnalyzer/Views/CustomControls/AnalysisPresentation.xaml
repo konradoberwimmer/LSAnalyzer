@@ -117,6 +117,15 @@
                                 </Binding>
                             </CheckBox.Visibility>
                         </CheckBox>
+                        <CheckBox Content="Show rank of means" IsChecked="{Binding ShowRank}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
+                            <CheckBox.Visibility>
+                                <Binding Path="HasRank" Converter="{StaticResource BoolToVisibilityConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Boolean>true</sys:Boolean>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </CheckBox.Visibility>
+                        </CheckBox>
                         <CheckBox Content="Show N cases (unweighted)" IsChecked="{Binding ShowNcases}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
                             <CheckBox.Visibility>
                                 <Binding Path="HasNcasesToggle" Converter="{StaticResource BoolToVisibilityConverter}">
