@@ -778,6 +778,8 @@ namespace LSAnalyzer.ViewModels
             columns.Add("$overall_Ncases", new DataColumn("N - cases unweighted", typeof(int)));
             columns.Add("$overall_Nweight", new DataColumn("N - weighted", typeof(double)));
 
+            columns.Add("lsanalyzer_rank", new DataColumn("rank of lowest category frequency (per variable)", typeof(double)));
+
             var commonValueLabels = GetCommonValueLabels(analysisFreq, categories);
 
             for (int cc = 0; cc < categories.Count; cc++)
@@ -905,6 +907,11 @@ namespace LSAnalyzer.ViewModels
                 }
                 row["N - cases unweighted"] = Ncases;
                 row["N - weighted"] = Nweight;
+            }
+
+            if (Analysis.GroupBy.Count > 0 && !table.AsEnumerable().Select(row => row.Field<double?>("Cat " + categories.First())).ToArray().Where(val => val == null).Any())
+            {
+                HasRank = true;
             }
 
             HasPValues = false;
@@ -1694,6 +1701,7 @@ namespace LSAnalyzer.ViewModels
             Dictionary<string, string> toggles = new()
             {
                 ["ShowVariableLabels"] = "variable\\s\\(label\\)",
+                ["ShowRank"] = "^rank\\sof\\slowest\\scategory",
                 ["ShowPValues"] = "p\\svalue$",
                 ["ShowFMI"] = "FMI$",
                 ["ShowNcases"] = "^Cat.*\\-\\scases$",

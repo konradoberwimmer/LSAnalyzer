@@ -117,7 +117,7 @@
                                 </Binding>
                             </CheckBox.Visibility>
                         </CheckBox>
-                        <CheckBox Content="Show rank of means" IsChecked="{Binding ShowRank}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
+                        <CheckBox Content="Show rank" IsChecked="{Binding ShowRank}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
                             <CheckBox.Visibility>
                                 <Binding Path="HasRank" Converter="{StaticResource BoolToVisibilityConverter}">
                                     <Binding.ConverterParameter>

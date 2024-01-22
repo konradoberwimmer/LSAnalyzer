@@ -616,6 +616,7 @@ namespace TestLSAnalyzer.Services
             var firstResult = result.First();
             var stats = firstResult["stat"].AsDataFrame();
             Assert.Equal(1.5, Convert.ToDouble(stats["Ncases"][2]));
+            Assert.Equal(2, Convert.ToInt32(stats["lsanalyzer_rank"][0]));
             Assert.True(Math.Abs((double)stats["perc"][0] - 0.2941176) < 0.0001);
             Assert.True(Math.Abs((double)stats["Nweight"][0] - 1.250) < 0.0001);
 
@@ -725,6 +726,9 @@ namespace TestLSAnalyzer.Services
             Assert.NotNull(result);
             Assert.Equal(2, result.Count);
             Assert.Equal(9, result.First()["stat"].AsDataFrame().RowCount);
+            var firstResult = result.First();
+            var firstResultStats = firstResult["stat"].AsDataFrame();
+            Assert.DoesNotContain("lsanalyzer_rank", firstResultStats.ColumnNames);
             Assert.Equal(18, result.Last()["stat"].AsDataFrame().RowCount);
         }
 

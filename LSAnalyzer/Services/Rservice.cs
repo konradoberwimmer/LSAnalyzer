@@ -865,6 +865,9 @@ namespace LSAnalyzer.Services
                 {
                     groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
                     EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                    EvaluateAndLog("lsanalyzer_result_freq$stat$lsanalyzer_rank <- as.numeric(NA)");
+                    EvaluateAndLog("ff <- lsanalyzer_result_freq$stat$varval == min(lsanalyzer_result_freq$stat$varval)");
+                    EvaluateAndLog("lsanalyzer_result_freq$stat[ff,]$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_freq$stat[ff,]$perc, factor(lsanalyzer_result_freq$stat[ff,]$var, levels = unique(lsanalyzer_result_freq$stat[ff,]$var))), rank, ties.method = 'min'))");
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
                 }
                 else
@@ -886,6 +889,9 @@ namespace LSAnalyzer.Services
                             {
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
                                 EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                                EvaluateAndLog("lsanalyzer_result_freq$stat$lsanalyzer_rank <- as.numeric(NA)");
+                                EvaluateAndLog("ff <- lsanalyzer_result_freq$stat$varval == min(lsanalyzer_result_freq$stat$varval)");
+                                EvaluateAndLog("lsanalyzer_result_freq$stat[ff,]$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_freq$stat[ff,]$perc, factor(lsanalyzer_result_freq$stat[ff,]$var, levels = unique(lsanalyzer_result_freq$stat[ff,]$var))), rank, ties.method = 'min'))");
                                 resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
                             }
                         }

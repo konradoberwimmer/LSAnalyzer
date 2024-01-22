@@ -296,6 +296,8 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("instable"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("instable (label)"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("rank of lowest category frequency (per variable)"));
+            Assert.False(analysisPresentationViewModel.DataView.Table!.Columns.Contains("rank of lowest category frequency (per variable)"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Cat 1"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Cat 5 - standard error"));
             Assert.True(analysisPresentationViewModel.ColumnTooltips.ContainsKey("Cat 3 - standard error"));

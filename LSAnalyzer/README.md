@@ -1,7 +1,6 @@
 ﻿# ToDo-List
 Test and debug!
 
-* add "rank" to univariate statistics (order of means) and frequencies (order of relative frequency of lowest category, only if all variables have the same categories)
 * add standard error of means to output of differences in means
 * create an automated test suite for a wider range of published trustful coefficients from known data (PIRLS, PISA school level, ...) that conducts realistic workflows
 * refactoring of data table creation and management
