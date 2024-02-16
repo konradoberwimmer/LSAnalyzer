@@ -2,7 +2,7 @@
 Test and debug!
 
 * add standard error of means to output of differences in means
-* implement a way to rebuild default dataset types and add many more: class and school level variante, TIMSS 2023, ICILS, PIAAC, ...
+* add more default dataset types: class and school level variante, TIMSS 2023, ICILS, PIAAC, ...
 * build the MSI for IQS software center
 * split application core and UI in separate assemblies to possibly switch to AvaloniaUI
 * create an automated test suite for a wider range of published trustful coefficients from known data (PIRLS, PISA school level, ...) that conducts realistic workflows

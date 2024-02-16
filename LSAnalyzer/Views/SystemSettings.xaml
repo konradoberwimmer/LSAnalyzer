@@ -27,12 +27,12 @@
                 </Grid.RowDefinitions>
                 <TextBlock Margin="0,0,0,5">
                      by Konrad Oberwimmer, released under 
-                    <Hyperlink x:Name="hyperLinkGPL3" NavigateUri="https://www.gnu.org/licenses/gpl-3.0.html" RequestNavigate="hyperLinkGPL3_RequestNavigate">
+                    <Hyperlink x:Name="hyperLinkGPL3" NavigateUri="https://www.gnu.org/licenses/gpl-3.0.html" RequestNavigate="HyperLinkGPL3_RequestNavigate">
                         GPL-3
                     </Hyperlink>
                 </TextBlock>
                 <TextBlock Grid.Row="1" Text="{Binding CountConfiguredDatasetTypes, StringFormat={}{0} configured dataset types ...}"/>
-                <Button Grid.Row="1" Width="80" Height="22" Content="Load default" HorizontalAlignment="Right"/>
+                <Button x:Name="buttonLoadDefaultDatasetConfiguration" Grid.Row="1" Width="80" Height="22" Content="Load default" HorizontalAlignment="Right" Click="ButtonLoadDefaultDatasetConfiguration_Click"/>
             </Grid>            
         </GroupBox>
         <GroupBox Grid.Row="1" Margin="10" Padding="5">

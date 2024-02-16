@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using LSAnalyzer.Helper;
+using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using System;
 using System.Collections.Generic;
@@ -74,6 +75,8 @@ namespace LSAnalyzer.ViewModels
         [ExcludeFromCodeCoverage]
         public SystemSettings() 
         {
+            _rservice = new();
+            _configuration = new();
             // design-time only, parameterless constructor
             RVersion = "R version 4.3.1";
             BifieSurveyVersion = "3.4-15";
@@ -96,19 +99,36 @@ namespace LSAnalyzer.ViewModels
         public event PropertyChangedEventHandler? PropertyChanged;
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
-            if (PropertyChanged != null)
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private RelayCommand<object?> _loadDefaultDatasetTypesCommand = null!;
+        public ICommand LoadDefaultDatasetTypesCommand
+        {
+            get
             {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                _loadDefaultDatasetTypesCommand ??= new RelayCommand<object?>(this.LoadDefaultDatasetTypes);
+                return _loadDefaultDatasetTypesCommand;
             }
         }
 
-        private RelayCommand<object?> _updateBifieSurveyCommand;
+        private void LoadDefaultDatasetTypes(object? dummy)
+        {
+            foreach (var defaultDatasetType in DatasetType.CreateDefaultDatasetTypes())
+            {
+                _configuration.RemoveDatasetType(defaultDatasetType);
+                _configuration.StoreDatasetType(defaultDatasetType);
+            }
+
+            CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
+        }
+
+        private RelayCommand<object?> _updateBifieSurveyCommand = null!;
         public ICommand UpdateBifieSurveyCommand
         {
             get
             {
-                if (_updateBifieSurveyCommand == null)
-                    _updateBifieSurveyCommand = new RelayCommand<object?>(this.UpdateBifieSurvey);
+                _updateBifieSurveyCommand ??= new RelayCommand<object?>(this.UpdateBifieSurvey);
                 return _updateBifieSurveyCommand;
             }
         }
@@ -134,13 +154,12 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private RelayCommand<string?> _saveSessionLogCommand;
+        private RelayCommand<string?> _saveSessionLogCommand = null!;
         public ICommand SaveSessionLogCommand
         {
             get
             {
-                if (_saveSessionLogCommand == null)
-                    _saveSessionLogCommand = new RelayCommand<string?>(this.SaveSessionLog);
+                _saveSessionLogCommand ??= new RelayCommand<string?>(this.SaveSessionLog);
                 return _saveSessionLogCommand;
             }
         }

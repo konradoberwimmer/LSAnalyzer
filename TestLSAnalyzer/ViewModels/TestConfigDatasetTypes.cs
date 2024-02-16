@@ -34,26 +34,22 @@ namespace TestLSAnalyzer.ViewModels
         public void TestNewDatasetType()
         {
             Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
-            int maxId = 0;
-            foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
-            {
-                datasetTypesConfiguration.StoreDatasetType(datasetType);
-                if (datasetType.Id > maxId)
-                {
-                    maxId = datasetType.Id;
-                }
-            }
 
             ConfigDatasetTypes datasetTypesViewModel = new(datasetTypesConfiguration);
 
             datasetTypesViewModel.NewDatasetTypeCommand.Execute(null);
             Assert.NotNull(datasetTypesViewModel.SelectedDatasetType);
             Assert.Equal("New dataset type", datasetTypesViewModel.SelectedDatasetType.Name);
-            Assert.Equal(maxId + 1, datasetTypesViewModel.SelectedDatasetType.Id);
+            Assert.Equal(1, datasetTypesViewModel.SelectedDatasetType.Id);
             Assert.Contains("New dataset type", datasetTypesViewModel.UnsavedDatasetTypeNames);
 
             datasetTypesViewModel.SelectedDatasetType.Weight = "wgt";
             Assert.Contains("New dataset type", datasetTypesViewModel.UnsavedDatasetTypeNames);
+
+            datasetTypesViewModel.NewDatasetTypeCommand.Execute(null);
+            Assert.NotNull(datasetTypesViewModel.SelectedDatasetType);
+            Assert.Equal("New dataset type", datasetTypesViewModel.SelectedDatasetType.Name);
+            Assert.Equal(2, datasetTypesViewModel.SelectedDatasetType.Id);
         }
 
         [Fact]
@@ -119,6 +115,7 @@ namespace TestLSAnalyzer.ViewModels
             }
 
             ConfigDatasetTypes datasetTypesViewModel = new(datasetTypesConfiguration);
+            Assert.Empty(datasetTypesViewModel.DatasetTypes.Where(dst => dst.Id == 1));
             var numberOfDatasetTypes = datasetTypesViewModel.DatasetTypes.Count;
 
             string failureMessageSent = string.Empty;
@@ -148,6 +145,7 @@ namespace TestLSAnalyzer.ViewModels
             datasetTypesViewModel.ImportDatasetTypeCommand.Execute(goodFileName);
             Assert.True(failureMessageSent == string.Empty);
             Assert.True(datasetTypesViewModel.DatasetTypes.Count == numberOfDatasetTypes + 1);
+            Assert.NotEmpty(datasetTypesViewModel.DatasetTypes.Where(dst => dst.Id == 1));
         }
 
         [Fact]

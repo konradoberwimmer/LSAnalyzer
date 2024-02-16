@@ -29,7 +29,7 @@ namespace LSAnalyzer.Views
         }
 
         [ExcludeFromCodeCoverage]
-        private void hyperLinkGPL3_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        private void HyperLinkGPL3_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
         {
             var sInfo = new System.Diagnostics.ProcessStartInfo(e.Uri.ToString())
             {
@@ -56,6 +56,23 @@ namespace LSAnalyzer.Views
                 Properties.Settings.Default.Save();
                 systemSettingsViewModel.SaveSessionLogCommand.Execute(saveFileDialog.FileName);
             }
+        }
+
+        private void ButtonLoadDefaultDatasetConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.SystemSettings systemSettingsViewModel)
+            {
+                return;
+            }
+
+            var result = MessageBox.Show("This will load all default dataset types of the current version. Your user-specific dataset types will be preserved, except for the very rare case where their IDs may collide with default values. Consider exporting your user-specific datasets beforehand!\n\nDo you want to proceed?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.No) 
+            {
+                return;
+            }
+
+            systemSettingsViewModel.LoadDefaultDatasetTypesCommand.Execute(null);
         }
     }
 }

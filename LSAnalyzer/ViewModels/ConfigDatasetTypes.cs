@@ -101,16 +101,13 @@ namespace LSAnalyzer.ViewModels
 
         private void NewDatasetType(object? dummy)
         {
-            int maxDatasetTypeId = 0;
-            foreach (var datasetType in DatasetTypes)
+            int minAvailableDatasetTypeId = 1;
+            while (DatasetTypes.Where(dst => dst.Id == minAvailableDatasetTypeId).Any())
             {
-                if (datasetType.Id > maxDatasetTypeId)
-                {
-                    maxDatasetTypeId = datasetType.Id;
-                }
+                minAvailableDatasetTypeId++;
             }
 
-            DatasetType newDatasetType = new() { Id = maxDatasetTypeId + 1, Name = "New dataset type", JKreverse = false };
+            DatasetType newDatasetType = new() { Id = minAvailableDatasetTypeId, Name = "New dataset type", JKreverse = false };
 
             DatasetTypes.Add(newDatasetType);
             SelectedDatasetType = newDatasetType;
@@ -191,15 +188,13 @@ namespace LSAnalyzer.ViewModels
                     return;
                 }
 
-                int maxDatasetTypeId = 0;
-                foreach (var datasetType in DatasetTypes)
+                int minAvailableDatasetTypeId = 1;
+                while (DatasetTypes.Where(dst => dst.Id == minAvailableDatasetTypeId).Any())
                 {
-                    if (datasetType.Id > maxDatasetTypeId)
-                    {
-                        maxDatasetTypeId = datasetType.Id;
-                    }
+                    minAvailableDatasetTypeId++;
                 }
-                newDatasetType.Id = maxDatasetTypeId + 1;
+
+                newDatasetType.Id = minAvailableDatasetTypeId;
 
                 if (!newDatasetType.Validate())
                 {
