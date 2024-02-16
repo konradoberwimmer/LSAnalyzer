@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +20,29 @@ namespace LSAnalyzer.ViewModels
     {
         private readonly Rservice _rservice;
         private readonly Logging _logger;
+        private readonly Configuration _configuration;
+
+        private string _version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
+        public string Version
+        {
+            get => _version;
+            set
+            {
+                _version = value;
+                NotifyPropertyChanged(nameof(Version));
+            }
+        }
+
+        private int _countConfiguredDatasetTypes;
+        public int CountConfiguredDatasetTypes
+        {
+            get => _countConfiguredDatasetTypes;
+            set
+            {
+                _countConfiguredDatasetTypes = value;
+                NotifyPropertyChanged(nameof(CountConfiguredDatasetTypes));
+            }
+        }
 
         private string? _rVersion;
         public string? RVersion
@@ -53,16 +77,19 @@ namespace LSAnalyzer.ViewModels
             // design-time only, parameterless constructor
             RVersion = "R version 4.3.1";
             BifieSurveyVersion = "3.4-15";
+            CountConfiguredDatasetTypes = 12;
             _logger = new();
             _logger.AddEntry(new LogEntry(DateTime.Now, "stats::sd(c(1,2,3))"));
             _logger.AddEntry(new LogEntry(DateTime.Now, "rm(dummy_result)"));
         }
 
-        public SystemSettings(Rservice rservice, Logging logger)
+        public SystemSettings(Rservice rservice, Configuration configuration, Logging logger)
         {
             _rservice = rservice;
             RVersion = _rservice.GetRVersion();
             BifieSurveyVersion = _rservice.GetBifieSurveyVersion();
+            _configuration = configuration;
+            CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
             _logger = logger;
         }
 

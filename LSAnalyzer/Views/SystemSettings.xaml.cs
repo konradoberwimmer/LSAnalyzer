@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -25,6 +26,16 @@ namespace LSAnalyzer.Views
             InitializeComponent();
 
             DataContext = systemSettingsViewModel;
+        }
+
+        [ExcludeFromCodeCoverage]
+        private void hyperLinkGPL3_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            var sInfo = new System.Diagnostics.ProcessStartInfo(e.Uri.ToString())
+            {
+                UseShellExecute = true,
+            };
+            System.Diagnostics.Process.Start(sInfo);
         }
 
         private void ButtonSaveSessionLog_Click(object sender, RoutedEventArgs e)

@@ -15,11 +15,13 @@ namespace TestLSAnalyzer.ViewModels
         public void TestSaveSessionLogCommand()
         {
             Logging logger = new();
+            Configuration configuration = new();
             Rservice rservice = new(logger);
+
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.InjectAppFunctions());
 
-            SystemSettings systemSettingsViewModel = new(rservice, logger);
+            SystemSettings systemSettingsViewModel = new(rservice, configuration, logger);
 
             var filename = Path.GetTempFileName();
             systemSettingsViewModel.SaveSessionLogCommand.Execute(filename);
