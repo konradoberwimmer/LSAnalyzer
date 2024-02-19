@@ -820,6 +820,7 @@ namespace LSAnalyzer.Services
                 {
                     string groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
                     EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar").AsList());
                     EvaluateAndLog("lsanalyzer_result_univar_test <- BIFIEsurvey::BIFIE.univar.test(lsanalyzer_result_univar)", analysis.AnalysisName);
                     resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar_test").AsList());
                 } else
@@ -828,6 +829,7 @@ namespace LSAnalyzer.Services
                     {
                         string groupByArg = ", group = '" + groupByVar.Name + "'";
                         EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                        resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar").AsList());
                         EvaluateAndLog("lsanalyzer_result_univar_test <- BIFIEsurvey::BIFIE.univar.test(lsanalyzer_result_univar)", analysis.AnalysisName);
                         resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar_test").AsList());
                     }

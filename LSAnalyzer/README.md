@@ -1,7 +1,6 @@
 ﻿# ToDo-List
 Test and debug!
 
-* add standard error of means to output of differences in means
 * add more default dataset types: class and school level variante, TIMSS 2023, ICILS, PIAAC, ...
 * build the MSI for IQS software center
 * split application core and UI in separate assemblies to possibly switch to AvaloniaUI

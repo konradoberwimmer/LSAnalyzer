@@ -563,7 +563,9 @@ namespace LSAnalyzer.ViewModels
             }
 
             columns.Add("M1", new DataColumn("mean - group A", typeof(double)));
+            columns.Add("$M1_SE", new DataColumn("mean - group A - standard error", typeof(double)));
             columns.Add("M2", new DataColumn("mean - group B", typeof(double)));
+            columns.Add("$M2_SE", new DataColumn("mean - group B - standard error", typeof(double)));
             columns.Add("SD", new DataColumn("standard deviation (pooled)", typeof(double)));
             columns.Add("d", new DataColumn("Cohens d", typeof(double)));
             columns.Add("d_SE", new DataColumn("Cohens d - standard error", typeof(double)));
@@ -575,9 +577,19 @@ namespace LSAnalyzer.ViewModels
                 table.Columns.Add(column);
             }
 
-            foreach (var result in Analysis.Result)
+            // list of results has output from BIFIE.univar in even and results from BIFIE.univar.test in odd positions
+            for (int cntResult = 0; cntResult < Analysis.Result.Count; cntResult++)
             {
+                if (cntResult % 2 == 0)
+                {
+                    continue;
+                }
+
+                var result = Analysis.Result[cntResult];
+                var univarResult = Analysis.Result[cntResult - 1];
+
                 var dataFrame = result["stat.dstat"].AsDataFrame();
+                var univarDataFrame = univarResult["stat_M"].AsDataFrame();
 
                 foreach (var dataFrameRow in dataFrame.GetRows())
                 {
@@ -644,7 +656,42 @@ namespace LSAnalyzer.ViewModels
                             {
                                 cellValues.Add(null);
                             }
-                        } else if (Regex.IsMatch(column, "^\\$varlabel_"))
+                        }
+                        else if (Regex.IsMatch(column, "^\\$M(1|2)_SE$"))
+                        {
+                            var groupNr = Convert.ToInt32(Regex.Match(column, "[0-9]").Value);
+                            var groupValues = Convert.ToString(dataFrameRow["groupval" + groupNr])?.Split("#");
+
+                            if (groupValues != null)
+                            {
+                                foreach (var univarDataFrameRow in univarDataFrame.GetRows())
+                                {
+                                    bool matchGroup = true;
+
+                                    for (int gg = 0; gg < groupValues.Length; gg++)
+                                    {
+                                        var groupColumnUnivar = (gg > 1 || groupValues.Length > 1) ? "groupval" + (gg + 1) : "groupval";
+                                        if ((double)univarDataFrameRow[groupColumnUnivar] != Convert.ToDouble(groupValues[gg]))
+                                        {
+                                            matchGroup = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (matchGroup)
+                                    {
+                                        cellValues.Add((double)univarDataFrameRow["M_SE"]);
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                cellValues.Add(null);
+                            }
+
+                        }
+                        else if (Regex.IsMatch(column, "^\\$varlabel_"))
                         {
                             if (dataFrameRow["var"] is string varName && analysisMeanDiff.VariableLabels.ContainsKey(varName))
                             {
@@ -699,8 +746,16 @@ namespace LSAnalyzer.ViewModels
                 table.Columns.Add(column);
             }
 
-            foreach (var result in Analysis.Result)
+            // list of results has output from BIFIE.univar in even and results from BIFIE.univar.test in odd positions
+            for (int cntResult = 0; cntResult < Analysis.Result.Count; cntResult++)
             {
+                if (cntResult % 2 == 0)
+                {
+                    continue;
+                }
+
+                var result = Analysis.Result[cntResult];
+
                 var dataFrame = result["stat.eta"].AsDataFrame();
 
                 foreach (var dataFrameRow in dataFrame.GetRows())

@@ -531,12 +531,18 @@ namespace TestLSAnalyzer.Services
 
             var result = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(result);
-            Assert.Single(result);
+            Assert.Equal(2, result.Count);
+
             var firstResult = result.First();
-            var statEta = firstResult["stat.eta"].AsDataFrame();
+            var statM = firstResult["stat_M"].AsDataFrame();
+            Assert.True(Math.Abs((double)statM["M"][0] - 549.66678562657671) < 0.0001);
+            Assert.True(Math.Abs((double)statM["M_SE"][0] - 2.4462113724162045) < 0.0001);
+
+            var lastResult = result.Last();
+            var statEta = lastResult["stat.eta"].AsDataFrame();
             Assert.True(Math.Abs((double)statEta["eta"][0] - 0.1770158) < 0.0001);
             Assert.True(Math.Abs((double)statEta["eta_SE"][0] - 0.0211625) < 0.0001);
-            var statD= firstResult["stat.dstat"].AsDataFrame();
+            var statD= lastResult["stat.dstat"].AsDataFrame();
             Assert.Equal(6, statD.RowCount);
         }
 
@@ -573,13 +579,17 @@ namespace TestLSAnalyzer.Services
 
             var result = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(result);
-            Assert.Equal(2, result.Count);
-            var firstResult = result.First();
-            var statEta = firstResult["stat.eta"].AsDataFrame();
+            Assert.Equal(4, result.Count);
+
+            var firstMeanDiffResult = result[1];
+            var statEta = firstMeanDiffResult["stat.eta"].AsDataFrame();
             Assert.True(Math.Abs((double)statEta["eta"][0] - 0.04523357) < 0.0001);
             Assert.True(Math.Abs((double)statEta["eta_SE"][0] - 0.0185994) < 0.0001);
-            var statD = firstResult["stat.dstat"].AsDataFrame();
+            var statD = firstMeanDiffResult["stat.dstat"].AsDataFrame();
             Assert.Equal(1, statD.RowCount);
+
+            var secondUnivarResult = result[2];
+            Assert.Contains("stat_M", secondUnivarResult.AsList().Names);
         }
 
         [Fact]
@@ -1329,14 +1339,16 @@ namespace TestLSAnalyzer.Services
 
             var resultSav = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(resultSav);
-            var dataFrameSav = resultSav.First()["stat.dstat"].AsDataFrame();
+            Assert.Equal(2, resultSav.Count);
+            var dataFrameSav = resultSav.Last()["stat.dstat"].AsDataFrame();
 
             analysisConfiguration.FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.rds");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
 
             var resultRds = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(resultRds);
-            var dataFrameRds = resultRds.First()["stat.dstat"].AsDataFrame();
+            Assert.Equal(2, resultRds.Count);
+            var dataFrameRds = resultRds.Last()["stat.dstat"].AsDataFrame();
 
             var valuesRds = dataFrameRds["d"].AsNumeric();
             for (int vv = 0; vv < valuesRds.Length; vv++)
@@ -1349,7 +1361,8 @@ namespace TestLSAnalyzer.Services
 
             var resultCsv2 = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(resultCsv2);
-            var dataFrameCsv2 = resultCsv2.First()["stat.dstat"].AsDataFrame();
+            Assert.Equal(2, resultCsv2.Count);
+            var dataFrameCsv2 = resultCsv2.Last()["stat.dstat"].AsDataFrame();
 
             var valuesCsv2 = dataFrameCsv2["d"].AsNumeric();
             for (int vv = 0; vv < valuesCsv2.Length; vv++)
@@ -1362,7 +1375,8 @@ namespace TestLSAnalyzer.Services
 
             var resultXlsx = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(resultXlsx);
-            var dataFrameXlsx = resultXlsx.First()["stat.dstat"].AsDataFrame();
+            Assert.Equal(2, resultXlsx.Count);
+            var dataFrameXlsx = resultXlsx.Last()["stat.dstat"].AsDataFrame();
 
             var valuesXlsx = dataFrameXlsx["d"].AsNumeric();
             for (int vv = 0; vv < valuesXlsx.Length; vv++)
