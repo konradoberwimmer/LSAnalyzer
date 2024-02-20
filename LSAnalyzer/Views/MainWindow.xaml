@@ -56,7 +56,9 @@
                 <MenuItem x:Name="menuItemBatchAnalyze" Header="Batch analyze ..." Click="MenuItemBatchAnalyze_Click"/>
             </MenuItem>
             <MenuItem Header="_Config">
-                <MenuItem x:Name="menuItemDatasetTypes" Header="Dataset-Types ..." Click="MenuItemDatasetTypes_Click" />
+                <MenuItem x:Name="menuItemDatasetTypes" Header="Dataset types ..." Click="MenuItemDatasetTypes_Click" />
+                <Separator/>
+                <MenuItem x:Name="menuItemDataProviders" Header="Data providers ..." Click="MenuItemDataProviders_Click"/>
                 <MenuItem x:Name="menuItemSystemSettings" Header="System ..." Click="MenuItemSystemSettings_Click"/>
             </MenuItem>
         </Menu>

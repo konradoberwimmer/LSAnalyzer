@@ -1,6 +1,7 @@
 ﻿# ToDo-List
 Test and debug!
 
+* add dataverse support
 * add more default dataset types: class and school level variante, TIMSS 2023, ICILS, PIAAC, ...
 * build the MSI for IQS software center
 * split application core and UI in separate assemblies to possibly switch to AvaloniaUI

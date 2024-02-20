@@ -283,5 +283,11 @@ namespace LSAnalyzer.Views
                 mainWindowViewModel.SaveAnalysesDefintionsCommand.Execute(saveFileDialog.FileName);
             }
         }
+
+        private void MenuItemDataProviders_Click(object sender, RoutedEventArgs e)
+        {
+            DataProviders dataProvidersView = _serviceProvider.GetService<DataProviders>()!;
+            dataProvidersView.ShowDialog();
+        }
     }
 }

@@ -76,7 +76,7 @@ namespace LSAnalyzer.ViewModels
         public SystemSettings() 
         {
             _rservice = new();
-            _configuration = new();
+            _configuration = new("");
             // design-time only, parameterless constructor
             RVersion = "R version 4.3.1";
             BifieSurveyVersion = "3.4-15";

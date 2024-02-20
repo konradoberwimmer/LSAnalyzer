@@ -2,6 +2,7 @@
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
@@ -31,15 +32,19 @@ namespace LSAnalyzer
 
         private void ConfigureServices(IServiceCollection services)
         {
+            ConfigurationBuilder configurationBuilder = new();
+            configurationBuilder.AddUserSecrets<Configuration>();
+
             services.AddLogging(builder => builder.AddEventLog());
             services.AddSingleton<Logging>();
             services.AddSingleton<Rservice>();
             services.AddTransient<Services.BatchAnalyze>();
             services.AddTransient<Configuration>(provider => { 
                 var userDatasetTypesConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");
-                return new Configuration(userDatasetTypesConfigFile); 
+                return new Configuration(userDatasetTypesConfigFile, configurationBuilder); 
             });
             services.AddTransient<ConfigDatasetTypes>();
+            services.AddTransient<DataProviders>();
             services.AddTransient<SystemSettings>();
             services.AddTransient<SelectAnalysisFile>();
             services.AddTransient<Subsetting>();
@@ -47,6 +52,7 @@ namespace LSAnalyzer
             services.AddTransient<MainWindow>();
             services.AddTransient<ViewModels.BatchAnalyze>();
             services.AddTransient<Views.ConfigDatasetTypes>();
+            services.AddTransient<Views.DataProviders>();
             services.AddTransient<Views.SystemSettings>();
             services.AddTransient<Views.SelectAnalysisFile>();
             services.AddTransient<Views.BatchAnalyze>();

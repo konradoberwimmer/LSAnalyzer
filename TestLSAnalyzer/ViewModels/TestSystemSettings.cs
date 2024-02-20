@@ -16,7 +16,7 @@ namespace TestLSAnalyzer.ViewModels
         public void TestSaveSessionLogCommand()
         {
             Logging logger = new();
-            Configuration configuration = new();
+            Configuration configuration = new("");
             Rservice rservice = new(logger);
 
             Assert.True(rservice.Connect(), "R must also be available for tests");
