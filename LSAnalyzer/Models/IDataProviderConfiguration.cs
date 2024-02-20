@@ -1,4 +1,5 @@
 ﻿using LSAnalyzer.Models.DataProviderConfiguration;
+using LSAnalyzer.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,5 +15,7 @@ namespace LSAnalyzer.Models
     {
         int Id { get; set; }
         string Name { get; set; }
+
+        IDataProvider CreateService(IServiceProvider serviceProvider);
     }
 }

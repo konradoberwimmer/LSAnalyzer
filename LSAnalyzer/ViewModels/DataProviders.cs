@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,18 +18,26 @@ namespace LSAnalyzer.ViewModels
     public partial class DataProviders : ObservableObject
     {
         private readonly Configuration _configuration;
+        private readonly IServiceProvider? _serviceProvider;
 
         [ObservableProperty]
         private ObservableCollection<IDataProviderConfiguration> _configurations = new();
 
         [ObservableProperty]
         private IDataProviderConfiguration? _selectedConfiguration;
+        partial void OnSelectedConfigurationChanged(IDataProviderConfiguration? value)
+        {
+            TestResults = new();
+        }
 
         [ObservableProperty]
         private List<Type> _types = GetInstalledDataProviderConfigurationTypes();
 
         [ObservableProperty]
         private Type? _selectedType;
+
+        [ObservableProperty]
+        private DataProviderTestResults _testResults = new();
 
         private static List<Type> GetInstalledDataProviderConfigurationTypes() => Assembly.GetExecutingAssembly().GetTypes().Where(t => t.Namespace == "LSAnalyzer.Models.DataProviderConfiguration" && t.GetInterfaces().Contains(typeof(IDataProviderConfiguration))).ToList();
 
@@ -39,7 +48,7 @@ namespace LSAnalyzer.ViewModels
             _configuration = new("");
         }
 
-        public DataProviders(Configuration configuration)
+        public DataProviders(Configuration configuration, IServiceProvider? serviceProvider)
         {
             _configuration = configuration;
             Configurations = new(configuration.GetDataProviderConfigurations());
@@ -47,6 +56,8 @@ namespace LSAnalyzer.ViewModels
             {
                 config.AcceptChanges();
             }
+
+            _serviceProvider = serviceProvider;
         }
 
         [RelayCommand]
@@ -110,5 +121,24 @@ namespace LSAnalyzer.ViewModels
             Configurations.Remove(SelectedConfiguration);
             SelectedConfiguration = null;
         }
+
+        [RelayCommand]
+        private void TestDataProvider()
+        {
+            if (SelectedConfiguration == null || _serviceProvider == null)
+            {
+                return;
+            }
+
+            var success = SelectedConfiguration.CreateService(_serviceProvider).TestProvider();
+
+            TestResults = new() { IsSuccess = success, Message = success ? "Data provider works" : "Data provider not working " };
+        }
+    }
+
+    public class DataProviderTestResults
+    {
+        public bool IsSuccess { get; set; } = false;
+        public string Message { get; set; } = string.Empty;
     }
 }

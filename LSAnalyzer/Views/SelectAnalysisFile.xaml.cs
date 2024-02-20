@@ -54,7 +54,7 @@ namespace LSAnalyzer.Views
             {
                 if (m.PackageName == "openxlsx")
                 {
-                    var result = MessageBox.Show("Using XLSX files requires package 'openxls'. Do you want to install it now?", "Info", MessageBoxButton.YesNo, MessageBoxImage.Information);
+                    var result = MessageBox.Show("Using XLSX files requires package 'openxlsx'. Do you want to install it now?", "Info", MessageBoxButton.YesNo, MessageBoxImage.Information);
 
                     if (result == MessageBoxResult.Yes)
                     {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LSAnalyzer.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,7 @@ namespace LSAnalyzer.Helper
     public class MissingRPackageMessage
     {
         public string PackageName;
+        public IDataProvider? DataProvider;
 
         public MissingRPackageMessage(string packageName)
         {

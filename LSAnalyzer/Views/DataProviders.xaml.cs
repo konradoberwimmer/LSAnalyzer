@@ -1,4 +1,7 @@
-﻿using LSAnalyzer.ViewModels;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using GalaSoft.MvvmLight.Threading;
+using LSAnalyzer.Helper;
+using LSAnalyzer.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +28,30 @@ namespace LSAnalyzer.Views
             InitializeComponent();
 
             DataContext = viewModel;
+
+            WeakReferenceMessenger.Default.Register<MissingRPackageMessage>(this, (r, m) =>
+            {
+                if (m.PackageName == "dataverse")
+                {
+                    var result = MessageBox.Show("Using dataverse requires package 'dataverse' (>= 0.3.0). Do you want to install it now?", "Info", MessageBoxButton.YesNo, MessageBoxImage.Information);
+
+                    if (result == MessageBoxResult.Yes && m.DataProvider != null)
+                    {
+                        DispatcherHelper.CheckBeginInvokeOnUI(() =>
+                        {
+                            var succesfulInstall = m.DataProvider.InstallDependencies();
+                            if (succesfulInstall)
+                            {
+                                MessageBox.Show("R package installation successful. Please restart application!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                            }
+                            else
+                            {
+                                MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart app afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            }
+                        });
+                    }
+                }
+            });
         }
         private void ComboBoxSelectedType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

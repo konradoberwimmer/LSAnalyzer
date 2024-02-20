@@ -35,6 +35,10 @@ namespace LSAnalyzer
             ConfigurationBuilder configurationBuilder = new();
             configurationBuilder.AddUserSecrets<Configuration>();
 
+            services.AddSingleton<IServiceProvider>(provider =>
+            {
+                return _serviceProvider;
+            });
             services.AddLogging(builder => builder.AddEventLog());
             services.AddSingleton<Logging>();
             services.AddSingleton<Rservice>();

@@ -79,7 +79,7 @@ namespace LSAnalyzer.Services
             }
         }
 
-        public bool CheckNecessaryRPackages(string? packageName = null)
+        public virtual bool CheckNecessaryRPackages(string? packageName = null)
         {
             string[] rPackagesToCheck = (packageName == null ? _rPackagesNecessary : new string[] { packageName });
 
@@ -1341,6 +1341,18 @@ namespace LSAnalyzer.Services
             } catch 
             { 
                 return null; 
+            }
+        }
+
+        public virtual bool Execute(string rCode)
+        {
+            try
+            {
+                EvaluateAndLog(rCode, null, true);
+                return true;
+            } catch
+            {
+                return false;
             }
         }
     }

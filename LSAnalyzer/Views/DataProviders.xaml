@@ -10,10 +10,12 @@
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewModels:DataProviders, IsDesignTimeCreatable=True}"
-        Title="Data providers" MinWidth="600" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight">
+        Title="Data providers" MinWidth="600" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
     <Window.Resources>
         <converter:DataProviderTypeName x:Key="dataProviderTypeNameConverter"/>
         <converter:IndexToBool x:Key="IndexToBoolConverter"/>
+        <converter:InverseBool x:Key="InverseBoolConverter"/>
+        <converter:BoolToRedGreen x:Key="BoolToRedGreenConverter"/>
         <Style x:Key="ComboBoxSelectOverlay" TargetType="TextBlock">
             <Setter Property="Grid.ZIndex" Value="10"/>
             <Setter Property="Foreground" Value="{x:Static SystemColors.GrayTextBrush}"/>
@@ -35,29 +37,32 @@
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
                 <ColumnDefinition/>
                 <ColumnDefinition Width="auto"/>
                 <ColumnDefinition Width="auto"/>
             </Grid.ColumnDefinitions>
-            <ComboBox x:Name="comboBoxSelectedConfiguration" Grid.Row="0" Grid.Column="0" ItemsSource="{Binding Configurations}" SelectedItem="{Binding SelectedConfiguration}" DisplayMemberPath="Name" Margin="0,0,10,10" Validation.ErrorTemplate="{x:Null}"/>
-            <TextBlock Grid.Row="0" Grid.Column="0" DataContext="{Binding ElementName=comboBoxSelectedConfiguration, Path=SelectedItem}" Text="Select ..." Style="{StaticResource ComboBoxSelectOverlay}"/>
-            <ComboBox x:Name="comboBoxSelectedType" Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Types}" SelectedItem="{Binding SelectedType}" Margin="0,0,10,10" MinWidth="100" SelectionChanged="ComboBoxSelectedType_SelectionChanged">
+            <ComboBox x:Name="comboBoxSelectedConfiguration" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" ItemsSource="{Binding Configurations}" SelectedItem="{Binding SelectedConfiguration}" DisplayMemberPath="Name" Margin="0,0,10,10" Validation.ErrorTemplate="{x:Null}"/>
+            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"  DataContext="{Binding ElementName=comboBoxSelectedConfiguration, Path=SelectedItem}" Text="Select ..." Style="{StaticResource ComboBoxSelectOverlay}"/>
+            <ComboBox x:Name="comboBoxSelectedType" Grid.Row="0" Grid.Column="2" ItemsSource="{Binding Types}" SelectedItem="{Binding SelectedType}" Margin="0,0,10,10" MinWidth="100" SelectionChanged="ComboBoxSelectedType_SelectionChanged">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Converter={StaticResource dataProviderTypeNameConverter}}"/>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <TextBlock Grid.Row="0" Grid.Column="1" DataContext="{Binding ElementName=comboBoxSelectedType, Path=SelectedItem}" Text="New ..." Style="{StaticResource ComboBoxSelectOverlay}"/>
-            <Button Grid.Row="0" Grid.Column="2" Content="Remove" Width="80" Height="22" VerticalAlignment="Top" IsEnabled="{Binding SelectedIndex, ElementName=comboBoxSelectedConfiguration, Converter={StaticResource IndexToBoolConverter}}" Command="{Binding DeleteDataProviderCommand}"/>
-            <ContentControl Grid.Row="1" Grid.ColumnSpan="3" Content="{Binding SelectedConfiguration}" Validation.ErrorTemplate="{x:Null}">
+            <TextBlock Grid.Row="0" Grid.Column="2" DataContext="{Binding ElementName=comboBoxSelectedType, Path=SelectedItem}" Text="New ..." Style="{StaticResource ComboBoxSelectOverlay}"/>
+            <Button Grid.Row="0" Grid.Column="3" Content="Remove" Width="80" Height="22" VerticalAlignment="Top" IsEnabled="{Binding SelectedIndex, ElementName=comboBoxSelectedConfiguration, Converter={StaticResource IndexToBoolConverter}}" Command="{Binding DeleteDataProviderCommand}"/>
+            <ContentControl Grid.Row="1" Grid.ColumnSpan="4" Content="{Binding SelectedConfiguration}" Validation.ErrorTemplate="{x:Null}">
                 <ContentControl.Resources>
                     <DataTemplate x:Name="dataverseDataTemplate" DataType="{x:Type dataProviderConfiguration:DataverseConfiguration}">
                         <dataProviderCustomControls:Dataverse Content="{Binding}"/>
                     </DataTemplate>
                 </ContentControl.Resources>
             </ContentControl>
-            <Button Grid.Row="2" Grid.Column="2" Content="Save" Width="80" Height="22" IsEnabled="{Binding SelectedConfiguration.IsChanged, FallbackValue=false}" Command="{Binding SaveDataProviderCommand}"/>
+            <Button Grid.Row="2" Grid.Column="0" Content="Test" Width="80" Height="22" HorizontalAlignment="Left" IsEnabled="{Binding SelectedConfiguration.IsChanged, Converter={StaticResource InverseBoolConverter}, FallbackValue=false}" Command="{Binding TestDataProviderCommand}" Margin="0,0,10,0"/>
+            <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{Binding TestResults.Message}" Foreground="{Binding TestResults.IsSuccess, Converter={StaticResource BoolToRedGreenConverter}}"/>
+            <Button Grid.Row="2" Grid.Column="3" Content="Save" Width="80" Height="22" IsEnabled="{Binding SelectedConfiguration.IsChanged, FallbackValue=false}" Command="{Binding SaveDataProviderCommand}"/>
         </Grid>
     </Grid>
 </Window>

@@ -2,6 +2,9 @@
 using CommunityToolkit.Mvvm.Input;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
+using LSAnalyzer.Services;
+using LSAnalyzer.Services.DataProvider;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -60,6 +63,11 @@ namespace LSAnalyzer.Models.DataProviderConfiguration
             };
 
             OnPropertyChanged(nameof(IsChanged));
+        }
+
+        public IDataProvider CreateService(IServiceProvider serviceProvider)
+        {
+            return new Dataverse(serviceProvider.GetRequiredService<Rservice>()) { Configuration = this };
         }
     }
 }
