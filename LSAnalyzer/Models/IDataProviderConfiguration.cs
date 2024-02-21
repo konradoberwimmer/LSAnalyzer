@@ -1,5 +1,6 @@
 ﻿using LSAnalyzer.Models.DataProviderConfiguration;
 using LSAnalyzer.Services;
+using LSAnalyzer.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,5 +18,7 @@ namespace LSAnalyzer.Models
         string Name { get; set; }
 
         IDataProvider CreateService(IServiceProvider serviceProvider);
+
+        IDataProviderViewModel GetViewModel();
     }
 }

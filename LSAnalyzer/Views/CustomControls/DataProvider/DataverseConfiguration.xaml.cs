@@ -18,9 +18,9 @@ namespace LSAnalyzer.Views.CustomControls.DataProvider
     /// <summary>
     /// Interaktionslogik für Dataverse.xaml
     /// </summary>
-    public partial class Dataverse : UserControl
+    public partial class DataverseConfiguration : UserControl
     {
-        public Dataverse()
+        public DataverseConfiguration()
         {
             InitializeComponent();
         }

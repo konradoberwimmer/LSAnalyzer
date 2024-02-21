@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LSAnalyzer.ViewModels
 {
-    internal interface IDataProviderViewModel
+    public interface IDataProviderViewModel
     {
     }
 }

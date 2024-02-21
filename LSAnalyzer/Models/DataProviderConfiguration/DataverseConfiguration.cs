@@ -4,6 +4,7 @@ using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.Services.DataProvider;
+using LSAnalyzer.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -35,6 +36,8 @@ namespace LSAnalyzer.Models.DataProviderConfiguration
         [NotifyPropertyChangedFor(nameof(IsChanged))]
         [MinLength(1, ErrorMessage = "Please provide your API token!")]
         private string _apiToken = string.Empty;
+
+        private ViewModels.DataProvider.Dataverse? _dataverseViewModel = null;
 
         private DataverseConfiguration? _savedState;
 
@@ -68,6 +71,11 @@ namespace LSAnalyzer.Models.DataProviderConfiguration
         public IDataProvider CreateService(IServiceProvider serviceProvider)
         {
             return new Dataverse(serviceProvider.GetRequiredService<Rservice>()) { Configuration = this };
+        }
+
+        public IDataProviderViewModel GetViewModel()
+        {
+            return _dataverseViewModel ??= new ViewModels.DataProvider.Dataverse();
         }
     }
 }

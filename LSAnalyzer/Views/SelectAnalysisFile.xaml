@@ -7,8 +7,10 @@
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         xmlns:local="clr-namespace:LSAnalyzer.Views"
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" x:Name="windowSelectAnalysisFile" x:Class="LSAnalyzer.Views.SelectAnalysisFile"
+        xmlns:dataProviderViewModel="clr-namespace:LSAnalyzer.ViewModels.DataProvider"
+        xmlns:dataProviderCustomControls="clr-namespace:LSAnalyzer.Views.CustomControls.DataProvider"
         mc:Ignorable="d"
-        Title="Select file for analyses" Height="auto" MinHeight="247" Width="auto" MinWidth="665" WindowStartupLocation="CenterScreen" Closed="Window_Closed" SizeToContent="WidthAndHeight">
+        Title="Select file for analyses" WindowStartupLocation="CenterScreen" Closed="Window_Closed" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
     <Window.DataContext>
         <ViewModels:SelectAnalysisFile/>
     </Window.DataContext>
@@ -18,11 +20,12 @@
         <converter:EnumToBoolean x:Key="EnumToBooleanConverter"/>
         <converter:IndexToBool x:Key="IndexToBoolConverter"/>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
+        <converter:TabItemToHeaderString x:Key="TabItemToHeaderStringConverter"/>
     </Window.Resources>
     <Window.IsEnabled>
         <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
     </Window.IsEnabled>
-    <Grid>
+    <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="*"/>
@@ -35,31 +38,54 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock Text="File:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Center"/>
-        <TextBox x:Name="textBoxFileName" Grid.Column="1" HorizontalAlignment="Stretch" Margin="10,10,0,0" TextWrapping="Wrap" Text="{Binding FileName}" IsEnabled="False" Height="22"/>
-        <Button x:Name="buttonSelectFile" Grid.Column="2" Content="Select ..." HorizontalAlignment="Left" Margin="10,10,10,0" Width="80" Height="22" Click="ButtonSelectFile_Click"/>
-        <CheckBox Grid.Row="1" Grid.Column="1" Content="Use read.csv2()" Margin="10,10,0,0" IsChecked="{Binding UseCsv2}" IsEnabled="{Binding IsCsv}"/>
-        <CheckBox Grid.Row="2" Grid.Column="1" Content="Replace character vectors with numeric" Margin="10,5,0,0" IsChecked="{Binding ReplaceCharacterVectors}"/>
-        <TextBlock Grid.Row="3" Text="Dataset Type:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Center"/>
-        <ComboBox Grid.Row="3" x:Name="comboBoxDatasetType" Grid.Column="1" HorizontalAlignment="Stretch" Margin="10,10,0,0" VerticalAlignment="Top" Height="22" ItemsSource="{Binding DatasetTypes}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedDatasetType}"/>
-        <Button Grid.Row="3" Grid.Column="2" ContentTemplate="{StaticResource MagicWand}" HorizontalAlignment="Left" Margin="10,10,10,0" VerticalAlignment="Top" Width="80" Height="22" Command="{Binding GuessDatasetTypeCommand}" IsEnabled="{Binding Path=Text.Length, ElementName=textBoxFileName}"/>
-        <TextBlock Grid.Row="4" Text="Weight variable:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Center"/>
-        <ComboBox Grid.Row="4" Grid.Column="1" x:Name="comboBoxWeightVariable" HorizontalAlignment="Stretch" Margin="10,10,0,0" VerticalAlignment="Top" Height="22" ItemsSource="{Binding PossibleWeightVariables}" SelectedItem="{Binding SelectedWeightVariable}" IsEnabled="{Binding ElementName=comboBoxDatasetType, Path=SelectedIndex, Converter={StaticResource IndexToBoolConverter}}"/>
-        <TextBlock Grid.Row="5" Text="Mode:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-        <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Vertical" Margin="10,10,0,0">
+        <TabControl Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,10" SelectedValue="{Binding TabControlValue, Converter={StaticResource TabItemToHeaderStringConverter}, Mode=OneWayToSource}">
+            <TabItem Header="File system">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="File:" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBox x:Name="textBoxFileName" Grid.Column="1" HorizontalAlignment="Stretch" Margin="10,00,0,0" TextWrapping="Wrap" Text="{Binding FileName}" IsEnabled="False" Height="22"/>
+                    <Button x:Name="buttonSelectFile" Grid.Column="2" Content="Select ..." HorizontalAlignment="Left" Margin="10,00,0,0" Width="80" Height="22" Click="ButtonSelectFile_Click"/>
+                    <CheckBox Grid.Row="1" Grid.Column="1" Content="Use read.csv2()" Margin="10,10,0,0" IsChecked="{Binding UseCsv2}" IsEnabled="{Binding IsCsv}"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Data provider" IsEnabled="{Binding DataProviderConfigurations.Count}">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+                    <ComboBox x:Name="comboBoxSelectedDataProvider" ItemsSource="{Binding DataProviderConfigurations}" SelectedItem="{Binding SelectedDataProviderConfiguration}" DisplayMemberPath="Name" Margin="0,0,0,10"/>
+                    <ContentControl Grid.Row="1" Content="{Binding DataProviderViewModel}" HorizontalAlignment="Stretch">
+                        <ContentControl.Resources>
+                            <DataTemplate x:Name="dataverseDataTemplate" DataType="{x:Type dataProviderViewModel:Dataverse}">
+                                <dataProviderCustomControls:DataverseSelectFile Content="{Binding}"/>
+                            </DataTemplate>
+                        </ContentControl.Resources>
+                    </ContentControl>
+                </Grid>
+            </TabItem>
+        </TabControl>
+        <CheckBox Grid.Row="1" Grid.Column="1" Content="Replace character vectors with numeric" Margin="10,5,0,0" IsChecked="{Binding ReplaceCharacterVectors}"/>
+        <TextBlock Grid.Row="2" Text="Dataset Type:" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Center"/>
+        <ComboBox Grid.Row="2" x:Name="comboBoxDatasetType" Grid.Column="1" HorizontalAlignment="Stretch" Margin="10,10,0,0" VerticalAlignment="Top" Height="22" ItemsSource="{Binding DatasetTypes}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedDatasetType}"/>
+        <Button Grid.Row="2" Grid.Column="2" ContentTemplate="{StaticResource MagicWand}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="80" Height="22" Command="{Binding GuessDatasetTypeCommand}" IsEnabled="{Binding ReadyToGuess}"/>
+        <TextBlock Grid.Row="3" Text="Weight variable:" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Center"/>
+        <ComboBox Grid.Row="3" Grid.Column="1" x:Name="comboBoxWeightVariable" HorizontalAlignment="Stretch" Margin="10,10,0,0" VerticalAlignment="Top" Height="22" ItemsSource="{Binding PossibleWeightVariables}" SelectedItem="{Binding SelectedWeightVariable}" IsEnabled="{Binding ElementName=comboBoxDatasetType, Path=SelectedIndex, Converter={StaticResource IndexToBoolConverter}}"/>
+        <TextBlock Grid.Row="4" Text="Mode:" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top"/>
+        <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Vertical" Margin="10,10,0,0">
             <RadioButton x:Name="radioButtonAnalysisModeKeep" Content="Keep BIFIEdata object between analyses (recommended if memory limit allows it)" HorizontalAlignment="Left" Height="15" GroupName="AnalysisMode" IsChecked="{Binding SelectedAnalysisMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Keep}"/>
             <RadioButton x:Name="radioButtonAnalysisModeBuild" Content="Build BIFIEdata object for each analysis (Use only in case of reaching memory limit!)" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="AnalysisMode" IsChecked="{Binding SelectedAnalysisMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Build}"/>
         </StackPanel>
-        <Button Grid.Row="6" Grid.Column="2" Content="Go!" HorizontalAlignment="Left" Margin="10,10,10,10" VerticalAlignment="Bottom" Height="22" Width="80" Command="{Binding UseFileForAnalysisCommand, Mode=OneWay}" CommandParameter="{Binding ElementName=windowSelectAnalysisFile}">
-            <Button.IsEnabled>
-                <MultiBinding Converter="{StaticResource BooleanAndConverter}">
-                    <Binding Path="Text.Length" ElementName="textBoxFileName"/>
-                    <Binding Path="SelectedIndex" ElementName="comboBoxDatasetType" Converter="{StaticResource IndexToBoolConverter}"/>
-                </MultiBinding>
-            </Button.IsEnabled>
-        </Button>
-        <fa:ImageAwesome Grid.RowSpan="6" Grid.ColumnSpan="3" Icon="SunOutline" Spin="True" VerticalAlignment="Center" Height="100" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
+        <Button Grid.Row="5" Grid.Column="2" Content="Go!" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Bottom" Height="22" Width="80" Command="{Binding UseFileForAnalysisCommand, Mode=OneWay}" CommandParameter="{Binding ElementName=windowSelectAnalysisFile}" IsEnabled="{Binding ReadyToGo}"/>
+        <fa:ImageAwesome Grid.RowSpan="5" Grid.ColumnSpan="3" Icon="SunOutline" Spin="True" VerticalAlignment="Center" Height="100" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
     </Grid>
 </Window>

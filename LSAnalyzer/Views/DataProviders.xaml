@@ -56,7 +56,7 @@
             <ContentControl Grid.Row="1" Grid.ColumnSpan="4" Content="{Binding SelectedConfiguration}" Validation.ErrorTemplate="{x:Null}">
                 <ContentControl.Resources>
                     <DataTemplate x:Name="dataverseDataTemplate" DataType="{x:Type dataProviderConfiguration:DataverseConfiguration}">
-                        <dataProviderCustomControls:Dataverse Content="{Binding}"/>
+                        <dataProviderCustomControls:DataverseConfiguration Content="{Binding}"/>
                     </DataTemplate>
                 </ContentControl.Resources>
             </ContentControl>

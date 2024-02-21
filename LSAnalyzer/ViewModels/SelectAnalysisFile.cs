@@ -4,10 +4,12 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 using GalaSoft.MvvmLight.Threading;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
+using LSAnalyzer.Models.DataProviderConfiguration;
 using LSAnalyzer.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -23,6 +25,20 @@ namespace LSAnalyzer.ViewModels
     public class SelectAnalysisFile : INotifyPropertyChanged
     {
         private Rservice _rservice;
+
+        private string? _tabControlValue;
+        public string? TabControlValue
+        {
+            get => _tabControlValue;
+            set
+            {
+                _tabControlValue = value;
+                NotifyPropertyChanged(nameof(TabControlValue));
+
+                NotifyPropertyChanged(nameof(ReadyToGuess));
+                NotifyPropertyChanged(nameof(ReadyToGo));
+            }
+        }
 
         private string? _fileName;
         public string? FileName
@@ -40,6 +56,9 @@ namespace LSAnalyzer.ViewModels
                 {
                     IsCsv = false;
                 }
+
+                NotifyPropertyChanged(nameof(ReadyToGuess));
+                NotifyPropertyChanged(nameof(ReadyToGo));
             }
         }
 
@@ -107,6 +126,49 @@ namespace LSAnalyzer.ViewModels
                     PossibleWeightVariables = possibleWeights;
                     SelectedWeightVariable = PossibleWeightVariables.FirstOrDefault();
                 }
+
+                NotifyPropertyChanged(nameof(ReadyToGo));
+            }
+        }
+
+        private List<IDataProviderConfiguration> _dataProviderConfigurations = new();
+        public List<IDataProviderConfiguration> DataProviderConfigurations
+        {
+            get => _dataProviderConfigurations;
+            set
+            {
+                _dataProviderConfigurations = value;
+                NotifyPropertyChanged(nameof(DataProviderConfigurations));
+            }
+        }
+
+        private IDataProviderConfiguration? _selectedDataProviderConfiguration;
+        public IDataProviderConfiguration? SelectedDataProviderConfiguration
+        {
+            get => _selectedDataProviderConfiguration;
+            set
+            {
+                _selectedDataProviderConfiguration = value;
+                NotifyPropertyChanged(nameof(SelectedDataProviderConfiguration));
+
+                if (SelectedDataProviderConfiguration != null)
+                {
+                    DataProviderViewModel = SelectedDataProviderConfiguration.GetViewModel();
+                } else
+                {
+                    DataProviderViewModel = null;
+                }
+            }
+        }
+
+        private IDataProviderViewModel? _dataProviderViewModel;
+        public IDataProviderViewModel? DataProviderViewModel
+        {
+            get => _dataProviderViewModel;
+            set
+            {
+                _dataProviderViewModel = value;
+                NotifyPropertyChanged(nameof(DataProviderViewModel));
             }
         }
 
@@ -129,6 +191,7 @@ namespace LSAnalyzer.ViewModels
             {
                 _selectedWeightVariable = value;
                 NotifyPropertyChanged(nameof(SelectedWeightVariable));
+                NotifyPropertyChanged(nameof(ReadyToGo));
             }
         }
 
@@ -144,6 +207,18 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _readyToGuess = false;
+        public bool ReadyToGuess
+        {
+            get => TabControlValue == "File system" && (FileName?.Length ?? 0) > 0;
+        }
+
+        private bool _readyToGo = false;
+        public bool ReadyToGo
+        {
+            get => TabControlValue == "File system" && (FileName?.Length ?? 0) > 0 && SelectedDatasetType != null && SelectedWeightVariable != null;
+        }
+
         private bool _busy = false;
         public bool IsBusy
         {
@@ -155,15 +230,22 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        [ExcludeFromCodeCoverage]
         public SelectAnalysisFile()
         {
-
+            // design-time only parameter-less constructor
+            DataProviderConfigurations = new()
+            {
+                new DataverseConfiguration() { Name = "My dataverse" }
+            };
+            SelectedDataProviderConfiguration = DataProviderConfigurations.First();
         }
 
         public SelectAnalysisFile(Configuration configuration, Rservice rservice)
         {
             _rservice = rservice;
             DatasetTypes = configuration.GetStoredDatasetTypes()?.OrderBy(dst => dst.Name).ToList() ?? DatasetTypes;
+            DataProviderConfigurations = configuration.GetDataProviderConfigurations().OrderBy(dpc => dpc.Name).ToList();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
