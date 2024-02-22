@@ -21,29 +21,61 @@ namespace LSAnalyzer.Services.DataProvider
             _rservice = rservice;
         }
 
-        public bool TestProvider()
+        public DataProviderTestResults TestProvider()
         {
             if (Configuration is not DataverseConfiguration dataverseConfiguration)
             {
-                return false;
+                return new() { IsSuccess = false, Message = "Mismatch between data provider configuration and service" };
             }
 
             if (!_rservice.CheckNecessaryRPackages("dataverse"))
             {
                 WeakReferenceMessenger.Default.Send(new MissingRPackageMessage("dataverse") { DataProvider = this });
-                return false;
+                return new() { IsSuccess = false, Message = "Missing R package 'dataverse'" };
             }
 
-            return _rservice.Execute($$"""
+            var success = _rservice.Execute($$"""
                 Sys.setenv(DATAVERSE_SERVER = "{{ dataverseConfiguration.Url }}");
                 Sys.setenv(DATAVERSE_KEY = "{{ dataverseConfiguration.ApiToken }}")
                 dataverse1 <- dataverse::get_dataverse(dataverse::dataverse_search("*", type = "dataverse")[1, "identifier"])
                 """);
+
+            return new() { IsSuccess = success, Message = success ? "Data provider works" : "Data provider not working " };
         }
 
         public bool InstallDependencies()
         {
             return _rservice.InstallNecessaryRPackages("dataverse");
+        }
+
+        public DataProviderTestResults TestFileAccess(dynamic values)
+        {
+            if (string.IsNullOrWhiteSpace(values.File) || string.IsNullOrWhiteSpace(values.Dataset))
+            {
+                return new() { IsSuccess = false, Message = "Missing filename or dataset" };
+            }
+            
+            if (Configuration is not DataverseConfiguration dataverseConfiguration)
+            {
+                return new() { IsSuccess = false, Message = "Mismatch between data provider configuration and service" };
+            }
+
+            if (!_rservice.CheckNecessaryRPackages("dataverse"))
+            {
+                WeakReferenceMessenger.Default.Send(new MissingRPackageMessage("dataverse") { DataProvider = this });
+                return new() { IsSuccess = false, Message = "Missing R package 'dataverse'" };
+            }
+
+            var success = _rservice.Execute($$"""
+                Sys.setenv(DATAVERSE_SERVER = "{{dataverseConfiguration.Url}}");
+                Sys.setenv(DATAVERSE_KEY = "{{dataverseConfiguration.ApiToken}}")
+                lsanalyzer_dat_test <- dataverse::get_dataframe_by_name(
+                    filename = "{{values.File}}",
+                    dataset = "{{values.Dataset}}",
+                    original = FALSE)
+                """);
+
+            return new() { IsSuccess = success, Message = success ? "File access works" : "File access not working" };
         }
     }
 }

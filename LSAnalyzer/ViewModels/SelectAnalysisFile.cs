@@ -6,6 +6,7 @@ using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Models.DataProviderConfiguration;
 using LSAnalyzer.Services;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,6 +26,7 @@ namespace LSAnalyzer.ViewModels
     public class SelectAnalysisFile : INotifyPropertyChanged
     {
         private Rservice _rservice;
+        private readonly IServiceProvider _serviceProvider;
 
         private string? _tabControlValue;
         public string? TabControlValue
@@ -142,7 +144,7 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private IDataProviderConfiguration? _selectedDataProviderConfiguration;
+        private IDataProviderConfiguration? _selectedDataProviderConfiguration = null;
         public IDataProviderConfiguration? SelectedDataProviderConfiguration
         {
             get => _selectedDataProviderConfiguration;
@@ -153,7 +155,7 @@ namespace LSAnalyzer.ViewModels
 
                 if (SelectedDataProviderConfiguration != null)
                 {
-                    DataProviderViewModel = SelectedDataProviderConfiguration.GetViewModel();
+                    DataProviderViewModel = SelectedDataProviderConfiguration.GetViewModel(_serviceProvider);
                 } else
                 {
                     DataProviderViewModel = null;
@@ -241,11 +243,12 @@ namespace LSAnalyzer.ViewModels
             SelectedDataProviderConfiguration = DataProviderConfigurations.First();
         }
 
-        public SelectAnalysisFile(Configuration configuration, Rservice rservice)
+        public SelectAnalysisFile(Configuration configuration, Rservice rservice, IServiceProvider serviceProvider)
         {
             _rservice = rservice;
             DatasetTypes = configuration.GetStoredDatasetTypes()?.OrderBy(dst => dst.Name).ToList() ?? DatasetTypes;
             DataProviderConfigurations = configuration.GetDataProviderConfigurations().OrderBy(dpc => dpc.Name).ToList();
+            _serviceProvider = serviceProvider;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -6,11 +6,14 @@
              xmlns:local="clr-namespace:LSAnalyzer.Views.CustomControls.DataProvider"
              xmlns:dataProviderViewModels="clr-namespace:LSAnalyzer.ViewModels.DataProvider"
              xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=dataProviderViewModels:Dataverse, IsDesignTimeCreatable=True}">
     <UserControl.Resources>
         <converter:BooleanAnd x:Key="BooleanAndConverter"/>
         <converter:BoolToRedGreen x:Key="BoolToRedGreenConverter"/>
+        <converter:InverseBool x:Key="InverseBoolConverter"/>
+        <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
     </UserControl.Resources>
     <Grid HorizontalAlignment="Stretch">
         <Grid.RowDefinitions>
@@ -33,8 +36,10 @@
                 <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                     <Binding Path="File.Length" FallbackValue="false"/>
                     <Binding Path="Dataset.Length" FallbackValue="false"/>
+                    <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}" FallbackValue="false"/>
                 </MultiBinding>
             </Button.IsEnabled>
         </Button>
+        <fa:ImageAwesome Grid.Row="2" Grid.Column="2" Icon="SunOutline" Spin="True" VerticalAlignment="Center" Height="18" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
     </Grid>
 </UserControl>

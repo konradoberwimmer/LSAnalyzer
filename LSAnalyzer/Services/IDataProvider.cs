@@ -1,4 +1,5 @@
-﻿using LSAnalyzer.Models;
+﻿using LSAnalyzer.Helper;
+using LSAnalyzer.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +12,10 @@ namespace LSAnalyzer.Services
     {
         IDataProviderConfiguration Configuration { get; set; }
 
-        bool TestProvider();
+        DataProviderTestResults TestProvider();
 
         bool InstallDependencies();
+
+        DataProviderTestResults TestFileAccess(dynamic values);
     }
 }

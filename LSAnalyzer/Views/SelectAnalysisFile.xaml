@@ -10,10 +10,8 @@
         xmlns:dataProviderViewModel="clr-namespace:LSAnalyzer.ViewModels.DataProvider"
         xmlns:dataProviderCustomControls="clr-namespace:LSAnalyzer.Views.CustomControls.DataProvider"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=ViewModels:SelectAnalysisFile, IsDesignTimeCreatable=True}"
         Title="Select file for analyses" WindowStartupLocation="CenterScreen" Closed="Window_Closed" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
-    <Window.DataContext>
-        <ViewModels:SelectAnalysisFile/>
-    </Window.DataContext>
     <Window.Resources>
         <converter:BooleanAnd x:Key="BooleanAndConverter"/>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>

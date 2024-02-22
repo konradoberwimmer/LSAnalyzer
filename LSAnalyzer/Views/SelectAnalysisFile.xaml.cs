@@ -64,6 +64,27 @@ namespace LSAnalyzer.Views
                         });
                     }
                 }
+
+                if (m.PackageName == "dataverse" && m.DataProvider != null)
+                {
+                    var result = MessageBox.Show("Using dataverse requires package 'dataverse' (>= 0.3.0). Do you want to install it now?", "Info", MessageBoxButton.YesNo, MessageBoxImage.Information);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        DispatcherHelper.CheckBeginInvokeOnUI(() =>
+                        {
+                            var succesfulInstall = m.DataProvider.InstallDependencies();
+                            if (succesfulInstall)
+                            {
+                                MessageBox.Show("R package installation successful. Please restart application!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                            }
+                            else
+                            {
+                                MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart app afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            }
+                        });
+                    }
+                }
             });
         }
 

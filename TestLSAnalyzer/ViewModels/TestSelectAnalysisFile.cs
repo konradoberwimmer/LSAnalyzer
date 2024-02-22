@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using TestLSAnalyzer.Services;
 using GalaSoft.MvvmLight.Threading;
 using Moq;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TestLSAnalyzer.ViewModels
 {
@@ -27,7 +28,7 @@ namespace TestLSAnalyzer.ViewModels
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
-            SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice);
+            SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
             selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
 
             bool messageSent = false;
@@ -121,7 +122,7 @@ namespace TestLSAnalyzer.ViewModels
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
-            SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration.Object, rservice);
+            SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration.Object, rservice, new ServiceCollection().BuildServiceProvider());
             selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_asgautr4.csv");
             selectAnalysisFileViewModel.UseCsv2 = false;
 
@@ -151,7 +152,7 @@ namespace TestLSAnalyzer.ViewModels
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
-            SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice);
+            SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
             selectAnalysisFileViewModel.FileName = "C:\\dummy.sav";
             selectAnalysisFileViewModel.SelectedDatasetType = selectAnalysisFileViewModel.DatasetTypes.First();
 
@@ -205,7 +206,7 @@ namespace TestLSAnalyzer.ViewModels
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
-            SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice);
+            SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
             selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
             selectAnalysisFileViewModel.SelectedDatasetType = new()
             {

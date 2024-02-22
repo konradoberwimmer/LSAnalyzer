@@ -15,7 +15,7 @@ namespace LSAnalyzer.Services
 {
     public class Configuration
     {
-        private IConfigurationRoot _config;
+        private IConfigurationRoot? _config;
         private readonly IConfigurationBuilder? _configurationBuilder;
 
         private string _datasetTypesConfigFile;
@@ -45,7 +45,7 @@ namespace LSAnalyzer.Services
 
         public List<IDataProviderConfiguration> GetDataProviderConfigurations()
         {
-            if (!_config.GetSection("DataProviders").Exists() || _configurationBuilder?.Sources.Where(source => source.GetType() == typeof(JsonConfigurationSource)).LastOrDefault() is not JsonConfigurationSource configurationSource)
+            if (_config == null || !_config.GetSection("DataProviders").Exists() || _configurationBuilder?.Sources.Where(source => source.GetType() == typeof(JsonConfigurationSource)).LastOrDefault() is not JsonConfigurationSource configurationSource)
             {
                 return new();
             }
@@ -81,7 +81,7 @@ namespace LSAnalyzer.Services
             var fileInfo = configurationSource.FileProvider.GetFileInfo(configurationSource.Path);
             File.WriteAllText(fileInfo.PhysicalPath, JsonSerializer.Serialize(configuration));
 
-            _config.Reload();
+            _config?.Reload();
         }
 
         public void DeleteDataProviderConfiguration(IDataProviderConfiguration dataProviderConfiguration)
@@ -98,7 +98,7 @@ namespace LSAnalyzer.Services
             var fileInfo = configurationSource.FileProvider.GetFileInfo(configurationSource.Path);
             File.WriteAllText(fileInfo.PhysicalPath, JsonSerializer.Serialize(configuration));
 
-            _config.Reload();
+            _config?.Reload();
         }
 
         public List<DatasetType>? GetStoredDatasetTypes()

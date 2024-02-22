@@ -19,6 +19,6 @@ namespace LSAnalyzer.Models
 
         IDataProvider CreateService(IServiceProvider serviceProvider);
 
-        IDataProviderViewModel GetViewModel();
+        IDataProviderViewModel GetViewModel(IServiceProvider serviceProvider);
     }
 }

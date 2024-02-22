@@ -2,6 +2,7 @@
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -239,7 +240,7 @@ namespace TestLSAnalyzer.ViewModels
 
             MainWindow mainWindowViewModel = new(rservice);
 
-            SelectAnalysisFile selectAnalysisFileViewModel = new(new Mock<Configuration>().Object, rservice);
+            SelectAnalysisFile selectAnalysisFileViewModel = new(new Mock<Configuration>().Object, rservice, new ServiceCollection().AddSingleton(rservice).BuildServiceProvider());
             selectAnalysisFileViewModel.FileName = fileName;
             selectAnalysisFileViewModel.SelectedDatasetType = datasetType;
             selectAnalysisFileViewModel.SelectedWeightVariable = selectAnalysisFileViewModel.PossibleWeightVariables.First();
