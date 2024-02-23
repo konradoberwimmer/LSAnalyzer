@@ -2,6 +2,7 @@
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Models.DataProviderConfiguration;
+using RDotNet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,9 +74,96 @@ namespace LSAnalyzer.Services.DataProvider
                     filename = "{{values.File}}",
                     dataset = "{{values.Dataset}}",
                     original = FALSE)
+                lsanalyzer_dat_test_nrow <- nrow(lsanalyzer_dat_test)
                 """);
 
             return new() { IsSuccess = success, Message = success ? "File access works" : "File access not working" };
+        }
+
+        public List<Variable> GetDatasetVariables(dynamic values)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(values.File) || string.IsNullOrWhiteSpace(values.Dataset))
+                {
+                    return new();
+                }
+
+                if (Configuration is not DataverseConfiguration dataverseConfiguration)
+                {
+                    return new();
+                }
+
+                var successLoadFile = _rservice.Execute($$"""
+                    if (exists("lsanalyzer_some_file_raw")) rm(lsanalyzer_some_file_raw)
+                    Sys.setenv(DATAVERSE_SERVER = "{{dataverseConfiguration.Url}}");
+                    Sys.setenv(DATAVERSE_KEY = "{{dataverseConfiguration.ApiToken}}")
+                    lsanalyzer_some_file_raw <- dataverse::get_dataframe_by_name(
+                        filename = "{{values.File}}",
+                        dataset = "{{values.Dataset}}",
+                        original = FALSE)
+                    lsanalyzer_some_file_raw_nrow <- nrow(lsanalyzer_some_file_raw)
+                    lsanalyzer_some_file_raw_colnames <- colnames(lsanalyzer_some_file_raw)
+                    """);
+
+                if (!successLoadFile)
+                {
+                    return new();
+                }
+
+                var variables = _rservice.Fetch("lsanalyzer_some_file_raw_colnames")?.AsCharacter();
+
+                if (variables == null)
+                {
+                    return new();
+                }
+
+                List<Variable> variableList = new();
+                int vv = 0;
+                foreach (var variable in variables)
+                {
+                    variableList.Add(new(++vv, variable, false));
+                }
+
+                return variableList;
+            }
+            catch
+            {
+                return new();
+            }
+        }
+
+        public bool LoadFileIntoGlobalEnvironment(dynamic values)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(values.File) || string.IsNullOrWhiteSpace(values.Dataset))
+                {
+                    return new();
+                }
+
+                if (Configuration is not DataverseConfiguration dataverseConfiguration)
+                {
+                    return new();
+                }
+
+                return _rservice.Execute($$"""
+                    if (exists("lsanalyzer_dat_raw_stored")) rm(lsanalyzer_dat_raw_stored)
+                    Sys.setenv(DATAVERSE_SERVER = "{{dataverseConfiguration.Url}}");
+                    Sys.setenv(DATAVERSE_KEY = "{{dataverseConfiguration.ApiToken}}")
+                    lsanalyzer_dat_raw_stored <- dataverse::get_dataframe_by_name(
+                        filename = "{{values.File}}",
+                        dataset = "{{values.Dataset}}",
+                        original = FALSE)
+                    lsanalyzer_dat_raw_stored_nrow <- nrow(lsanalyzer_dat_raw_stored)
+                    lsanalyzer_dat_raw_stored_colnames <- colnames(lsanalyzer_dat_raw_stored)
+                    lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored
+                    """);
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

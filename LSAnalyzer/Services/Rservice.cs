@@ -37,7 +37,7 @@ namespace LSAnalyzer.Services
 
         private SymbolicExpression EvaluateAndLog(string what, string? analysisName = null, bool oneLiner = false)
         {
-            _logger.AddEntry(new LogEntry(DateTime.Now, oneLiner ? what.Substring(0, what.IndexOf("\n")) : what, analysisName));
+            _logger.AddEntry(new LogEntry(DateTime.Now, (oneLiner && what.Contains("\n")) ? what.Substring(0, what.IndexOf("\n")) : what, analysisName));
             return _engine!.Evaluate(what);
         }
 
@@ -290,7 +290,7 @@ namespace LSAnalyzer.Services
                 }
                 EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
 
-                var rawData = _engine!.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
+                var rawData = _engine!.GetSymbol("lsanalyzer_dat_raw_stored").AsDataFrame();
                 if (rawData == null)
                 {
                     return false;
@@ -493,7 +493,7 @@ namespace LSAnalyzer.Services
             try
             {
                 string rawDataVariableName = "lsanalyzer_dat_raw";
-                if (mivar != null && mivar.Length > 0)
+                if (mivar != null && mivar.Length > 0 && nmi > 1)
                 {
                     EvaluateAndLog("lsanalyzer_dat_raw_list <- split(lsanalyzer_dat_raw, lsanalyzer_dat_raw[, '" + mivar + "'])");
                     rawDataVariableName = "lsanalyzer_dat_raw_list";
@@ -581,10 +581,7 @@ namespace LSAnalyzer.Services
                 return false;
             }
 
-            if (!LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName, analysisConfiguration.FileType, analysisConfiguration.DatasetType.IDvar))
-            {
-                return false;
-            }
+            EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
 
             if (subsettingExpression != null && !ApplySubsetting(subsettingExpression))
             {
@@ -1353,6 +1350,18 @@ namespace LSAnalyzer.Services
             } catch
             {
                 return false;
+            }
+        }
+
+        public virtual SymbolicExpression? Fetch(string objectName)
+        {
+            try
+            {
+                return _engine!.GetSymbol(objectName);
+            }
+            catch
+            {
+                return null;
             }
         }
     }

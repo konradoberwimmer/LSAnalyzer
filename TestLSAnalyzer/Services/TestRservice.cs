@@ -22,6 +22,27 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void TestExecute()
+        {
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+
+            Assert.True(rservice.Execute("x <- 2 * 2"));
+            Assert.False(rservice.Execute("x <- abcdefg[2, 'hij']"));
+        }
+
+        [Fact]
+        public void TestFetch()
+        {
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.Execute("x <- 2 * 2"));
+
+            Assert.NotNull(rservice.Fetch("x"));
+            Assert.Null(rservice.Fetch("notexistenttestvariable"));
+        }
+
+        [Fact]
         public void TestInstallAndCheckNecessaryRPackages()
         {
             Rservice rservice = new(new());
@@ -299,14 +320,15 @@ namespace TestLSAnalyzer.Services
 
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
-            Assert.False(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
             analysisConfiguration.FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
             analysisConfiguration.ModeKeep = false;
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.False(rservice.TestAnalysisConfiguration(analysisConfiguration, "xyz == 1"));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration, "cat == 1"));
 

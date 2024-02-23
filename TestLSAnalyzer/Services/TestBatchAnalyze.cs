@@ -158,6 +158,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = false,
             };
 
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Rep5.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5));
 
             BatchAnalyze batchAnalyze = new(rservice);
@@ -233,6 +234,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = false,
             };
 
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Multicat.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Multicat));
 
             BatchAnalyze batchAnalyze = new(rservice);

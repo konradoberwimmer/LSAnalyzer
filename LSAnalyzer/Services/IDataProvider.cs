@@ -17,5 +17,9 @@ namespace LSAnalyzer.Services
         bool InstallDependencies();
 
         DataProviderTestResults TestFileAccess(dynamic values);
+
+        bool LoadFileIntoGlobalEnvironment(dynamic values);
+
+        List<Variable> GetDatasetVariables(dynamic values);
     }
 }

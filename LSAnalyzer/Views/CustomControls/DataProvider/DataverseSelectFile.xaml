@@ -31,15 +31,7 @@
         <TextBlock Grid.Row="1" Grid.Column="0" Text="Dataset:" VerticalAlignment="Center" Margin="0,0,10,10"/>
         <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Height="22" Margin="0,0,0,10" Text="{Binding Dataset, UpdateSourceTrigger=PropertyChanged}"/>
         <TextBlock Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Text="{Binding TestResults.Message}" Foreground="{Binding TestResults.IsSuccess, Converter={StaticResource BoolToRedGreenConverter}}" Margin="0,0,10,0"/>
-        <Button Grid.Row="2" Grid.Column="2" Width="80" Height="22" Content="Test" Command="{Binding TestFileAccessCommand}">
-            <Button.IsEnabled>
-                <MultiBinding Converter="{StaticResource BooleanAndConverter}">
-                    <Binding Path="File.Length" FallbackValue="false"/>
-                    <Binding Path="Dataset.Length" FallbackValue="false"/>
-                    <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}" FallbackValue="false"/>
-                </MultiBinding>
-            </Button.IsEnabled>
-        </Button>
+        <Button Grid.Row="2" Grid.Column="2" Width="80" Height="22" Content="Test" Command="{Binding TestFileAccessCommand}" IsEnabled="{Binding IsConfigurationReady}"/>
         <fa:ImageAwesome Grid.Row="2" Grid.Column="2" Icon="SunOutline" Spin="True" VerticalAlignment="Center" Height="18" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
     </Grid>
 </UserControl>

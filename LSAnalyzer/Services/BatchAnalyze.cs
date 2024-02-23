@@ -52,13 +52,24 @@ namespace LSAnalyzer.Services
             {
                 if (!_useCurrentFile)
                 {
+                    if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.Value.AnalysisConfiguration.FileName ?? string.Empty, analysis.Value.AnalysisConfiguration.FileType, analysis.Value.AnalysisConfiguration.DatasetType?.IDvar))
+                    {
+                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                        {
+                            Id = analysis.Key,
+                            Success = false,
+                            Message = "Could not load file '" + analysis.Value.AnalysisConfiguration.FileName + "'!"
+                        });
+                        continue;
+                    }
+
                     if (!_rservice.TestAnalysisConfiguration(analysis.Value.AnalysisConfiguration, analysis.Value.SubsettingExpression))
                     {
                         WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                         {
                             Id = analysis.Key,
                             Success = false,
-                            Message = "Could not load file '" + analysis.Value.AnalysisConfiguration.FileName + "' or use it for dataset type '" + analysis.Value.AnalysisConfiguration.DatasetType?.Name + "'!"
+                            Message = "Could not use file for dataset type '" + analysis.Value.AnalysisConfiguration.DatasetType?.Name + "'!"
                         });
                         continue;
                     }

@@ -1,7 +1,12 @@
 ﻿# ToDo-List
 Test and debug!
 
-* add dataverse support
+* WIP dataverse support: 
+	* test current functionality
+	* refactor sorting by ID out of LoadFileIntoGlobalEnvironment()
+	* pass along file information correctly and check subsetting functionality
+	* suppress batch analyze reload of files from data provider
+	* add file type to dataverse data provider
 * add more default dataset types: class and school level variante, TIMSS 2023, ICILS, PIAAC, ...
 * build the MSI for IQS software center
 * split application core and UI in separate assemblies to possibly switch to AvaloniaUI

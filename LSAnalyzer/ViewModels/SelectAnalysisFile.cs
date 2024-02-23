@@ -28,8 +28,8 @@ namespace LSAnalyzer.ViewModels
         private Rservice _rservice;
         private readonly IServiceProvider _serviceProvider;
 
-        private string? _tabControlValue;
-        public string? TabControlValue
+        private string _tabControlValue = "File system";
+        public string TabControlValue
         {
             get => _tabControlValue;
             set
@@ -156,6 +156,7 @@ namespace LSAnalyzer.ViewModels
                 if (SelectedDataProviderConfiguration != null)
                 {
                     DataProviderViewModel = SelectedDataProviderConfiguration.GetViewModel(_serviceProvider);
+                    DataProviderViewModel.ParentViewModel = this;
                 } else
                 {
                     DataProviderViewModel = null;
@@ -209,16 +210,14 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private bool _readyToGuess = false;
         public bool ReadyToGuess
         {
-            get => TabControlValue == "File system" && (FileName?.Length ?? 0) > 0;
+            get => (TabControlValue == "File system" && (FileName?.Length ?? 0) > 0) || (TabControlValue == "Data provider" && (DataProviderViewModel?.IsConfigurationReady ?? false));
         }
 
-        private bool _readyToGo = false;
         public bool ReadyToGo
         {
-            get => TabControlValue == "File system" && (FileName?.Length ?? 0) > 0 && SelectedDatasetType != null && SelectedWeightVariable != null;
+            get => ReadyToGuess && SelectedDatasetType != null && SelectedWeightVariable != null;
         }
 
         private bool _busy = false;
@@ -260,6 +259,12 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        public void NotifyReadyState()
+        {
+            NotifyPropertyChanged(nameof(ReadyToGuess));
+            NotifyPropertyChanged(nameof(ReadyToGo));
+        }
+
         private RelayCommand<object?> _guessDatasetTypeCommand;
         public ICommand GuessDatasetTypeCommand
         {
@@ -273,7 +278,7 @@ namespace LSAnalyzer.ViewModels
 
         private void GuessDatasetType(object? dummy)
         {
-            if (_fileName == null)
+            if (string.IsNullOrWhiteSpace(FileName) && !(DataProviderViewModel?.IsConfigurationReady ?? false))
             {
                 return;
             }
@@ -284,28 +289,39 @@ namespace LSAnalyzer.ViewModels
             guessDatasetTypeWorker.WorkerReportsProgress = false;
             guessDatasetTypeWorker.WorkerSupportsCancellation = false;
             guessDatasetTypeWorker.DoWork += GuessDatasetTypeWorker_DoWork;
-            guessDatasetTypeWorker.RunWorkerAsync(_fileName);
+            guessDatasetTypeWorker.RunWorkerAsync();
         }
 
         private void GuessDatasetTypeWorker_DoWork(object? sender, DoWorkEventArgs e)
         {
-            var fileName = (string)e.Argument!;
-            var fileTypeFromFile = fileName.Substring(fileName.LastIndexOf('.') + 1);
+            List<Variable> variables = new();
 
-            if (fileTypeFromFile.ToLower() == "xlsx" && !_rservice.CheckNecessaryRPackages("openxlsx"))
+            if (TabControlValue == "Data provider" && DataProviderViewModel != null)
             {
-                WeakReferenceMessenger.Default.Send(new MissingRPackageMessage("openxlsx"));
-                IsBusy = false;
-                return;
-            }
-
-            var variables = _rservice.GetDatasetVariables(fileName, IsCsv && UseCsv2 ? "csv2" : null);
-
-            if (variables == null)
+                variables = DataProviderViewModel.LoadDataTemporarilyAndGetVariables();
+                if (variables.Count == 0)
+                {
+                    WeakReferenceMessenger.Default.Send(new FailureDataProviderMessage());
+                    IsBusy = false;
+                    return;
+                }
+            } else
             {
-                WeakReferenceMessenger.Default.Send(new FailureAnalysisFileMessage((string)e.Argument!));
-                IsBusy = false;
-                return;
+                var fileTypeFromFile = FileName!.Substring(FileName!.LastIndexOf('.') + 1);
+                if (fileTypeFromFile.ToLower() == "xlsx" && !_rservice.CheckNecessaryRPackages("openxlsx"))
+                {
+                    WeakReferenceMessenger.Default.Send(new MissingRPackageMessage("openxlsx"));
+                    IsBusy = false;
+                    return;
+                }
+
+                variables = _rservice.GetDatasetVariables(FileName!, IsCsv && UseCsv2 ? "csv2" : null) ?? new();
+                if (variables.Count == 0)
+                {
+                    WeakReferenceMessenger.Default.Send(new FailureAnalysisFileMessage(FileName!));
+                    IsBusy = false;
+                    return;
+                }
             }
 
             List<DatasetType> possibleDatasetTypes = new();
@@ -319,15 +335,19 @@ namespace LSAnalyzer.ViewModels
                 var weightVariables = datasetType.Weight.Split(";");
                 foreach (var weightVariable in weightVariables)
                 {
-                    if (variables.Where(var => var.Name == weightVariable).Count() == 0) continue;
+                    if (!variables.Where(var => var.Name == weightVariable).Any())
+                    {
+                        foundAllWeightVariables = false;
+                        break;
+                    }
                 }
                 if (!foundAllWeightVariables)
                 {
                     continue;
                 }
 
-                if (!String.IsNullOrWhiteSpace(datasetType.MIvar) && variables.Where(var => var.Name == datasetType.MIvar).Count() == 0) continue;
-                if (!String.IsNullOrWhiteSpace(datasetType.IDvar) && variables.Where(var => var.Name == datasetType.IDvar).Count() == 0) continue;
+                if (!String.IsNullOrWhiteSpace(datasetType.MIvar) && !variables.Where(var => var.Name == datasetType.MIvar).Any()) continue;
+                if (!String.IsNullOrWhiteSpace(datasetType.IDvar) && !variables.Where(var => var.Name == datasetType.IDvar).Any()) continue;
                 if (!String.IsNullOrWhiteSpace(datasetType.PVvars))
                 {
                     string[] pvVarsSplit = datasetType.PVvars.Split(';');
@@ -361,8 +381,8 @@ namespace LSAnalyzer.ViewModels
                     }
                 }
 
-                if (!String.IsNullOrWhiteSpace(datasetType.JKzone) && variables.Where(var => var.Name == datasetType.JKzone).Count() == 0) continue;
-                if (!String.IsNullOrWhiteSpace(datasetType.JKrep) && variables.Where(var => var.Name == datasetType.JKrep).Count() == 0) continue;
+                if (!String.IsNullOrWhiteSpace(datasetType.JKzone) && !variables.Where(var => var.Name == datasetType.JKzone).Any()) continue;
+                if (!String.IsNullOrWhiteSpace(datasetType.JKrep) && !variables.Where(var => var.Name == datasetType.JKrep).Any()) continue;
 
                 if (priority == maxPriority)
                 {
@@ -404,7 +424,7 @@ namespace LSAnalyzer.ViewModels
 
         private void UseFileForAnalysis(ICloseable? window)
         {
-            if (_fileName == null || _selectedDatasetType == null)
+            if ((string.IsNullOrWhiteSpace(FileName) && !(DataProviderViewModel?.IsConfigurationReady ?? false)) || SelectedDatasetType == null)
             {
                 return;
             }
@@ -421,18 +441,9 @@ namespace LSAnalyzer.ViewModels
 
         private void UseFileForAnalysisWorker_DoWork(object? sender, DoWorkEventArgs e)
         {
-            var fileTypeFromFile = FileName!.Substring(FileName.LastIndexOf('.') + 1);
-
-            if (fileTypeFromFile.ToLower() == "xlsx" && !_rservice.CheckNecessaryRPackages("openxlsx"))
-            {
-                e.Result = new MissingRPackageMessage("openxlsx");
-                IsBusy = false;
-                return;
-            }
-
             AnalysisConfiguration analysisConfiguration = new()
             {
-                FileName = this.FileName,
+                FileName = string.IsNullOrWhiteSpace(FileName) ? "[data provider: " + DataProviderViewModel!.ProviderName + "]" : FileName,
                 FileType = IsCsv && UseCsv2 ? "csv2" : null,
                 DatasetType = SelectedDatasetType != null ? new(SelectedDatasetType) : null,
                 ModeKeep = (SelectedAnalysisMode == AnalysisModes.Keep),
@@ -441,7 +452,34 @@ namespace LSAnalyzer.ViewModels
             {
                 analysisConfiguration.DatasetType.Weight = SelectedWeightVariable ?? String.Empty;
             }
-            
+
+            if (TabControlValue == "Data provider" && DataProviderViewModel != null)
+            {
+                if (!DataProviderViewModel.LoadDataForUsage())
+                {
+                    WeakReferenceMessenger.Default.Send(new FailureDataProviderMessage());
+                    IsBusy = false;
+                    return;
+                }
+            } else
+            {
+                var fileTypeFromFile = FileName!.Substring(FileName.LastIndexOf('.') + 1);
+                if (fileTypeFromFile.ToLower() == "xlsx" && !_rservice.CheckNecessaryRPackages("openxlsx"))
+                {
+                    e.Result = new MissingRPackageMessage("openxlsx");
+                    IsBusy = false;
+                    return;
+                }
+
+                if (!_rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName ?? string.Empty, analysisConfiguration.FileType, analysisConfiguration.DatasetType?.IDvar))
+                {
+                    WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
+                    IsBusy = false;
+                    return;
+                }
+
+            }
+
             var testAnalysisConfiguration = _rservice.TestAnalysisConfiguration(analysisConfiguration);
 
             if (!testAnalysisConfiguration)
@@ -507,6 +545,11 @@ namespace LSAnalyzer.ViewModels
         {
 
         }
+    }
+
+    internal class FailureDataProviderMessage
+    {
+
     }
 
     internal class FailureAnalysisConfigurationMessage : ValueChangedMessage<AnalysisConfiguration>

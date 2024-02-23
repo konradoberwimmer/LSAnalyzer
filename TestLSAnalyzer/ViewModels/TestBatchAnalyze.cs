@@ -70,6 +70,7 @@ namespace TestLSAnalyzer.ViewModels
                 ModeKeep = true,
             };
 
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
             LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice);
@@ -118,6 +119,7 @@ namespace TestLSAnalyzer.ViewModels
                 ModeKeep = true,
             };
 
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
             LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice);
