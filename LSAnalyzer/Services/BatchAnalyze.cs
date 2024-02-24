@@ -52,7 +52,18 @@ namespace LSAnalyzer.Services
             {
                 if (!_useCurrentFile)
                 {
-                    if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.Value.AnalysisConfiguration.FileName ?? string.Empty, analysis.Value.AnalysisConfiguration.FileType, analysis.Value.AnalysisConfiguration.DatasetType?.IDvar))
+                    if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.Value.AnalysisConfiguration.FileName ?? string.Empty, analysis.Value.AnalysisConfiguration.FileType))
+                    {
+                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                        {
+                            Id = analysis.Key,
+                            Success = false,
+                            Message = "Could not load file '" + analysis.Value.AnalysisConfiguration.FileName + "'!"
+                        });
+                        continue;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(analysis.Value.AnalysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysis.Value.AnalysisConfiguration.DatasetType!.IDvar))
                     {
                         WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                         {

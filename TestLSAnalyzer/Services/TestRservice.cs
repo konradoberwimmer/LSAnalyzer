@@ -1321,7 +1321,8 @@ namespace TestLSAnalyzer.Services
             var resultCorrupt = rservice.CalculateCorr(analysisCorr);
             Assert.NotEqual((double)result![0]["stat.cor"].AsDataFrame()["cor_SE"][1], (double)resultCorrupt![0]["stat.cor"].AsDataFrame()["cor_SE"][1]);
 
-            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName, null, "id"));
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName, null));
+            Assert.True(rservice.SortRawDataStored("id"));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
 
             var resultCorrect = rservice.CalculateCorr(analysisCorr);

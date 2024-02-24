@@ -252,7 +252,7 @@ namespace LSAnalyzer.Services
             }
         }
 
-        public bool LoadFileIntoGlobalEnvironment(string fileName, string? fileType = null, string? sortBy = null)
+        public bool LoadFileIntoGlobalEnvironment(string fileName, string? fileType = null)
         {
             try
             {
@@ -281,13 +281,7 @@ namespace LSAnalyzer.Services
                     default:
                         return false;
                 }
-                
-                if (!String.IsNullOrWhiteSpace(sortBy))
-                {
-                    EvaluateAndLog("lsanalyzer_dat_raw_stored_attributes <- lapply(lsanalyzer_dat_raw_stored, attributes)");
-                    EvaluateAndLog("lsanalyzer_dat_raw_stored <- lsanalyzer_dat_raw_stored[order(lsanalyzer_dat_raw_stored$`" + sortBy + "`), ]");
-                    EvaluateAndLog("for (vv in colnames(lsanalyzer_dat_raw_stored)) attributes(lsanalyzer_dat_raw_stored[,vv]) <- lsanalyzer_dat_raw_stored_attributes[[vv]]");
-                }
+
                 EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
 
                 var rawData = _engine!.GetSymbol("lsanalyzer_dat_raw_stored").AsDataFrame();
@@ -301,6 +295,24 @@ namespace LSAnalyzer.Services
             }
 
             return true;
+        }
+
+        public bool SortRawDataStored(string sortBy)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(sortBy))
+                {
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored_attributes <- lapply(lsanalyzer_dat_raw_stored, attributes)");
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored <- lsanalyzer_dat_raw_stored[order(lsanalyzer_dat_raw_stored$`" + sortBy + "`), ]");
+                    EvaluateAndLog("for (vv in colnames(lsanalyzer_dat_raw_stored)) attributes(lsanalyzer_dat_raw_stored[,vv]) <- lsanalyzer_dat_raw_stored_attributes[[vv]]");
+                }
+                EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
+                return true;
+            } catch
+            {
+                return false;
+            }
         }
 
         public bool ReplaceCharacterVariables()

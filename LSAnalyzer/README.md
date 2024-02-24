@@ -3,7 +3,6 @@ Test and debug!
 
 * WIP dataverse support: 
 	* test current functionality
-	* refactor sorting by ID out of LoadFileIntoGlobalEnvironment()
 	* pass along file information correctly and check subsetting functionality
 	* suppress batch analyze reload of files from data provider
 	* add file type to dataverse data provider

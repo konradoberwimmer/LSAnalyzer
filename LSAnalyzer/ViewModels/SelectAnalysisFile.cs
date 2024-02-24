@@ -471,13 +471,19 @@ namespace LSAnalyzer.ViewModels
                     return;
                 }
 
-                if (!_rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName ?? string.Empty, analysisConfiguration.FileType, analysisConfiguration.DatasetType?.IDvar))
+                if (!_rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName ?? string.Empty, analysisConfiguration.FileType))
                 {
                     WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
                     IsBusy = false;
                     return;
                 }
+            }
 
+            if (!string.IsNullOrWhiteSpace(analysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysisConfiguration.DatasetType.IDvar))
+            {
+                WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
+                IsBusy = false;
+                return;
             }
 
             var testAnalysisConfiguration = _rservice.TestAnalysisConfiguration(analysisConfiguration);
