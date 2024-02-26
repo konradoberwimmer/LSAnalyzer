@@ -4,6 +4,7 @@ using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -44,6 +45,12 @@ public partial class Dataverse : ObservableObject, IDataProviderViewModel
     }
 
     [ObservableProperty]
+    private ObservableCollection<KeyValuePair<string, string>> _fileFormats;
+
+    [ObservableProperty]
+    private KeyValuePair<string, string> _selectedFileFormat;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsConfigurationReady))]
     private string _dataset = string.Empty;
     partial void OnDatasetChanged(string value)
@@ -67,11 +74,15 @@ public partial class Dataverse : ObservableObject, IDataProviderViewModel
     public Dataverse()
     {
         // design-time only parameterless constructor
+        FileFormats = new() { new("tsv", "Archive (TSV)"), new("spss", "SPSS Original") };
+        SelectedFileFormat = FileFormats.First();
     }
 
     public Dataverse(Services.DataProvider.Dataverse dataverseService)
     {
         _dataverseService = dataverseService;
+        FileFormats = new() { new("tsv", "Archive (TSV)"), new("spss", "SPSS Original") };
+        SelectedFileFormat = FileFormats.First();
     }
 
     [RelayCommand]
@@ -93,18 +104,18 @@ public partial class Dataverse : ObservableObject, IDataProviderViewModel
 
     private void TestFileAccessWorker_DoWork(object? sender, DoWorkEventArgs e)
     {
-        TestResults = _dataverseService.TestFileAccess(new { File, Dataset });
+        TestResults = _dataverseService.TestFileAccess(new { File, Dataset, FileFormat = SelectedFileFormat.Key });
 
         IsBusy = false;
     }
 
     public List<Variable> LoadDataTemporarilyAndGetVariables()
     {
-        return _dataverseService.GetDatasetVariables(new { File, Dataset });
+        return _dataverseService.GetDatasetVariables(new { File, Dataset, FileFormat = SelectedFileFormat.Key });
     }
 
     public bool LoadDataForUsage()
     {
-        return _dataverseService.LoadFileIntoGlobalEnvironment(new { File, Dataset });
+        return _dataverseService.LoadFileIntoGlobalEnvironment(new { File, Dataset, FileFormat = SelectedFileFormat.Key });
     }
 }

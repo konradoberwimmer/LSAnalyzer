@@ -49,6 +49,43 @@ namespace LSAnalyzer.Services.DataProvider
             return _rservice.InstallNecessaryRPackages("dataverse");
         }
 
+        private bool FetchFile(DataverseConfiguration dataverseConfiguration, string objectName, string fileName, string dataset, string format)
+        {
+            bool success = true;
+
+            success = success && _rservice.Execute($$"""
+                Sys.setenv(DATAVERSE_SERVER = "{{dataverseConfiguration.Url}}");
+                Sys.setenv(DATAVERSE_KEY = "{{dataverseConfiguration.ApiToken}}")
+                """);
+
+            if (format == "tsv")
+            {
+                success = success && _rservice.Execute($$"""
+                    {{objectName}} <- dataverse::get_dataframe_by_name(
+                        filename = "{{fileName}}",
+                        dataset = "{{dataset}}",
+                        original = FALSE)
+                    """);
+            } else if (format == "spss") {
+                success = success && _rservice.Execute($$"""
+                    {{objectName}} <- dataverse::get_dataframe_by_name(
+                        filename = "{{fileName}}",
+                        dataset = "{{dataset}}",
+                        .f = function(file) { return(foreign::read.spss(file, use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)) },
+                        original = TRUE)
+                    """);
+            } else {
+                return false;
+            }
+
+            success = success && _rservice.Execute($$"""
+                {{objectName}}_nrow <- nrow({{objectName}})
+                {{objectName}}_colnames <- colnames({{objectName}})
+                """);
+
+            return success;
+        }
+
         public DataProviderTestResults TestFileAccess(dynamic values)
         {
             if (string.IsNullOrWhiteSpace(values.File) || string.IsNullOrWhiteSpace(values.Dataset))
@@ -67,15 +104,7 @@ namespace LSAnalyzer.Services.DataProvider
                 return new() { IsSuccess = false, Message = "Missing R package 'dataverse'" };
             }
 
-            var success = _rservice.Execute($$"""
-                Sys.setenv(DATAVERSE_SERVER = "{{dataverseConfiguration.Url}}");
-                Sys.setenv(DATAVERSE_KEY = "{{dataverseConfiguration.ApiToken}}")
-                lsanalyzer_dat_test <- dataverse::get_dataframe_by_name(
-                    filename = "{{values.File}}",
-                    dataset = "{{values.Dataset}}",
-                    original = FALSE)
-                lsanalyzer_dat_test_nrow <- nrow(lsanalyzer_dat_test)
-                """);
+            var success = FetchFile(dataverseConfiguration, "lsanalyzer_test_file_raw", values.File, values.Dataset, values.FileFormat);
 
             return new() { IsSuccess = success, Message = success ? "File access works" : "File access not working" };
         }
@@ -94,17 +123,9 @@ namespace LSAnalyzer.Services.DataProvider
                     return new();
                 }
 
-                var successLoadFile = _rservice.Execute($$"""
-                    if (exists("lsanalyzer_some_file_raw")) rm(lsanalyzer_some_file_raw)
-                    Sys.setenv(DATAVERSE_SERVER = "{{dataverseConfiguration.Url}}");
-                    Sys.setenv(DATAVERSE_KEY = "{{dataverseConfiguration.ApiToken}}")
-                    lsanalyzer_some_file_raw <- dataverse::get_dataframe_by_name(
-                        filename = "{{values.File}}",
-                        dataset = "{{values.Dataset}}",
-                        original = FALSE)
-                    lsanalyzer_some_file_raw_nrow <- nrow(lsanalyzer_some_file_raw)
-                    lsanalyzer_some_file_raw_colnames <- colnames(lsanalyzer_some_file_raw)
-                    """);
+                _rservice.Execute("""if (exists("lsanalyzer_some_file_raw")) rm(lsanalyzer_some_file_raw)""");
+
+                var successLoadFile = FetchFile(dataverseConfiguration, "lsanalyzer_some_file_raw", values.File, values.Dataset, values.FileFormat);
 
                 if (!successLoadFile)
                 {
@@ -147,18 +168,18 @@ namespace LSAnalyzer.Services.DataProvider
                     return new();
                 }
 
-                return _rservice.Execute($$"""
-                    if (exists("lsanalyzer_dat_raw_stored")) rm(lsanalyzer_dat_raw_stored)
-                    Sys.setenv(DATAVERSE_SERVER = "{{dataverseConfiguration.Url}}");
-                    Sys.setenv(DATAVERSE_KEY = "{{dataverseConfiguration.ApiToken}}")
-                    lsanalyzer_dat_raw_stored <- dataverse::get_dataframe_by_name(
-                        filename = "{{values.File}}",
-                        dataset = "{{values.Dataset}}",
-                        original = FALSE)
-                    lsanalyzer_dat_raw_stored_nrow <- nrow(lsanalyzer_dat_raw_stored)
-                    lsanalyzer_dat_raw_stored_colnames <- colnames(lsanalyzer_dat_raw_stored)
-                    lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored
-                    """);
+                _rservice.Execute("""if (exists("lsanalyzer_dat_raw_stored")) rm(lsanalyzer_dat_raw_stored)""");
+
+                var successLoadFile = FetchFile(dataverseConfiguration, "lsanalyzer_dat_raw_stored", values.File, values.Dataset, values.FileFormat);
+
+                if (!successLoadFile)
+                {
+                    return false;
+                }
+
+                _rservice.Execute("""lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored""");
+
+                return true;
             }
             catch
             {
