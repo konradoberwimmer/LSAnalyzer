@@ -443,7 +443,7 @@ namespace LSAnalyzer.ViewModels
         {
             AnalysisConfiguration analysisConfiguration = new()
             {
-                FileName = string.IsNullOrWhiteSpace(FileName) ? "[data provider: " + DataProviderViewModel!.ProviderName + "]" : FileName,
+                FileName = string.IsNullOrWhiteSpace(FileName) ? "[" + DataProviderViewModel!.FileInformation + "]" : FileName,
                 FileType = IsCsv && UseCsv2 ? "csv2" : null,
                 DatasetType = SelectedDatasetType != null ? new(SelectedDatasetType) : null,
                 ModeKeep = (SelectedAnalysisMode == AnalysisModes.Keep),

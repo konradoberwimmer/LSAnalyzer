@@ -29,6 +29,11 @@ public partial class Dataverse : ObservableObject, IDataProviderViewModel
         get => _dataverseService.Configuration.Name;
     }
 
+    public string? FileInformation
+    {
+        get => (File == null || Dataset == null) ? null : (ProviderName + ": " + File + ", " + Dataset);
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsConfigurationReady))]
     private string _file = string.Empty;

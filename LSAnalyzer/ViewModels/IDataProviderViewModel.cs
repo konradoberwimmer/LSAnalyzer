@@ -11,6 +11,8 @@ namespace LSAnalyzer.ViewModels
     {
         public string ProviderName { get; }
 
+        public string? FileInformation {  get; }
+
         public SelectAnalysisFile ParentViewModel { get; set; }
 
         public bool IsConfigurationReady { get; }
