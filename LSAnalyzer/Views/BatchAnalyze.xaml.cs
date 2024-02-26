@@ -61,5 +61,19 @@ namespace LSAnalyzer.Views
                 e.Cancel = true;
             }
         }
+
+        private void DataGridBatchResults_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
+        {
+            if (e.Column is not DataGridTextColumn column)
+            {
+                return;
+            }
+
+            if (column.Header is string columnHeader && columnHeader == "Info")
+            {
+                column.ElementStyle = Resources["wordWrapStyle"] as Style;
+                column.Width = 250;
+            }
+        }
     }
 }

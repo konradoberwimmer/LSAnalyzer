@@ -42,7 +42,7 @@ namespace TestLSAnalyzer.Services
             }, true);
             await Task.Delay(100);
 
-            Assert.Equal(2, messageCounter);
+            Assert.Equal(4, messageCounter);
             Assert.NotNull(lastMessage);
             Assert.False(lastMessage.Success);
         }
@@ -113,16 +113,16 @@ namespace TestLSAnalyzer.Services
 
             batchAnalyze.RunBatch(analyses, false);
 
-            while (messages.Count < 5)
+            while (messages.Count < 10)
             {
                 await Task.Delay(100);
             }
 
-            Assert.False(messages[0].Success);
-            Assert.True(messages[1].Success);
-            Assert.False(messages[2].Success);
+            Assert.False(messages[1].Success);
             Assert.True(messages[3].Success);
-            Assert.False(messages[4].Success);
+            Assert.False(messages[5].Success);
+            Assert.True(messages[7].Success);
+            Assert.False(messages[9].Success);
         }
 
         [Fact]
@@ -190,15 +190,15 @@ namespace TestLSAnalyzer.Services
 
             batchAnalyze.RunBatch(analyses, true, true);
 
-            while (messages.Count < 4)
+            while (messages.Count < 8)
             {
                 await Task.Delay(100);
             }
 
-            Assert.False(messages[0].Success);
-            Assert.True(messages[1].Success);
-            Assert.True(messages[2].Success);
-            Assert.False(messages[3].Success);
+            Assert.False(messages[1].Success);
+            Assert.True(messages[3].Success);
+            Assert.True(messages[5].Success);
+            Assert.False(messages[7].Success);
         }
 
         [Fact]
@@ -266,15 +266,15 @@ namespace TestLSAnalyzer.Services
 
             batchAnalyze.RunBatch(analyses, true, false);
 
-            while (messages.Count < 4)
+            while (messages.Count < 8)
             {
                 await Task.Delay(100);
             }
 
-            Assert.False(messages[0].Success);
             Assert.False(messages[1].Success);
-            Assert.True(messages[2].Success);
-            Assert.True(messages[3].Success);
+            Assert.False(messages[3].Success);
+            Assert.True(messages[5].Success);
+            Assert.True(messages[7].Success);
         }
 
         public static string AssemblyDirectory

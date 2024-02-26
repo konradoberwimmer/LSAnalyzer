@@ -15,6 +15,9 @@
     </Window.DataContext>
     <Window.Resources>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
+        <Style x:Key="wordWrapStyle" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
     </Window.Resources>
     <Window.IsEnabled>
         <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
@@ -42,7 +45,7 @@
         </StackPanel>
         <Button Grid.Row="2" Grid.Column="2" Content="Analyze" HorizontalAlignment="Left" Margin="10,10,0,0" Height="22" Width="80" Command="{Binding RunBatchCommand}" IsEnabled="{Binding ElementName=textBoxFileName, Path=Text.Length}"/>
         <Border x:Name="dataGridWidthHelper" Grid.Row="3" Grid.ColumnSpan="3" Margin="0,10,0,0" >
-            <DataGrid Width="{Binding Path=ActualWidth, ElementName=dataGridWidthHelper}" ItemsSource="{Binding AnalysesTable}" AutoGenerateColumns="True" IsReadOnly="True">
+            <DataGrid x:Name="dataGridBatchResults" Width="{Binding Path=ActualWidth, ElementName=dataGridWidthHelper}" ItemsSource="{Binding AnalysesTable}" AutoGenerateColumns="True" IsReadOnly="True" AutoGeneratingColumn="DataGridBatchResults_AutoGeneratingColumn">
 
             </DataGrid>
         </Border>

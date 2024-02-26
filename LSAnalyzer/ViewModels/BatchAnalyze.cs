@@ -131,6 +131,7 @@ namespace LSAnalyzer.ViewModels
                     if (row != null)
                     {
                         row["Success"] = m.Success;
+                        row["Message"] = m.Message;
                     }
                 }
 
@@ -176,7 +177,7 @@ namespace LSAnalyzer.ViewModels
             try
             {
                 analyses = JsonSerializer.Deserialize<Analysis[]>(File.ReadAllText(FileName))!;
-            } catch (Exception ex)
+            } catch (Exception)
             {
                 WeakReferenceMessenger.Default.Send(new BatchAnalyzeFailureMessage() { Message = "File is not valid JSON or did not contain analysis requests!" });
                 return;
@@ -190,13 +191,14 @@ namespace LSAnalyzer.ViewModels
 
             DataTable analysesTable = new();
             analysesTable.Columns.Add("Number", typeof(int));
+            analysesTable.Columns.Add("Info", typeof(string));
             var successColumn = analysesTable.Columns.Add("Success", typeof(bool));
             successColumn.AllowDBNull = true;
-            analysesTable.Columns.Add("Info", typeof(string));
-            
+            analysesTable.Columns.Add("Message", typeof(string));
+
             foreach (var analysis in _analysesDictionary)
             {
-                analysesTable.Rows.Add(new object?[] { analysis.Key, DBNull.Value, analysis.Value.ShortInfo });
+                analysesTable.Rows.Add(new object?[] { analysis.Key, analysis.Value.ShortInfo, DBNull.Value, string.Empty });
             }
 
             AnalysesTable = analysesTable;

@@ -50,8 +50,26 @@ namespace LSAnalyzer.Services
 
             foreach (var analysis in analyses)
             {
+                WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                {
+                    Id = analysis.Key,
+                    Success = false,
+                    Message = "Working ..."
+                });
+
                 if (!_useCurrentFile)
                 {
+                    if (analysis.Value.AnalysisConfiguration.FileName?.StartsWith("[") ?? false)
+                    {
+                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                        {
+                            Id = analysis.Key,
+                            Success = false,
+                            Message = "Reloading from data provider is not supported!"
+                        });
+                        continue;
+                    }
+
                     if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.Value.AnalysisConfiguration.FileName ?? string.Empty, analysis.Value.AnalysisConfiguration.FileType))
                     {
                         WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
