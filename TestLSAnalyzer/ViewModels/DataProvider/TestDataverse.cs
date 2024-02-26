@@ -22,8 +22,13 @@ public class TestDataverse
         configuration.ApiToken = "token";
 
         var rserviceMock = new Mock<Rservice>();
-        rserviceMock.SetupSequence(rservice => rservice.CheckNecessaryRPackages(It.IsAny<string>())).Returns(false).Returns(true).Returns(true);
-        rserviceMock.SetupSequence(rservice => rservice.Execute(It.IsAny<string>())).Returns(false).Returns(true);
+        rserviceMock.SetupSequence(rservice => rservice.CheckNecessaryRPackages(It.IsAny<string>()))
+            .Returns(false)
+            .Returns(true)
+            .Returns(true);
+        rserviceMock.SetupSequence(rservice => rservice.Execute(It.IsAny<string>()))
+            .Returns(false)
+            .Returns(true).Returns(true).Returns(true);
 
         var serviceProvider = new ServiceCollection().AddSingleton(rserviceMock.Object).BuildServiceProvider();
 
@@ -35,6 +40,7 @@ public class TestDataverse
 
         viewModel.File = "test.tab";
         viewModel.Dataset = "doi:99.99999/ABCDEFGHI";
+        viewModel.SelectedFileFormat = new("tsv", "Archive (TSV)");
 
         viewModel!.TestFileAccessCommand.Execute(null);
 
