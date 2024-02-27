@@ -1,4 +1,4 @@
-﻿using GalaSoft.MvvmLight.Threading;
+﻿using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;

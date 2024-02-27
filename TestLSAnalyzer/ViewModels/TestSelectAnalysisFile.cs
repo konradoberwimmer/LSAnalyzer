@@ -8,9 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using TestLSAnalyzer.Services;
-using GalaSoft.MvvmLight.Threading;
 using Moq;
 using Microsoft.Extensions.DependencyInjection;
+using LSAnalyzer.Helper;
 
 namespace TestLSAnalyzer.ViewModels
 {

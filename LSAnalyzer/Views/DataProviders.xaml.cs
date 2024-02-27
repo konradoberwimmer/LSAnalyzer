@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
-using GalaSoft.MvvmLight.Threading;
 using LSAnalyzer.Helper;
 using LSAnalyzer.ViewModels;
 using System;
