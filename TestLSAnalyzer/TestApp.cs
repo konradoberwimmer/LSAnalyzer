@@ -26,35 +26,8 @@ namespace TestLSAnalyzer
             var mainWindow = TestApplication!.GetMainWindow(automation, TimeSpan.FromSeconds(5));
             Assert.True(mainWindow != null, "App did not start - bear in mind that R and BIFIEsurvey are necessary for app tests too");
 
-            // open up Select File dialog
-            var selectFileDialog = OpenWindowFromMenuItem(automation, mainWindow, "File", "Select File ...", "Select file for analyses");
-            Assert.NotNull(selectFileDialog);
-            
-            // get PIRLS Austria data file
-            var openFileDialogButton = selectFileDialog.FindFirstDescendant(cf.ByName("Select ...")).AsButton();
-            openFileDialogButton.Click();
-            var openFileDialog = Retry.WhileNull(() => selectFileDialog.ModalWindows.FirstOrDefault(), TimeSpan.FromSeconds(5)).Result;
-            Assert.NotNull(openFileDialog);
-            var filenameTextField = openFileDialog.FindFirstDescendant(cf.ByControlType(ControlType.ComboBox).And(cf.ByName("Dateiname:"))).AsComboBox();
-            Assert.NotNull(filenameTextField);
-            filenameTextField.EditableText = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav");
-            var openFileButton = openFileDialog.FindFirstDescendant(cf.ByControlType(ControlType.Button).And(cf.ByClassName("Button")).And(cf.ByName("Öffnen"))).AsButton();
-            Assert.NotNull(openFileButton);
-            openFileButton.Click();
-
-            // set PIRLS dataset definition
-            var selectDatasetTypeList = selectFileDialog.FindFirstChild("comboBoxDatasetType").AsComboBox();
-            Assert.NotNull(selectDatasetTypeList);
-            selectDatasetTypeList.Select("PIRLS since 2016 - student level");
-            Assert.True(selectDatasetTypeList.SelectedItem != null, "Dataset type could not be selected - note that 'PIRLS since 2016 - student level' needs to be configured for your user");
-            
-            // load PIRLS Austria data
-            var useFileForAnalysisButton = selectFileDialog.FindFirstDescendant(cf.ByControlType(ControlType.Button).And(cf.ByName("Go!"))).AsButton();
-            Assert.NotNull(useFileForAnalysisButton);
-            useFileForAnalysisButton.WaitUntilEnabled();
-            useFileForAnalysisButton.Focus();
-            useFileForAnalysisButton.Click();
-            Retry.WhileNotNull(() => TestApplication.GetAllTopLevelWindows(automation).Where(window => window.Title == "Select file for analyses").FirstOrDefault(), TimeSpan.FromSeconds(10));
+            // load PIRLS 2016 Austria data
+            LoadFileFromFileSystem(automation, mainWindow, "test_asgautr4.sav", "PIRLS since 2016 - student level");
 
             // analzye univariate PVs by sex and overall
             var analyzeUnivariateDialog = OpenWindowFromMenuItem(automation, mainWindow, "Analysis", "Univariate (means and SD) ...", "Univariate statistics");
@@ -99,9 +72,84 @@ namespace TestLSAnalyzer
             StartAnalysisFromDialog(automation, analyzeLinregDialog);
             SaveLastAnalysisAsXlsx(mainWindow, 9, "test_workflow_pirls_austria_linreg.xlsx");
 
+            // save those analyses
+            mainWindow.FindFirstDescendant("buttonDownloadAnalysesDefinitions").Click();
+            var saveAnalysesDialog = Retry.WhileNull(() => mainWindow.ModalWindows.FirstOrDefault(), TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(saveAnalysesDialog);
+            var jsonTextField = saveAnalysesDialog.FindFirstDescendant(cf.ByControlType(ControlType.ComboBox).And(cf.ByName("Dateiname:"))).AsComboBox();
+            Assert.NotNull(jsonTextField);
+            var jsonFilename = Path.Combine(Path.GetTempPath(), "test_workflow_pirls_austria_linreg.json");
+            if (File.Exists(jsonFilename))
+            {
+                File.Delete(jsonFilename);
+            }
+            jsonTextField.EditableText = jsonFilename;
+            var saveFileButton = saveAnalysesDialog.FindFirstDescendant(cf.ByControlType(ControlType.Button).And(cf.ByClassName("Button")).And(cf.ByName("Speichern"))).AsButton();
+            Assert.NotNull(saveFileButton);
+            saveFileButton.Click();
+            Assert.True(Retry.WhileFalse(() => File.Exists(jsonFilename), TimeSpan.FromSeconds(10)).Result);
+
+            // load PIRLS 2011 Austria data
+            LoadFileFromFileSystem(automation, mainWindow, "test_asgautr3.sav", "PIRLS until 2011 - student level");
+
+            // batch analyze
+            var batchAnalyzeDialog = OpenWindowFromMenuItem(automation, mainWindow, "Analysis", "Batch analyze ...", "Batch analyze");
+            var openFileDialogButton = batchAnalyzeDialog.FindFirstDescendant(cf.ByName("Select ...")).AsButton();
+            openFileDialogButton.Click();
+            var openFileDialog = Retry.WhileNull(() => batchAnalyzeDialog.ModalWindows.FirstOrDefault(), TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(openFileDialog);
+            var filenameTextField = openFileDialog.FindFirstDescendant(cf.ByControlType(ControlType.ComboBox).And(cf.ByName("Dateiname:"))).AsComboBox();
+            Assert.NotNull(filenameTextField);
+            filenameTextField.EditableText = jsonFilename;
+            var openFileButton = openFileDialog.FindFirstDescendant(cf.ByControlType(ControlType.Button).And(cf.ByClassName("Button")).And(cf.ByName("Öffnen"))).AsButton();
+            Assert.NotNull(openFileButton);
+            openFileButton.Click();
+            var analyzeButton = batchAnalyzeDialog.FindFirstDescendant(cf.ByName("Analyze")).AsButton();
+            analyzeButton.Click();
+            var gridView = batchAnalyzeDialog.FindAllDescendants(cf.ByControlType(ControlType.DataGrid)).First().AsDataGridView();
+            Assert.NotNull(gridView);
+            var analysisIsFinished = Retry.WhileFalse(() => gridView.Rows.All(row => row.Cells[3].Value == "Success!"), TimeSpan.FromSeconds(10)).Result;
+            Assert.True(analysisIsFinished);
+            var transferButton = batchAnalyzeDialog.FindFirstDescendant(cf.ByName("OK")).AsButton();
+            Retry.WhileFalse(() => transferButton.IsEnabled, TimeSpan.FromSeconds(10));
+            transferButton.Click();
+            var closedDialog = Retry.WhileNotNull(() => TestApplication!.GetAllTopLevelWindows(automation).Where(window => window.Title == "Batch analyze").FirstOrDefault(), TimeSpan.FromSeconds(10)).Result;
+            Assert.True(closedDialog);
+
             // close app
             mainWindow.Close();
             TestApplication.Dispose();
+        }
+
+        private void LoadFileFromFileSystem(UIA3Automation automation, Window mainWindow, string testDataFileName, string datasetTypeName)
+        {
+            ConditionFactory cf = new(new UIA3PropertyLibrary());
+
+            var selectFileDialog = OpenWindowFromMenuItem(automation, mainWindow, "File", "Select File ...", "Select file for analyses");
+            Assert.NotNull(selectFileDialog);
+
+            var openFileDialogButton = selectFileDialog.FindFirstDescendant(cf.ByName("Select ...")).AsButton();
+            openFileDialogButton.Click();
+            var openFileDialog = Retry.WhileNull(() => selectFileDialog.ModalWindows.FirstOrDefault(), TimeSpan.FromSeconds(5)).Result;
+            Assert.NotNull(openFileDialog);
+            var filenameTextField = openFileDialog.FindFirstDescendant(cf.ByControlType(ControlType.ComboBox).And(cf.ByName("Dateiname:"))).AsComboBox();
+            Assert.NotNull(filenameTextField);
+            filenameTextField.EditableText = Path.Combine(AssemblyDirectory, "_testData", testDataFileName);
+            var openFileButton = openFileDialog.FindFirstDescendant(cf.ByControlType(ControlType.Button).And(cf.ByClassName("Button")).And(cf.ByName("Öffnen"))).AsButton();
+            Assert.NotNull(openFileButton);
+            openFileButton.Click();
+
+            var selectDatasetTypeList = selectFileDialog.FindFirstChild("comboBoxDatasetType").AsComboBox();
+            Assert.NotNull(selectDatasetTypeList);
+            selectDatasetTypeList.Select(datasetTypeName);
+            Assert.True(selectDatasetTypeList.SelectedItem != null, "Dataset type could not be selected - note that '" + datasetTypeName + "' needs to be configured for your user");
+
+            var useFileForAnalysisButton = selectFileDialog.FindFirstDescendant(cf.ByControlType(ControlType.Button).And(cf.ByName("Go!"))).AsButton();
+            Assert.NotNull(useFileForAnalysisButton);
+            useFileForAnalysisButton.WaitUntilEnabled();
+            useFileForAnalysisButton.Focus();
+            useFileForAnalysisButton.Click();
+            Retry.WhileNotNull(() => TestApplication!.GetAllTopLevelWindows(automation).Where(window => window.Title == "Select file for analyses").FirstOrDefault(), TimeSpan.FromSeconds(10));
         }
 
         private Window OpenWindowFromMenuItem(UIA3Automation automation, Window mainWindow, string mainMenuItemName, string subMenuItemName, string windowTitle)
