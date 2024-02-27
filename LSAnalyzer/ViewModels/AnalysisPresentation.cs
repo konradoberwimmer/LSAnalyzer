@@ -4,7 +4,6 @@ using ExcelNumberFormat;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.ViewModels.ValueConverter;
-using Microsoft.Extensions.Logging;
 using RDotNet;
 using System;
 using System.Collections.Generic;
@@ -24,8 +23,6 @@ namespace LSAnalyzer.ViewModels
 {
     public partial class AnalysisPresentation : INotifyPropertyChanged
     {
-        private ILogger? _eventLogger;
-
         private Analysis _analysis;
         public Analysis Analysis
         {
@@ -336,12 +333,11 @@ namespace LSAnalyzer.ViewModels
             SecondaryDataView = new(TableSecondary);
         }
 
-        public AnalysisPresentation(Analysis analysis, ILogger? eventLogger = null)
+        public AnalysisPresentation(Analysis analysis)
         {
             Analysis = analysis;
             DataTable = new();
             DataView = new(DataTable);
-            _eventLogger = eventLogger;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

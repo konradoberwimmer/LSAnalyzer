@@ -5,7 +5,6 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
-using Microsoft.Extensions.Logging;
 using RDotNet;
 using System;
 using System.Collections.Generic;
@@ -26,7 +25,6 @@ namespace LSAnalyzer.ViewModels
     {
 
         private Rservice _rservice;
-        private ILogger? _eventLogger;
 
         private AnalysisConfiguration? _analysisConfiguration;
         public AnalysisConfiguration? AnalysisConfiguration
@@ -139,10 +137,9 @@ namespace LSAnalyzer.ViewModels
             SubsettingExpression = "cat == 1";
         }
 
-        public MainWindow(Rservice rservice, ILogger? eventLogger = null) 
+        public MainWindow(Rservice rservice) 
         {
             _rservice = rservice;
-            _eventLogger = eventLogger;
 
             WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (r, m) =>
             {
@@ -156,7 +153,7 @@ namespace LSAnalyzer.ViewModels
 
             WeakReferenceMessenger.Default.Register<RequestAnalysisMessage>(this, (r, m) =>
             {
-                AnalysisPresentation analysisPresentation = new(m.Value, _eventLogger);
+                AnalysisPresentation analysisPresentation = new(m.Value);
 
                 Analyses.Add(analysisPresentation);
                 if (RecentAnalyses.ContainsKey(m.Value.GetType()))
@@ -180,7 +177,7 @@ namespace LSAnalyzer.ViewModels
 
             WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (r, m) =>
             {
-                AnalysisPresentation analysisPresentation = new(m.Analysis, _eventLogger);
+                AnalysisPresentation analysisPresentation = new(m.Analysis);
 
                 Analyses.Add(analysisPresentation);
 

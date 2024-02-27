@@ -5,7 +5,6 @@ using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using LSAnalyzer.Views;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -41,7 +40,7 @@ namespace LSAnalyzer.Views
             
             InitializeComponent();
 
-            DataContext = new ViewModels.MainWindow(_serviceProvider.GetRequiredService<Rservice>(), _serviceProvider.GetRequiredService<ILogger<MainWindow>>());
+            DataContext = new ViewModels.MainWindow(_serviceProvider.GetRequiredService<Rservice>());
 
             Closed += WindowClosed;
 
