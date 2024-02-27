@@ -88,14 +88,14 @@ namespace LSAnalyzer.Services.DataProvider
 
         public DataProviderTestResults TestFileAccess(dynamic values)
         {
-            if (string.IsNullOrWhiteSpace(values.File) || string.IsNullOrWhiteSpace(values.Dataset))
-            {
-                return new() { IsSuccess = false, Message = "Missing filename or dataset" };
-            }
-            
             if (Configuration is not DataverseConfiguration dataverseConfiguration)
             {
                 return new() { IsSuccess = false, Message = "Mismatch between data provider configuration and service" };
+            }
+            
+            if (!ObjectTools.DoesPropertyExist(values, "File") || string.IsNullOrWhiteSpace(values.File) || !ObjectTools.DoesPropertyExist(values, "Dataset") || string.IsNullOrWhiteSpace(values.Dataset))
+            {
+                return new() { IsSuccess = false, Message = "Missing filename or dataset" };
             }
 
             if (!_rservice.CheckNecessaryRPackages("dataverse"))
@@ -113,12 +113,12 @@ namespace LSAnalyzer.Services.DataProvider
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(values.File) || string.IsNullOrWhiteSpace(values.Dataset))
+                if (Configuration is not DataverseConfiguration dataverseConfiguration)
                 {
                     return new();
                 }
 
-                if (Configuration is not DataverseConfiguration dataverseConfiguration)
+                if (!ObjectTools.DoesPropertyExist(values, "File") || string.IsNullOrWhiteSpace(values.File) || !ObjectTools.DoesPropertyExist(values, "Dataset") || string.IsNullOrWhiteSpace(values.Dataset))
                 {
                     return new();
                 }
@@ -158,12 +158,12 @@ namespace LSAnalyzer.Services.DataProvider
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(values.File) || string.IsNullOrWhiteSpace(values.Dataset))
+                if (Configuration is not DataverseConfiguration dataverseConfiguration)
                 {
                     return new();
                 }
 
-                if (Configuration is not DataverseConfiguration dataverseConfiguration)
+                if (!ObjectTools.DoesPropertyExist(values, "File") || string.IsNullOrWhiteSpace(values.File) || !ObjectTools.DoesPropertyExist(values, "Dataset") || string.IsNullOrWhiteSpace(values.Dataset))
                 {
                     return new();
                 }

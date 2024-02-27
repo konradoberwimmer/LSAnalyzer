@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,6 +32,15 @@ namespace LSAnalyzer.Helper
                 return true;
             }
             return self == to;
+        }
+
+        // Kudos to Serj-Tm and Ian Kemp
+        public static bool DoesPropertyExist(dynamic values, string name)
+        {
+            if (values is ExpandoObject)
+                return ((IDictionary<string, object>)values).ContainsKey(name);
+
+            return values.GetType().GetProperty(name) != null;
         }
     }
 }
