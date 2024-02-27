@@ -173,6 +173,11 @@ namespace LSAnalyzer.ViewModels
                 AnalysisConfiguration = null;
             });
 
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeChangedSubsettingMessage>(this, (r, m) =>
+            {
+                SubsettingExpression = m.SubsettingExpression;
+            });
+
             WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (r, m) =>
             {
                 AnalysisPresentation analysisPresentation = new(m.Analysis, _eventLogger);

@@ -123,6 +123,22 @@ namespace LSAnalyzer.Services
                     }
                 }
 
+                if (_useCurrentFile && !string.IsNullOrWhiteSpace(analysis.Value.SubsettingExpression))
+                {
+                    if (!_rservice.TestAnalysisConfiguration(analysis.Value.AnalysisConfiguration, analysis.Value.SubsettingExpression))
+                    {
+                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                        {
+                            Id = analysis.Key,
+                            Success = false,
+                            Message = "Could not reapply subsetting '" + analysis.Value.SubsettingExpression + "'!"
+                        });
+                        continue;
+                    }
+
+                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedSubsettingMessage() { SubsettingExpression = analysis.Value.SubsettingExpression });
+                }
+
                 if (_useCurrentFile && !_currentModeKeep)
                 {
                     List<string>? additionalVariables = null;
@@ -215,5 +231,10 @@ namespace LSAnalyzer.Services
     public class BatchAnalyzeChangedStoredRawDataFileMessage
     {
 
+    }
+
+    public class BatchAnalyzeChangedSubsettingMessage
+    {
+        public string SubsettingExpression { get; set; } = null!;
     }
 }
