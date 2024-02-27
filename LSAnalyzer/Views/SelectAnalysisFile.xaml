@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         xmlns:local="clr-namespace:LSAnalyzer.Views"
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" x:Name="windowSelectAnalysisFile" x:Class="LSAnalyzer.Views.SelectAnalysisFile"
@@ -84,6 +84,6 @@
             <RadioButton x:Name="radioButtonAnalysisModeBuild" Content="Build BIFIEdata object for each analysis (Use only in case of reaching memory limit!)" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="AnalysisMode" IsChecked="{Binding SelectedAnalysisMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Build}"/>
         </StackPanel>
         <Button Grid.Row="5" Grid.Column="2" Content="Go!" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Bottom" Height="22" Width="80" Command="{Binding UseFileForAnalysisCommand, Mode=OneWay}" CommandParameter="{Binding ElementName=windowSelectAnalysisFile}" IsEnabled="{Binding ReadyToGo}"/>
-        <fa:ImageAwesome Grid.RowSpan="5" Grid.ColumnSpan="3" Icon="SunOutline" Spin="True" VerticalAlignment="Center" Height="100" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
+        <fa:IconImage Grid.RowSpan="5" Grid.ColumnSpan="3" Icon="Sun" fa:Awesome.Spin="True" VerticalAlignment="Center" Height="100" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
     </Grid>
 </Window>
