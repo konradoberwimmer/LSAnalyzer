@@ -61,18 +61,18 @@ namespace LSAnalyzer.Services.DataProvider
             if (format == "tsv")
             {
                 success = success && _rservice.Execute($$"""
-                    {{objectName}} <- dataverse::get_dataframe_by_name(
+                    {{objectName}} <- as.data.frame(dataverse::get_dataframe_by_name(
                         filename = "{{fileName}}",
                         dataset = "{{dataset}}",
-                        original = FALSE)
+                        original = FALSE))
                     """);
             } else if (format == "spss") {
                 success = success && _rservice.Execute($$"""
-                    {{objectName}} <- dataverse::get_dataframe_by_name(
+                    {{objectName}} <- as.data.frame(dataverse::get_dataframe_by_name(
                         filename = "{{fileName}}",
                         dataset = "{{dataset}}",
                         .f = function(file) { return(foreign::read.spss(file, use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)) },
-                        original = TRUE)
+                        original = TRUE))
                     """);
             } else {
                 return false;
