@@ -23,6 +23,7 @@ namespace TestLSAnalyzer.Services
             {
                 DatasetType = new() { },
                 FileName = "dummy.sav",
+                ModeKeep = true,
             };
 
             BatchAnalyze batchAnalyze = new(rservice);
@@ -39,7 +40,7 @@ namespace TestLSAnalyzer.Services
             {
                 { 1, new AnalysisUnivar(analysisConfiguration) }, 
                 { 2, new AnalysisFreq(analysisConfiguration) }, 
-            }, true);
+            }, true, analysisConfiguration);
             await Task.Delay(100);
 
             Assert.Equal(4, messageCounter);
@@ -111,7 +112,7 @@ namespace TestLSAnalyzer.Services
                     } },
             };
 
-            batchAnalyze.RunBatch(analyses, false);
+            batchAnalyze.RunBatch(analyses, false, null);
 
             while (messages.Count < 10)
             {
@@ -188,7 +189,7 @@ namespace TestLSAnalyzer.Services
                     } },
             };
 
-            batchAnalyze.RunBatch(analyses, true, true);
+            batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5);
 
             while (messages.Count < 8)
             {
@@ -264,7 +265,7 @@ namespace TestLSAnalyzer.Services
                     } },
             };
 
-            batchAnalyze.RunBatch(analyses, true, false);
+            batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat);
 
             while (messages.Count < 8)
             {

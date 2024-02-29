@@ -6,7 +6,6 @@ Test and debug!
 * split application core and UI in separate assemblies to possibly switch to AvaloniaUI
 * create an automated test suite for a wider range of published trustful coefficients from known data (PIRLS, PISA school level, ...) that conducts realistic workflows
 * refactoring of data table creation and management OR switch from BIFIEsurvey to a specialized R package for LSAnalyzer
-* optimize batch analyze: do not repeatedly reload the same file; do not re-apply same subsetting over and over again
 
 # Would-be-nice-but-hard-to-implement
 * implement variable display name to hide away regex in PVs

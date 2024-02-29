@@ -84,7 +84,7 @@ namespace TestLSAnalyzer.ViewModels
 
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json");
             batchAnalyzeViewModel.UseCurrentFile = true;
-            batchAnalyzeViewModel.CurrentModeKeep = true;
+            batchAnalyzeViewModel.CurrentConfiguration = analysisConfiguration;
             batchAnalyzeViewModel.RunBatchCommand.Execute(null);
 
             await Task.Delay(1000);
@@ -127,7 +127,7 @@ namespace TestLSAnalyzer.ViewModels
 
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json");
             batchAnalyzeViewModel.UseCurrentFile = true;
-            batchAnalyzeViewModel.CurrentModeKeep = true;
+            batchAnalyzeViewModel.CurrentConfiguration =analysisConfiguration;
             batchAnalyzeViewModel.RunBatchCommand.Execute(null);
 
             await Task.Delay(1000);

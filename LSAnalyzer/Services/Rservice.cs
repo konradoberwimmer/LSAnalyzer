@@ -595,7 +595,7 @@ namespace LSAnalyzer.Services
 
             EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
 
-            if (subsettingExpression != null && !ApplySubsetting(subsettingExpression))
+            if (!string.IsNullOrWhiteSpace(subsettingExpression) && !ApplySubsetting(subsettingExpression))
             {
                 return false;
             }

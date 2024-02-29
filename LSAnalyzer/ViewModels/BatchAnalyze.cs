@@ -63,14 +63,14 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private bool _currentModeKeep = true;
-        public bool CurrentModeKeep
+        private AnalysisConfiguration? _currentConfiguration;
+        public AnalysisConfiguration? CurrentConfiguration
         {
-            get => _currentModeKeep;
+            get => _currentConfiguration;
             set
             {
-                _currentModeKeep = value;
-                NotifyPropertyChanged(nameof(CurrentModeKeep));
+                _currentConfiguration = value;
+                NotifyPropertyChanged(nameof(CurrentConfiguration));
             }
         }
 
@@ -115,7 +115,6 @@ namespace LSAnalyzer.ViewModels
             // design-time only, parameterless constructor
             HasCurrentFile = false;
             UseCurrentFile = false;
-            CurrentModeKeep = true;
         }
 
         public BatchAnalyze(Services.BatchAnalyze batchAnalyzeService)
@@ -204,7 +203,7 @@ namespace LSAnalyzer.ViewModels
 
             IsBusy = true;
 
-            _batchAnalyzeService.RunBatch(_analysesDictionary, UseCurrentFile, CurrentModeKeep);
+            _batchAnalyzeService.RunBatch(_analysesDictionary, UseCurrentFile, CurrentConfiguration);
         }
 
         private RelayCommand<ICloseable?>? _transferResultsCommand;

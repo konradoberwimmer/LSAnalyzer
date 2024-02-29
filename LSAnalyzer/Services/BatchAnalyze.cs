@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.ViewModels;
 using RDotNet;
@@ -15,18 +16,17 @@ namespace LSAnalyzer.Services
     {
         private Rservice _rservice;
         private bool _useCurrentFile = true;
-        private bool _currentModeKeep = true;
+        private AnalysisConfiguration? _currentConfiguration;
 
         public BatchAnalyze(Rservice rservice)
         {
             _rservice = rservice;
         }
 
-        public void RunBatch(Dictionary<int, Analysis> analyses, bool useCurrentFile, bool currentModeKeep = true)
+        public void RunBatch(Dictionary<int, Analysis> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration)
         {
             _useCurrentFile = useCurrentFile;
-            _currentModeKeep = currentModeKeep;
-
+            _currentConfiguration = currentConfiguration;
 
             if (analyses.Count > 0 && !_useCurrentFile)
             {
@@ -48,6 +48,9 @@ namespace LSAnalyzer.Services
                 return;
             }
 
+            AnalysisConfiguration? previousAnalysisConfiguration = null;
+            string? previousSubsettingExpression = "$$$initialize$$$";
+
             foreach (var analysis in analyses)
             {
                 WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
@@ -57,9 +60,12 @@ namespace LSAnalyzer.Services
                     Message = "Working ..."
                 });
 
-                if (!_useCurrentFile)
+                if (!_useCurrentFile && 
+                    (!ObjectTools.PublicInstancePropertiesEqual(analysis.Value.AnalysisConfiguration!, previousAnalysisConfiguration!, new[] { "DatasetType" }) ||
+                     !ObjectTools.PublicInstancePropertiesEqual(analysis.Value.AnalysisConfiguration?.DatasetType!, previousAnalysisConfiguration?.DatasetType!, new[] { "Errors", "IsChanged" }) ||
+                     analysis.Value.SubsettingExpression != previousSubsettingExpression))
                 {
-                    if (analysis.Value.AnalysisConfiguration.FileName?.StartsWith("[") ?? false)
+                    if (analysis.Value.AnalysisConfiguration!.FileName?.StartsWith("[") ?? false)
                     {
                         WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                         {
@@ -123,9 +129,9 @@ namespace LSAnalyzer.Services
                     }
                 }
 
-                if (_useCurrentFile && !string.IsNullOrWhiteSpace(analysis.Value.SubsettingExpression))
+                if (_useCurrentFile && analysis.Value.SubsettingExpression != previousSubsettingExpression)
                 {
-                    if (!_rservice.TestAnalysisConfiguration(analysis.Value.AnalysisConfiguration, analysis.Value.SubsettingExpression))
+                    if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, analysis.Value.SubsettingExpression))
                     {
                         WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                         {
@@ -136,10 +142,12 @@ namespace LSAnalyzer.Services
                         continue;
                     }
 
-                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedSubsettingMessage() { SubsettingExpression = analysis.Value.SubsettingExpression });
+                    previousSubsettingExpression = analysis.Value.SubsettingExpression;
+                    
+                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedSubsettingMessage() { SubsettingExpression = analysis.Value.SubsettingExpression ?? string.Empty });
                 }
 
-                if (_useCurrentFile && !_currentModeKeep)
+                if (_useCurrentFile && !(_currentConfiguration?.ModeKeep ?? true))
                 {
                     List<string>? additionalVariables = null;
                     if (analysis.Value is AnalysisRegression analysisRegression)
@@ -157,6 +165,9 @@ namespace LSAnalyzer.Services
                         continue;
                     }
                 }
+
+                previousSubsettingExpression = analysis.Value.SubsettingExpression;
+                previousAnalysisConfiguration = analysis.Value.AnalysisConfiguration;
 
                 DateTime beforeCalculation = DateTime.Now;
 

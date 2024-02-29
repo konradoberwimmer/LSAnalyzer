@@ -250,7 +250,7 @@ namespace LSAnalyzer.Views
             {
                 batchAnalyzeViewModel.UseCurrentFile = true;
             }
-            batchAnalyzeViewModel.CurrentModeKeep = mainWindowViewModel.AnalysisConfiguration?.ModeKeep != false;
+            batchAnalyzeViewModel.CurrentConfiguration = mainWindowViewModel.AnalysisConfiguration;
 
             Views.BatchAnalyze batchAnalyzeView = new(batchAnalyzeViewModel);
             batchAnalyzeView.ShowDialog();
