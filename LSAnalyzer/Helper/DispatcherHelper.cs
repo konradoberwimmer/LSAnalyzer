@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,6 +33,7 @@ public static class DispatcherHelper
                                                 "Call DispatcherHelper.Initialize() in the static App constructor.");
     }
 
+    [ExcludeFromCodeCoverage]
     public static DispatcherOperation RunAsync(Action action)
     {
         CheckDispatcher();
@@ -46,6 +48,7 @@ public static class DispatcherHelper
         UIDispatcher = Dispatcher.CurrentDispatcher;
     }
 
+    [ExcludeFromCodeCoverage]
     public static void Reset()
     {
         UIDispatcher = null;

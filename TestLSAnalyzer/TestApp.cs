@@ -72,6 +72,21 @@ namespace TestLSAnalyzer
             StartAnalysisFromDialog(automation, analyzeLinregDialog);
             SaveLastAnalysisAsXlsx(mainWindow, 9, "test_workflow_pirls_austria_linreg.xlsx");
 
+            // calculate correlation betweeen PVs, but only for girls
+            var subsettingDialog = OpenWindowFromMenuItem(automation, mainWindow, "File", "Subsetting ...", "Subsetting");
+            var expressionTextBox = subsettingDialog.FindAllDescendants(cf.ByControlType(ControlType.Edit).And(cf.ByAutomationId("textBoxSubsettingExpression"))).First().AsTextBox();
+            expressionTextBox.Text = "ITSEX == 1";
+            var useSubsettingButton = subsettingDialog.FindAllDescendants(cf.ByControlType(ControlType.Button).And(cf.ByName("OK"))).First().AsButton();
+            useSubsettingButton.Click();
+            var closedDialog = Retry.WhileNotNull(() => TestApplication!.GetAllTopLevelWindows(automation).Where(window => window.Title == "Subsetting").FirstOrDefault(), TimeSpan.FromSeconds(10)).Result;
+            Assert.True(closedDialog);
+
+            var analyzeCorrelDialog = OpenWindowFromMenuItem(automation, mainWindow, "Analysis", "Correlations ...", "Correlations");
+            SelectVariablesInListBox(analyzeCorrelDialog, "listBoxVariablesDataset", new string[] { "ASRREA", "ASRLIT", "ASRINF", "ASRIIE", "ASRRSI" }, true);
+            MoveVariablesBetweenLists(analyzeCorrelDialog, "listBoxVariablesDataset", "buttonMoveToAndFromAnalysisVariables", "listBoxVariablesAnalyze");
+            StartAnalysisFromDialog(automation, analyzeCorrelDialog);
+            SaveLastAnalysisAsXlsx(mainWindow, 15, "test_workflow_pirls_austria_correl.xlsx");
+
             // save those analyses
             mainWindow.FindFirstDescendant("buttonDownloadAnalysesDefinitions").Click();
             var saveAnalysesDialog = Retry.WhileNull(() => mainWindow.ModalWindows.FirstOrDefault(), TimeSpan.FromSeconds(5)).Result;
@@ -113,7 +128,7 @@ namespace TestLSAnalyzer
             var transferButton = batchAnalyzeDialog.FindFirstDescendant(cf.ByName("OK")).AsButton();
             Retry.WhileFalse(() => transferButton.IsEnabled, TimeSpan.FromSeconds(10));
             transferButton.Click();
-            var closedDialog = Retry.WhileNotNull(() => TestApplication!.GetAllTopLevelWindows(automation).Where(window => window.Title == "Batch analyze").FirstOrDefault(), TimeSpan.FromSeconds(10)).Result;
+            closedDialog = Retry.WhileNotNull(() => TestApplication!.GetAllTopLevelWindows(automation).Where(window => window.Title == "Batch analyze").FirstOrDefault(), TimeSpan.FromSeconds(10)).Result;
             Assert.True(closedDialog);
 
             // close app
@@ -261,6 +276,9 @@ namespace TestLSAnalyzer
 
             saveFileButton.Click();
             Assert.True(Retry.WhileFalse(() => File.Exists(xlsxFilename), TimeSpan.FromSeconds(10)).Result);
+
+            var expander = mainWindow.FindAllDescendants(cf.ByControlType(ControlType.Button).And(cf.ByAutomationId("HeaderSite"))).Last();
+            expander.Click();
         }
 
         public static string AssemblyDirectory
