@@ -21,10 +21,11 @@ namespace LSAnalyzer.Models
     {
         public abstract string AnalysisName { get; }
 
-        protected readonly AnalysisConfiguration _analysisConfiguration;
+        protected AnalysisConfiguration _analysisConfiguration;
         public AnalysisConfiguration AnalysisConfiguration 
         { 
             get => _analysisConfiguration; 
+            set => _analysisConfiguration = value;
         }
         public List<Variable> Vars { get; set; } = new();
         public List<Variable> GroupBy { get; set; } = new();

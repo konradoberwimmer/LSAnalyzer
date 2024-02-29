@@ -42,7 +42,7 @@ namespace LSAnalyzer.Services
 
         private void DoBatch(object? sender, DoWorkEventArgs e)
         {
-            if (e.Argument is not Dictionary<int, Analysis> analyses)
+            if (e.Argument is not Dictionary<int, Analysis> analyses || (_useCurrentFile && _currentConfiguration == null))
             {
                 e.Cancel = true;
                 return;
@@ -129,41 +129,46 @@ namespace LSAnalyzer.Services
                     }
                 }
 
-                if (_useCurrentFile && analysis.Value.SubsettingExpression != previousSubsettingExpression)
+                if (_useCurrentFile)
                 {
-                    if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, analysis.Value.SubsettingExpression))
+                    if (analysis.Value.SubsettingExpression != previousSubsettingExpression)
                     {
-                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                        if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, analysis.Value.SubsettingExpression))
                         {
-                            Id = analysis.Key,
-                            Success = false,
-                            Message = "Could not reapply subsetting '" + analysis.Value.SubsettingExpression + "'!"
-                        });
-                        continue;
-                    }
+                            WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                            {
+                                Id = analysis.Key,
+                                Success = false,
+                                Message = "Could not reapply subsetting '" + analysis.Value.SubsettingExpression + "'!"
+                            });
+                            continue;
+                        }
 
-                    previousSubsettingExpression = analysis.Value.SubsettingExpression;
+                        previousSubsettingExpression = analysis.Value.SubsettingExpression;
                     
-                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedSubsettingMessage() { SubsettingExpression = analysis.Value.SubsettingExpression ?? string.Empty });
-                }
+                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedSubsettingMessage() { SubsettingExpression = analysis.Value.SubsettingExpression ?? string.Empty });
+                    }
 
-                if (_useCurrentFile && !(_currentConfiguration?.ModeKeep ?? true))
-                {
-                    List<string>? additionalVariables = null;
-                    if (analysis.Value is AnalysisRegression analysisRegression)
+                    if (!(_currentConfiguration?.ModeKeep ?? true))
                     {
-                        additionalVariables = new() { analysisRegression.Dependent?.Name ?? "insufficient_analysis_definition_" };
-                    }
-                    if (!_rservice.PrepareForAnalysis(analysis.Value, additionalVariables))
-                    {
-                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                        List<string>? additionalVariables = null;
+                        if (analysis.Value is AnalysisRegression analysisRegression)
                         {
-                            Id = analysis.Key,
-                            Success = false,
-                            Message = "Could not build current file for analysis!"
-                        });
-                        continue;
+                            additionalVariables = new() { analysisRegression.Dependent?.Name ?? "insufficient_analysis_definition_" };
+                        }
+                        if (!_rservice.PrepareForAnalysis(analysis.Value, additionalVariables))
+                        {
+                            WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                            {
+                                Id = analysis.Key,
+                                Success = false,
+                                Message = "Could not build current file for analysis!"
+                            });
+                            continue;
+                        }
                     }
+
+                    analysis.Value.AnalysisConfiguration = _currentConfiguration!;
                 }
 
                 previousSubsettingExpression = analysis.Value.SubsettingExpression;
