@@ -205,13 +205,13 @@ namespace TestLSAnalyzer.Services.DataProvider
             Assert.True(result, "dataverse access (https://data.aussda.at/) not working - be sure to set up an API key in your user secrets");
         }
 
-        private static string GetTestApiToken()
+        internal static string GetTestApiToken()
         {
             ConfigurationBuilder builder = new();
             builder.AddUserSecrets<TestDataverse>();
 
             var configuration = builder.Build();
-            return (string)configuration["dataverseTestKey"]!;
+            return (string)configuration["testDataverseKey"]!;
         }
     }
 }
