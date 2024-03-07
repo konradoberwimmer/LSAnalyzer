@@ -114,7 +114,7 @@
                     </ToolTipService.IsEnabled>
                 </TextBox>
                 <TextBlock TextWrapping="Wrap" Text="Replication variance adjustment factor (argument fayfac in BIFIEsurvey):"/>
-                <TextBox x:Name="textBoxFayFac" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.FayFac, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left">
+                <TextBox x:Name="textBoxFayFac" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.FayFac}" HorizontalAlignment="Left">
                     <ToolTipService.ToolTip>
                         <TextBlock Text="{Binding SelectedDatasetType.Errors[FayFac]}" Foreground="Red"/>
                     </ToolTipService.ToolTip>
