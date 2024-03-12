@@ -2,6 +2,7 @@
 using RDotNet;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -104,5 +105,11 @@ namespace LSAnalyzer.Models
                 return variableLabels;
             }
         }
+
+        [JsonIgnore]
+        public virtual string PrimaryDataFrameName { get => "stat"; }
+
+        [JsonIgnore]
+        public abstract Dictionary<string, DataColumn> TableColumns { get; }
     }
 }

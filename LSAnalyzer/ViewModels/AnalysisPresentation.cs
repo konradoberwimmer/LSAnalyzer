@@ -3,7 +3,9 @@ using CommunityToolkit.Mvvm.Input;
 using ExcelNumberFormat;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
+using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels.ValueConverter;
+using Microsoft.Extensions.DependencyInjection;
 using RDotNet;
 using System;
 using System.Collections.Generic;
@@ -23,6 +25,13 @@ namespace LSAnalyzer.ViewModels
 {
     public partial class AnalysisPresentation : INotifyPropertyChanged
     {
+        private IResultService? _resultService;
+        public IResultService ResultService
+        {
+            get => _resultService ??= (App.Current as App)?.ServiceProvider.GetService<IResultService>() ?? new ResultService();
+            set => _resultService ??= value;
+        }
+
         private Analysis _analysis;
         public Analysis Analysis
         {
@@ -401,99 +410,17 @@ namespace LSAnalyzer.ViewModels
                 return new();
             }
 
-            DataTable table = new(analysisUnivar.AnalysisName);
-            Dictionary<string, DataColumn> columns = new();
+            ResultService.Analysis = analysisUnivar;
+            DataTable table = ResultService.CreatePrimaryTable()!;
 
-            AddVariableLabelColumn(analysisUnivar, columns, "var", "variable");
-
-            for (int cntGroupyBy = 0; cntGroupyBy < analysisUnivar.GroupBy.Count; cntGroupyBy++)
+            if (analysisUnivar.VariableLabels.Count > 0)
             {
-                columns.Add("groupval" + (cntGroupyBy + 1), new DataColumn(analysisUnivar.GroupBy[cntGroupyBy].Name, typeof(double)));
-                if (analysisUnivar.ValueLabels.ContainsKey(analysisUnivar.GroupBy[cntGroupyBy].Name))
-                {
-                    columns.Add("$label_" + analysisUnivar.GroupBy[cntGroupyBy].Name, new DataColumn(analysisUnivar.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
-                }
+                HasVariableLabels = true;
             }
 
-            columns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
-            columns.Add("Nweight", new DataColumn("N - weighted", typeof(double)));
-            columns.Add("lsanalyzer_rank", new DataColumn("rank of mean (per variable)", typeof(double)));
-            columns.Add("M", new DataColumn("mean", typeof(double)));
-            columns.Add("M_SE", new DataColumn("mean - standard error", typeof(double)));
-            columns.Add("M_p", new DataColumn("mean - p value", typeof(double)));
-            columns.Add("M_fmi", new DataColumn("mean - FMI", typeof(double)));
-            columns.Add("SD", new DataColumn("standard deviation", typeof(double)));
-            columns.Add("SD_SE", new DataColumn("standard deviation - standard error", typeof(double)));
-            columns.Add("SD_p", new DataColumn("standard deviation - p value", typeof(double)));
-            columns.Add("SD_fmi", new DataColumn("standard deviation - FMI", typeof(double)));
-
-            foreach (var column in columns.Values)
+            if (analysisUnivar.Vars.Count == 1 && analysisUnivar.GroupBy.Count == 1)
             {
-                table.Columns.Add(column);
-            }
-
-            foreach (var result in Analysis.Result)
-            {
-                var dataFrame = result["stat"].AsDataFrame();
-                var groupColumns = GetGroupColumns(dataFrame);
-
-                foreach (var dataFrameRow in dataFrame.GetRows())
-                {
-                    DataRow tableRow = table.NewRow();
-
-                    List<object?> cellValues = new();
-                    foreach (var column in columns.Keys)
-                    {
-                        if (Regex.IsMatch(column, "^groupval[0-9]*$") && groupColumns.ContainsKey(columns[column].ColumnName))
-                        {
-                            cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
-                        } else if (Regex.IsMatch(column, "^\\$label_"))
-                        {
-                            if ((double?)cellValues.Last() == null)
-                            {
-                                cellValues.Add(null);
-                                continue;
-                            }
-
-                            var groupByVariable = column.Substring(column.IndexOf("_") + 1);
-                            var valueLabels = analysisUnivar.ValueLabels[groupByVariable];
-                            // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
-                            var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)cellValues.Last()!);
-
-                            if (posValueLabel != -1)
-                            {
-                                var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
-                                cellValues.Add(valueLabel);
-                            } else
-                            {
-                                cellValues.Add(null);
-                            }
-                        } else if (Regex.IsMatch(column, "^\\$varlabel_"))
-                        {
-                            if (dataFrameRow["var"] is string varName && analysisUnivar.VariableLabels.ContainsKey(varName))
-                            {
-                                cellValues.Add(analysisUnivar.VariableLabels[varName]);
-                            } else
-                            {
-                                cellValues.Add(null);
-                            }
-                        } else if (dataFrame.ColumnNames.Contains(column))
-                        {
-                            cellValues.Add(dataFrameRow[column]);
-                        } else
-                        {
-                            cellValues.Add(null);
-                        }
-                    }
-
-                    tableRow.ItemArray = cellValues.ToArray();
-                    table.Rows.Add(tableRow);
-                }
-            }
-
-            if (Analysis.Vars.Count == 1 && Analysis.GroupBy.Count == 1)
-            {
-                var relevantRows = table.AsEnumerable().Where(row => row.Field<double?>(Analysis.GroupBy.First().Name) != null);
+                var relevantRows = table.AsEnumerable().Where(row => row.Field<double?>(analysisUnivar.GroupBy.First().Name) != null);
                 var values = relevantRows.Select(row => row.Field<double>("mean")).ToList();
                 var valuesSE = relevantRows.Select(row => row.Field<double>("mean - standard error")).ToList();
                 var rowCount = relevantRows.ToList().Count;
@@ -510,7 +437,7 @@ namespace LSAnalyzer.ViewModels
                 HasTableAverage = true;
             }
 
-            if (Analysis.GroupBy.Count >= 1)
+            if (analysisUnivar.GroupBy.Count >= 1)
             {
                 HasRank = true;
             }

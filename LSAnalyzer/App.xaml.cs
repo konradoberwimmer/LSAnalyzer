@@ -16,6 +16,10 @@ namespace LSAnalyzer
     public partial class App : Application
     {
         private IServiceProvider _serviceProvider;
+        public IServiceProvider ServiceProvider
+        {
+            get => _serviceProvider;
+        }
 
         public App()
         {
@@ -45,6 +49,7 @@ namespace LSAnalyzer
                 var userDatasetTypesConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");
                 return new Configuration(userDatasetTypesConfigFile, configurationBuilder); 
             });
+            services.AddTransient<IResultService>(provider => new ResultService());
             services.AddTransient<ConfigDatasetTypes>();
             services.AddTransient<DataProviders>();
             services.AddTransient<SystemSettings>();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -39,5 +40,8 @@ namespace LSAnalyzer.Models
                 ("Without standard errors (BIFIE.ecdf) and " + (UseInterpolation ? "with interpolation (quanttype = 1)" : "without interpolation (quanttype = 2)")) :
                 ("With standard errors and " + (UseInterpolation ? "with interpolation (mimic BIFIE.ecdf, quanttype = 1)" : (!MimicIdbAnalyzer ? "without interpolation (mimic BIFIE.ecdf, quanttype = 2)" : "without interpolation (mimic IDBanalyzer)")));
         }
+
+        [JsonIgnore]
+        public override Dictionary<string, DataColumn> TableColumns => throw new NotImplementedException();
     }
 }
