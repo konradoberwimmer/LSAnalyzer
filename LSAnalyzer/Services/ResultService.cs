@@ -1,4 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Vml.Office;
+using DocumentFormat.OpenXml.Wordprocessing;
 using LSAnalyzer.Models;
 using RDotNet;
 using System;
@@ -74,6 +76,18 @@ public class ResultService : IResultService
             {
                 var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
                 return valueLabel;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        else if (Regex.IsMatch(value, "^\\$varlabel_var(1|2)"))
+        {
+            string varVariable = value == "$varlabel_var1" ? "var1" : "var2";
+            if (row[varVariable] is string varName && Analysis!.VariableLabels.ContainsKey(varName))
+            {
+                return Analysis.VariableLabels[varName];
             }
             else
             {
