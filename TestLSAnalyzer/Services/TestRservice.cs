@@ -553,18 +553,16 @@ namespace TestLSAnalyzer.Services
 
             var result = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(result);
-            Assert.Equal(2, result.Count);
+            Assert.Single(result);
 
             var firstResult = result.First();
             var statM = firstResult["stat_M"].AsDataFrame();
             Assert.True(Math.Abs((double)statM["M"][0] - 549.66678562657671) < 0.0001);
             Assert.True(Math.Abs((double)statM["M_SE"][0] - 2.4462113724162045) < 0.0001);
-
-            var lastResult = result.Last();
-            var statEta = lastResult["stat.eta"].AsDataFrame();
+            var statEta = firstResult["stat.eta"].AsDataFrame();
             Assert.True(Math.Abs((double)statEta["eta"][0] - 0.1770158) < 0.0001);
             Assert.True(Math.Abs((double)statEta["eta_SE"][0] - 0.0211625) < 0.0001);
-            var statD= lastResult["stat.dstat"].AsDataFrame();
+            var statD= firstResult["stat.dstat"].AsDataFrame();
             Assert.Equal(6, statD.RowCount);
         }
 
@@ -601,17 +599,17 @@ namespace TestLSAnalyzer.Services
 
             var result = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(result);
-            Assert.Equal(4, result.Count);
+            Assert.Equal(2, result.Count);
 
-            var firstMeanDiffResult = result[1];
-            var statEta = firstMeanDiffResult["stat.eta"].AsDataFrame();
+            var firstResult = result[0];
+            var statEta = firstResult["stat.eta"].AsDataFrame();
             Assert.True(Math.Abs((double)statEta["eta"][0] - 0.04523357) < 0.0001);
             Assert.True(Math.Abs((double)statEta["eta_SE"][0] - 0.0185994) < 0.0001);
-            var statD = firstMeanDiffResult["stat.dstat"].AsDataFrame();
+            var statD = firstResult["stat.dstat"].AsDataFrame();
             Assert.Equal(1, statD.RowCount);
 
-            var secondUnivarResult = result[2];
-            Assert.Contains("stat_M", secondUnivarResult.AsList().Names);
+            var secondResult = result[1];
+            Assert.Contains("stat_M", secondResult.AsList().Names);
         }
 
         [Fact]
@@ -1362,7 +1360,7 @@ namespace TestLSAnalyzer.Services
 
             var resultSav = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(resultSav);
-            Assert.Equal(2, resultSav.Count);
+            Assert.Single(resultSav);
             var dataFrameSav = resultSav.Last()["stat.dstat"].AsDataFrame();
 
             analysisConfiguration.FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.rds");
@@ -1370,7 +1368,7 @@ namespace TestLSAnalyzer.Services
 
             var resultRds = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(resultRds);
-            Assert.Equal(2, resultRds.Count);
+            Assert.Single(resultRds);
             var dataFrameRds = resultRds.Last()["stat.dstat"].AsDataFrame();
 
             var valuesRds = dataFrameRds["d"].AsNumeric();
@@ -1384,7 +1382,7 @@ namespace TestLSAnalyzer.Services
 
             var resultCsv2 = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(resultCsv2);
-            Assert.Equal(2, resultCsv2.Count);
+            Assert.Single(resultCsv2);
             var dataFrameCsv2 = resultCsv2.Last()["stat.dstat"].AsDataFrame();
 
             var valuesCsv2 = dataFrameCsv2["d"].AsNumeric();
@@ -1398,7 +1396,7 @@ namespace TestLSAnalyzer.Services
 
             var resultXlsx = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(resultXlsx);
-            Assert.Equal(2, resultXlsx.Count);
+            Assert.Single(resultXlsx);
             var dataFrameXlsx = resultXlsx.Last()["stat.dstat"].AsDataFrame();
 
             var valuesXlsx = dataFrameXlsx["d"].AsNumeric();

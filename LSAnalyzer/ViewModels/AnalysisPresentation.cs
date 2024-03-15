@@ -500,19 +500,13 @@ namespace LSAnalyzer.ViewModels
                 table.Columns.Add(column);
             }
 
-            // list of results has output from BIFIE.univar in even and results from BIFIE.univar.test in odd positions
             for (int cntResult = 0; cntResult < Analysis.Result.Count; cntResult++)
             {
-                if (cntResult % 2 == 0)
-                {
-                    continue;
-                }
 
                 var result = Analysis.Result[cntResult];
-                var univarResult = Analysis.Result[cntResult - 1];
 
                 var dataFrame = result["stat.dstat"].AsDataFrame();
-                var univarDataFrame = univarResult["stat_M"].AsDataFrame();
+                var univarDataFrame = result["stat_M"].AsDataFrame();
 
                 foreach (var dataFrameRow in dataFrame.GetRows())
                 {
@@ -589,6 +583,11 @@ namespace LSAnalyzer.ViewModels
                             {
                                 foreach (var univarDataFrameRow in univarDataFrame.GetRows())
                                 {
+                                    if ((string)univarDataFrameRow["var"] != (string)dataFrameRow["var"])
+                                    {
+                                        continue;
+                                    }
+                                    
                                     bool matchGroup = true;
 
                                     for (int gg = 0; gg < groupValues.Length; gg++)
@@ -649,69 +648,8 @@ namespace LSAnalyzer.ViewModels
                 return new();
             }
 
-            DataTable table = new("Explained variance");
-            Dictionary<string, DataColumn> columns = new();
-
-            AddVariableLabelColumn(analysisMeanDiff, columns, "var", "variable");
-
-            if (analysisMeanDiff.CalculateSeparately)
-            {
-                columns.Add("group", new DataColumn("groups by", typeof(string)));
-            }
-
-            columns.Add("eta2", new DataColumn("eta²", typeof(double)));
-            columns.Add("eta", new DataColumn("eta", typeof(double)));
-            columns.Add("eta_SE", new DataColumn("eta - standard error", typeof(double)));
-            columns.Add("fmi", new DataColumn("eta - FMI", typeof(double)));
-
-            foreach (var column in columns.Values)
-            {
-                table.Columns.Add(column);
-            }
-
-            // list of results has output from BIFIE.univar in even and results from BIFIE.univar.test in odd positions
-            for (int cntResult = 0; cntResult < Analysis.Result.Count; cntResult++)
-            {
-                if (cntResult % 2 == 0)
-                {
-                    continue;
-                }
-
-                var result = Analysis.Result[cntResult];
-
-                var dataFrame = result["stat.eta"].AsDataFrame();
-
-                foreach (var dataFrameRow in dataFrame.GetRows())
-                {
-                    DataRow tableRow = table.NewRow();
-
-                    List<object?> cellValues = new();
-                    foreach (var column in columns.Keys)
-                    {
-                        if (Regex.IsMatch(column, "^\\$varlabel_"))
-                        {
-                            if (dataFrameRow["var"] is string varName && analysisMeanDiff.VariableLabels.ContainsKey(varName))
-                            {
-                                cellValues.Add(analysisMeanDiff.VariableLabels[varName]);
-                            }
-                            else
-                            {
-                                cellValues.Add(null);
-                            }
-                        } else if (dataFrame.ColumnNames.Contains(column))
-                        {
-                            cellValues.Add(dataFrameRow[column]);
-                        }
-                        else
-                        {
-                            cellValues.Add(null);
-                        }
-                    }
-
-                    tableRow.ItemArray = cellValues.ToArray();
-                    table.Rows.Add(tableRow);
-                }
-            }
+            ResultService.Analysis = analysisMeanDiff;
+            DataTable table = ResultService.CreateSecondaryTable()!;
 
             return table;
         }
@@ -1134,96 +1072,8 @@ namespace LSAnalyzer.ViewModels
                 return new();
             }
 
-            DataTable table = new("Covariances");
-            Dictionary<string, DataColumn> columns = new();
-
-            for (int cntGroupyBy = 0; cntGroupyBy < analysisCorr.GroupBy.Count; cntGroupyBy++)
-            {
-                columns.Add("groupval" + (cntGroupyBy + 1), new DataColumn(analysisCorr.GroupBy[cntGroupyBy].Name, typeof(double)));
-                if (analysisCorr.ValueLabels.ContainsKey(analysisCorr.GroupBy[cntGroupyBy].Name))
-                {
-                    columns.Add("$label_" + analysisCorr.GroupBy[cntGroupyBy].Name, new DataColumn(analysisCorr.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
-                }
-            }
-
-            AddVariableLabelColumn(analysisCorr, columns, "var1", "variable A");
-            AddVariableLabelColumn(analysisCorr, columns, "var2", "variable B");
-
-            columns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
-            columns.Add("Nweight", new DataColumn("N - weighted", typeof(double)));
-            columns.Add("cov", new DataColumn("covariance", typeof(double)));
-            columns.Add("cov_SE", new DataColumn("covariance - standard error", typeof(double)));
-
-            foreach (var column in columns.Values)
-            {
-                table.Columns.Add(column);
-            }
-
-            foreach (var result in Analysis.Result)
-            {
-                var dataFrame = result["stat.cov"].AsDataFrame();
-                var groupColumns = GetGroupColumns(dataFrame);
-
-                foreach (var dataFrameRow in dataFrame.GetRows())
-                {
-                    DataRow tableRow = table.NewRow();
-
-                    List<object?> cellValues = new();
-                    foreach (var column in columns.Keys)
-                    {
-                        if (Regex.IsMatch(column, "^groupval[0-9]*$") && groupColumns.ContainsKey(columns[column].ColumnName))
-                        {
-                            cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
-                        }
-                        else if (Regex.IsMatch(column, "^\\$label_"))
-                        {
-                            if ((double?)cellValues.Last() == null)
-                            {
-                                cellValues.Add(null);
-                                continue;
-                            }
-
-                            var groupByVariable = column.Substring(column.IndexOf("_") + 1);
-                            var valueLabels = analysisCorr.ValueLabels[groupByVariable];
-                            // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
-                            var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)cellValues.Last()!);
-
-                            if (posValueLabel != -1)
-                            {
-                                var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
-                                cellValues.Add(valueLabel);
-                            }
-                            else
-                            {
-                                cellValues.Add(null);
-                            }
-                        }
-                        else if (Regex.IsMatch(column, "^\\$varlabel_"))
-                        {
-                            string varVariable = column == "$varlabel_var1" ? "var1" : "var2";
-                            if (dataFrameRow[varVariable] is string varName && analysisCorr.VariableLabels.ContainsKey(varName))
-                            {
-                                cellValues.Add(analysisCorr.VariableLabels[varName]);
-                            }
-                            else
-                            {
-                                cellValues.Add(null);
-                            }
-                        }
-                        else if (dataFrame.ColumnNames.Contains(column))
-                        {
-                            cellValues.Add(dataFrameRow[column]);
-                        }
-                        else
-                        {
-                            cellValues.Add(null);
-                        }
-                    }
-
-                    tableRow.ItemArray = cellValues.ToArray();
-                    table.Rows.Add(tableRow);
-                }
-            }
+            ResultService.Analysis = analysisCorr;
+            DataTable table = ResultService.CreateSecondaryTable()!;
 
             string[] sortBy = { "variable A", "variable B" };
             table.DefaultView.Sort = String.Join(", ", analysisCorr.GroupBy.ConvertAll(var => var.Name).ToArray().Concat(sortBy));

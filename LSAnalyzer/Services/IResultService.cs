@@ -13,4 +13,6 @@ public interface IResultService
     Analysis? Analysis { get; set; }
 
     DataTable? CreatePrimaryTable();
+
+    DataTable? CreateSecondaryTable();
 }

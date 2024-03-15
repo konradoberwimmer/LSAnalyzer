@@ -111,5 +111,14 @@ namespace LSAnalyzer.Models
 
         [JsonIgnore]
         public abstract Dictionary<string, DataColumn> TableColumns { get; }
+
+        [JsonIgnore]
+        public virtual string? SecondaryTableName { get => null;  }
+
+        [JsonIgnore]
+        public virtual string? SecondaryDataFrameName { get => null; }
+
+        [JsonIgnore]
+        public virtual Dictionary<string, DataColumn>? SecondaryTableColumns { get => null; }
     }
 }

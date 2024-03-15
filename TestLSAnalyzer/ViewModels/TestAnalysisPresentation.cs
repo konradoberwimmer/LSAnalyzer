@@ -193,7 +193,8 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("group B - ASBG05C (label)"));
             Assert.Equal(8, analysisPresentationViewModel.DataTable.Select("[group A - ITSEX (label)] = 'Girl'").Length);
             Assert.Equal(10, analysisPresentationViewModel.DataTable.Select("[group B - ASBG05C] = 2").Length);
-            Assert.True(Math.Abs(analysisPresentationViewModel.DataTable.AsEnumerable().Select(row => row.Field<double>("mean - group A - standard error")).Last() - 4.5098848250735371) < 0.0001);
+            Assert.NotEqual(analysisPresentationViewModel.DataTable.AsEnumerable().Select(row => row.Field<double>("mean - group A - standard error")).First(), analysisPresentationViewModel.DataTable.AsEnumerable().Select(row => row.Field<double>("mean - group A - standard error")).Last());
+            Assert.True(Math.Abs(analysisPresentationViewModel.DataTable.AsEnumerable().Select(row => row.Field<double>("mean - group A - standard error")).Last() - 4.610640711248724) < 0.0001);
 
             Assert.NotNull(analysisPresentationViewModel.TableSecondary);
             Assert.Equal(2, analysisPresentationViewModel.TableSecondary.Rows.Count);

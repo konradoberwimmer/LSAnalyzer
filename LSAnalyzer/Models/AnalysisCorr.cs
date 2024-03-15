@@ -60,5 +60,48 @@ namespace LSAnalyzer.Models
                 return tableColumns;
             }
         }
+
+        [JsonIgnore]
+        public override string? SecondaryTableName => "Covariances";
+
+        [JsonIgnore]
+        public override string? SecondaryDataFrameName => "stat.cov";
+
+        [JsonIgnore]
+        public override Dictionary<string, DataColumn>? SecondaryTableColumns
+        {
+            get
+            {
+                Dictionary<string, DataColumn> tableColumns = new();
+
+                for (int cntGroupyBy = 0; cntGroupyBy < GroupBy.Count; cntGroupyBy++)
+                {
+                    tableColumns.Add("groupval" + (cntGroupyBy + 1), new DataColumn(GroupBy[cntGroupyBy].Name, typeof(double)));
+                    if (ValueLabels.ContainsKey(GroupBy[cntGroupyBy].Name))
+                    {
+                        tableColumns.Add("$label_" + GroupBy[cntGroupyBy].Name, new DataColumn(GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
+                    }
+                }
+
+                tableColumns.Add("var1", new DataColumn("variable A", typeof(string)));
+                if (VariableLabels.Count > 0)
+                {
+                    tableColumns.Add("$varlabel_var1", new DataColumn("variable A (label)", typeof(string)));
+                }
+
+                tableColumns.Add("var2", new DataColumn("variable B", typeof(string)));
+                if (VariableLabels.Count > 0)
+                {
+                    tableColumns.Add("$varlabel_var2", new DataColumn("variable B (label)", typeof(string)));
+                }
+
+                tableColumns.Add("Ncases", new DataColumn("N - cases unweighted", typeof(int)));
+                tableColumns.Add("Nweight", new DataColumn("N - weighted", typeof(double)));
+                tableColumns.Add("cov", new DataColumn("covariance", typeof(double)));
+                tableColumns.Add("cov_SE", new DataColumn("covariance - standard error", typeof(double)));
+
+                return tableColumns;
+            }
+        }
     }
 }

@@ -54,6 +54,42 @@ public class ResultService : IResultService
         return table;
     }
 
+    public DataTable? CreateSecondaryTable()
+    {
+        if (Analysis == null || Analysis.SecondaryTableName == null || Analysis.SecondaryDataFrameName == null || Analysis.SecondaryTableColumns == null)
+        {
+            return null;
+        }
+
+        DataTable table = new(Analysis.SecondaryTableName);
+        foreach (var column in Analysis.SecondaryTableColumns.Values)
+        {
+            table.Columns.Add(column);
+        }
+
+        foreach (var result in Analysis.Result)
+        {
+            var dataFrame = result[Analysis.SecondaryDataFrameName].AsDataFrame();
+            var groupColumns = GetGroupColumns(dataFrame);
+
+            foreach (var dataFrameRow in dataFrame.GetRows())
+            {
+                DataRow tableRow = table.NewRow();
+
+                List<object?> cellValues = new();
+                foreach (var column in Analysis.SecondaryTableColumns.Keys)
+                {
+                    cellValues.Add(GetValueFromDataFrameRow(dataFrameRow, column, groupColumns, cellValues.LastOrDefault()));
+                }
+
+                tableRow.ItemArray = cellValues.ToArray();
+                table.Rows.Add(tableRow);
+            }
+        }
+
+        return table;
+    }
+
     private object? GetValueFromDataFrameRow(DataFrameRow row, string value, Dictionary<string, string> groupColumns, object? lastValue = null)
     {
         if (Regex.IsMatch(value, "^groupval[0-9]*$") && groupColumns.ContainsKey(Analysis!.TableColumns[value].ColumnName))
