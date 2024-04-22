@@ -6,8 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace LSAnalyzer.Views
@@ -44,6 +47,34 @@ namespace LSAnalyzer.Views
             }
         }
 
+        internal void ListBoxVariables_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not ListBox listBox)
+            {
+                return;
+            }
+
+            if (new string[] { "listBoxVariablesDataset", "listBoxVariablesAnalyze" }.Contains(listBox.Name)  && FindName("buttonMoveToAndFromAnalysisVariables") is Button moveToAndFromAnalysisButton)
+            {
+                ButtonAutomationPeer peer = new(moveToAndFromAnalysisButton);
+                IInvokeProvider? invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+                invokeProv?.Invoke();
+            }
+
+            if (listBox.Name == "listBoxVariablesGroupBy" && FindName("buttonMoveToAndFromGroupByVariables") is Button moveToAndFromGroupByButton)
+            {
+                ButtonAutomationPeer peer = new(moveToAndFromGroupByButton);
+                IInvokeProvider? invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+                invokeProv?.Invoke();
+            }
+
+            if (listBox.Name == "listBoxVariablesDependent" && FindName("buttonMoveToAndFromDependentVariable") is Button moveToAndFromDependentButton)
+            {
+                ButtonAutomationPeer peer = new(moveToAndFromDependentButton);
+                IInvokeProvider? invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+                invokeProv?.Invoke();
+            }
+        }
 
         internal void AvailableVariablesCollectionView_FilterSystemVariables(object sender, FilterEventArgs e)
         {

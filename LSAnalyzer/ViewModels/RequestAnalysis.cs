@@ -172,7 +172,13 @@ namespace LSAnalyzer.ViewModels
             {
                 _regressionSequence = value;
                 NotifyPropertyChanged(nameof(RegressionSequence));
+                NotifyPropertyChanged(nameof(RegressionSequenceIsAllIn));
             }
+        }
+
+        public bool RegressionSequenceIsAllIn
+        {
+            get => RegressionSequence == AnalysisRegression.RegressionSequence.AllIn;
         }
 
         private ObservableCollection<Variable> _dependentVariables = new();
