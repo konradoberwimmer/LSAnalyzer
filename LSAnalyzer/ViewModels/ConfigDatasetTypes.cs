@@ -12,7 +12,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Unicode;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -232,7 +234,13 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
-            File.WriteAllText(filename, JsonSerializer.Serialize(SelectedDatasetType));
+            JsonSerializerOptions jsonSerializerOptions = new(JsonSerializerOptions.Default)
+            {
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                WriteIndented = true
+            };
+
+            File.WriteAllText(filename, JsonSerializer.Serialize(SelectedDatasetType, jsonSerializerOptions));
         }
     }
 
