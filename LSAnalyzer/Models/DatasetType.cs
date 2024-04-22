@@ -25,6 +25,11 @@ namespace LSAnalyzer.Models
         {
             OnPropertyChanged(nameof(IsChanged));
         }
+        [ObservableProperty] private bool _autoEncapsulateRegex = false;
+        partial void OnAutoEncapsulateRegexChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [Required(ErrorMessage = "Weight variable is required! If there is none, add a constant of one to the dataset.")]
         [ObservableProperty] private string _weight;
         partial void OnWeightChanged(string value)
@@ -119,6 +124,7 @@ namespace LSAnalyzer.Models
         {
             Id = datasetType.Id;
             Name = datasetType.Name;
+            AutoEncapsulateRegex = datasetType.AutoEncapsulateRegex;
             Description = datasetType.Description;
             Weight = datasetType.Weight;
             NMI = datasetType.NMI;

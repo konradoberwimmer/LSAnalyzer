@@ -500,7 +500,7 @@ namespace LSAnalyzer.Services
             return true;
         }
 
-        public bool CreateBIFIEdataObject(string weight, int nmi, string? mivar, string? pvvars, int nrep, string? repwgts, double? fayfac)
+        public bool CreateBIFIEdataObject(string weight, int nmi, string? mivar, string? pvvars, int nrep, string? repwgts, double? fayfac, bool autoEncapsulatePVvars = false)
         {
             try
             {
@@ -541,7 +541,7 @@ namespace LSAnalyzer.Services
                         var pvvarTrimmed = pvvar.Trim();
                         if (Regex.IsMatch(pvvarTrimmed, "^\\(.*\\)$"))
                         {
-                            var optionalPvvar = pvvarTrimmed.Substring(1, pvvarTrimmed.Length - 2);
+                            var optionalPvvar = StringFormats.EncapsulateRegex(pvvarTrimmed.Substring(1, pvvarTrimmed.Length - 2), autoEncapsulatePVvars)!;
                             var optionalPvExists = EvaluateAndLog("any(grepl('" + optionalPvvar + "', colnames(lsanalyzer_dat_raw)))").AsLogical().First();
 
                             if (optionalPvExists)
@@ -550,7 +550,7 @@ namespace LSAnalyzer.Services
                             }
                         } else
                         {
-                            pvvarsList.Add(pvvarTrimmed);
+                            pvvarsList.Add(StringFormats.EncapsulateRegex(pvvarTrimmed, autoEncapsulatePVvars)!);
                         }
                     }
 
@@ -605,7 +605,7 @@ namespace LSAnalyzer.Services
                 return false;
             }
 
-            var repWgtsRegex = analysisConfiguration.DatasetType.RepWgts;
+            var repWgtsRegex = StringFormats.EncapsulateRegex(analysisConfiguration.DatasetType.RepWgts, analysisConfiguration.DatasetType.AutoEncapsulateRegex);
             if (analysisConfiguration.DatasetType.JKzone != null && analysisConfiguration.DatasetType.JKzone.Length != 0)
             {
                 if (analysisConfiguration.DatasetType.Weight.Length == 0 || 
@@ -623,7 +623,7 @@ namespace LSAnalyzer.Services
                 repWgtsRegex = "lsanalyzer_repwgt_";
             }
 
-            if (!CreateBIFIEdataObject(analysisConfiguration.DatasetType.Weight, (int)analysisConfiguration.DatasetType.NMI, analysisConfiguration.DatasetType.MIvar, analysisConfiguration.DatasetType.PVvars, (int)analysisConfiguration.DatasetType.Nrep, repWgtsRegex, analysisConfiguration.DatasetType.FayFac))
+            if (!CreateBIFIEdataObject(analysisConfiguration.DatasetType.Weight, (int)analysisConfiguration.DatasetType.NMI, analysisConfiguration.DatasetType.MIvar, analysisConfiguration.DatasetType.PVvars, (int)analysisConfiguration.DatasetType.Nrep, repWgtsRegex, analysisConfiguration.DatasetType.FayFac, analysisConfiguration.DatasetType.AutoEncapsulateRegex))
             {
                 return false;
             }
@@ -638,7 +638,7 @@ namespace LSAnalyzer.Services
                 return false;
             }
 
-            var repWgtsRegex = analysis.AnalysisConfiguration.DatasetType.RepWgts;
+            var repWgtsRegex = StringFormats.EncapsulateRegex(analysis.AnalysisConfiguration.DatasetType.RepWgts, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex);
             if (analysis.AnalysisConfiguration.DatasetType.JKzone != null && analysis.AnalysisConfiguration.DatasetType.JKzone.Length != 0)
             {
                 if (analysis.AnalysisConfiguration.DatasetType.Weight.Length == 0 ||
@@ -656,7 +656,7 @@ namespace LSAnalyzer.Services
                 repWgtsRegex = "lsanalyzer_repwgt_";
             }
 
-            if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI, analysis.AnalysisConfiguration.DatasetType.MIvar, analysis.AnalysisConfiguration.DatasetType.PVvars, (int)analysis.AnalysisConfiguration.DatasetType.Nrep, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac))
+            if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI, analysis.AnalysisConfiguration.DatasetType.MIvar, analysis.AnalysisConfiguration.DatasetType.PVvars, (int)analysis.AnalysisConfiguration.DatasetType.Nrep, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex))
             {
                 return false;
             }
@@ -728,7 +728,7 @@ namespace LSAnalyzer.Services
                         foreach (var pvVar in pvVars)
                         {
                             var isOptionalPv = Regex.IsMatch(pvVar, "^\\(.*\\)$");
-                            var pvVarRegex = isOptionalPv ? pvVar.Substring(1, pvVar.Length - 2) : pvVar;
+                            var pvVarRegex = StringFormats.EncapsulateRegex(isOptionalPv ? pvVar.Substring(1, pvVar.Length - 2) : pvVar, analysisConfiguration.DatasetType.AutoEncapsulateRegex)!;
 
                             var firstMatch = variableList.Where(var => Regex.IsMatch(var.Name, pvVarRegex)).FirstOrDefault();
 

@@ -77,7 +77,7 @@ namespace LSAnalyzer.Views.CustomControls
                 {
                     var columnIndex = dataGrid.Columns.Count; // because this is done before adding the new column
                     var values = dataGrid.Items.Cast<DataRowView>().Select(row => row.Row.ItemArray[columnIndex]).Where(val => val != DBNull.Value).Cast<double>().ToArray();
-                    var maxRelevantDigits = StringFormats.getMaxRelevantDigits(values, 3);
+                    var maxRelevantDigits = StringFormats.GetMaxRelevantDigits(values, 3);
                     dataGridTextColumn.Binding.StringFormat = "{0:0" + (maxRelevantDigits > 0 ? ("." + new string('0', maxRelevantDigits)) : "") + "}";
 
                     if (maxRelevantDigits > 0)

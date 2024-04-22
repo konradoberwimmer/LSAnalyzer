@@ -8,7 +8,7 @@ namespace LSAnalyzer.Helper
 {
     public class StringFormats
     {
-        public static int getMaxRelevantDigits(double[] values, int maxDigits = 3)
+        public static int GetMaxRelevantDigits(double[] values, int maxDigits = 3)
         {
             int digits = 0;
             while (digits < maxDigits)
@@ -31,6 +31,31 @@ namespace LSAnalyzer.Helper
                 }
             }
             return digits;
+        }
+
+        /**
+         * Wraps ^ and $ around regex if encapsulate = true.
+         */
+        public static string? EncapsulateRegex(string? regex, bool encapsulate = true)
+        {
+            if (regex == null || !encapsulate)
+            {
+                return regex;
+            }
+
+            var encapsulatedRegex = regex;
+
+            if (!regex.StartsWith("^"))
+            {
+                encapsulatedRegex = "^" + encapsulatedRegex;
+            }
+
+            if (!regex.EndsWith("$"))
+            {
+                encapsulatedRegex += "$";
+            }
+
+            return encapsulatedRegex;
         }
     }
 }

@@ -116,6 +116,56 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
+        public async Task TestGuessDatasetTypeAutoEncapsulateRegex()
+        {
+            Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+            foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
+            {
+                datasetTypesConfiguration.StoreDatasetType(datasetType);
+            }
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+
+            SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
+            selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_pv10_nrep5.sav");
+
+            selectAnalysisFileViewModel.DatasetTypes.Add(new()
+            {
+                Id = 999991,
+                Name = "Test with PV 10 and NREP 5 (incorrect)",
+                AutoEncapsulateRegex = true,
+                Weight = "wgt",
+                NMI = 10,
+                PVvars = "x[0-9]+",
+                Nrep = 5,
+                RepWgts = "repwgt",
+            });
+
+            selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
+            await Task.Delay(1000);
+
+            Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType);
+
+            selectAnalysisFileViewModel.DatasetTypes.Add(new()
+            {
+                Id = 999992,
+                Name = "Test with PV 10 and NREP 5 (correct)",
+                AutoEncapsulateRegex = true,
+                Weight = "wgt",
+                NMI = 10,
+                PVvars = "x[0-9]+",
+                Nrep = 5,
+                RepWgts = "repwgt[0-9]+",
+            });
+
+            selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
+            await Task.Delay(1000);
+
+            Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType);
+            Assert.Equal(selectAnalysisFileViewModel.DatasetTypes.Last(), selectAnalysisFileViewModel.SelectedDatasetType);
+        }
+
+        [Fact]
         public async Task TestGuessDatasetTypeSendsFileTypeError()
         {
             var datasetTypesConfiguration = new Mock<Configuration>();
@@ -229,6 +279,59 @@ namespace TestLSAnalyzer.ViewModels
             await Task.Delay(100);
 
             Assert.True(messageSent);
+        }
+
+        [Fact]
+        public async Task TestUseFileForAnalysisWithAutoEncapsulatedRegex()
+        {
+            DispatcherHelper.Initialize();
+
+            Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+            foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
+            {
+                datasetTypesConfiguration.StoreDatasetType(datasetType);
+            }
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+
+            SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
+            selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_pv10_nrep5.sav");
+            selectAnalysisFileViewModel.SelectedDatasetType = new()
+            {
+                AutoEncapsulateRegex = true,
+                Weight = "wgt",
+                NMI = 10,
+                PVvars = "x;y[0-9]+",
+                Nrep = 5,
+                RepWgts = "repwgt",
+                FayFac = 0.5,
+            };
+
+            AnalysisConfiguration? analysisConfiguration = null;
+            bool messageSent = false;
+            WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (r, m) =>
+            {
+                messageSent = true;
+                analysisConfiguration = m.Value;
+            });
+
+            selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
+            await Task.Delay(5000);
+
+            Assert.False(messageSent);
+
+            selectAnalysisFileViewModel.SelectedDatasetType.PVvars = "x[0-9]+;y[0-9]+";
+            selectAnalysisFileViewModel.SelectedDatasetType.RepWgts = "repwgt[0-9]+";
+
+            selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
+            await Task.Delay(5000);
+
+            Assert.True(messageSent);
+            Assert.NotNull(analysisConfiguration);
+
+            var currentVariables = rservice.GetCurrentDatasetVariables(analysisConfiguration);
+            Assert.NotNull(currentVariables);
+            Assert.Contains("^x[0-9]+$", currentVariables.ConvertAll<string>(var => var.Name));
         }
     }
 }

@@ -47,8 +47,12 @@
         </TextBox>
         <Label Content="Description:" Grid.Row="1" HorizontalAlignment="Left" Margin="10,26,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="textBoxDescription" Grid.Row="1" Margin="106,30,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Description, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top"/>
-        <Label Content="Weight variable:" Grid.Row="1" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="textBoxWeightVariable" Grid.Row="1" Margin="106,56,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Weight, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top">
+        <StackPanel Grid.Row="1" Margin="14,58,0,0" Orientation="Horizontal" VerticalAlignment="Top">
+            <CheckBox x:Name="checkboxAutoEncapsulate" Content="Auto-encapsulate regular expressions" IsChecked="{Binding SelectedDatasetType.AutoEncapsulateRegex}"/>
+            <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="If checked, any regular expression XY will be treated as ^XY$ when used."/>
+        </StackPanel>
+        <Label Content="Weight variable:" Grid.Row="1" HorizontalAlignment="Left" Margin="10,78,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="textBoxWeightVariable" Grid.Row="1" Margin="106,82,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Weight, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top">
             <ToolTipService.ToolTip>
                 <TextBlock Text="{Binding SelectedDatasetType.Errors[Weight]}" Foreground="Red"/>
             </ToolTipService.ToolTip>
@@ -56,11 +60,11 @@
                 <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Weight"/>
             </ToolTipService.IsEnabled>
         </TextBox>
-        <StackPanel Grid.Row="1" Margin="10,78,0,0" VerticalAlignment="Top" Orientation="Horizontal">
+        <StackPanel Grid.Row="1" Margin="10,104,0,0" VerticalAlignment="Top" Orientation="Horizontal">
             <Label Content="ID variable:"/>
             <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="Providing a unique ID variable is not necessary but will guarantee sorting and correct associations between cases when using MI indicator variable."/>
         </StackPanel>
-        <TextBox x:Name="textBoxIdVariable" Grid.Row="1" Margin="106,82,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.IDvar, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top"/>
+        <TextBox x:Name="textBoxIdVariable" Grid.Row="1" Margin="106,108,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.IDvar, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top"/>
         <GroupBox Grid.Row="2" Margin="10,10,10,0" VerticalAlignment="Top">
             <GroupBox.Header>
                 <TextBlock FontWeight="DemiBold"><Run Text="Multiple Imputation / Plausible Values"/></TextBlock>
@@ -86,7 +90,7 @@
                     </ToolTipService.IsEnabled>
                 </TextBox>
                 <TextBlock TextWrapping="Wrap" Text="OR"/>
-                <TextBlock TextWrapping="Wrap" Text="Variables with plausible values (semicolon-separated):"/>
+                <TextBlock TextWrapping="Wrap" Text="Variables with plausible values (semicolon-separated regex):"/>
                 <Border x:Name="WidthHelperTextBoxPVVariables" Margin="0,0,0,5">
                     <TextBox x:Name="textBoxPVVariables" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.PVvars, UpdateSourceTrigger=PropertyChanged}" Width="{Binding Path=ActualWidth, ElementName=WidthHelperTextBoxPVVariables}">
                         <ToolTipService.ToolTip>

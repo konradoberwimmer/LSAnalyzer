@@ -359,7 +359,7 @@ namespace LSAnalyzer.ViewModels
                             continue;
                         }
 
-                        if (variables.Where(var => Regex.IsMatch(var.Name, pvVar)).Count() != datasetType.NMI)
+                        if (variables.Where(var => Regex.IsMatch(var.Name, StringFormats.EncapsulateRegex(pvVar, datasetType.AutoEncapsulateRegex)!)).Count() != datasetType.NMI)
                         {
                             foundAllNecessaryPvVars = false;
                             break;
@@ -371,7 +371,7 @@ namespace LSAnalyzer.ViewModels
 
                 if (!String.IsNullOrWhiteSpace(datasetType.RepWgts))
                 {
-                    if (variables.Where(var => Regex.IsMatch(var.Name, datasetType.RepWgts)).Count() != datasetType.Nrep)
+                    if (variables.Where(var => Regex.IsMatch(var.Name, StringFormats.EncapsulateRegex(datasetType.RepWgts, datasetType.AutoEncapsulateRegex)!)).Count() != datasetType.Nrep)
                     {
                         continue;
                     } else

@@ -8,10 +8,10 @@ Test and debug!
 * create an automated test suite for a wider range of published trustful coefficients from known data (PIRLS, PISA school level, ...) that conducts realistic workflows
 * refactoring of data table creation and management OR switch from BIFIEsurvey to a specialized R package for LSAnalyzer
 * export dataset type with human-readable characters instead of rigorous encoding
-* let user decide on auto-encapsulation of regex in dataset types
 * dynamically show warning message for logistic regression with groups when BIFIEsurvey version is too low
 * correct display of buttons for moving around variables in request analysis dialogs; also implement double-click as a way to move around variables
 * implement (optional) specification of variable display names to hide away regex in PVs
+* success message at dataset type import and after reloading defaults; add incremental number on dataset type import when name is already in use
 
 # Would-be-nice-but-hard-to-implement
 * GUIs for BIFIE.twolevel() and BIFIE.pathmodel()
