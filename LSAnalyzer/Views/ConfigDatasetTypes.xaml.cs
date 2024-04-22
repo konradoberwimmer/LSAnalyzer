@@ -29,6 +29,11 @@ namespace LSAnalyzer.Views
 
             DataContext = configDatasetTypesViewModel;
 
+            WeakReferenceMessenger.Default.Register<SuccessImportDatasetTypeMessage>(this, (r, m) =>
+            {
+                MessageBox.Show($"Import of dataset type '{ m.Value }' successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            });
+
             WeakReferenceMessenger.Default.Register<FailureImportDatasetTypeMessage>(this, (r, m) =>
             {
                 MessageBox.Show("Import failed: " + m.Value, "Error", MessageBoxButton.OK, MessageBoxImage.Error);

@@ -198,6 +198,14 @@ namespace LSAnalyzer.ViewModels
 
                 newDatasetType.Id = minAvailableDatasetTypeId;
 
+                string newDatasetTypeOriginalName = newDatasetType.Name;
+                int newDatasetTypeNameCounter = 1;
+                while (DatasetTypes.Any(dst => dst.Name == newDatasetType.Name))
+                {
+                    newDatasetType.Name = newDatasetTypeOriginalName + " (" + newDatasetTypeNameCounter + ")";
+                    newDatasetTypeNameCounter++;
+                }
+
                 if (!newDatasetType.Validate())
                 {
                     WeakReferenceMessenger.Default.Send(new FailureImportDatasetTypeMessage("invalid dataset type"));
@@ -209,6 +217,8 @@ namespace LSAnalyzer.ViewModels
                 DatasetTypes.Add(newDatasetType);
                 newDatasetType.AcceptChanges();
                 SelectedDatasetType = newDatasetType;
+
+                WeakReferenceMessenger.Default.Send(new SuccessImportDatasetTypeMessage(newDatasetType.Name));
             }
             catch (Exception)
             {
@@ -247,6 +257,14 @@ namespace LSAnalyzer.ViewModels
     internal class FailureImportDatasetTypeMessage : ValueChangedMessage<string>
     {
         public FailureImportDatasetTypeMessage(string message) : base(message)
+        {
+
+        }
+    }
+
+    internal class SuccessImportDatasetTypeMessage : ValueChangedMessage<string>
+    {
+        public SuccessImportDatasetTypeMessage(string message) : base(message)
         {
 
         }

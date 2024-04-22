@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
@@ -121,6 +122,8 @@ namespace LSAnalyzer.ViewModels
             }
 
             CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
+
+            WeakReferenceMessenger.Default.Send(new LoadedDefaultDatasetTypesMessage());
         }
 
         private RelayCommand<object?> _updateBifieSurveyCommand = null!;
@@ -175,4 +178,6 @@ namespace LSAnalyzer.ViewModels
             streamWriter.Write(_logger.Stringify());
         }
     }
+
+    internal class LoadedDefaultDatasetTypesMessage { }
 }

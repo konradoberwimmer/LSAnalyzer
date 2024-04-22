@@ -1,4 +1,6 @@
-﻿using Microsoft.Win32;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using LSAnalyzer.ViewModels;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -26,6 +28,11 @@ namespace LSAnalyzer.Views
             InitializeComponent();
 
             DataContext = systemSettingsViewModel;
+
+            WeakReferenceMessenger.Default.Register<LoadedDefaultDatasetTypesMessage>(this, (r, m) =>
+            {
+                MessageBox.Show("Loading default dataset types successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            });
         }
 
         [ExcludeFromCodeCoverage]

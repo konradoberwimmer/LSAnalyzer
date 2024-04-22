@@ -146,6 +146,14 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(failureMessageSent == string.Empty);
             Assert.True(datasetTypesViewModel.DatasetTypes.Count == numberOfDatasetTypes + 1);
             Assert.NotEmpty(datasetTypesViewModel.DatasetTypes.Where(dst => dst.Id == 1));
+
+            failureMessageSent = string.Empty;
+            datasetTypesViewModel.ImportDatasetTypeCommand.Execute(goodFileName);
+            Assert.True(failureMessageSent == string.Empty);
+            Assert.True(datasetTypesViewModel.DatasetTypes.Count == numberOfDatasetTypes + 2);
+            Assert.NotEmpty(datasetTypesViewModel.DatasetTypes.Where(dst => dst.Id == 1));
+            Assert.Single(datasetTypesViewModel.DatasetTypes.Where(dst => dst.Id == 1));
+            Assert.NotEmpty(datasetTypesViewModel.DatasetTypes.Where(dst => dst.Name.Contains(" (1)")));
         }
 
         [Fact]
