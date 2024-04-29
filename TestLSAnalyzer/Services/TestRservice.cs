@@ -261,7 +261,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "wgt",
                     NMI = 10,
-                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y[0-9]+", Mandatory = true } },
+                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
                     Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
@@ -275,9 +275,9 @@ namespace TestLSAnalyzer.Services
             Assert.NotNull(variablesListModeBuild);
             Assert.True(variablesListModeBuild.Count == 20);
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "x").ToList());
-            Assert.Single(variablesListModeBuild.Where(var => var.Name == "y[0-9]+").ToList());
+            Assert.Single(variablesListModeBuild.Where(var => var.Name == "y").ToList());
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "one").ToList());
-            Assert.Equal("PV Mathematics 1", variablesListModeBuild.Where(var => var.Name == "y[0-9]+").First().Label);
+            Assert.Equal("PV Mathematics 1", variablesListModeBuild.Where(var => var.Name == "y").First().Label);
 
             AnalysisConfiguration analysisConfigurationKeepPV = new()
             {
@@ -286,7 +286,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "wgt",
                     NMI = 10,
-                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y[0-9]+", Mandatory = true } },
+                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
                     Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
@@ -294,7 +294,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationModeBuild.FileName));
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationKeepPV.FileName));
             var variablesListKeepPV = rservice.GetCurrentDatasetVariables(analysisConfigurationKeepPV);
 
             Assert.NotNull(variablesListKeepPV);
@@ -423,7 +423,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "wgt",
                     NMI = 10,
-                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y[0-9]+", Mandatory = true } },
+                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
                     Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 1,
@@ -435,7 +435,7 @@ namespace TestLSAnalyzer.Services
 
             AnalysisUnivar analysisUnivarModeBuild = new(analysisConfigurationModeBuild)
             {
-                Vars = new() { new(1, "x", false), new(1, "y[0-9]+", false) },
+                Vars = new() { new(1, "x", false), new(1, "y", false) },
                 GroupBy = new() { new(3, "cat", false) },
                 CalculateOverall = false,
             };
@@ -1432,7 +1432,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "wgt",
                     NMI = 10,
-                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } },
+                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "yoptional", Mandatory = false } },
                     Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
@@ -1453,9 +1453,9 @@ namespace TestLSAnalyzer.Services
             Assert.Contains("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileFullPVs));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "yoptional", Mandatory = false } }, 5, "repwgt", 0.5));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
-            Assert.Contains("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.Contains("yoptional", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationSome)));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, 5, "repwgt", 0.5));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));

@@ -4,6 +4,7 @@ using Microsoft.Win32;
 using RDotNet;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -456,6 +457,16 @@ namespace LSAnalyzer.Services
                 }
             }
 
+            for (int i = 0; i < regexNecessaryVariables.Count; i++)
+            {
+                var necessaryVariable = regexNecessaryVariables[i];
+                var potentialPvVariable = analysis.AnalysisConfiguration.DatasetType!.PVvarsList.Where(pvvar => pvvar.DisplayName == necessaryVariable).FirstOrDefault();
+                if (potentialPvVariable != null)
+                {
+                    regexNecessaryVariables[i] = potentialPvVariable.Regex;
+                }
+            }
+
             return ReduceToNecessaryVariables(regexNecessaryVariables, subsettingExpression);
         }
 
@@ -562,6 +573,12 @@ namespace LSAnalyzer.Services
                 {
                     return false;
                 }
+
+                foreach (var pvvar in pvvars ?? new Collection<PlausibleValueVariable>())
+                {
+                    EvaluateAndLog($"lsanalyzer_dat_BO$varnames[lsanalyzer_dat_BO$varnames == '{ pvvar.Regex }'] <- '{ pvvar.DisplayName }'");
+                    EvaluateAndLog($"lsanalyzer_dat_BO$variables[lsanalyzer_dat_BO$variables$variable == '{ pvvar.Regex }', c('variable', 'variable_orig')] <- '{pvvar.DisplayName}'");
+                }
             }
             catch
             {
@@ -656,6 +673,11 @@ namespace LSAnalyzer.Services
 
         public virtual List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration)
         {
+            if (analysisConfiguration.DatasetType == null)
+            {
+                return null;
+            }
+
             try
             {
                 DataFrame? variables = null;
@@ -721,7 +743,7 @@ namespace LSAnalyzer.Services
                         if (firstMatch != null)
                         {
                             variableList.RemoveAll(var => Regex.IsMatch(var.Name, pvVarRegex));
-                            Variable newVariable = new(maxPosition++, pvVarRegex, false);
+                            Variable newVariable = new(maxPosition++, pvVar.DisplayName, false);
                             newVariable.Label = firstMatch?.Label;
                             variableList.Add(newVariable);
                         }
