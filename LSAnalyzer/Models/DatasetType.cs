@@ -8,6 +8,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -55,11 +56,6 @@ namespace LSAnalyzer.Models
         }
         [ObservableProperty] private string? _IDvar;
         partial void OnIDvarChanged(string? value)
-        {
-            OnPropertyChanged(nameof(IsChanged));
-        }
-        [ObservableProperty] private string? _PVvars;
-        partial void OnPVvarsChanged(string? value)
         {
             OnPropertyChanged(nameof(IsChanged));
         }
@@ -144,7 +140,6 @@ namespace LSAnalyzer.Models
             NMI = datasetType.NMI;
             MIvar = datasetType.MIvar;
             IDvar = datasetType.IDvar;
-            PVvars = datasetType.PVvars;
             PVvarsList = new();
             foreach (var pvvar in datasetType.PVvarsList)
             {
@@ -194,12 +189,10 @@ namespace LSAnalyzer.Models
             
             if (!string.IsNullOrWhiteSpace(MIvar)) regexNecessaryVariables.Add("^" + MIvar + "$");
             if (!string.IsNullOrWhiteSpace(IDvar)) regexNecessaryVariables.Add("^" + IDvar + "$");
-            if (!string.IsNullOrWhiteSpace(PVvars))
+            foreach (var pvVar in PVvarsList.Where(pvvar => pvvar.Mandatory).Select(pvvar => pvvar.Regex))
             {
-                string[] pvVarsSplit = PVvars.Split(';');
-                foreach (var pvVar in pvVarsSplit) regexNecessaryVariables.Add(pvVar);
+                regexNecessaryVariables.Add(pvVar);
             }
-
             if (!string.IsNullOrWhiteSpace(RepWgts)) regexNecessaryVariables.Add(RepWgts);
             if (!string.IsNullOrWhiteSpace(JKzone)) regexNecessaryVariables.Add("^" + JKzone + "$");
             if (!string.IsNullOrWhiteSpace(JKrep)) regexNecessaryVariables.Add("^" + JKrep + "$");
@@ -257,7 +250,7 @@ namespace LSAnalyzer.Models
                 {
                     Id = 201, Name = "TIMSS 2003 - 4th grade student level", Description = "TIMSS 2003 - 4th grade student level",
                     Weight = "totwgt;senwgt", IDvar = "idstud",
-                    NMI = 5, PVvars = "asmmat;asssci;asmalg;asmdap;asmfns;asmgeo;asmmea;asseas;asslis;assphy;asmapp;asmkno;asmrea;asmibm;assibm", PVvarsList = new() {
+                    NMI = 5, PVvarsList = new() {
                         new() { Regex = "asmmat", DisplayName = "asmmat", Mandatory = true},
                         new() { Regex = "asssci", DisplayName = "asssci", Mandatory = true},
                         new() { Regex = "asmalg", DisplayName = "asmalg", Mandatory = true},

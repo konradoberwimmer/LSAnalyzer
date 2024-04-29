@@ -347,27 +347,17 @@ namespace LSAnalyzer.ViewModels
 
                 if (!String.IsNullOrWhiteSpace(datasetType.MIvar) && !variables.Where(var => var.Name == datasetType.MIvar).Any()) continue;
                 if (!String.IsNullOrWhiteSpace(datasetType.IDvar) && !variables.Where(var => var.Name == datasetType.IDvar).Any()) continue;
-                if (!String.IsNullOrWhiteSpace(datasetType.PVvars))
+
+                bool foundAllNecessaryPvVars = true;
+                foreach (var pvVar in datasetType.PVvarsList.Where(pvvar => pvvar.Mandatory).Select(pvvar => pvvar.Regex))
                 {
-                    string[] pvVarsSplit = datasetType.PVvars.Split(';');
-
-                    bool foundAllNecessaryPvVars = true;
-                    foreach (var pvVar in pvVarsSplit)
+                    if (variables.Where(var => Regex.IsMatch(var.Name, StringFormats.EncapsulateRegex(pvVar, datasetType.AutoEncapsulateRegex)!)).Count() != datasetType.NMI)
                     {
-                        if (Regex.IsMatch(pvVar, "^\\(.*\\)$"))
-                        {
-                            continue;
-                        }
-
-                        if (variables.Where(var => Regex.IsMatch(var.Name, StringFormats.EncapsulateRegex(pvVar, datasetType.AutoEncapsulateRegex)!)).Count() != datasetType.NMI)
-                        {
-                            foundAllNecessaryPvVars = false;
-                            break;
-                        }
+                        foundAllNecessaryPvVars = false;
+                        break;
                     }
-
-                    if (!foundAllNecessaryPvVars) continue;
                 }
+                if (!foundAllNecessaryPvVars) continue;
 
                 if (!String.IsNullOrWhiteSpace(datasetType.RepWgts))
                 {

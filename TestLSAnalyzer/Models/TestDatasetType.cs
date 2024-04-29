@@ -16,7 +16,7 @@ namespace TestLSAnalyzer.Models
                 new object[] { new DatasetType(), false},
                 new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", Nrep = 1 }, true},
                 new object[] { new DatasetType() { Name = "AB", Weight = "TOTWGT", NMI = 1, MIvar = "one", Nrep = 1 }, false},
-                new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", PVvars = "ASRREA", Nrep = 1 }, false},
+                new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } }, Nrep = 1 }, false},
                 new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", Nrep = 1, RepWgts = "[" }, false},
                 new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", Nrep = 1, RepWgts = "wgtrep[0-9]*" }, true},
                 new object[] { DatasetType.CreateDefaultDatasetTypes().FirstOrDefault()!, true }
@@ -29,7 +29,7 @@ namespace TestLSAnalyzer.Models
             {
                 Weight = "W_FSTUWT",
                 MIvar = "mivar",
-                PVvars = "ASRREA",
+                PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } },
                 RepWgts = "W_STURWT",
             };
 
@@ -57,7 +57,7 @@ namespace TestLSAnalyzer.Models
             {
                 Weight = "W_FSTUWT",
                 MIvar = "mivar",
-                PVvars = "ASRREA",
+                PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } },
                 RepWgts = "W_STURWT",
             };
 
@@ -70,15 +70,16 @@ namespace TestLSAnalyzer.Models
             DatasetType datasetType = new()
             {
                 Weight = "W_FSTUWT",
-                PVvars = "ASRREA;ASRINF",
+                PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true }, new() { Regex = "ASRINF", DisplayName = "ASRINF", Mandatory = false } },
                 RepWgts = "W_STURWT",
             };
 
             var regexNecessaryVariables = datasetType.GetRegexNecessaryVariables();
 
-            Assert.Equal(4, regexNecessaryVariables.Count);
+            Assert.Equal(3, regexNecessaryVariables.Count);
             Assert.Contains("^W_FSTUWT$", regexNecessaryVariables);
             Assert.Contains("ASRREA", regexNecessaryVariables);
+            Assert.DoesNotContain("ASRINF", regexNecessaryVariables);
             Assert.Contains("W_STURWT", regexNecessaryVariables);
         }
     }

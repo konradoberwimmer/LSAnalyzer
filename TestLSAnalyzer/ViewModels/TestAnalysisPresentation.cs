@@ -157,7 +157,7 @@ namespace TestLSAnalyzer.ViewModels
                 {
                     Weight = "TOTWGT",
                     NMI = 5,
-                    PVvars = "ASRREA;ASRLIT",
+                    PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true }, new() { Regex = "ASRLIT", DisplayName = "ASRLIT", Mandatory = true } },
                     Nrep = 150,
                     FayFac = 0.5,
                     JKzone = "JKZONE",
@@ -212,7 +212,7 @@ namespace TestLSAnalyzer.ViewModels
                 {
                     Weight = "TOTWGT",
                     NMI = 5,
-                    PVvars = "ASRREA;ASRLIT",
+                    PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true }, new() { Regex = "ASRLIT", DisplayName = "ASRLIT", Mandatory = true } },
                     Nrep = 150,
                     FayFac = 0.5,
                     JKzone = "JKZONE",

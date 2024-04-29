@@ -85,7 +85,7 @@ namespace TestLSAnalyzer.ViewModels
                 Name = "Test with PV 10 and NREP 5",
                 Weight = "wgt",
                 NMI = 10,
-                PVvars = "x;y[0-9]+",
+                PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
                 Nrep = 5,
                 RepWgts = "repwgt",
             });
@@ -103,7 +103,7 @@ namespace TestLSAnalyzer.ViewModels
                 Name = "Test with PV 10 and NREP 5",
                 Weight = "wgt",
                 NMI = 10,
-                PVvars = "x;y[0-9]+",
+                PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
                 Nrep = 1,
             });
 
@@ -136,7 +136,7 @@ namespace TestLSAnalyzer.ViewModels
                 AutoEncapsulateRegex = true,
                 Weight = "wgt",
                 NMI = 10,
-                PVvars = "x[0-9]+",
+                PVvarsList = new() { new() { Regex = "x[0-9]+", DisplayName = "x", Mandatory = true } },
                 Nrep = 5,
                 RepWgts = "repwgt",
             });
@@ -153,7 +153,7 @@ namespace TestLSAnalyzer.ViewModels
                 AutoEncapsulateRegex = true,
                 Weight = "wgt",
                 NMI = 10,
-                PVvars = "x[0-9]+",
+                PVvarsList = new() { new() { Regex = "x[0-9]+", DisplayName = "x", Mandatory = true } },
                 Nrep = 5,
                 RepWgts = "repwgt[0-9]+",
             });
@@ -301,7 +301,7 @@ namespace TestLSAnalyzer.ViewModels
                 AutoEncapsulateRegex = true,
                 Weight = "wgt",
                 NMI = 10,
-                PVvars = "x;y[0-9]+",
+                PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
                 Nrep = 5,
                 RepWgts = "repwgt",
                 FayFac = 0.5,
@@ -320,7 +320,7 @@ namespace TestLSAnalyzer.ViewModels
 
             Assert.False(messageSent);
 
-            selectAnalysisFileViewModel.SelectedDatasetType.PVvars = "x[0-9]+;y[0-9]+";
+            selectAnalysisFileViewModel.SelectedDatasetType.PVvarsList = new() { new() { Regex = "x[0-9]+", DisplayName = "x", Mandatory = false }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = false } };
             selectAnalysisFileViewModel.SelectedDatasetType.RepWgts = "repwgt[0-9]+";
 
             selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);

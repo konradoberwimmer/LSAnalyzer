@@ -3,9 +3,11 @@ using LSAnalyzer.Services;
 using RDotNet;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -259,7 +261,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "wgt",
                     NMI = 10,
-                    PVvars = "x;y[0-9]+",
+                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y[0-9]+", Mandatory = true } },
                     Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
@@ -284,7 +286,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "wgt",
                     NMI = 10,
-                    PVvars = "x;y[0-9]+",
+                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y[0-9]+", Mandatory = true } },
                     Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
@@ -421,7 +423,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "wgt",
                     NMI = 10,
-                    PVvars = "x;y[0-9]+",
+                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y[0-9]+", Mandatory = true } },
                     Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 1,
@@ -526,7 +528,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "TOTWGT",
                     NMI = 5,
-                    PVvars = "ASRREA",
+                    PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } },
                     Nrep = 150,
                     FayFac = 0.5,
                     JKzone = "JKZONE",
@@ -576,7 +578,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "TOTWGT",
                     NMI = 5,
-                    PVvars = "ASRREA",
+                    PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } },
                     Nrep = 150,
                     FayFac = 0.5,
                     JKzone = "JKZONE",
@@ -1337,7 +1339,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "TOTWGT",
                     NMI = 5,
-                    PVvars = "ASRREA",
+                    PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } },
                     Nrep = 150,
                     FayFac = 0.5,
                     JKzone = "JKZONE",
@@ -1416,7 +1418,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "wgt",
                     NMI = 10,
-                    PVvars = "x;y",
+                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = true } },
                     Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
@@ -1430,7 +1432,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "wgt",
                     NMI = 10,
-                    PVvars = "x;(y)",
+                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } },
                     Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
@@ -1446,34 +1448,34 @@ namespace TestLSAnalyzer.Services
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileFullPVs));
             Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationAll)));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, "x;y", 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = true } }, 5, "repwgt", 0.5));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.Contains("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileFullPVs));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, "x;(y)", 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, 5, "repwgt", 0.5));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.Contains("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationSome)));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, "x;(y)", 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, 5, "repwgt", 0.5));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
-            Assert.Contains("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileMissingPVs));
-            Assert.False(rservice.CreateBIFIEdataObject("wgt", 10, null, "x;y", 5, "repwgt", 0.5));
+            Assert.False(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = true } }, 5, "repwgt", 0.5));
             Assert.False(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationAll)));
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileMissingPVs));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, "x;(y)", 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, 5, "repwgt", 0.5));
             Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationSome)));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, "x;(y)", 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, 5, "repwgt", 0.5));
             Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
 
             analysisConfigurationSome.ModeKeep = false;
-            analysisConfigurationSome.DatasetType.PVvars = "(x);(y)";
+            analysisConfigurationSome.DatasetType.PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = false }, new() { Regex = "y", DisplayName = "y", Mandatory = false } };
             Assert.DoesNotContain("(y)", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
         }
