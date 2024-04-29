@@ -192,6 +192,12 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private bool _bifiesurveyVersionWarning = false;
+        public bool BIFIEsurveyVersionWarning
+        {
+            get => _bifiesurveyVersionWarning;
+        }
+
         [ExcludeFromCodeCoverage]
         public RequestAnalysis()
         {
@@ -202,6 +208,9 @@ namespace LSAnalyzer.ViewModels
         {
             _rservice = rservice;
             AvailableVariables = new ObservableCollection<Variable>();
+
+            Version BIFIEsurveyVersion = new(rservice.GetBifieSurveyVersion() ?? "1.0.0");
+            _bifiesurveyVersionWarning = BIFIEsurveyVersion.CompareTo(new Version(3, 6)) < 0;
         }
 
         public void InitializeWithAnalysis(Analysis analysis)

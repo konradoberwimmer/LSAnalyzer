@@ -105,7 +105,7 @@
                 </Grid>
                 <StackPanel Grid.Row="2" Margin="10,0,10,0" Orientation="Horizontal">
                     <TextBlock Text="Group by:"/>
-                    <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="Beware that BIFIEsurvey up to version 3.4-15 reports incorrect pseudo-R^2 when using grouping variables." VerticalAlignment="Top"/>
+                    <ContentControl ContentTemplate="{StaticResource StatusWarningOutline}" ToolTip="Beware that BIFIEsurvey below version 3.6-6 reports incorrect values when using grouping variables." VerticalAlignment="Top" Visibility="{Binding BIFIEsurveyVersionWarning, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 </StackPanel>
                 <Grid Grid.Row="2" Margin="0,27,0,0">
                     <Grid.ColumnDefinitions>
