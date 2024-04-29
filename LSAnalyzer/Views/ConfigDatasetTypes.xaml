@@ -101,6 +101,13 @@
                         </ToolTipService.IsEnabled>
                     </TextBox>
                 </Border>
+                <DataGrid ItemsSource="{Binding SelectedDatasetType.PVvarsList}" AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Regex" Binding="{Binding Regex}"/>
+                        <DataGridTextColumn Header="Display name" Binding="{Binding DisplayName}"/>
+                        <DataGridCheckBoxColumn Header="Mandatory" Binding="{Binding Mandatory}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
             </StackPanel>
         </GroupBox>
         <GroupBox Grid.Row="3"  Margin="10,10,10,0" VerticalAlignment="Top" Height="250">

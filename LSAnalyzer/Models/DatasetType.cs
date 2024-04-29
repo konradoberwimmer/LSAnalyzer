@@ -1,7 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models.ValidationAttributes;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -60,6 +63,15 @@ namespace LSAnalyzer.Models
         {
             OnPropertyChanged(nameof(IsChanged));
         }
+        [ObservableProperty] private ItemsChangeObservableCollection<PlausibleValueVariable> _PVvarsList;
+        partial void OnPVvarsListChanged(ItemsChangeObservableCollection<PlausibleValueVariable> value)
+        {
+            PVvarsList.CollectionChanged += delegate (object? sender, NotifyCollectionChangedEventArgs args) 
+            { 
+                OnPropertyChanged(nameof(IsChanged)); 
+            };
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [Required(ErrorMessage = "Number of replications is required!")]
         [Range(1, int.MaxValue, ErrorMessage = "Number of replications has to be at least 1!")]
         [ObservableProperty] private int? _Nrep;
@@ -109,7 +121,7 @@ namespace LSAnalyzer.Models
                     return true;
                 }
 
-                return !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, new string[] { "Errors", "IsChanged" });
+                return !PVvarsList.ElementObjectsEqual(_savedState.PVvarsList, new string[] { "Errors" }) || !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, new string[] { "PVvarsList", "Errors", "IsChanged" });
             }
         }
 
@@ -118,6 +130,7 @@ namespace LSAnalyzer.Models
             Name = "New Dataset Type";
             Weight = string.Empty;
             JKreverse = false;
+            PVvarsList = new();
         }
 
         public DatasetType(DatasetType datasetType)
@@ -131,6 +144,11 @@ namespace LSAnalyzer.Models
             MIvar = datasetType.MIvar;
             IDvar = datasetType.IDvar;
             PVvars = datasetType.PVvars;
+            PVvarsList = new();
+            foreach (var pvvar in datasetType.PVvarsList)
+            {
+                PVvarsList.Add(new(pvvar));
+            }
             Nrep = datasetType.Nrep;
             RepWgts = datasetType.RepWgts;
             FayFac = datasetType.FayFac;

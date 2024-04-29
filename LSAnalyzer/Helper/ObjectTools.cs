@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LSAnalyzer.Helper
 {
-    public class ObjectTools
+    public static class ObjectTools
     {
         // Kudos to Taras Alenin
         public static bool PublicInstancePropertiesEqual<T>(T self, T to, params string[] ignore) where T : class
@@ -41,6 +42,24 @@ namespace LSAnalyzer.Helper
                 return ((IDictionary<string, object>)values).ContainsKey(name);
 
             return values.GetType().GetProperty(name) != null;
+        }
+
+        public static bool ElementObjectsEqual<T>(this ICollection<T> collection, ICollection<T> otherCollection, params string[] ignore) where T : class
+        {
+            if (collection.Count != otherCollection.Count)
+            {
+                return false;
+            }
+
+            for (int ii = 0; ii < collection.Count; ii++)
+            {
+                if (!ObjectTools.PublicInstancePropertiesEqual(collection.ElementAt(ii), otherCollection.ElementAt(ii), ignore))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
