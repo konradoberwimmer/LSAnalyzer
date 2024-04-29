@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -29,7 +30,17 @@ namespace LSAnalyzer.Models.ValidationAttributes
             var instance = validationContext.ObjectInstance;
             var otherValue = instance.GetType().GetProperty(PropertyName)!.GetValue(instance);
 
-            if (otherValue == null || otherValue.ToString()!.Length == 0)
+            if (otherValue == null)
+            {
+                return new ValidationResult(_errorMessage, new List<string> { validationContext.MemberName! });
+            }
+
+            if (otherValue is string otherValueString && otherValueString.Length == 0)
+            {
+                return new ValidationResult(_errorMessage, new List<string> { validationContext.MemberName! });
+            }
+
+            if (otherValue is ICollection otherValueCollection && otherValueCollection.Count == 0)
             {
                 return new ValidationResult(_errorMessage, new List<string> { validationContext.MemberName! });
             }

@@ -46,7 +46,8 @@ namespace LSAnalyzer.Models
         {
             OnPropertyChanged(nameof(IsChanged));
         }
-        [RequiredInsteadOf(nameof(PVvars), "Either indicator variable for multiple imputations or plausible value variables are requried! If there is no MI/PV involved, add a constant of one to the dataset.")]
+        [RequiredInsteadOf(nameof(PVvarsList), "Either indicator variable for multiple imputations or plausible value variables are requried! If there is no MI/PV involved, add a constant of one to the dataset.")]
+        [MutuallyExclusive(nameof(PVvarsList), "Cannot specify both indicator variable for multiple imputations and plausible value variables!")]
         [ObservableProperty] private string? _MIvar;
         partial void OnMIvarChanged(string? value)
         {
@@ -57,12 +58,12 @@ namespace LSAnalyzer.Models
         {
             OnPropertyChanged(nameof(IsChanged));
         }
-        [MutuallyExclusive(nameof(MIvar), "Cannot specify both indicator variable for multiple imputations and plausible value variables!")]
         [ObservableProperty] private string? _PVvars;
         partial void OnPVvarsChanged(string? value)
         {
             OnPropertyChanged(nameof(IsChanged));
         }
+        [ValidItems("Invalid plausible values!")]
         [ObservableProperty] private ItemsChangeObservableCollection<PlausibleValueVariable> _PVvarsList;
         partial void OnPVvarsListChanged(ItemsChangeObservableCollection<PlausibleValueVariable> value)
         {
@@ -214,77 +215,251 @@ namespace LSAnalyzer.Models
                 {
                     Id = 101, Name = "PIRLS until 2011 - student level", Description = "PIRLS until 2011 - student level",
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
-                    NMI = 5, PVvars = "ASRREA;ASRLIT;ASRINF;ASRIIE;ASRRSI;(ASRIBM)",
+                    NMI = 5, PVvarsList = new() { 
+                        new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true},
+                        new() { Regex = "ASRLIT", DisplayName = "ASRLIT", Mandatory = true},
+                        new() { Regex = "ASRINF", DisplayName = "ASRINF", Mandatory = true},
+                        new() { Regex = "ASRIIE", DisplayName = "ASRIIE", Mandatory = true},
+                        new() { Regex = "ASRRSI", DisplayName = "ASRRSI", Mandatory = true},
+                        new() { Regex = "ASRIBM", DisplayName = "ASRIBM", Mandatory = false},
+                    },
                     Nrep = 75, FayFac = 1, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = false,
                 },
                 new DatasetType
                 {
                     Id = 102, Name = "PIRLS since 2016 - student level", Description = "PIRLS since 2016 (reverse jackknife) - student level", 
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
-                    NMI = 5, PVvars = "ASRREA;ASRLIT;ASRINF;ASRIIE;ASRRSI;ASRIBM",
+                    NMI = 5, PVvarsList = new() {
+                        new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true},
+                        new() { Regex = "ASRLIT", DisplayName = "ASRLIT", Mandatory = true},
+                        new() { Regex = "ASRINF", DisplayName = "ASRINF", Mandatory = true},
+                        new() { Regex = "ASRIIE", DisplayName = "ASRIIE", Mandatory = true},
+                        new() { Regex = "ASRRSI", DisplayName = "ASRRSI", Mandatory = true},
+                        new() { Regex = "ASRIBM", DisplayName = "ASRIBM", Mandatory = true},
+                    },
                     Nrep = 150, FayFac = 0.5, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = true,
                 },
                 new DatasetType
                 {
                     Id = 103, Name = "PIRLS/TIMSS 2011 joint - student level", Description = "PIRLS/TIMSS 2011 joint - student level",
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
-                    NMI = 5, PVvars = "ASMMAT;ASSSCI;ASRREA;ASMIBM;ASSIBM;ASRIBM",
+                    NMI = 5, PVvarsList = new() {
+                        new() { Regex = "ASMMAT", DisplayName = "ASMMAT", Mandatory = true},
+                        new() { Regex = "ASSSCI", DisplayName = "ASSSCI", Mandatory = true},
+                        new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true},
+                        new() { Regex = "ASMIBM", DisplayName = "ASMIBM", Mandatory = true},
+                        new() { Regex = "ASSIBM", DisplayName = "ASSIBM", Mandatory = true},
+                        new() { Regex = "ASRIBM", DisplayName = "ASRIBM", Mandatory = true},
+                    },
                     Nrep = 75, FayFac = 1, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = false,
                 },
                 new DatasetType
                 {
                     Id = 201, Name = "TIMSS 2003 - 4th grade student level", Description = "TIMSS 2003 - 4th grade student level",
                     Weight = "totwgt;senwgt", IDvar = "idstud",
-                    NMI = 5, PVvars = "asmmat;asssci;asmalg;asmdap;asmfns;asmgeo;asmmea;asseas;asslis;assphy;asmapp;asmkno;asmrea;asmibm;assibm",
+                    NMI = 5, PVvars = "asmmat;asssci;asmalg;asmdap;asmfns;asmgeo;asmmea;asseas;asslis;assphy;asmapp;asmkno;asmrea;asmibm;assibm", PVvarsList = new() {
+                        new() { Regex = "asmmat", DisplayName = "asmmat", Mandatory = true},
+                        new() { Regex = "asssci", DisplayName = "asssci", Mandatory = true},
+                        new() { Regex = "asmalg", DisplayName = "asmalg", Mandatory = true},
+                        new() { Regex = "asmdap", DisplayName = "asmdap", Mandatory = true},
+                        new() { Regex = "asmfns", DisplayName = "asmfns", Mandatory = true},
+                        new() { Regex = "asmgeo", DisplayName = "asmgeo", Mandatory = true},
+                        new() { Regex = "asmmea", DisplayName = "asmmea", Mandatory = true},
+                        new() { Regex = "asseas", DisplayName = "asseas", Mandatory = true},
+                        new() { Regex = "asslis", DisplayName = "asslis", Mandatory = true},
+                        new() { Regex = "assphy", DisplayName = "assphy", Mandatory = true},
+                        new() { Regex = "asmapp", DisplayName = "asmapp", Mandatory = true},
+                        new() { Regex = "asmkno", DisplayName = "asmkno", Mandatory = true},
+                        new() { Regex = "asmrea", DisplayName = "asmrea", Mandatory = true},
+                        new() { Regex = "asmibm", DisplayName = "asmibm", Mandatory = true},
+                        new() { Regex = "assibm", DisplayName = "assibm", Mandatory = true},
+                    },
                     Nrep = 75, FayFac = 1, JKzone = "jkzone", JKrep = "jkrep", JKreverse = false,
                 },
                 new DatasetType
                 {
                     Id = 202, Name = "TIMSS 2003 - 8th grade student level", Description = "TIMSS 2003 - 8th grade student level",
                     Weight = "totwgt;senwgt", IDvar = "idstud",
-                    NMI = 5, PVvars = "bsmmat;bsssci;bsmalg;bsmdap;bsmfns;bsmgeo;bsmmea;bsseas;bsslis;bssphy;bssche;bsseri;bsmapp;bsmkno;bsmrea;bsmibm;bssibm",
+                    NMI = 5, PVvarsList = new() {
+                        new() { Regex = "bsmmat", DisplayName = "bsmmat", Mandatory = true},
+                        new() { Regex = "bsssci", DisplayName = "bsssci", Mandatory = true},
+                        new() { Regex = "bsmalg", DisplayName = "bsmalg", Mandatory = true},
+                        new() { Regex = "bsmdap", DisplayName = "bsmdap", Mandatory = true},
+                        new() { Regex = "bsmfns", DisplayName = "bsmfns", Mandatory = true},
+                        new() { Regex = "bsmgeo", DisplayName = "bsmgeo", Mandatory = true},
+                        new() { Regex = "bsmmea", DisplayName = "bsmmea", Mandatory = true},
+                        new() { Regex = "bsseas", DisplayName = "bsseas", Mandatory = true},
+                        new() { Regex = "bsslis", DisplayName = "bsslis", Mandatory = true},
+                        new() { Regex = "bssphy", DisplayName = "bssphy", Mandatory = true},
+                        new() { Regex = "bssche", DisplayName = "bssche", Mandatory = true},
+                        new() { Regex = "bsseri", DisplayName = "bsseri", Mandatory = true},
+                        new() { Regex = "bsmapp", DisplayName = "bsmapp", Mandatory = true},
+                        new() { Regex = "bsmkno", DisplayName = "bsmkno", Mandatory = true},
+                        new() { Regex = "bsmrea", DisplayName = "bsmrea", Mandatory = true},
+                        new() { Regex = "bsmibm", DisplayName = "bsmibm", Mandatory = true},
+                        new() { Regex = "bssibm", DisplayName = "bssibm", Mandatory = true},
+                    },
                     Nrep = 75, FayFac = 1, JKzone = "jkzone", JKrep = "jkrep", JKreverse = false,
                 },
                 new DatasetType
                 {
                     Id = 203, Name = "TIMSS 2007/2011 - 4th grade student level", Description = "TIMSS 2007/2011 - 4th grade student level",
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
-                    NMI = 5, PVvars = "ASMMAT;ASSSCI;ASMNUM;ASMGEO;ASMDAT;ASMKNO;ASMAPP;ASMREA;ASSLIF;ASSPHY;ASSEAR;ASSKNO;ASSAPP;ASSREA;ASMIBM;ASSIBM",
+                    NMI = 5, PVvarsList = new() {
+                        new() { Regex = "ASMMAT", DisplayName = "ASMMAT", Mandatory = true},
+                        new() { Regex = "ASSSCI", DisplayName = "ASSSCI", Mandatory = true},
+                        new() { Regex = "ASMNUM", DisplayName = "ASMNUM", Mandatory = true},
+                        new() { Regex = "ASMGEO", DisplayName = "ASMGEO", Mandatory = true},
+                        new() { Regex = "ASMDAT", DisplayName = "ASMDAT", Mandatory = true},
+                        new() { Regex = "ASMKNO", DisplayName = "ASMKNO", Mandatory = true},
+                        new() { Regex = "ASMAPP", DisplayName = "ASMAPP", Mandatory = true},
+                        new() { Regex = "ASMREA", DisplayName = "ASMREA", Mandatory = true},
+                        new() { Regex = "ASSLIF", DisplayName = "ASSLIF", Mandatory = true},
+                        new() { Regex = "ASSPHY", DisplayName = "ASSPHY", Mandatory = true},
+                        new() { Regex = "ASSEAR", DisplayName = "ASSEAR", Mandatory = true},
+                        new() { Regex = "ASSKNO", DisplayName = "ASSKNO", Mandatory = true},
+                        new() { Regex = "ASSAPP", DisplayName = "ASSAPP", Mandatory = true},
+                        new() { Regex = "ASSREA", DisplayName = "ASSREA", Mandatory = true},
+                        new() { Regex = "ASMIBM", DisplayName = "ASMIBM", Mandatory = true},
+                        new() { Regex = "ASSIBM", DisplayName = "ASSIBM", Mandatory = true},
+                    },
                     Nrep = 75, FayFac = 1, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = false,
                 },
                 new DatasetType
                 {
                     Id = 204, Name = "TIMSS 2007/2011 - 8th grade student level", Description = "TIMSS 2007/2011 - 8th grade student level",
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
-                    NMI = 5, PVvars = "BSMMAT;BSSSCI;BSMALG;BSMAPP;BSMDAT;BSMGEO;BSMKNO;BSMNUM;BSMREA;BSSAPP;BSSBIO;BSSCHE;BSSEAR;BSSKNO;BSSPHY;BSSREA;BSMIBM;BSSIBM",
+                    NMI = 5, PVvarsList = new() {
+                        new() { Regex = "BSMMAT", DisplayName = "BSMMAT", Mandatory = true},
+                        new() { Regex = "BSSSCI", DisplayName = "BSSSCI", Mandatory = true},
+                        new() { Regex = "BSMALG", DisplayName = "BSMALG", Mandatory = true},
+                        new() { Regex = "BSMAPP", DisplayName = "BSMAPP", Mandatory = true},
+                        new() { Regex = "BSMDAT", DisplayName = "BSMDAT", Mandatory = true},
+                        new() { Regex = "BSMGEO", DisplayName = "BSMGEO", Mandatory = true},
+                        new() { Regex = "BSMKNO", DisplayName = "BSMKNO", Mandatory = true},
+                        new() { Regex = "BSMNUM", DisplayName = "BSMNUM", Mandatory = true},
+                        new() { Regex = "BSMREA", DisplayName = "BSMREA", Mandatory = true},
+                        new() { Regex = "BSSAPP", DisplayName = "BSSAPP", Mandatory = true},
+                        new() { Regex = "BSSBIO", DisplayName = "BSSBIO", Mandatory = true},
+                        new() { Regex = "BSSCHE", DisplayName = "BSSCHE", Mandatory = true},
+                        new() { Regex = "BSSEAR", DisplayName = "BSSEAR", Mandatory = true},
+                        new() { Regex = "BSSKNO", DisplayName = "BSSKNO", Mandatory = true},
+                        new() { Regex = "BSSPHY", DisplayName = "BSSPHY", Mandatory = true},
+                        new() { Regex = "BSSREA", DisplayName = "BSSREA", Mandatory = true},
+                        new() { Regex = "BSMIBM", DisplayName = "BSMIBM", Mandatory = true},
+                        new() { Regex = "BSSIBM", DisplayName = "BSSIBM", Mandatory = true},
+                    },
                     Nrep = 75, FayFac = 1, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = false,
                 },
                 new DatasetType
                 {
                     Id = 205, Name = "TIMSS since 2015 - 4th grade student level", Description = "TIMSS since 2015 (reverse jackknife) - 4th grade student level",
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
-                    NMI = 5, PVvars = "ASMMAT;ASSSCI;ASMNUM;ASMGEO;ASMDAT;ASMKNO;ASMAPP;ASMREA;ASSLIF;ASSPHY;ASSEAR;ASSKNO;ASSAPP;ASSREA;(ASSENV);ASMIBM;ASSIBM",
+                    NMI = 5, PVvarsList = new() {
+                        new() { Regex = "ASMMAT", DisplayName = "ASMMAT", Mandatory = true},
+                        new() { Regex = "ASSSCI", DisplayName = "ASSSCI", Mandatory = true},
+                        new() { Regex = "ASMNUM", DisplayName = "ASMNUM", Mandatory = true},
+                        new() { Regex = "ASMGEO", DisplayName = "ASMGEO", Mandatory = true},
+                        new() { Regex = "ASMDAT", DisplayName = "ASMDAT", Mandatory = true},
+                        new() { Regex = "ASMKNO", DisplayName = "ASMKNO", Mandatory = true},
+                        new() { Regex = "ASMAPP", DisplayName = "ASMAPP", Mandatory = true},
+                        new() { Regex = "ASMREA", DisplayName = "ASMREA", Mandatory = true},
+                        new() { Regex = "ASSLIF", DisplayName = "ASSLIF", Mandatory = true},
+                        new() { Regex = "ASSPHY", DisplayName = "ASSPHY", Mandatory = true},
+                        new() { Regex = "ASSEAR", DisplayName = "ASSEAR", Mandatory = true},
+                        new() { Regex = "ASSKNO", DisplayName = "ASSKNO", Mandatory = true},
+                        new() { Regex = "ASSAPP", DisplayName = "ASSAPP", Mandatory = true},
+                        new() { Regex = "ASSREA", DisplayName = "ASSREA", Mandatory = true},
+                        new() { Regex = "ASSENV", DisplayName = "ASSENV", Mandatory = false},
+                        new() { Regex = "ASMIBM", DisplayName = "ASMIBM", Mandatory = true},
+                        new() { Regex = "ASSIBM", DisplayName = "ASSIBM", Mandatory = true},
+                    },
                     Nrep = 150, FayFac = 0.5, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = true,
                 },
                 new DatasetType
                 {
                     Id = 206, Name = "TIMSS since 2015 - 8th grade student level", Description = "TIMSS since 2015 (reverse jackknife) - 8th grade student level",
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
-                    NMI = 5, PVvars = "BSMMAT;BSSSCI;BSMALG;BSMAPP;BSMDAT;BSMGEO;BSMKNO;BSMNUM;BSMREA;BSSAPP;BSSBIO;BSSCHE;BSSEAR;BSSKNO;BSSPHY;BSSREA;(BSSENV);BSMIBM;BSSIBM",
+                    NMI = 5, PVvarsList = new() {
+                        new() { Regex = "BSMMAT", DisplayName = "BSMMAT", Mandatory = true},
+                        new() { Regex = "BSSSCI", DisplayName = "BSSSCI", Mandatory = true},
+                        new() { Regex = "BSMALG", DisplayName = "BSMALG", Mandatory = true},
+                        new() { Regex = "BSMAPP", DisplayName = "BSMAPP", Mandatory = true},
+                        new() { Regex = "BSMDAT", DisplayName = "BSMDAT", Mandatory = true},
+                        new() { Regex = "BSMGEO", DisplayName = "BSMGEO", Mandatory = true},
+                        new() { Regex = "BSMKNO", DisplayName = "BSMKNO", Mandatory = true},
+                        new() { Regex = "BSMNUM", DisplayName = "BSMNUM", Mandatory = true},
+                        new() { Regex = "BSMREA", DisplayName = "BSMREA", Mandatory = true},
+                        new() { Regex = "BSSAPP", DisplayName = "BSSAPP", Mandatory = true},
+                        new() { Regex = "BSSBIO", DisplayName = "BSSBIO", Mandatory = true},
+                        new() { Regex = "BSSCHE", DisplayName = "BSSCHE", Mandatory = true},
+                        new() { Regex = "BSSEAR", DisplayName = "BSSEAR", Mandatory = true},
+                        new() { Regex = "BSSKNO", DisplayName = "BSSKNO", Mandatory = true},
+                        new() { Regex = "BSSPHY", DisplayName = "BSSPHY", Mandatory = true},
+                        new() { Regex = "BSSREA", DisplayName = "BSSREA", Mandatory = true},
+                        new() { Regex = "BSSENV", DisplayName = "BSSENV", Mandatory = false},
+                        new() { Regex = "BSMIBM", DisplayName = "BSMIBM", Mandatory = true},
+                        new() { Regex = "BSSIBM", DisplayName = "BSSIBM", Mandatory = true},
+                    },
                     Nrep = 150, FayFac = 0.5, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = true,
                 },
                 new DatasetType
                 {
                     Id = 301, Name = "PISA 2003-2012 - student level", Description = "PISA 2003-2012 - student level",
                     Weight = "W_FSTUWT",
-                    NMI = 5, PVvars = "PV[0-9]+MATH$;PV[0-9]+READ$;PV[0-9]+SCIE;(PV[0-9]+MACC);(PV[0-9]+MACQ);(PV[0-9]+MACS);(PV[0-9]+MACU);(PV[0-9]+MAPE);(PV[0-9]+MAPF);(PV[0-9]+MAPI);(PV[0-9]+READ1);(PV[0-9]+READ2);(PV[0-9]+READ3);(PV[0-9]+READ4);(PV[0-9]+READ5);(PV[0-9]+INTR);(PV[0-9]+SUPP);(PV[0-9]+EPS);(PV[0-9]+ISI);(PV[0-9]+USE);(PV[0-9]+MATH1);(PV[0-9]+MATH2);(PV[0-9]+MATH3);(PV[0-9]+MATH4);(PV[0-9]+MATH5);(PV[0-9]+PROB)",
+                    NMI = 5, PVvarsList = new() {
+                        new() { Regex = "PV[0-9]+MATH", DisplayName = "PV[0-9]+MATH", Mandatory = true},
+                        new() { Regex = "PV[0-9]+READ", DisplayName = "PV[0-9]+READ", Mandatory = true},
+                        new() { Regex = "PV[0-9]+SCIE", DisplayName = "PV[0-9]+SCIE", Mandatory = true},
+                        new() { Regex = "PV[0-9]+MACC", DisplayName = "PV[0-9]+MACC", Mandatory = false},
+                        new() { Regex = "PV[0-9]+MACQ", DisplayName = "PV[0-9]+MACQ", Mandatory = false},
+                        new() { Regex = "PV[0-9]+MACS", DisplayName = "PV[0-9]+MACS", Mandatory = false},
+                        new() { Regex = "PV[0-9]+MACU", DisplayName = "PV[0-9]+MACU", Mandatory = false},
+                        new() { Regex = "PV[0-9]+MAPE", DisplayName = "PV[0-9]+MAPE", Mandatory = false},
+                        new() { Regex = "PV[0-9]+MAPF", DisplayName = "PV[0-9]+MAPF", Mandatory = false},
+                        new() { Regex = "PV[0-9]+MAPI", DisplayName = "PV[0-9]+MAPI", Mandatory = false},
+                        new() { Regex = "PV[0-9]+READ1", DisplayName = "PV[0-9]+READ1", Mandatory = false},
+                        new() { Regex = "PV[0-9]+READ2", DisplayName = "PV[0-9]+READ2", Mandatory = false},
+                        new() { Regex = "PV[0-9]+READ3", DisplayName = "PV[0-9]+READ3", Mandatory = false},
+                        new() { Regex = "PV[0-9]+READ4", DisplayName = "PV[0-9]+READ4", Mandatory = false},
+                        new() { Regex = "PV[0-9]+READ5", DisplayName = "PV[0-9]+READ5", Mandatory = false},
+                        new() { Regex = "PV[0-9]+INTR", DisplayName = "PV[0-9]+INTR", Mandatory = false},
+                        new() { Regex = "PV[0-9]+SUPP", DisplayName = "PV[0-9]+SUPP", Mandatory = false},
+                        new() { Regex = "PV[0-9]+EPS", DisplayName = "PV[0-9]+EPS", Mandatory = false},
+                        new() { Regex = "PV[0-9]+ISI", DisplayName = "PV[0-9]+ISI", Mandatory = false},
+                        new() { Regex = "PV[0-9]+USE", DisplayName = "PV[0-9]+USE", Mandatory = false},
+                        new() { Regex = "PV[0-9]+MATH1", DisplayName = "PV[0-9]+MATH1", Mandatory = false},
+                        new() { Regex = "PV[0-9]+MATH2", DisplayName = "PV[0-9]+MATH2", Mandatory = false},
+                        new() { Regex = "PV[0-9]+MATH3", DisplayName = "PV[0-9]+MATH3", Mandatory = false},
+                        new() { Regex = "PV[0-9]+MATH4", DisplayName = "PV[0-9]+MATH4", Mandatory = false},
+                        new() { Regex = "PV[0-9]+MATH5", DisplayName = "PV[0-9]+MATH5", Mandatory = false},
+                        new() { Regex = "PV[0-9]+PROB", DisplayName = "PV[0-9]+PROB", Mandatory = false},
+                    },
                     Nrep = 80, RepWgts = "W_FSTR", FayFac = 0.05, JKreverse = false,
                 },
                 new DatasetType
                 {
                     Id = 302, Name = "PISA since 2015 - student level", Description = "PISA since 2015 - student level",
                     Weight = "W_FSTUWT", IDvar = "CNTSTUID",
-                    NMI = 10, PVvars = "PV[0-9]+MATH;PV[0-9]+READ;PV[0-9]+SCIE;(PV[0-9]+GLCM);(PV[0-9]+RCLI);(PV[0-9]+RCUN);(PV[0-9]+RCER);(PV[0-9]+RTSN);(PV[0-9]+RTML);(PV[0-9]+SCEP);(PV[0-9]+SCED);(PV[0-9]+SCID);(PV[0-9]+SKCO);(PV[0-9]+SKPE);(PV[0-9]+SSPH);(PV[0-9]+SSLI);(PV[0-9]+SSES)",
+                    NMI = 10, PVvarsList = new() {
+                        new() { Regex = "PV[0-9]+MATH", DisplayName = "PV[0-9]+MATH", Mandatory = true},
+                        new() { Regex = "PV[0-9]+READ", DisplayName = "PV[0-9]+READ", Mandatory = true},
+                        new() { Regex = "PV[0-9]+SCIE", DisplayName = "PV[0-9]+SCIE", Mandatory = true},
+                        new() { Regex = "PV[0-9]+GLCM", DisplayName = "PV[0-9]+GLCM", Mandatory = false},
+                        new() { Regex = "PV[0-9]+RCLI", DisplayName = "PV[0-9]+RCLI", Mandatory = false},
+                        new() { Regex = "PV[0-9]+RCUN", DisplayName = "PV[0-9]+RCUN", Mandatory = false},
+                        new() { Regex = "PV[0-9]+RCER", DisplayName = "PV[0-9]+RCER", Mandatory = false},
+                        new() { Regex = "PV[0-9]+RTSN", DisplayName = "PV[0-9]+RTSN", Mandatory = false},
+                        new() { Regex = "PV[0-9]+RTML", DisplayName = "PV[0-9]+RTML", Mandatory = false},
+                        new() { Regex = "PV[0-9]+SCEP", DisplayName = "PV[0-9]+SCEP", Mandatory = false},
+                        new() { Regex = "PV[0-9]+SCED", DisplayName = "PV[0-9]+SCED", Mandatory = false},
+                        new() { Regex = "PV[0-9]+SCID", DisplayName = "PV[0-9]+SCID", Mandatory = false},
+                        new() { Regex = "PV[0-9]+SKCO", DisplayName = "PV[0-9]+SKCO", Mandatory = false},
+                        new() { Regex = "PV[0-9]+SKPE", DisplayName = "PV[0-9]+SKPE", Mandatory = false},
+                        new() { Regex = "PV[0-9]+SSPH", DisplayName = "PV[0-9]+SSPH", Mandatory = false},
+                        new() { Regex = "PV[0-9]+SSLI", DisplayName = "PV[0-9]+SSLI", Mandatory = false},
+                        new() { Regex = "PV[0-9]+SSES", DisplayName = "PV[0-9]+SSES", Mandatory = false},
+                    },
                     Nrep = 80, RepWgts = "W_FSTURWT", FayFac = 0.05, JKreverse = false,
                 },
                 new DatasetType

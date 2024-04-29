@@ -90,23 +90,19 @@
                     </ToolTipService.IsEnabled>
                 </TextBox>
                 <TextBlock TextWrapping="Wrap" Text="OR"/>
-                <TextBlock TextWrapping="Wrap" Text="Variables with plausible values (semicolon-separated regex):"/>
-                <Border x:Name="WidthHelperTextBoxPVVariables" Margin="0,0,0,5">
-                    <TextBox x:Name="textBoxPVVariables" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.PVvars, UpdateSourceTrigger=PropertyChanged}" Width="{Binding Path=ActualWidth, ElementName=WidthHelperTextBoxPVVariables}">
-                        <ToolTipService.ToolTip>
-                            <TextBlock Text="{Binding SelectedDatasetType.Errors[PVvars]}" Foreground="Red"/>
-                        </ToolTipService.ToolTip>
-                        <ToolTipService.IsEnabled>
-                            <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="PVvars"/>
-                        </ToolTipService.IsEnabled>
-                    </TextBox>
-                </Border>
-                <DataGrid ItemsSource="{Binding SelectedDatasetType.PVvarsList}" AutoGenerateColumns="False">
+                <TextBlock TextWrapping="Wrap" Text="Variables with plausible values:"/>
+                <DataGrid ItemsSource="{Binding SelectedDatasetType.PVvarsList}" AutoGenerateColumns="False" Height="100" MaxHeight="100">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Regex" Binding="{Binding Regex}"/>
-                        <DataGridTextColumn Header="Display name" Binding="{Binding DisplayName}"/>
-                        <DataGridCheckBoxColumn Header="Mandatory" Binding="{Binding Mandatory}"/>
+                        <DataGridTextColumn Header="Regex" Binding="{Binding Regex}" Width="150"/>
+                        <DataGridTextColumn Header="Display name" Binding="{Binding DisplayName}" Width="150"/>
+                        <DataGridCheckBoxColumn Header="Mandatory" Binding="{Binding Mandatory}" Width="75"/>
                     </DataGrid.Columns>
+                    <ToolTipService.ToolTip>
+                        <TextBlock Text="{Binding SelectedDatasetType.Errors[PVvarsList]}" Foreground="Red"/>
+                    </ToolTipService.ToolTip>
+                    <ToolTipService.IsEnabled>
+                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="PVvarsList"/>
+                    </ToolTipService.IsEnabled>
                 </DataGrid>
             </StackPanel>
         </GroupBox>

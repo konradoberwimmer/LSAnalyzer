@@ -13,7 +13,7 @@ namespace LSAnalyzer.Services
 {
     public class Rservice
     {
-        private Logging _logger;
+        private Logging _logger = null!;
         private string? _rPath;
         private REngine? _engine;
         private readonly string[] _rPackagesNecessary = new string[] { "BIFIEsurvey", "foreign" };
@@ -72,7 +72,7 @@ namespace LSAnalyzer.Services
             try
             {
                 EvaluateAndLog("lsanalyzer_full_version_string <- paste(R.Version()$version.string, R.Version()$nickname, R.Version()$platform, sep = ' - ')");
-                return _engine.GetSymbol("lsanalyzer_full_version_string").AsCharacter().First();
+                return _engine!.GetSymbol("lsanalyzer_full_version_string").AsCharacter().First();
             } catch
             {
                 return null;
@@ -144,7 +144,7 @@ namespace LSAnalyzer.Services
             try
             {
                 EvaluateAndLog("lsanalyzer_bifiesurvey_version <- paste(utils::packageVersion('BIFIEsurvey'), sep = '.')");
-                return _engine.GetSymbol("lsanalyzer_bifiesurvey_version").AsCharacter().First();
+                return _engine!.GetSymbol("lsanalyzer_bifiesurvey_version").AsCharacter().First();
             } catch
             {
                 return null;
@@ -289,7 +289,7 @@ namespace LSAnalyzer.Services
                 {
                     return false;
                 }
-            } catch (Exception ex)
+            } catch (Exception)
             {
                 return false;
             }
@@ -332,7 +332,7 @@ namespace LSAnalyzer.Services
                     }
                 """, null, true);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -437,7 +437,7 @@ namespace LSAnalyzer.Services
                     return false;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -492,7 +492,7 @@ namespace LSAnalyzer.Services
                     return false;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
