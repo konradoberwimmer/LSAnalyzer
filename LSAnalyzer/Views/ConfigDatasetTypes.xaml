@@ -18,18 +18,17 @@
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" Margin="10,10,10,10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <ComboBox x:Name="comboBoxSelectDatasetType" Grid.Column="0" VerticalAlignment="Top" Width="312" ItemsSource="{Binding DatasetTypes}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedDatasetType, Mode=TwoWay}"/>
             <Button x:Name="buttonNewDatasetType" Grid.Column="1" Content="New" HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Top" Height="22" Width="78" Command="{Binding NewDatasetTypeCommand, Mode=OneWay}"/>
@@ -52,7 +51,7 @@
             <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="If checked, any regular expression XY will be treated as ^XY$ when used."/>
         </StackPanel>
         <Label Content="Weight variable:" Grid.Row="1" HorizontalAlignment="Left" Margin="10,78,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="textBoxWeightVariable" Grid.Row="1" Margin="106,82,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Weight, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top">
+        <TextBox x:Name="textBoxWeightVariable" Grid.Row="1" Margin="106,82,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Weight, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="200" HorizontalAlignment="Left">
             <ToolTipService.ToolTip>
                 <TextBlock Text="{Binding SelectedDatasetType.Errors[Weight]}" Foreground="Red"/>
             </ToolTipService.ToolTip>
@@ -64,106 +63,110 @@
             <Label Content="ID variable:"/>
             <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="Providing a unique ID variable is not necessary but will guarantee sorting and correct associations between cases when using MI indicator variable."/>
         </StackPanel>
-        <TextBox x:Name="textBoxIdVariable" Grid.Row="1" Margin="106,108,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.IDvar, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top"/>
-        <GroupBox Grid.Row="2" Margin="10,10,10,0" VerticalAlignment="Top">
-            <GroupBox.Header>
-                <TextBlock FontWeight="DemiBold"><Run Text="Multiple Imputation / Plausible Values"/></TextBlock>
-            </GroupBox.Header>
-            <StackPanel>
-                <TextBlock TextWrapping="Wrap" Text="Number of multiple imputations or plausible values:" Margin="0,5,0,0"/>
-                <TextBox x:Name="textBoxNMI" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.NMI, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left">
-                    <ToolTipService.ToolTip>
-                        <TextBlock Text="{Binding SelectedDatasetType.Errors[NMI]}" Foreground="Red"/>
-                    </ToolTipService.ToolTip>
-                    <ToolTipService.IsEnabled>
-                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="NMI"/>
-                    </ToolTipService.IsEnabled>
-                </TextBox>
-                <Rectangle Height="1" Stroke="Gray" Margin="0,10,0,10"/>
-                <TextBlock TextWrapping="Wrap" Text="Variable indicating imputation count:"/>
-                <TextBox x:Name="textBoxMIVariable" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.MIvar, UpdateSourceTrigger=PropertyChanged}">
-                    <ToolTipService.ToolTip>
-                        <TextBlock Text="{Binding SelectedDatasetType.Errors[MIvar]}" Foreground="Red"/>
-                    </ToolTipService.ToolTip>
-                    <ToolTipService.IsEnabled>
-                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="MIvar"/>
-                    </ToolTipService.IsEnabled>
-                </TextBox>
-                <TextBlock TextWrapping="Wrap" Text="OR"/>
-                <TextBlock TextWrapping="Wrap" Text="Variables with plausible values:"/>
-                <DataGrid ItemsSource="{Binding SelectedDatasetType.PVvarsList}" AutoGenerateColumns="False" Height="100" MaxHeight="100">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Regex" Binding="{Binding Regex}" Width="150"/>
-                        <DataGridTextColumn Header="Display name" Binding="{Binding DisplayName}" Width="150"/>
-                        <DataGridCheckBoxColumn Header="Mandatory" Binding="{Binding Mandatory}" Width="75"/>
-                    </DataGrid.Columns>
-                    <ToolTipService.ToolTip>
-                        <TextBlock Text="{Binding SelectedDatasetType.Errors[PVvarsList]}" Foreground="Red"/>
-                    </ToolTipService.ToolTip>
-                    <ToolTipService.IsEnabled>
-                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="PVvarsList"/>
-                    </ToolTipService.IsEnabled>
-                </DataGrid>
-            </StackPanel>
-        </GroupBox>
-        <GroupBox Grid.Row="3"  Margin="10,10,10,0" VerticalAlignment="Top" Height="250">
-            <GroupBox.Header>
-                <TextBlock FontWeight="DemiBold"><Run Text="Replicate Weights"/></TextBlock>
-            </GroupBox.Header>
-            <StackPanel>
-                <TextBlock TextWrapping="Wrap" Text="Number of replications:"/>
-                <TextBox x:Name="textBoxNRep" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.Nrep, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left">
-                    <ToolTipService.ToolTip>
-                        <TextBlock Text="{Binding SelectedDatasetType.Errors[Nrep]}" Foreground="Red"/>
-                    </ToolTipService.ToolTip>
-                    <ToolTipService.IsEnabled>
-                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Nrep"/>
-                    </ToolTipService.IsEnabled>
-                </TextBox>
-                <TextBlock TextWrapping="Wrap" Text="Replication variance adjustment factor (argument fayfac in BIFIEsurvey):"/>
-                <TextBox x:Name="textBoxFayFac" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.FayFac}" HorizontalAlignment="Left">
-                    <ToolTipService.ToolTip>
-                        <TextBlock Text="{Binding SelectedDatasetType.Errors[FayFac]}" Foreground="Red"/>
-                    </ToolTipService.ToolTip>
-                    <ToolTipService.IsEnabled>
-                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="FayFac"/>
-                    </ToolTipService.IsEnabled>
-                </TextBox>
-                <Rectangle Height="1" Stroke="Gray" Margin="0,10,0,10"/>
-                <TextBlock TextWrapping="Wrap" Text="Variables with replicate weights (regex):"/>
-                <TextBox x:Name="textBoxRepWeights" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.RepWgts, UpdateSourceTrigger=PropertyChanged}">
-                    <ToolTipService.ToolTip>
-                        <TextBlock Text="{Binding SelectedDatasetType.Errors[RepWgts]}" Foreground="Red"/>
-                    </ToolTipService.ToolTip>
-                    <ToolTipService.IsEnabled>
-                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="RepWgts"/>
-                    </ToolTipService.IsEnabled>
-                </TextBox>
-                <TextBlock TextWrapping="Wrap" Text="OR"/>
-                <TextBlock TextWrapping="Wrap" Text="Variable indicating jackknife zones:"/>
-                <TextBox x:Name="textBoxJKZone" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.JKzone, UpdateSourceTrigger=PropertyChanged}">
-                    <ToolTipService.ToolTip>
-                        <TextBlock Text="{Binding SelectedDatasetType.Errors[JKzone]}" Foreground="Red"/>
-                    </ToolTipService.ToolTip>
-                    <ToolTipService.IsEnabled>
-                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="JKzone"/>
-                    </ToolTipService.IsEnabled>
-                </TextBox>
-                <TextBlock TextWrapping="Wrap" Text="Variable indicating inclusion/exclusion within jackknife zone:"/>
-                <TextBox x:Name="textBoxJKRep" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.JKrep, UpdateSourceTrigger=PropertyChanged}">
-                    <ToolTipService.ToolTip>
-                        <TextBlock Text="{Binding SelectedDatasetType.Errors[JKrep]}" Foreground="Red"/>
-                    </ToolTipService.ToolTip>
-                    <ToolTipService.IsEnabled>
-                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="JKrep"/>
-                    </ToolTipService.IsEnabled>
-                </TextBox>
-                <CheckBox x:Name="checkBoxJKReverse" Content="Use reverse inclusion/exclusion?" Margin="0,5,0,5" IsChecked="{Binding SelectedDatasetType.JKreverse}"/>
-
-
-            </StackPanel>
-        </GroupBox>
-        <Grid Grid.Row="4" Margin="10">
+        <TextBox x:Name="textBoxIdVariable" Grid.Row="1" Margin="106,108,10,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.IDvar, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="200" HorizontalAlignment="Left"/>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <GroupBox Grid.Column="0" Margin="10,10,5,0" VerticalAlignment="Stretch">
+                <GroupBox.Header>
+                    <TextBlock FontWeight="DemiBold"><Run Text="Multiple Imputation / Plausible Values"/></TextBlock>
+                </GroupBox.Header>
+                <StackPanel>
+                    <TextBlock TextWrapping="Wrap" Text="Number of multiple imputations or plausible values:" Margin="0,5,0,0"/>
+                    <TextBox x:Name="textBoxNMI" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.NMI, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left">
+                        <ToolTipService.ToolTip>
+                            <TextBlock Text="{Binding SelectedDatasetType.Errors[NMI]}" Foreground="Red"/>
+                        </ToolTipService.ToolTip>
+                        <ToolTipService.IsEnabled>
+                            <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="NMI"/>
+                        </ToolTipService.IsEnabled>
+                    </TextBox>
+                    <Rectangle Height="1" Stroke="Gray" Margin="0,10,0,10"/>
+                    <TextBlock TextWrapping="Wrap" Text="Variable indicating imputation count:"/>
+                    <TextBox x:Name="textBoxMIVariable" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.MIvar, UpdateSourceTrigger=PropertyChanged}" Width="200" HorizontalAlignment="Left">
+                        <ToolTipService.ToolTip>
+                            <TextBlock Text="{Binding SelectedDatasetType.Errors[MIvar]}" Foreground="Red"/>
+                        </ToolTipService.ToolTip>
+                        <ToolTipService.IsEnabled>
+                            <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="MIvar"/>
+                        </ToolTipService.IsEnabled>
+                    </TextBox>
+                    <TextBlock TextWrapping="Wrap" Text="OR"/>
+                    <TextBlock TextWrapping="Wrap" Text="Variables with plausible values:"/>
+                    <DataGrid ItemsSource="{Binding SelectedDatasetType.PVvarsList}" AutoGenerateColumns="False" Height="105" Width="400">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Regex" Binding="{Binding Regex}" Width="150"/>
+                            <DataGridTextColumn Header="Display name" Binding="{Binding DisplayName}" Width="150"/>
+                            <DataGridCheckBoxColumn Header="Mandatory" Binding="{Binding Mandatory}" Width="75"/>
+                        </DataGrid.Columns>
+                        <ToolTipService.ToolTip>
+                            <TextBlock Text="{Binding SelectedDatasetType.Errors[PVvarsList]}" Foreground="Red"/>
+                        </ToolTipService.ToolTip>
+                        <ToolTipService.IsEnabled>
+                            <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="PVvarsList"/>
+                        </ToolTipService.IsEnabled>
+                    </DataGrid>
+                </StackPanel>
+            </GroupBox>
+            <GroupBox Grid.Column="1"  Margin="5,10,10,0" VerticalAlignment="Top" Width="400">
+                <GroupBox.Header>
+                    <TextBlock FontWeight="DemiBold"><Run Text="Replicate Weights"/></TextBlock>
+                </GroupBox.Header>
+                <StackPanel>
+                    <TextBlock TextWrapping="Wrap" Text="Number of replications:"/>
+                    <TextBox x:Name="textBoxNRep" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.Nrep, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left">
+                        <ToolTipService.ToolTip>
+                            <TextBlock Text="{Binding SelectedDatasetType.Errors[Nrep]}" Foreground="Red"/>
+                        </ToolTipService.ToolTip>
+                        <ToolTipService.IsEnabled>
+                            <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Nrep"/>
+                        </ToolTipService.IsEnabled>
+                    </TextBox>
+                    <TextBlock TextWrapping="Wrap" Text="Replication variance adjustment factor (argument fayfac in BIFIEsurvey):"/>
+                    <TextBox x:Name="textBoxFayFac" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.FayFac}" HorizontalAlignment="Left">
+                        <ToolTipService.ToolTip>
+                            <TextBlock Text="{Binding SelectedDatasetType.Errors[FayFac]}" Foreground="Red"/>
+                        </ToolTipService.ToolTip>
+                        <ToolTipService.IsEnabled>
+                            <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="FayFac"/>
+                        </ToolTipService.IsEnabled>
+                    </TextBox>
+                    <Rectangle Height="1" Stroke="Gray" Margin="0,10,0,10"/>
+                    <TextBlock TextWrapping="Wrap" Text="Variables with replicate weights (regex):"/>
+                    <TextBox x:Name="textBoxRepWeights" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.RepWgts, UpdateSourceTrigger=PropertyChanged}">
+                        <ToolTipService.ToolTip>
+                            <TextBlock Text="{Binding SelectedDatasetType.Errors[RepWgts]}" Foreground="Red"/>
+                        </ToolTipService.ToolTip>
+                        <ToolTipService.IsEnabled>
+                            <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="RepWgts"/>
+                        </ToolTipService.IsEnabled>
+                    </TextBox>
+                    <TextBlock TextWrapping="Wrap" Text="OR"/>
+                    <TextBlock TextWrapping="Wrap" Text="Variable indicating jackknife zones:"/>
+                    <TextBox x:Name="textBoxJKZone" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.JKzone, UpdateSourceTrigger=PropertyChanged}" Width="200" HorizontalAlignment="Left">
+                        <ToolTipService.ToolTip>
+                            <TextBlock Text="{Binding SelectedDatasetType.Errors[JKzone]}" Foreground="Red"/>
+                        </ToolTipService.ToolTip>
+                        <ToolTipService.IsEnabled>
+                            <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="JKzone"/>
+                        </ToolTipService.IsEnabled>
+                    </TextBox>
+                    <TextBlock TextWrapping="Wrap" Text="Variable indicating inclusion/exclusion within jackknife zone:"/>
+                    <TextBox x:Name="textBoxJKRep" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.JKrep, UpdateSourceTrigger=PropertyChanged}" Width="200" HorizontalAlignment="Left">
+                        <ToolTipService.ToolTip>
+                            <TextBlock Text="{Binding SelectedDatasetType.Errors[JKrep]}" Foreground="Red"/>
+                        </ToolTipService.ToolTip>
+                        <ToolTipService.IsEnabled>
+                            <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="JKrep"/>
+                        </ToolTipService.IsEnabled>
+                    </TextBox>
+                    <CheckBox x:Name="checkBoxJKReverse" Content="Use reverse inclusion/exclusion?" Margin="0,5,0,5" IsChecked="{Binding SelectedDatasetType.JKreverse}"/>
+                </StackPanel>
+            </GroupBox>
+        </Grid>
+        <Grid Grid.Row="3" Margin="10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
