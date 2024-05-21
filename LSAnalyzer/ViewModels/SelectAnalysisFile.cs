@@ -8,6 +8,7 @@ using LSAnalyzer.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -17,6 +18,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Input;
 
 [assembly: InternalsVisibleTo("TestLSAnalyzer")]
@@ -96,14 +98,45 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private List<DatasetType> _datasetTypes = new();
-        public List<DatasetType> DatasetTypes
+        private ObservableCollection<DatasetType> _datasetTypes = new();
+        public ObservableCollection<DatasetType> DatasetTypes
         {
             get => _datasetTypes;
             set
             {
                 _datasetTypes = value;
                 NotifyPropertyChanged(nameof(DatasetTypes));
+            }
+        }
+
+        private bool _showDatasetTypesGrouped = (Environment.GetEnvironmentVariable("SHOW_DATASET_TYPES_GROUPED") ?? "1") == "1";
+        public bool ShowDatasetTypesGrouped
+        {
+            get => _showDatasetTypesGrouped;
+            set
+            {
+                _showDatasetTypesGrouped = value;
+                NotifyPropertyChanged(nameof(ShowDatasetTypesGrouped));
+            }
+        }
+
+        private CollectionViewSource? _datasetTypesView = null;
+        public CollectionViewSource? DatasetTypesView 
+        { 
+            get
+            {
+                if (_datasetTypesView == null)
+                {
+                    CollectionViewSource datasetTypesView = new();
+                    if (ShowDatasetTypesGrouped)
+                    {
+                        datasetTypesView.GroupDescriptions.Add(new PropertyGroupDescription("Group"));
+                    }
+                    datasetTypesView.Source = DatasetTypes;
+                    _datasetTypesView = datasetTypesView;
+                }
+
+                return _datasetTypesView;
             }
         }
 
@@ -244,7 +277,7 @@ namespace LSAnalyzer.ViewModels
         public SelectAnalysisFile(Configuration configuration, Rservice rservice, IServiceProvider serviceProvider)
         {
             _rservice = rservice;
-            DatasetTypes = configuration.GetStoredDatasetTypes()?.OrderBy(dst => dst.Name).ToList() ?? DatasetTypes;
+            DatasetTypes = new ObservableCollection<DatasetType>(configuration.GetStoredDatasetTypes()?.OrderBy(dst => dst.Name).ToList() ?? new List<DatasetType>());
             DataProviderConfigurations = configuration.GetDataProviderConfigurations().OrderBy(dpc => dpc.Name).ToList();
             _serviceProvider = serviceProvider;
         }

@@ -19,6 +19,28 @@
         <converter:IndexToBool x:Key="IndexToBoolConverter"/>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
         <converter:TabItemToHeaderString x:Key="TabItemToHeaderStringConverter"/>
+        <converter:EmptyStringTo x:Key="EmptyStringToConverter"/>
+        <Style x:Key="ComboBoxGroupItem" TargetType="{x:Type GroupItem}">
+            <Setter Property="Margin" Value="0,0,0,5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type GroupItem}">
+                        <Expander IsExpanded="False">
+                            <Expander.Header>
+                                <DockPanel>
+                                    <TextBlock Text="{Binding Name, Converter={StaticResource EmptyStringToConverter}, ConverterParameter=[no group]}" FontWeight="DemiBold" Margin="2,5,0,2" FontSize="14"/>
+                                </DockPanel>
+                            </Expander.Header>
+                            <Expander.Content>
+                                <Border Margin="5,0,0,0">
+                                    <ItemsPresenter />
+                                </Border>
+                            </Expander.Content>
+                        </Expander>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     <Window.IsEnabled>
         <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
@@ -74,7 +96,11 @@
         </TabControl>
         <CheckBox Grid.Row="1" Grid.Column="1" Content="Replace character vectors with numeric" Margin="10,5,0,0" IsChecked="{Binding ReplaceCharacterVectors}"/>
         <TextBlock Grid.Row="2" Text="Dataset Type:" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Center"/>
-        <ComboBox Grid.Row="2" x:Name="comboBoxDatasetType" Grid.Column="1" HorizontalAlignment="Stretch" Margin="10,10,0,0" VerticalAlignment="Top" Height="22" ItemsSource="{Binding DatasetTypes}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedDatasetType}"/>
+        <ComboBox Grid.Row="2" x:Name="comboBoxDatasetType" Grid.Column="1" HorizontalAlignment="Stretch" Margin="10,10,0,0" VerticalAlignment="Top" Height="22" ItemsSource="{Binding DatasetTypesView.View}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedDatasetType}" MaxDropDownHeight="250">
+            <ComboBox.GroupStyle>
+                <GroupStyle ContainerStyle="{StaticResource ResourceKey=ComboBoxGroupItem}"/>
+            </ComboBox.GroupStyle>
+        </ComboBox>
         <Button Grid.Row="2" Grid.Column="2" ContentTemplate="{StaticResource MagicWand}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="80" Height="22" Command="{Binding GuessDatasetTypeCommand}" IsEnabled="{Binding ReadyToGuess}"/>
         <TextBlock Grid.Row="3" Text="Weight variable:" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Center"/>
         <ComboBox Grid.Row="3" Grid.Column="1" x:Name="comboBoxWeightVariable" HorizontalAlignment="Stretch" Margin="10,10,0,0" VerticalAlignment="Top" Height="22" ItemsSource="{Binding PossibleWeightVariables}" SelectedItem="{Binding SelectedWeightVariable}" IsEnabled="{Binding ElementName=comboBoxDatasetType, Path=SelectedIndex, Converter={StaticResource IndexToBoolConverter}}"/>
@@ -84,6 +110,6 @@
             <RadioButton x:Name="radioButtonAnalysisModeBuild" Content="Build BIFIEdata object for each analysis (Use only in case of reaching memory limit!)" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="AnalysisMode" IsChecked="{Binding SelectedAnalysisMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Build}"/>
         </StackPanel>
         <Button Grid.Row="5" Grid.Column="2" Content="Go!" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Bottom" Height="22" Width="80" Command="{Binding UseFileForAnalysisCommand, Mode=OneWay}" CommandParameter="{Binding ElementName=windowSelectAnalysisFile}" IsEnabled="{Binding ReadyToGo}"/>
-        <fa:IconImage Grid.RowSpan="5" Grid.ColumnSpan="3" Icon="Sun" fa:Awesome.Spin="True" VerticalAlignment="Center" Height="100" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
+        <fa:IconImage Grid.RowSpan="6" Grid.ColumnSpan="3" Icon="Sun" fa:Awesome.Spin="True" VerticalAlignment="Center" Height="100" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
     </Grid>
 </Window>

@@ -14,6 +14,7 @@ public class TestAppPirls : SystemTestsBase
     [Fact]
     public void TestWorkflowPirlsAustria()
     {
+        Environment.SetEnvironmentVariable("SHOW_DATASET_TYPES_GROUPED", "0");
         _testApplication = Application.Launch(Path.Combine(AssemblyDirectory, "LSAnalyzer.exe"));
 
         using UIA3Automation automation = new();

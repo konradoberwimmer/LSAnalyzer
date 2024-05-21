@@ -24,6 +24,11 @@ namespace LSAnalyzer.Models
         {
             OnPropertyChanged(nameof(IsChanged));
         }
+        [ObservableProperty] private string _group = string.Empty;
+        partial void OnGroupChanged(string value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [ObservableProperty] private string? _description;
         partial void OnDescriptionChanged(string? value)
         {
@@ -134,6 +139,7 @@ namespace LSAnalyzer.Models
         {
             Id = datasetType.Id;
             Name = datasetType.Name;
+            Group = datasetType.Group;
             AutoEncapsulateRegex = datasetType.AutoEncapsulateRegex;
             Description = datasetType.Description;
             Weight = datasetType.Weight;
@@ -206,7 +212,7 @@ namespace LSAnalyzer.Models
             {
                 new DatasetType
                 {
-                    Id = 101, Name = "PIRLS until 2011 - student level", Description = "PIRLS until 2011 - student level",
+                    Id = 101, Name = "PIRLS until 2011 - student level", Group = "PIRLS/TIMSS", Description = "PIRLS until 2011 - student level",
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
                     NMI = 5, PVvarsList = new() { 
                         new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true},
@@ -220,7 +226,7 @@ namespace LSAnalyzer.Models
                 },
                 new DatasetType
                 {
-                    Id = 102, Name = "PIRLS since 2016 - student level", Description = "PIRLS since 2016 (reverse jackknife) - student level", 
+                    Id = 102, Name = "PIRLS since 2016 - student level", Group = "PIRLS/TIMSS", Description = "PIRLS since 2016 (reverse jackknife) - student level", 
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true},
@@ -234,7 +240,7 @@ namespace LSAnalyzer.Models
                 },
                 new DatasetType
                 {
-                    Id = 103, Name = "PIRLS/TIMSS 2011 joint - student level", Description = "PIRLS/TIMSS 2011 joint - student level",
+                    Id = 103, Name = "PIRLS/TIMSS 2011 joint - student level", Group = "PIRLS/TIMSS", Description = "PIRLS/TIMSS 2011 joint - student level",
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "ASMMAT", DisplayName = "ASMMAT", Mandatory = true},
@@ -248,7 +254,7 @@ namespace LSAnalyzer.Models
                 },
                 new DatasetType
                 {
-                    Id = 201, Name = "TIMSS 2003 - 4th grade student level", Description = "TIMSS 2003 - 4th grade student level",
+                    Id = 201, Name = "TIMSS 2003 - 4th grade student level", Group = "PIRLS/TIMSS", Description = "TIMSS 2003 - 4th grade student level",
                     Weight = "totwgt;senwgt", IDvar = "idstud",
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "asmmat", DisplayName = "asmmat", Mandatory = true},
@@ -271,7 +277,7 @@ namespace LSAnalyzer.Models
                 },
                 new DatasetType
                 {
-                    Id = 202, Name = "TIMSS 2003 - 8th grade student level", Description = "TIMSS 2003 - 8th grade student level",
+                    Id = 202, Name = "TIMSS 2003 - 8th grade student level", Group = "PIRLS/TIMSS", Description = "TIMSS 2003 - 8th grade student level",
                     Weight = "totwgt;senwgt", IDvar = "idstud",
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "bsmmat", DisplayName = "bsmmat", Mandatory = true},
@@ -296,7 +302,7 @@ namespace LSAnalyzer.Models
                 },
                 new DatasetType
                 {
-                    Id = 203, Name = "TIMSS 2007/2011 - 4th grade student level", Description = "TIMSS 2007/2011 - 4th grade student level",
+                    Id = 203, Name = "TIMSS 2007/2011 - 4th grade student level", Group = "PIRLS/TIMSS", Description = "TIMSS 2007/2011 - 4th grade student level",
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "ASMMAT", DisplayName = "ASMMAT", Mandatory = true},
@@ -320,7 +326,7 @@ namespace LSAnalyzer.Models
                 },
                 new DatasetType
                 {
-                    Id = 204, Name = "TIMSS 2007/2011 - 8th grade student level", Description = "TIMSS 2007/2011 - 8th grade student level",
+                    Id = 204, Name = "TIMSS 2007/2011 - 8th grade student level", Group = "PIRLS/TIMSS", Description = "TIMSS 2007/2011 - 8th grade student level",
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "BSMMAT", DisplayName = "BSMMAT", Mandatory = true},
@@ -346,7 +352,7 @@ namespace LSAnalyzer.Models
                 },
                 new DatasetType
                 {
-                    Id = 205, Name = "TIMSS since 2015 - 4th grade student level", Description = "TIMSS since 2015 (reverse jackknife) - 4th grade student level",
+                    Id = 205, Name = "TIMSS since 2015 - 4th grade student level", Group = "PIRLS/TIMSS", Description = "TIMSS since 2015 (reverse jackknife) - 4th grade student level",
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "ASMMAT", DisplayName = "ASMMAT", Mandatory = true},
@@ -371,7 +377,7 @@ namespace LSAnalyzer.Models
                 },
                 new DatasetType
                 {
-                    Id = 206, Name = "TIMSS since 2015 - 8th grade student level", Description = "TIMSS since 2015 (reverse jackknife) - 8th grade student level",
+                    Id = 206, Name = "TIMSS since 2015 - 8th grade student level", Group = "PIRLS/TIMSS", Description = "TIMSS since 2015 (reverse jackknife) - 8th grade student level",
                     Weight = "TOTWGT;SENWGT", IDvar = "IDSTUD",
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "BSMMAT", DisplayName = "BSMMAT", Mandatory = true},
@@ -398,7 +404,7 @@ namespace LSAnalyzer.Models
                 },
                 new DatasetType
                 {
-                    Id = 301, Name = "PISA 2003-2012 - student level", Description = "PISA 2003-2012 - student level",
+                    Id = 301, Name = "PISA 2003-2012 - student level", Group = "PISA", Description = "PISA 2003-2012 - student level",
                     Weight = "W_FSTUWT",
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "PV[0-9]+MATH", DisplayName = "PVMATH", Mandatory = true},
@@ -432,7 +438,7 @@ namespace LSAnalyzer.Models
                 },
                 new DatasetType
                 {
-                    Id = 302, Name = "PISA since 2015 - student level", Description = "PISA since 2015 - student level",
+                    Id = 302, Name = "PISA since 2015 - student level", Group = "PISA", Description = "PISA since 2015 - student level",
                     Weight = "W_FSTUWT", IDvar = "CNTSTUID",
                     NMI = 10, PVvarsList = new() {
                         new() { Regex = "PV[0-9]+MATH", DisplayName = "PVMATH", Mandatory = true},
@@ -457,14 +463,14 @@ namespace LSAnalyzer.Models
                 },
                 new DatasetType
                 {
-                    Id = 401, Name = "TALIS - principal level", Description = "TALIS - principal level",
+                    Id = 401, Name = "TALIS - principal level", Group = "TALIS", Description = "TALIS - principal level",
                     Weight = "SCHWGT", IDvar = "IDSCHOOL",
                     NMI = 1,
                     Nrep = 100, RepWgts = "SRWGT", FayFac = 0.04, JKreverse = false,
                 },
                 new DatasetType
                 {
-                    Id = 402, Name = "TALIS - teacher level", Description = "TALIS - teacher level",
+                    Id = 402, Name = "TALIS - teacher level", Group = "TALIS", Description = "TALIS - teacher level",
                     Weight = "TCHWGT", IDvar = "IDTEACH",
                     NMI = 1,
                     Nrep = 100, RepWgts = "TRWGT", FayFac = 0.04, JKreverse = false,
