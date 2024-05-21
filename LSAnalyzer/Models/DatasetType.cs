@@ -475,6 +475,27 @@ namespace LSAnalyzer.Models
                     NMI = 1,
                     Nrep = 100, RepWgts = "TRWGT", FayFac = 0.04, JKreverse = false,
                 },
+                new DatasetType
+                {
+                    Id = 501, Name = "PIAAC", Group = "PIAAC", Description = "PIAAC since 2011 - person level",
+                    Weight = "SPFWT0",
+                    NMI = 10, PVvarsList = new() {
+                        new() { Regex = "PVLIT", DisplayName = "PVLIT", Mandatory = true},
+                        new() { Regex = "PVNUM", DisplayName = "PVNUM", Mandatory = true},
+                        new() { Regex = "PVPSL", DisplayName = "PVPSL", Mandatory = true},
+                    },
+                    Nrep = 80, RepWgts = "SPFWT[1-9][0-9]?", FayFac = 1, JKreverse = false,
+                },
+                new DatasetType
+                {
+                    Id = 601, Name = "ICILS - student level", Group = "ICILS", Description = "ICILS since 2013 - student level",
+                    Weight = "TOTWGTS",
+                    NMI = 5, PVvarsList = new() {
+                        new() { Regex = "PV[0-9]+CIL", DisplayName = "PVCIL", Mandatory = true},
+                        new() { Regex = "PV[0-9]+CT", DisplayName = "PVCT", Mandatory = false},
+                    },
+                    Nrep = 75, RepWgts = "SRWGT[0-9]+", FayFac = 1, JKreverse = false,
+                },
             };
         }
     }

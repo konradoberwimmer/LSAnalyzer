@@ -1,7 +1,8 @@
 ﻿# ToDo-List
 Test and debug!
 
-* add more default dataset types: class and school level variants, TIMSS 2023, ICILS, PIAAC, ...
+* fix list of variables in subsetting GUI
+* add more default dataset types: class and school level variants, ...
 * build the MSI for IQS software center
 * split application core and UI in separate assemblies to possibly switch to AvaloniaUI
 * create an automated test suite for a wider range of published trustful coefficients from known data (PIRLS, PISA school level, ...) that conducts realistic workflows
