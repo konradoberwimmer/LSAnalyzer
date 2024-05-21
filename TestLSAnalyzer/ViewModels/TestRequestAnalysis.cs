@@ -328,7 +328,7 @@ namespace TestLSAnalyzer.ViewModels
         {
         }
 
-        public override List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration)
+        public override List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, bool fromStoredRaw = false)
         {
             return new()
             {

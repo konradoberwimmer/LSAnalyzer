@@ -671,7 +671,7 @@ namespace LSAnalyzer.Services
             return true;
         }
 
-        public virtual List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration)
+        public virtual List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, bool fromStoredRaw = false)
         {
             if (analysisConfiguration.DatasetType == null)
             {
@@ -681,7 +681,7 @@ namespace LSAnalyzer.Services
             try
             {
                 DataFrame? variables = null;
-                if (analysisConfiguration.ModeKeep == true)
+                if (analysisConfiguration.ModeKeep == true && !fromStoredRaw)
                 {
                     variables = EvaluateAndLog("lsanalyzer_dat_BO$variables").AsDataFrame();
                 } else

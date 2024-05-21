@@ -1,7 +1,6 @@
 ﻿# ToDo-List
 Test and debug!
 
-* fix list of variables in subsetting GUI
 * add more default dataset types: class and school level variants, ...
 * build the MSI for IQS software center
 * split application core and UI in separate assemblies to possibly switch to AvaloniaUI

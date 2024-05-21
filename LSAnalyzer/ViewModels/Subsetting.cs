@@ -33,7 +33,7 @@ namespace LSAnalyzer.ViewModels
 
                 if (AnalysisConfiguration != null)
                 {
-                    var currentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration);
+                    var currentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, true);
                     if (currentDatasetVariables != null)
                     {
                         ObservableCollection<Variable> newAvailableVariables = new();

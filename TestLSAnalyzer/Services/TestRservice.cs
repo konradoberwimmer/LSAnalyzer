@@ -301,6 +301,13 @@ namespace TestLSAnalyzer.Services
             Assert.True(variablesListKeepPV.Count == 11);
             Assert.Single(variablesListKeepPV.Where(var => var.Name == "y").ToList());
             Assert.Equal("PV Mathematics 1", variablesListKeepPV.Where(var => var.Name == "y").First().Label);
+
+            var rawVariablesListKeepPV = rservice.GetCurrentDatasetVariables(analysisConfigurationKeepPV, true);
+
+            Assert.NotNull(rawVariablesListKeepPV);
+            Assert.True(rawVariablesListKeepPV.Count == 37);
+            Assert.Empty(rawVariablesListKeepPV.Where(var => var.Name == "y").ToList());
+            Assert.Single(rawVariablesListKeepPV.Where(var => var.Name == "y1").ToList());
         }
 
         [Fact]

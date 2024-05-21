@@ -19,7 +19,7 @@ namespace TestLSAnalyzer.ViewModels
             AnalysisConfiguration dummyAnalysisConfiguration = new();
 
             var mockRservice = new Mock<Rservice>();
-            mockRservice.Setup(rservice => rservice.GetCurrentDatasetVariables(dummyAnalysisConfiguration)).Returns(new List<Variable>()
+            mockRservice.Setup(rservice => rservice.GetCurrentDatasetVariables(dummyAnalysisConfiguration, true)).Returns(new List<Variable>()
             {
                 new(1, "x", false),
                 new(2, "y", false),
