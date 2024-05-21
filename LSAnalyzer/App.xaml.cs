@@ -3,11 +3,13 @@ using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using RDotNet;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Text.Json;
 using System.Windows;
 
@@ -35,6 +37,19 @@ namespace LSAnalyzer
 
         private void ConfigureServices(IServiceCollection services)
         {
+            var secretsId = Assembly.GetEntryAssembly()!.GetCustomAttribute<UserSecretsIdAttribute>()!.UserSecretsId;
+            var secretsPath = PathHelper.GetSecretsPathFromSecretsId(secretsId);
+            if (!Path.Exists(Path.GetDirectoryName(secretsPath)))
+            {
+                try
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(secretsPath)!);
+                } catch
+                {
+                    Console.WriteLine("Could not create user secrets path!");
+                }
+            }
+
             ConfigurationBuilder configurationBuilder = new();
             configurationBuilder.AddUserSecrets<Configuration>();
 

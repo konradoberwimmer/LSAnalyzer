@@ -79,6 +79,11 @@ namespace LSAnalyzer.Services
             dynamic configuration = new { DataProviders = currentDataProviderConfigurations };
 
             var fileInfo = configurationSource.FileProvider.GetFileInfo(configurationSource.Path);
+            if (!File.Exists(fileInfo.PhysicalPath))
+            {
+                var fs = File.Create(fileInfo.PhysicalPath!);
+                fs.Close();
+            }
             File.WriteAllText(fileInfo.PhysicalPath, JsonSerializer.Serialize(configuration));
 
             _config?.Reload();
