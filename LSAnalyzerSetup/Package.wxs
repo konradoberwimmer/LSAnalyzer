@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<?define Name = "LSAnalyzer" ?>
+<?define Manufacturer = "KonradOberwimmer" ?>
+<?define Version = "1.0.0" ?>
+<?define UpgradeCode = "DEF8B87E-0A4F-4DE5-8E72-44DF0EBFA957" ?>
+
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+	<Package Name="$(Name)" Manufacturer="$(Manufacturer)" Version="$(Version)" UpgradeCode="$(var.UpgradeCode)" Compressed="true">
+		<MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+
+		<Media Id="1" Cabinet="Cab1.cab" EmbedCab="yes" />
+
+		<Directory Id="ProgramFiles64Folder">
+			<Directory Id="ROOTDIRECTORY" Name="$(var.Manufacturer)">
+				<Directory Id="INSTALLFOLDER" Name="$(Name)" />
+			</Directory>
+		</Directory>
+		
+		<Directory Id="ProgramMenuFolder">
+			<Directory Id="ApplicationProgramsFolder" Name="LSAnalyzer"/>
+		</Directory>
+
+		<DirectoryRef Id="ApplicationProgramsFolder">
+			<Component Id="ApplicationShortcut" Guid="$(var.UpgradeCode)">
+				<Shortcut Id="ApplicationStartMenuShortcut"
+						  Name="LSAnalyzer"
+						  Description=".NET App for analyzing large-scale assessment data using R package BIFIEsurvey"
+						  Target="[#LSAnalyzer.exe]"
+						  WorkingDirectory="INSTALLFOLDER"
+						  Icon="favicon.ico"/>
+				<RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall"/>
+				<RegistryValue Root="HKCU" Key="Software\KonradOberwimmer\LSAnalyzer" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+			</Component>
+		</DirectoryRef>
+
+		<Icon Id="favicon.ico" SourceFile="$(var.LSAnalyzer.ProjectDir)app.ico"/>
+		<Property Id="ARPPRODUCTICON" Value="favicon.ico" />
+
+		<Feature Id="LSAnalyzerFeature" Title="LSAnalyzer" Level="1">
+			<ComponentGroupRef Id="LSAnalyzerComponents" />
+			<ComponentRef Id="ApplicationShortcut" />
+		</Feature>
+	</Package>
+</Wix>
