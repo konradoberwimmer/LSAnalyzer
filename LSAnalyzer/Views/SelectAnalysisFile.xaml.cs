@@ -50,8 +50,8 @@ namespace LSAnalyzer.Views
 
             WeakReferenceMessenger.Default.Register<MultiplePossibleDatasetTypesMessage>(this, (r, m) =>
             {
-                var listPossibleDatasetTypeNames = m.Value.ConvertAll(datasetType => datasetType.Name).ToArray();
-                MessageBox.Show("Unable to determine dataset type exactly. May be one of:\n\n" + String.Join("\n", listPossibleDatasetTypeNames), "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                var listPossibleDatasetTypeNames = m.Value.ConvertAll(datasetType => (string.IsNullOrWhiteSpace(datasetType.Group) ? "[no grpup]" : datasetType.Group) + " - " + datasetType.Name).ToArray();
+                MessageBox.Show("Unable to determine dataset type exactly. Might be one of:\n\n" + String.Join("\n", listPossibleDatasetTypeNames), "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             });
 
             WeakReferenceMessenger.Default.Register<MissingRPackageMessage>(this, (r, m) =>
