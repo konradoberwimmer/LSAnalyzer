@@ -77,7 +77,6 @@ namespace LSAnalyzer.ViewModels
                     Weight = "dummyWgt",
                     NMI = 10,
                     MIvar = "dummyMiwar",
-                    Nrep = 5,
                     RepWgts = "dummyRepwgts",
                     FayFac = 1,
                 },

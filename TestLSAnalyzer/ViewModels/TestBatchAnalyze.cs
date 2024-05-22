@@ -65,7 +65,6 @@ namespace TestLSAnalyzer.ViewModels
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };
@@ -114,7 +113,6 @@ namespace TestLSAnalyzer.ViewModels
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };

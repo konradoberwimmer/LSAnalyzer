@@ -470,7 +470,7 @@ namespace LSAnalyzer.Services
             return ReduceToNecessaryVariables(regexNecessaryVariables, subsettingExpression);
         }
 
-        public bool CreateReplicateWeights(int nrep, string weight, string jkzone, string jkrep, bool jkreverse)
+        public bool CreateReplicateWeights(string weight, string jkzone, string jkrep, bool jkreverse)
         {
             try
             {
@@ -489,11 +489,6 @@ namespace LSAnalyzer.Services
                         "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] == lsanalyzer_jk_zone) * (1 - lsanalyzer_dat_raw[, '" + jkrep + "']) * 2;");
                 }
                 EvaluateAndLog("lsanalyzer_repwgts <- grep('lsanalyzer_repwgt_', colnames(lsanalyzer_dat_raw), value = TRUE);");
-                var repWgts = _engine.GetSymbol("lsanalyzer_repwgts").AsCharacter();
-                if (repWgts.Length != nrep)
-                {
-                    return false;
-                }
             }
             catch (Exception)
             {
@@ -503,7 +498,7 @@ namespace LSAnalyzer.Services
             return true;
         }
 
-        public bool CreateBIFIEdataObject(string weight, int nmi, string? mivar, ICollection<PlausibleValueVariable>? pvvars, int nrep, string? repwgts, double? fayfac, bool autoEncapsulatePVvars = false)
+        public bool CreateBIFIEdataObject(string weight, int nmi, string? mivar, ICollection<PlausibleValueVariable>? pvvars, string? repwgts, double? fayfac, bool autoEncapsulatePVvars = false)
         {
             try
             {
@@ -569,7 +564,7 @@ namespace LSAnalyzer.Services
                 var bifieDataObject = _engine.GetSymbol("lsanalyzer_dat_BO").AsList();
                 var nmiReported = (int)bifieDataObject["Nimp"].AsNumeric().First();
                 var nrepReported = (int)bifieDataObject["RR"].AsNumeric().First();
-                if (nmi != nmiReported || nrep != nrepReported)
+                if (nmi != nmiReported)
                 {
                     return false;
                 }
@@ -593,8 +588,7 @@ namespace LSAnalyzer.Services
             if (_engine == null || 
                 analysisConfiguration.FileName == null || 
                 analysisConfiguration.DatasetType == null ||
-                analysisConfiguration.DatasetType.NMI == null ||
-                analysisConfiguration.DatasetType.Nrep == null
+                analysisConfiguration.DatasetType.NMI == null
                 )
             {
                 return false;
@@ -622,7 +616,7 @@ namespace LSAnalyzer.Services
                     return false;
                 }
 
-                if (!CreateReplicateWeights((int)analysisConfiguration.DatasetType.Nrep, analysisConfiguration.DatasetType.Weight, analysisConfiguration.DatasetType.JKzone, analysisConfiguration.DatasetType.JKrep, (bool)analysisConfiguration.DatasetType.JKreverse))
+                if (!CreateReplicateWeights(analysisConfiguration.DatasetType.Weight, analysisConfiguration.DatasetType.JKzone, analysisConfiguration.DatasetType.JKrep, (bool)analysisConfiguration.DatasetType.JKreverse))
                 {
                     return false;
                 }
@@ -630,7 +624,7 @@ namespace LSAnalyzer.Services
                 repWgtsRegex = "lsanalyzer_repwgt_";
             }
 
-            if (!CreateBIFIEdataObject(analysisConfiguration.DatasetType.Weight, (int)analysisConfiguration.DatasetType.NMI, analysisConfiguration.DatasetType.MIvar, analysisConfiguration.DatasetType.PVvarsList, (int)analysisConfiguration.DatasetType.Nrep, repWgtsRegex, analysisConfiguration.DatasetType.FayFac, analysisConfiguration.DatasetType.AutoEncapsulateRegex))
+            if (!CreateBIFIEdataObject(analysisConfiguration.DatasetType.Weight, (int)analysisConfiguration.DatasetType.NMI, analysisConfiguration.DatasetType.MIvar, analysisConfiguration.DatasetType.PVvarsList, repWgtsRegex, analysisConfiguration.DatasetType.FayFac, analysisConfiguration.DatasetType.AutoEncapsulateRegex))
             {
                 return false;
             }
@@ -655,7 +649,7 @@ namespace LSAnalyzer.Services
                     return false;
                 }
 
-                if (!CreateReplicateWeights((int)analysis.AnalysisConfiguration.DatasetType.Nrep, analysis.AnalysisConfiguration.DatasetType.Weight, analysis.AnalysisConfiguration.DatasetType.JKzone, analysis.AnalysisConfiguration.DatasetType.JKrep, (bool)analysis.AnalysisConfiguration.DatasetType.JKreverse))
+                if (!CreateReplicateWeights(analysis.AnalysisConfiguration.DatasetType.Weight, analysis.AnalysisConfiguration.DatasetType.JKzone, analysis.AnalysisConfiguration.DatasetType.JKrep, (bool)analysis.AnalysisConfiguration.DatasetType.JKreverse))
                 {
                     return false;
                 }
@@ -663,7 +657,7 @@ namespace LSAnalyzer.Services
                 repWgtsRegex = "lsanalyzer_repwgt_";
             }
 
-            if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI, analysis.AnalysisConfiguration.DatasetType.MIvar, analysis.AnalysisConfiguration.DatasetType.PVvarsList, (int)analysis.AnalysisConfiguration.DatasetType.Nrep, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex))
+            if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI, analysis.AnalysisConfiguration.DatasetType.MIvar, analysis.AnalysisConfiguration.DatasetType.PVvarsList, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex))
             {
                 return false;
             }

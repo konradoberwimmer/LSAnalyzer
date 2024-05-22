@@ -66,7 +66,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "wgt",
                     NMI = 10, MIvar = "mi",
-                    Nrep = 5, RepWgts = "repwgt", FayFac = 0.5,
+                    RepWgts = "repwgt", FayFac = 0.5,
                 },
                 ModeKeep = true,
             };
@@ -77,7 +77,6 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "wgt",
                     NMI = 10, MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = false,
             };
@@ -140,7 +139,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
                 },
@@ -154,7 +152,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = false,
             };
@@ -216,7 +213,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
                 },
@@ -230,7 +226,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = false,
             };

@@ -112,20 +112,11 @@
                     </DataGrid>
                 </StackPanel>
             </GroupBox>
-            <GroupBox Grid.Column="1"  Margin="5,10,10,0" VerticalAlignment="Top" Width="400">
+            <GroupBox Grid.Column="1"  Margin="5,10,10,0" VerticalAlignment="Top" Width="400" Height="254">
                 <GroupBox.Header>
                     <TextBlock FontWeight="DemiBold"><Run Text="Replicate Weights"/></TextBlock>
                 </GroupBox.Header>
-                <StackPanel>
-                    <TextBlock TextWrapping="Wrap" Text="Number of replications:"/>
-                    <TextBox x:Name="textBoxNRep" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.Nrep, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left">
-                        <ToolTipService.ToolTip>
-                            <TextBlock Text="{Binding SelectedDatasetType.Errors[Nrep]}" Foreground="Red"/>
-                        </ToolTipService.ToolTip>
-                        <ToolTipService.IsEnabled>
-                            <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Nrep"/>
-                        </ToolTipService.IsEnabled>
-                    </TextBox>
+                <StackPanel Margin="0,5,0,0">
                     <TextBlock TextWrapping="Wrap" Text="Replication variance adjustment factor (argument fayfac in BIFIEsurvey):"/>
                     <TextBox x:Name="textBoxFayFac" TextWrapping="Wrap" Width="50" Text="{Binding SelectedDatasetType.FayFac}" HorizontalAlignment="Left">
                         <ToolTipService.ToolTip>

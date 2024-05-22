@@ -394,7 +394,7 @@ namespace LSAnalyzer.ViewModels
 
                 if (!String.IsNullOrWhiteSpace(datasetType.RepWgts))
                 {
-                    if (variables.Where(var => Regex.IsMatch(var.Name, StringFormats.EncapsulateRegex(datasetType.RepWgts, datasetType.AutoEncapsulateRegex)!)).Count() != datasetType.Nrep)
+                    if (!variables.Where(var => Regex.IsMatch(var.Name, StringFormats.EncapsulateRegex(datasetType.RepWgts, datasetType.AutoEncapsulateRegex)!)).Any())
                     {
                         continue;
                     } else

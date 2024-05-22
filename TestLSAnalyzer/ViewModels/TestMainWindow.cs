@@ -54,7 +54,6 @@ namespace TestLSAnalyzer.ViewModels
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 1,
                 },
@@ -64,7 +63,7 @@ namespace TestLSAnalyzer.ViewModels
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 0.5));
 
             MainWindow mainWindowViewModel = new(rservice);
 
@@ -110,13 +109,12 @@ namespace TestLSAnalyzer.ViewModels
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             AnalysisFreq analysisFreq = new(analysisConfiguration)
             {
@@ -147,7 +145,6 @@ namespace TestLSAnalyzer.ViewModels
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 1,
                 },
@@ -157,7 +154,7 @@ namespace TestLSAnalyzer.ViewModels
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 0.5));
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
@@ -194,7 +191,6 @@ namespace TestLSAnalyzer.ViewModels
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 1,
                 },
@@ -231,7 +227,6 @@ namespace TestLSAnalyzer.ViewModels
                 Weight = "wgt;wgt100",
                 NMI = 10,
                 MIvar = "mi",
-                Nrep = 1,
                 FayFac = 1
             };
 
@@ -313,7 +308,6 @@ namespace TestLSAnalyzer.ViewModels
                 Name = "Dummy",
                 Description = "Test",
                 NMI = 1,
-                Nrep = 1,
             };
 
             AnalysisConfiguration dummyAnalysisConfiguration = new()

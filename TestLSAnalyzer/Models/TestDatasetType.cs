@@ -14,11 +14,11 @@ namespace TestLSAnalyzer.Models
             new List<object[]>
             {
                 new object[] { new DatasetType(), false},
-                new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", Nrep = 1 }, true},
-                new object[] { new DatasetType() { Name = "AB", Weight = "TOTWGT", NMI = 1, MIvar = "one", Nrep = 1 }, false},
-                new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } }, Nrep = 1 }, false},
-                new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", Nrep = 1, RepWgts = "[" }, false},
-                new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", Nrep = 1, RepWgts = "wgtrep[0-9]*" }, true},
+                new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one" }, true},
+                new object[] { new DatasetType() { Name = "AB", Weight = "TOTWGT", NMI = 1, MIvar = "one" }, false},
+                new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } } }, false},
+                new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", RepWgts = "[" }, false},
+                new object[] { new DatasetType() { Name = "New dataset type", Weight = "TOTWGT", NMI = 1, MIvar = "one", RepWgts = "wgtrep[0-9]*" }, true},
                 new object[] { DatasetType.CreateDefaultDatasetTypes().FirstOrDefault()!, true }
             };
 

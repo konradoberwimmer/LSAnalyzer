@@ -50,7 +50,6 @@ namespace TestLSAnalyzer.ViewModels
                 Weight = "wgt",
                 NMI = 10,
                 MIvar = "mi",
-                Nrep = 5,
                 RepWgts = "repwgt",
             });
 
@@ -68,7 +67,6 @@ namespace TestLSAnalyzer.ViewModels
                 Weight = "wgt",
                 NMI = 10,
                 MIvar = "mi",
-                Nrep = 5,
                 RepWgts = "repwgt",
             });
 
@@ -86,7 +84,6 @@ namespace TestLSAnalyzer.ViewModels
                 Weight = "wgt",
                 NMI = 10,
                 PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
-                Nrep = 5,
                 RepWgts = "repwgt",
             });
             selectAnalysisFileViewModel.SelectedAnalysisMode = SelectAnalysisFile.AnalysisModes.Build;
@@ -104,7 +101,6 @@ namespace TestLSAnalyzer.ViewModels
                 Weight = "wgt",
                 NMI = 10,
                 PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
-                Nrep = 1,
             });
 
             selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
@@ -137,7 +133,6 @@ namespace TestLSAnalyzer.ViewModels
                 Weight = "wgt",
                 NMI = 10,
                 PVvarsList = new() { new() { Regex = "x[0-9]+", DisplayName = "x", Mandatory = true } },
-                Nrep = 5,
                 RepWgts = "repwgt",
             });
 
@@ -154,7 +149,6 @@ namespace TestLSAnalyzer.ViewModels
                 Weight = "wgt",
                 NMI = 10,
                 PVvarsList = new() { new() { Regex = "x[0-9]+", DisplayName = "x", Mandatory = true } },
-                Nrep = 5,
                 RepWgts = "repwgt[0-9]+",
             });
 
@@ -233,7 +227,6 @@ namespace TestLSAnalyzer.ViewModels
                 Weight = "wgtstud",
                 NMI = 10,
                 MIvar = "mi",
-                Nrep = 3,
                 RepWgts = "repwgt",
             };
 
@@ -265,7 +258,6 @@ namespace TestLSAnalyzer.ViewModels
                 Weight = "wgt",
                 NMI = 10,
                 MIvar = "mi",
-                Nrep = 5,
                 RepWgts = "repwgt",
             };
 
@@ -302,7 +294,6 @@ namespace TestLSAnalyzer.ViewModels
                 Weight = "wgt",
                 NMI = 10,
                 PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
-                Nrep = 5,
                 RepWgts = "repwgt",
                 FayFac = 0.5,
             };

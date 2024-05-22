@@ -74,13 +74,6 @@ namespace LSAnalyzer.Models
             };
             OnPropertyChanged(nameof(IsChanged));
         }
-        [Required(ErrorMessage = "Number of replications is required!")]
-        [Range(1, int.MaxValue, ErrorMessage = "Number of replications has to be at least 1!")]
-        [ObservableProperty] private int? _Nrep;
-        partial void OnNrepChanged(int? value)
-        {
-            OnPropertyChanged(nameof(IsChanged));
-        }
         [ValidRegex("Invalid regex pattern!")]
         [ObservableProperty] private string? _repWgts;
         partial void OnRepWgtsChanged(string? value)
@@ -151,7 +144,6 @@ namespace LSAnalyzer.Models
             {
                 PVvarsList.Add(new(pvvar));
             }
-            Nrep = datasetType.Nrep;
             RepWgts = datasetType.RepWgts;
             FayFac = datasetType.FayFac;
             JKzone = datasetType.JKzone;
@@ -222,7 +214,7 @@ namespace LSAnalyzer.Models
                         new() { Regex = "ASRRSI", DisplayName = "ASRRSI", Mandatory = true},
                         new() { Regex = "ASRIBM", DisplayName = "ASRIBM", Mandatory = false},
                     },
-                    Nrep = 75, FayFac = 1, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = false,
+                    FayFac = 1, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = false,
                 },
                 new DatasetType
                 {
@@ -236,7 +228,7 @@ namespace LSAnalyzer.Models
                         new() { Regex = "ASRRSI", DisplayName = "ASRRSI", Mandatory = true},
                         new() { Regex = "ASRIBM", DisplayName = "ASRIBM", Mandatory = true},
                     },
-                    Nrep = 150, FayFac = 0.5, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = true,
+                    FayFac = 0.5, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = true,
                 },
                 new DatasetType
                 {
@@ -250,7 +242,7 @@ namespace LSAnalyzer.Models
                         new() { Regex = "ASSIBM", DisplayName = "ASSIBM", Mandatory = true},
                         new() { Regex = "ASRIBM", DisplayName = "ASRIBM", Mandatory = true},
                     },
-                    Nrep = 75, FayFac = 1, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = false,
+                    FayFac = 1, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = false,
                 },
                 new DatasetType
                 {
@@ -273,7 +265,7 @@ namespace LSAnalyzer.Models
                         new() { Regex = "asmibm", DisplayName = "asmibm", Mandatory = true},
                         new() { Regex = "assibm", DisplayName = "assibm", Mandatory = true},
                     },
-                    Nrep = 75, FayFac = 1, JKzone = "jkzone", JKrep = "jkrep", JKreverse = false,
+                    FayFac = 1, JKzone = "jkzone", JKrep = "jkrep", JKreverse = false,
                 },
                 new DatasetType
                 {
@@ -298,7 +290,7 @@ namespace LSAnalyzer.Models
                         new() { Regex = "bsmibm", DisplayName = "bsmibm", Mandatory = true},
                         new() { Regex = "bssibm", DisplayName = "bssibm", Mandatory = true},
                     },
-                    Nrep = 75, FayFac = 1, JKzone = "jkzone", JKrep = "jkrep", JKreverse = false,
+                    FayFac = 1, JKzone = "jkzone", JKrep = "jkrep", JKreverse = false,
                 },
                 new DatasetType
                 {
@@ -322,7 +314,7 @@ namespace LSAnalyzer.Models
                         new() { Regex = "ASMIBM", DisplayName = "ASMIBM", Mandatory = true},
                         new() { Regex = "ASSIBM", DisplayName = "ASSIBM", Mandatory = true},
                     },
-                    Nrep = 75, FayFac = 1, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = false,
+                    FayFac = 1, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = false,
                 },
                 new DatasetType
                 {
@@ -348,7 +340,7 @@ namespace LSAnalyzer.Models
                         new() { Regex = "BSMIBM", DisplayName = "BSMIBM", Mandatory = true},
                         new() { Regex = "BSSIBM", DisplayName = "BSSIBM", Mandatory = true},
                     },
-                    Nrep = 75, FayFac = 1, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = false,
+                    FayFac = 1, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = false,
                 },
                 new DatasetType
                 {
@@ -373,7 +365,7 @@ namespace LSAnalyzer.Models
                         new() { Regex = "ASMIBM", DisplayName = "ASMIBM", Mandatory = true},
                         new() { Regex = "ASSIBM", DisplayName = "ASSIBM", Mandatory = true},
                     },
-                    Nrep = 150, FayFac = 0.5, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = true,
+                    FayFac = 0.5, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = true,
                 },
                 new DatasetType
                 {
@@ -400,7 +392,7 @@ namespace LSAnalyzer.Models
                         new() { Regex = "BSMIBM", DisplayName = "BSMIBM", Mandatory = true},
                         new() { Regex = "BSSIBM", DisplayName = "BSSIBM", Mandatory = true},
                     },
-                    Nrep = 150, FayFac = 0.5, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = true,
+                    FayFac = 0.5, JKzone = "JKZONE", JKrep = "JKREP", JKreverse = true,
                 },
                 new DatasetType
                 {
@@ -434,7 +426,7 @@ namespace LSAnalyzer.Models
                         new() { Regex = "PV[0-9]+MATH5", DisplayName = "PVMATH5", Mandatory = false},
                         new() { Regex = "PV[0-9]+PROB", DisplayName = "PVPROB", Mandatory = false},
                     },
-                    Nrep = 80, RepWgts = "W_FSTR", FayFac = 0.05, JKreverse = false,
+                    RepWgts = "W_FSTR", FayFac = 0.05, JKreverse = false,
                 },
                 new DatasetType
                 {
@@ -459,21 +451,21 @@ namespace LSAnalyzer.Models
                         new() { Regex = "PV[0-9]+SSLI", DisplayName = "PVSSLI", Mandatory = false},
                         new() { Regex = "PV[0-9]+SSES", DisplayName = "PVSSES", Mandatory = false},
                     },
-                    Nrep = 80, RepWgts = "W_FSTURWT", FayFac = 0.05, JKreverse = false,
+                    RepWgts = "W_FSTURWT", FayFac = 0.05, JKreverse = false,
                 },
                 new DatasetType
                 {
                     Id = 401, Name = "TALIS - principal level", Group = "TALIS", Description = "TALIS - principal level",
                     Weight = "SCHWGT", IDvar = "IDSCHOOL",
                     NMI = 1,
-                    Nrep = 100, RepWgts = "SRWGT", FayFac = 0.04, JKreverse = false,
+                    RepWgts = "SRWGT", FayFac = 0.04, JKreverse = false,
                 },
                 new DatasetType
                 {
                     Id = 402, Name = "TALIS - teacher level", Group = "TALIS", Description = "TALIS - teacher level",
                     Weight = "TCHWGT", IDvar = "IDTEACH",
                     NMI = 1,
-                    Nrep = 100, RepWgts = "TRWGT", FayFac = 0.04, JKreverse = false,
+                    RepWgts = "TRWGT", FayFac = 0.04, JKreverse = false,
                 },
                 new DatasetType
                 {
@@ -484,7 +476,7 @@ namespace LSAnalyzer.Models
                         new() { Regex = "PVNUM", DisplayName = "PVNUM", Mandatory = true},
                         new() { Regex = "PVPSL", DisplayName = "PVPSL", Mandatory = true},
                     },
-                    Nrep = 80, RepWgts = "SPFWT[1-9][0-9]?", FayFac = 1, JKreverse = false,
+                    RepWgts = "SPFWT[1-9][0-9]?", FayFac = 1, JKreverse = false,
                 },
                 new DatasetType
                 {
@@ -494,7 +486,7 @@ namespace LSAnalyzer.Models
                         new() { Regex = "PV[0-9]+CIL", DisplayName = "PVCIL", Mandatory = true},
                         new() { Regex = "PV[0-9]+CT", DisplayName = "PVCT", Mandatory = false},
                     },
-                    Nrep = 75, RepWgts = "SRWGT[0-9]+", FayFac = 1, JKreverse = false,
+                    RepWgts = "SRWGT[0-9]+", FayFac = 1, JKreverse = false,
                 },
             };
         }

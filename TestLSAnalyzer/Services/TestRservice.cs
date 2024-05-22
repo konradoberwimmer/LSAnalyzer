@@ -174,7 +174,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
                 },
@@ -190,15 +189,14 @@ namespace TestLSAnalyzer.Services
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_create_repwgts.sav")));
-            Assert.False(rservice.CreateReplicateWeights(2, "wgt", "jkzoooone", "jkrep", false));
-            Assert.True(rservice.CreateReplicateWeights(2, "wgt", "jkzone", "jkrep", false));
+            Assert.False(rservice.CreateReplicateWeights("wgt", "jkzoooone", "jkrep", false));
+            Assert.True(rservice.CreateReplicateWeights("wgt", "jkzone", "jkrep", false));
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_create_repwgts.sav")));
-            Assert.False(rservice.CreateReplicateWeights(2, "wgt", "jkzone", "jkrep", true));
-            Assert.True(rservice.CreateReplicateWeights(4, "wgt", "jkzone", "jkrep", true));
+            Assert.True(rservice.CreateReplicateWeights("wgt", "jkzone", "jkrep", true));
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_create_repwgts.sav")));
-            Assert.False(rservice.CreateReplicateWeights(2, "wgtstud", "jkzone", "jkrep", false));
+            Assert.False(rservice.CreateReplicateWeights("wgtstud", "jkzone", "jkrep", false));
         }
 
         [Fact]
@@ -209,7 +207,7 @@ namespace TestLSAnalyzer.Services
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_create_repwgts.sav")));
             Assert.True(rservice.ApplySubsetting("subset == 1"));
 
-            Assert.True(rservice.CreateReplicateWeights(2, "wgt", "jkzone", "jkrep", false));
+            Assert.True(rservice.CreateReplicateWeights("wgt", "jkzone", "jkrep", false));
         }
 
         [Fact]
@@ -219,10 +217,9 @@ namespace TestLSAnalyzer.Services
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav")));
-            Assert.False(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 3, "repwgt", 1));
-            Assert.False(rservice.CreateBIFIEdataObject("wgt", 10, null, null, 5, "repwgt", 1));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 1));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 0.5));
+            Assert.False(rservice.CreateBIFIEdataObject("wgt", 10, null, null, "repwgt", 1));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 0.5));
         }
 
         [Fact]
@@ -236,7 +233,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
                 },
@@ -246,7 +242,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 0.5));
 
             var variablesList = rservice.GetCurrentDatasetVariables(analysisConfiguration);
             Assert.NotNull(variablesList);
@@ -262,7 +258,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
                 },
@@ -287,7 +282,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
                 },
@@ -320,7 +314,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 1,
                 },
@@ -360,7 +353,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 1,
                 },
@@ -394,7 +386,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 1,
                 },
@@ -404,7 +395,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 1));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1));
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
@@ -431,7 +422,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 1,
                 },
@@ -473,7 +463,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 1,
                 },
@@ -483,7 +472,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 1));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1));
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
@@ -536,7 +525,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "TOTWGT",
                     NMI = 5,
                     PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } },
-                    Nrep = 150,
                     FayFac = 0.5,
                     JKzone = "JKZONE",
                     JKrep = "JKREP",
@@ -586,7 +574,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "TOTWGT",
                     NMI = 5,
                     PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } },
-                    Nrep = 150,
                     FayFac = 0.5,
                     JKzone = "JKZONE",
                     JKrep = "JKREP",
@@ -632,7 +619,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };
@@ -640,7 +626,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             AnalysisFreq analysisFreq = new(analysisConfiguration)
             {
@@ -667,7 +653,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = false,
             };
@@ -704,7 +689,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };
@@ -712,7 +696,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             AnalysisFreq analysisFreq = new(analysisConfiguration)
             {
@@ -744,7 +728,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };
@@ -752,7 +735,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             AnalysisFreq analysisFreq = new(analysisConfiguration)
             {
@@ -782,7 +765,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 1,
                 },
@@ -792,7 +774,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 1));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1));
 
             AnalysisPercentiles analysisPercentiles = new(analysisConfiguration)
             {
@@ -834,7 +816,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 1,
                 },
@@ -845,7 +826,7 @@ namespace TestLSAnalyzer.Services
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.InjectAppFunctions());
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 5, "repwgt", 1));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1));
 
             AnalysisPercentiles analysisPercentiles = new(analysisConfiguration)
             {
@@ -898,7 +879,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };
@@ -906,7 +886,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             AnalysisCorr analysisCorr = new(analysisConfiguration)
             {
@@ -934,7 +914,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = false,
             };
@@ -971,7 +950,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };
@@ -979,7 +957,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             AnalysisLinreg analysisLinreg = new(analysisConfiguration)
             {
@@ -1007,7 +985,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = false,
             };
@@ -1045,7 +1022,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };
@@ -1053,7 +1029,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             AnalysisLinreg analysisLinregForward = new(analysisConfiguration)
             {
@@ -1092,7 +1068,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };
@@ -1100,7 +1075,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             AnalysisLinreg analysisLinregBackward = new(analysisConfiguration)
             {
@@ -1140,7 +1115,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };
@@ -1148,7 +1122,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             AnalysisLogistReg analysisLogistReg = new(analysisConfiguration)
             {
@@ -1174,7 +1148,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = false,
             };
@@ -1212,7 +1185,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };
@@ -1220,7 +1192,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             AnalysisLogistReg analysisLogistRegForward = new(analysisConfiguration)
             {
@@ -1302,7 +1274,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     MIvar = "mi",
-                    Nrep = 1,
                 },
                 ModeKeep = true,
             };
@@ -1310,7 +1281,7 @@ namespace TestLSAnalyzer.Services
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             AnalysisCorr analysisCorr = new(analysisConfiguration)
             {
@@ -1323,14 +1294,14 @@ namespace TestLSAnalyzer.Services
 
             analysisConfiguration.FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem_resorted.sav");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             var resultCorrupt = rservice.CalculateCorr(analysisCorr);
             Assert.NotEqual((double)result![0]["stat.cor"].AsDataFrame()["cor_SE"][1], (double)resultCorrupt![0]["stat.cor"].AsDataFrame()["cor_SE"][1]);
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName, null));
             Assert.True(rservice.SortRawDataStored("id"));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, 1, null, null));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
 
             var resultCorrect = rservice.CalculateCorr(analysisCorr);
             Assert.Equal((double)result![0]["stat.cor"].AsDataFrame()["cor_SE"][1], (double)resultCorrect![0]["stat.cor"].AsDataFrame()["cor_SE"][1]);
@@ -1347,7 +1318,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "TOTWGT",
                     NMI = 5,
                     PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } },
-                    Nrep = 150,
                     FayFac = 0.5,
                     JKzone = "JKZONE",
                     JKrep = "JKREP",
@@ -1426,7 +1396,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = true } },
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
                 },
@@ -1440,7 +1409,6 @@ namespace TestLSAnalyzer.Services
                     Weight = "wgt",
                     NMI = 10,
                     PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "yoptional", Mandatory = false } },
-                    Nrep = 5,
                     RepWgts = "repwgt",
                     FayFac = 0.5,
                 },
@@ -1455,29 +1423,29 @@ namespace TestLSAnalyzer.Services
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileFullPVs));
             Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationAll)));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = true } }, 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = true } }, "repwgt", 0.5));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.Contains("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileFullPVs));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "yoptional", Mandatory = false } }, 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "yoptional", Mandatory = false } }, "repwgt", 0.5));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.Contains("yoptional", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationSome)));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, "repwgt", 0.5));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileMissingPVs));
-            Assert.False(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = true } }, 5, "repwgt", 0.5));
+            Assert.False(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = true } }, "repwgt", 0.5));
             Assert.False(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationAll)));
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileMissingPVs));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, "repwgt", 0.5));
             Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationSome)));
-            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, 5, "repwgt", 0.5));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, "repwgt", 0.5));
             Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
 
