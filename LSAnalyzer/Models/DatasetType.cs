@@ -52,7 +52,6 @@ namespace LSAnalyzer.Models
         {
             OnPropertyChanged(nameof(IsChanged));
         }
-        [RequiredInsteadOf(nameof(PVvarsList), "Either indicator variable for multiple imputations or plausible value variables are requried! If there is no MI/PV involved, add a constant of one to the dataset.")]
         [MutuallyExclusive(nameof(PVvarsList), "Cannot specify both indicator variable for multiple imputations and plausible value variables!")]
         [ObservableProperty] private string? _MIvar;
         partial void OnMIvarChanged(string? value)
