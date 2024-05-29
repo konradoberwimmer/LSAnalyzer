@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Media;
 
 namespace LSAnalyzer.Views.CustomControls
 {
@@ -86,6 +87,32 @@ namespace LSAnalyzer.Views.CustomControls
                     }
                 }
             }
+        }
+
+        private void DataGrid_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if (sender is not DataGrid dataGrid)
+            {
+                return;
+            }
+
+            var dataGridScrollViewer = WPFHelper.FindVisualChild<ScrollViewer>(dataGrid);
+            if (dataGridScrollViewer == null || dataGridScrollViewer.ComputedVerticalScrollBarVisibility == Visibility.Visible)
+            {
+                return;
+            }
+
+            DependencyObject? parent = dataGrid.Parent;
+            do
+            {
+                if (parent is ScrollViewer scrollViewer)
+                { 
+                    scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - e.Delta);
+                    break;
+                }
+
+                parent = VisualTreeHelper.GetParent(parent);
+            } while (parent != null);
         }
     }
 }

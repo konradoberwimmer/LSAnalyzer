@@ -79,12 +79,12 @@
                                 <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="Move mouse cursor above column headers to see value labels"/>
                                 <TextBlock Text="Point mouse at column headers to read value labels"/>
                             </StackPanel>
-                            <DataGrid Grid.Row="0" x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataView}" AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top" MinColumnWidth="100" ColumnWidth="SizeToCells"/>
+                            <DataGrid Grid.Row="0" x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataView}" AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top" MinColumnWidth="100" ColumnWidth="SizeToCells" PreviewMouseWheel="DataGrid_MouseWheel"/>
                         </StackPanel>
                         <fa:IconImage Grid.Row="0" Icon="Sun" fa:Awesome.Spin="True" VerticalAlignment="Top" Height="20" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
                         <StackPanel Grid.Row="1" Margin="0,10,0,0"  Orientation="Vertical" VerticalAlignment="Top" Visibility="{Binding TableSecondary, Converter={StaticResource NullToVisibilityCollapsedConverter}}">
                             <TextBlock Text="{Binding TableSecondary.TableName}"/>
-                            <DataGrid x:Name="dataGridCov" IsReadOnly="True" ItemsSource="{Binding SecondaryDataView}" AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" MinColumnWidth="100" ColumnWidth="SizeToCells">
+                            <DataGrid x:Name="dataGridCov" IsReadOnly="True" ItemsSource="{Binding SecondaryDataView}" AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" MinColumnWidth="100" ColumnWidth="SizeToCells" PreviewMouseWheel="DataGrid_MouseWheel">
 
                             </DataGrid>
                         </StackPanel>
