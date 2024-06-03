@@ -1,4 +1,7 @@
 ﻿<Project Sdk="WixToolset.Sdk/5.0.0">
+  <PropertyGroup>
+    <OutputName>LSAnalyzer</OutputName>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\LSAnalyzer\LSAnalyzer.csproj" />
   </ItemGroup>
