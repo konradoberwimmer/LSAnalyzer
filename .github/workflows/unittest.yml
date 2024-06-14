@@ -22,6 +22,8 @@ jobs:
       with:
         packages: |
           any::BIFIEsurvey
+          any::openxlsx
+          any::dataverse
     - name: Checkout
       uses: actions/checkout@v4
     - name: Setup .NET
