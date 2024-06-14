@@ -4,18 +4,27 @@ using FlaUI.Core.Conditions;
 using FlaUI.Core.Definitions;
 using FlaUI.Core.Tools;
 using FlaUI.UIA3;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TestLSAnalyzer.Services.DataProvider;
 
-namespace TestLSAnalyzer;
+namespace TestLSAnalyzerUI;
 
 [Collection("Sequential")]
 public class TestAppAussda : SystemTestsBase
 {
+    internal static string GetTestApiToken()
+    {
+        ConfigurationBuilder builder = new();
+        builder.AddUserSecrets<TestAppAussda>();
+
+        var configuration = builder.Build();
+        return (string)configuration["testDataverseKey"]!;
+    }
+
     [Fact]
     public void TestAussdaWorkflow()
     {
@@ -40,7 +49,7 @@ public class TestAppAussda : SystemTestsBase
         newProviderUrl.Text = "https://data.aussda.at/";
         var newProviderApiToken = dataProviderDialog.FindAllDescendants(cf.ByControlType(ControlType.Edit)).LastOrDefault().AsTextBox();
         Assert.NotNull(newProviderApiToken);
-        var apiToken = TestDataverse.GetTestApiToken();
+        var apiToken = GetTestApiToken();
         Assert.True(!string.IsNullOrWhiteSpace(apiToken), "dataverse access (https://data.aussda.at/) not working - be sure to set up an API key in your user secrets");
         newProviderApiToken.Text = apiToken;
         var buttonSaveDataProvider = dataProviderDialog.FindAllDescendants(cf.ByName("Save")).First().AsButton();

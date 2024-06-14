@@ -6,7 +6,7 @@ using FlaUI.Core.Tools;
 using FlaUI.UIA3;
 using System.Reflection;
 
-namespace TestLSAnalyzer;
+namespace TestLSAnalyzerUI;
 
 [Collection("Sequential")]
 public class TestAppPirls : SystemTestsBase
