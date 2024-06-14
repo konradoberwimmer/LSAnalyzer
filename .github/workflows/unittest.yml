@@ -35,4 +35,4 @@ jobs:
     - name: Build
       run: dotnet build TestLSAnalyzer --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal --filter FullyQualifiedName!=TestLSAnalyzerUI
+      run: dotnet test --no-build --verbosity quiet --filter FullyQualifiedName!=TestLSAnalyzerUI
