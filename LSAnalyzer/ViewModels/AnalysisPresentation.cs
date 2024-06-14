@@ -25,6 +25,8 @@ namespace LSAnalyzer.ViewModels
 {
     public partial class AnalysisPresentation : INotifyPropertyChanged
     {
+        protected MainWindow? _mainWindowViewModel = null;
+
         private IResultService? _resultService;
         public IResultService ResultService
         {
@@ -273,6 +275,8 @@ namespace LSAnalyzer.ViewModels
             {
                 _busy = value;
                 NotifyPropertyChanged(nameof(IsBusy));
+
+                _mainWindowViewModel?.NotifyIsBusy();
             }
         }
 
@@ -341,11 +345,12 @@ namespace LSAnalyzer.ViewModels
             SecondaryDataView = new(TableSecondary);
         }
 
-        public AnalysisPresentation(Analysis analysis)
+        public AnalysisPresentation(Analysis analysis, MainWindow? mainWindowViewModel = null)
         {
             Analysis = analysis;
             DataTable = new();
             DataView = new(DataTable);
+            _mainWindowViewModel = mainWindowViewModel;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

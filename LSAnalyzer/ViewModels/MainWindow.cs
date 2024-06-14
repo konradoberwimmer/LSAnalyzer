@@ -62,6 +62,15 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        public bool IsBusy
+        {
+            get => Analyses.Any(analysis => analysis.IsBusy);
+        }
+        public void NotifyIsBusy()
+        {
+            NotifyPropertyChanged(nameof(IsBusy));
+        }
+
         public Dictionary<Type, Analysis> RecentAnalyses { get; } = new();
 
         [ExcludeFromCodeCoverage]
@@ -152,7 +161,7 @@ namespace LSAnalyzer.ViewModels
 
             WeakReferenceMessenger.Default.Register<RequestAnalysisMessage>(this, (r, m) =>
             {
-                AnalysisPresentation analysisPresentation = new(m.Value);
+                AnalysisPresentation analysisPresentation = new(m.Value, this);
 
                 Analyses.Add(analysisPresentation);
                 if (RecentAnalyses.ContainsKey(m.Value.GetType()))

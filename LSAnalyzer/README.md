@@ -4,7 +4,6 @@ Test and debug!
 * split application core and UI in separate assemblies to possibly switch to AvaloniaUI
 * create an automated test suite for a wider range of published trustful coefficients from known data (PIRLS, PISA school level, ...) that conducts realistic workflows
 * refactoring of data table creation and management OR switch from BIFIEsurvey to a specialized R package for LSAnalyzer
-* lock analyses when currently calculating
 
 # Nice-to-have
 * actual list of weight variables with descriptions and optinal weight variables

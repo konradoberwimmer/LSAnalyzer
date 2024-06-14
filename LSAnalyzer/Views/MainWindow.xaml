@@ -38,11 +38,11 @@
     </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File">
+            <MenuItem Header="_File" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
                 <MenuItem x:Name="menuItemAnalysisSelectFile" Header="Select File ..." Click="MenuItemAnalysisSelectFile_Click"/>
                 <MenuItem x:Name="menuItemAnalysisSubsetting" Header="Subsetting ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisSubsetting_Click"/>
             </MenuItem>
-            <MenuItem Header="_Analysis">
+            <MenuItem Header="_Analysis" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
                 <MenuItem x:Name="menuItemAnalysisUnivar" Header="Univariate (means and SD) ..." Click="MenuItemAnalysisUnivar_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisFrequencies" Header="Frequencies ..." Click="MenuItemAnalysisFreq_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisPercentiles" Header="Percentiles ..." Click="MenuItemAnalysisPercentiles_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
