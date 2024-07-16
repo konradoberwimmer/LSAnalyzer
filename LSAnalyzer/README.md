@@ -1,6 +1,7 @@
 ﻿# ToDo-List
 Test and debug!
 
+* update and fix session log to provide reproducible R code of the whole session
 * split application core and UI in separate assemblies to possibly switch to AvaloniaUI
 * refactoring of data table creation and management OR switch from BIFIEsurvey to a specialized R package for LSAnalyzer
 
