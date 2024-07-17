@@ -68,9 +68,9 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        public string? SessionLog
+        public Logging SessionLog
         {
-            get => _logger.Stringify();
+            get => _logger;
         }
 
         [ExcludeFromCodeCoverage]

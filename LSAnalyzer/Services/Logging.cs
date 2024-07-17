@@ -9,15 +9,11 @@ namespace LSAnalyzer.Services
     public class Logging
     {
         private List<LogEntry> _logEntries = new();
+        public List<LogEntry> LogEntries { get => _logEntries; }
 
         public void AddEntry(LogEntry logEntry)
         {
             _logEntries.Add(logEntry);
-        }
-
-        public string Stringify()
-        {
-            return String.Join("\n", _logEntries.ConvertAll<string>(logEntry => logEntry.Stringify()).ToArray());
         }
 
         public string GetRcode()
@@ -38,17 +34,14 @@ namespace LSAnalyzer.Services
         public string Rcode { get; set; }
         public bool OneLiner { get; set; }
 
+        public string RcodeForTableCell => (OneLiner && Rcode.Contains('\n')) ? Rcode.Substring(0, Rcode.IndexOf('\n')) + "\n..." : Rcode;
+
         public LogEntry(DateTime when, string rcode, string? analysisName = null, bool oneLiner = false)
         {
             When = when;
             Rcode = rcode;
             AnalysisName = analysisName;
             OneLiner = oneLiner;
-        }
-
-        public string Stringify()
-        {
-            return When.ToString() + " - " + AnalysisName + " - " + ((OneLiner && Rcode.Contains('\n')) ? Rcode.Substring(0, Rcode.IndexOf('\n')) : Rcode);
         }
 
         public string ToFullText()
