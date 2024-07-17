@@ -68,9 +68,9 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        public string? SessionLog
+        public Logging SessionLog
         {
-            get => _logger.Stringify();
+            get => _logger;
         }
 
         [ExcludeFromCodeCoverage]
@@ -175,7 +175,28 @@ namespace LSAnalyzer.ViewModels
             }
 
             using StreamWriter streamWriter = new(filename, false);
-            streamWriter.Write(_logger.Stringify());
+            streamWriter.Write(_logger.GetFullText());
+        }
+
+        private RelayCommand<string?> _saveSessionRcodeCommand = null!;
+        public ICommand SaveSessionRcodeCommand
+        {
+            get
+            {
+                _saveSessionRcodeCommand ??= new RelayCommand<string?>(this.SaveSessionRcode);
+                return _saveSessionRcodeCommand;
+            }
+        }
+
+        private void SaveSessionRcode(string? filename)
+        {
+            if (filename == null)
+            {
+                return;
+            }
+
+            using StreamWriter streamWriter = new(filename, false);
+            streamWriter.Write(_logger.GetRcode());
         }
     }
 

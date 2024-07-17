@@ -38,7 +38,7 @@ namespace LSAnalyzer.Services
 
         private SymbolicExpression EvaluateAndLog(string what, string? analysisName = null, bool oneLiner = false)
         {
-            _logger.AddEntry(new LogEntry(DateTime.Now, (oneLiner && what.Contains("\n")) ? what.Substring(0, what.IndexOf("\n")) : what, analysisName));
+            _logger.AddEntry(new LogEntry(DateTime.Now, what, analysisName, oneLiner));
             return _engine!.Evaluate(what);
         }
 
@@ -1354,11 +1354,11 @@ namespace LSAnalyzer.Services
             }
         }
 
-        public virtual bool Execute(string rCode)
+        public virtual bool Execute(string rCode, bool oneLiner = false)
         {
             try
             {
-                EvaluateAndLog(rCode, null, true);
+                EvaluateAndLog(rCode, null, oneLiner);
                 return true;
             } catch
             {

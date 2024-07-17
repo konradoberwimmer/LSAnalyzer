@@ -45,6 +45,26 @@ namespace LSAnalyzer.Views
             System.Diagnostics.Process.Start(sInfo);
         }
 
+        private void ButtonSaveSessionRcode_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button button || DataContext is not ViewModels.SystemSettings systemSettingsViewModel)
+            {
+                return;
+            }
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "R Script File (*.R)|*.R";
+            saveFileDialog.InitialDirectory = Properties.Settings.Default.lastResultOutFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var wantsSave = saveFileDialog.ShowDialog(this);
+
+            if (wantsSave == true)
+            {
+                Properties.Settings.Default.lastResultOutFileLocation = Path.GetDirectoryName(saveFileDialog.FileName);
+                Properties.Settings.Default.Save();
+                systemSettingsViewModel.SaveSessionRcodeCommand.Execute(saveFileDialog.FileName);
+            }
+        }
+
         private void ButtonSaveSessionLog_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button button || DataContext is not ViewModels.SystemSettings systemSettingsViewModel)
