@@ -184,7 +184,7 @@ public class TestDataProviders
 
         var RServiceMock = new Mock<Rservice>();
         RServiceMock.Setup(rservice => rservice.CheckNecessaryRPackages(It.IsAny<string>())).Returns(true);
-        RServiceMock.Setup(rservice => rservice.Execute(It.IsAny<string>())).Returns(true);
+        RServiceMock.Setup(rservice => rservice.Execute(It.IsAny<string>(), It.IsAny<bool>())).Returns(true);
 
         ServiceCollection services = new();
         services.AddSingleton(RServiceMock.Object);

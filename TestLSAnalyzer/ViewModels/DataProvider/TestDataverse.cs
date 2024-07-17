@@ -28,7 +28,7 @@ public class TestDataverse
             .Returns(false)
             .Returns(true)
             .Returns(true);
-        rserviceMock.SetupSequence(rservice => rservice.Execute(It.IsAny<string>()))
+        rserviceMock.SetupSequence(rservice => rservice.Execute(It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(false)
             .Returns(true).Returns(true).Returns(true);
 
@@ -75,7 +75,7 @@ public class TestDataverse
         configuration.ApiToken = "token";
 
         var rserviceMock = new Mock<Rservice>();
-        rserviceMock.SetupSequence(rservice => rservice.Execute(It.IsAny<string>()))
+        rserviceMock.SetupSequence(rservice => rservice.Execute(It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(true).Returns(false)
             .Returns(true).Returns(true).Returns(true).Returns(true)
             .Returns(true).Returns(true).Returns(true).Returns(true);
@@ -109,7 +109,7 @@ public class TestDataverse
         configuration.ApiToken = "token";
 
         var rserviceMock = new Mock<Rservice>();
-        rserviceMock.SetupSequence(rservice => rservice.Execute(It.IsAny<string>()))
+        rserviceMock.SetupSequence(rservice => rservice.Execute(It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(true).Returns(false)
             .Returns(true).Returns(true).Returns(true).Returns(true).Returns(true);
 

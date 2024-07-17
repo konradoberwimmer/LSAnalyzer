@@ -26,17 +26,19 @@ namespace LSAnalyzer.Services
         public DateTime When { get; set; }
         public string? AnalysisName { get; set; }
         public string Rcode { get; set; }
+        public bool OneLiner { get; set; }
 
-        public LogEntry(DateTime when, string rcode, string? analysisName = null)
+        public LogEntry(DateTime when, string rcode, string? analysisName = null, bool oneLiner = false)
         {
             When = when;
             Rcode = rcode;
             AnalysisName = analysisName;
+            OneLiner = oneLiner;
         }
 
         public string Stringify()
         {
-            return When.ToString() + " - " + AnalysisName + " - " + Rcode;
+            return When.ToString() + " - " + AnalysisName + " - " + ((OneLiner && Rcode.Contains('\n')) ? Rcode.Substring(0, Rcode.IndexOf('\n')) : Rcode);
         }
     }
 }
