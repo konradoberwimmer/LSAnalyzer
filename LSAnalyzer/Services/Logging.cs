@@ -19,6 +19,16 @@ namespace LSAnalyzer.Services
         {
             return String.Join("\n", _logEntries.ConvertAll<string>(logEntry => logEntry.Stringify()).ToArray());
         }
+
+        public string GetRcode()
+        {
+            return String.Join("\n", _logEntries.ConvertAll<string>(logEntry => logEntry.Rcode).ToArray());
+        }
+
+        public string GetFullText()
+        {
+            return String.Join("\n", _logEntries.ConvertAll<string>(logEntry => logEntry.ToFullText()).ToArray());
+        }
     }
 
     public class LogEntry
@@ -39,6 +49,11 @@ namespace LSAnalyzer.Services
         public string Stringify()
         {
             return When.ToString() + " - " + AnalysisName + " - " + ((OneLiner && Rcode.Contains('\n')) ? Rcode.Substring(0, Rcode.IndexOf('\n')) : Rcode);
+        }
+
+        public string ToFullText()
+        {
+            return When.ToString() + " - " + AnalysisName + " - " + Rcode;
         }
     }
 }

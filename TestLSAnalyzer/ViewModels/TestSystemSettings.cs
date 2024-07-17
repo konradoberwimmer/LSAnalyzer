@@ -13,6 +13,26 @@ namespace TestLSAnalyzer.ViewModels
     public class TestSystemSettings
     {
         [Fact]
+        public void TestSaveSessionRcodeCommand()
+        {
+            Logging logger = new();
+            Configuration configuration = new("");
+            Rservice rservice = new(logger);
+
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.InjectAppFunctions());
+
+            SystemSettings systemSettingsViewModel = new(rservice, configuration, logger);
+
+            var filename = Path.GetTempFileName();
+            systemSettingsViewModel.SaveSessionRcodeCommand.Execute(filename);
+
+            var savedLog = File.ReadAllText(filename);
+            Assert.Contains("lsanalyzer_func_quantile <- function(", savedLog);
+            Assert.DoesNotContain("- lsanalyzer_func_quantile <- function(", savedLog);
+        }
+
+        [Fact]
         public void TestSaveSessionLogCommand()
         {
             Logging logger = new();
@@ -28,7 +48,7 @@ namespace TestLSAnalyzer.ViewModels
             systemSettingsViewModel.SaveSessionLogCommand.Execute(filename);
 
             var savedLog = File.ReadAllText(filename);
-            Assert.Contains("lsanalyzer_func_quantile <- function(", savedLog);
+            Assert.Contains("- lsanalyzer_func_quantile <- function(", savedLog);
         }
 
         [Fact]

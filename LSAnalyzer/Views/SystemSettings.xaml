@@ -67,7 +67,10 @@
                 <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                     <TextBlock Text="{Binding SessionLog}" TextWrapping="NoWrap"/>
                 </ScrollViewer>
-                <Button x:Name="buttomSaveSessionLog" Grid.Row="1" Margin="0,5,0,0" HorizontalAlignment="Right" Content="Save ..." Height="22" Width="80" Click="ButtonSaveSessionLog_Click"/>
+                <StackPanel Grid.Row="1" Margin="0,5,0,0" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="buttomSaveSessionRcode" Content="Save R code (.R) ..." Height="22" Width="100" Margin="0,0,10,0" Click="ButtonSaveSessionRcode_Click"/>
+                    <Button x:Name="buttomSaveSessionLog" Content="Save All (.txt) ..." Height="22" Width="100" Click="ButtonSaveSessionLog_Click"/>
+                </StackPanel>
             </Grid>
         </GroupBox>
     </Grid>
