@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
@@ -6,14 +7,29 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using LSAnalyzerAvalonia.ViewModels;
 using LSAnalyzerAvalonia.Views;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LSAnalyzerAvalonia;
 
 public partial class App : Application
 {
+    public IServiceProvider Services { get; private set; } = null!;
+    
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        
+        ServiceCollection collection = new();
+        AddCommonServices(collection);
+        Services = collection.BuildServiceProvider();
+    }
+
+    private static void AddCommonServices(IServiceCollection collection)
+    {
+        collection.AddSingleton<MainWindowViewModel>();
+        collection.AddTransient<DatasetTypesViewModel>();
+        collection.AddSingleton<MainWindow>();
+        collection.AddTransient<DatasetTypes>();
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -23,10 +39,7 @@ public partial class App : Application
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = new MainWindowViewModel(),
-            };
+            desktop.MainWindow = Services.GetRequiredService<MainWindow>();
         }
 
         base.OnFrameworkInitializationCompleted();
