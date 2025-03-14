@@ -1,10 +1,10 @@
-﻿using LSAnalyzer.Helper;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using LSAnalyzerAvalonia.Helper;
 
-namespace LSAnalyzer.Models.ValidationAttributes;
+namespace LSAnalyzerAvalonia.Models.ValidationAttributes;
 
 public sealed class ValidItems : ValidationAttribute
 {
