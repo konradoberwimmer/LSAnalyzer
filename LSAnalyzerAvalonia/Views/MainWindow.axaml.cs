@@ -8,6 +8,11 @@ namespace LSAnalyzerAvalonia.Views;
 
 public partial class MainWindow : Window
 {
+    public MainWindow() // design-time only parameterless constructor
+    {
+        InitializeComponent();
+    }
+    
     public MainWindow(MainWindowViewModel viewModel)
     {
         InitializeComponent();

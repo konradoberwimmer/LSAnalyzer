@@ -7,6 +7,11 @@ namespace LSAnalyzerAvalonia.Views;
 
 public partial class DatasetTypes : Window
 {
+    public DatasetTypes() // design-time only parameterless constructor
+    {
+        InitializeComponent();
+    }
+    
     public DatasetTypes(DatasetTypesViewModel viewModel)
     {
         InitializeComponent();
