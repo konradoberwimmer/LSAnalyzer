@@ -1,10 +1,12 @@
 using System;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
+using LSAnalyzerAvalonia.Services;
 using LSAnalyzerAvalonia.ViewModels;
 using LSAnalyzerAvalonia.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +28,9 @@ public partial class App : Application
 
     private static void AddCommonServices(IServiceCollection collection)
     {
+        collection.AddSingleton<IAppConfiguration, AppConfiguration>(_ => 
+            new AppConfiguration(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "lsanalyzer_dataset_types.json"))
+        );
         collection.AddSingleton<MainWindowViewModel>();
         collection.AddTransient<DatasetTypesViewModel>();
         collection.AddSingleton<MainWindow>();

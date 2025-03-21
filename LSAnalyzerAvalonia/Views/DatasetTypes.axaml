@@ -3,15 +3,23 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:LSAnalyzerAvalonia.ViewModels"
+        xmlns:dialogHost="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="LSAnalyzerAvalonia.Views.DatasetTypes"
+        x:DataType="vm:DatasetTypesViewModel"
         Title="DatasetTypes">
     
     <Design.DataContext>
         <vm:DatasetTypesViewModel/>
     </Design.DataContext>
     
-    <StackPanel>
-        <TextBox>Welcome to Avalonia!</TextBox>
-    </StackPanel>
+        
+    <dialogHost:DialogHost CloseOnClickAway="True" IsOpen="{Binding ShowMessage}">
+        <dialogHost:DialogHost.DialogContent>
+            <TextBlock Text="{Binding Message}"/>
+        </dialogHost:DialogHost.DialogContent>
+        <StackPanel>
+            <ComboBox ItemsSource="{Binding DatasetTypes}"></ComboBox>
+        </StackPanel>
+    </dialogHost:DialogHost>
 </Window>

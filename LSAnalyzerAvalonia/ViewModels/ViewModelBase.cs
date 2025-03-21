@@ -2,6 +2,9 @@
 
 namespace LSAnalyzerAvalonia.ViewModels;
 
-public class ViewModelBase : ObservableObject
+public partial class ViewModelBase : ObservableObject
 {
+    [ObservableProperty] protected bool showMessage = false;
+
+    [ObservableProperty] protected string message;
 }

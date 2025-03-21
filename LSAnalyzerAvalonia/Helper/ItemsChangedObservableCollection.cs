@@ -18,16 +18,16 @@ public class ItemsChangeObservableCollection<T> :
     {
         if (e.Action == NotifyCollectionChangedAction.Add)
         {
-            RegisterPropertyChanged(e.NewItems);
+            RegisterPropertyChanged(e.NewItems!);
         }
         else if (e.Action == NotifyCollectionChangedAction.Remove)
         {
-            UnRegisterPropertyChanged(e.OldItems);
+            UnRegisterPropertyChanged(e.OldItems!);
         }
         else if (e.Action == NotifyCollectionChangedAction.Replace)
         {
-            UnRegisterPropertyChanged(e.OldItems);
-            RegisterPropertyChanged(e.NewItems);
+            UnRegisterPropertyChanged(e.OldItems!);
+            RegisterPropertyChanged(e.NewItems!);
         }
 
         base.OnCollectionChanged(e);
@@ -45,7 +45,7 @@ public class ItemsChangeObservableCollection<T> :
         {
             if (item != null)
             {
-                item.PropertyChanged += new PropertyChangedEventHandler(item_PropertyChanged);
+                item.PropertyChanged += new PropertyChangedEventHandler(item_PropertyChanged!);
             }
         }
     }
@@ -56,7 +56,7 @@ public class ItemsChangeObservableCollection<T> :
         {
             if (item != null)
             {
-                item.PropertyChanged -= new PropertyChangedEventHandler(item_PropertyChanged);
+                item.PropertyChanged -= new PropertyChangedEventHandler(item_PropertyChanged!);
             }
         }
     }
