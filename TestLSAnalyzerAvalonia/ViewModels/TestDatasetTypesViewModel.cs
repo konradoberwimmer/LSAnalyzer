@@ -39,4 +39,74 @@ public class TestDatasetTypesViewModel
         Assert.False(viewModel.ShowMessage);
         Assert.Empty(viewModel.DatasetTypes);
     }
+
+    [Fact]
+    public void TestNewDatasetTypeCommand()
+    {
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.Setup(x => x.GetStoredDatasetTypes()).Returns(DatasetType.CreateDefaultDatasetTypes());
+        
+        DatasetTypesViewModel viewModel = new(appConfiguration.Object);
+        
+        viewModel.NewDatasetTypeCommand.Execute(null);
+        
+        Assert.Equal(DatasetType.CreateDefaultDatasetTypes().Count + 1, viewModel.DatasetTypes.Count);
+        Assert.NotNull(viewModel.SelectedDatasetType);
+        Assert.Equal(1, viewModel.SelectedDatasetType.Id);
+        Assert.True(viewModel.SelectedDatasetType.IsChanged);
+        
+        viewModel.NewDatasetTypeCommand.Execute(null);
+        
+        Assert.Equal(2, viewModel.SelectedDatasetType.Id);
+    }
+
+    [Fact]
+    public void TestSaveDatasetTypeCommand()
+    {
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.Setup(x => x.GetStoredDatasetTypes()).Returns(DatasetType.CreateDefaultDatasetTypes());
+        
+        DatasetTypesViewModel viewModel = new(appConfiguration.Object);
+        
+        viewModel.SaveSelectedDatasetTypeCommand.Execute(null);
+        
+        viewModel.NewDatasetTypeCommand.Execute(null);
+        
+        viewModel.SaveSelectedDatasetTypeCommand.Execute(null);
+        
+        Assert.True(viewModel.SelectedDatasetType!.IsChanged);
+        
+        viewModel.SelectedDatasetType.Weight = "weight";
+        viewModel.SelectedDatasetType.NMI = 1;
+        
+        viewModel.SaveSelectedDatasetTypeCommand.Execute(null);
+        
+        Assert.False(viewModel.SelectedDatasetType.IsChanged);
+    }
+    
+    [Fact]
+    public void TestRemoveDatasetTypeCommand()
+    {
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.Setup(x => x.GetStoredDatasetTypes()).Returns(DatasetType.CreateDefaultDatasetTypes());
+        
+        DatasetTypesViewModel viewModel = new(appConfiguration.Object);
+        
+        viewModel.RemoveDatasetTypeCommand.Execute(null);
+        
+        viewModel.NewDatasetTypeCommand.Execute(null);
+        
+        Assert.Contains(viewModel.DatasetTypes, dst => dst.Id == 1);
+        
+        viewModel.SelectedDatasetType!.Weight = "weight";
+        viewModel.SelectedDatasetType.NMI = 1;
+        viewModel.SaveSelectedDatasetTypeCommand.Execute(null);
+        
+        Assert.False(viewModel.SelectedDatasetType.IsChanged);
+        
+        viewModel.RemoveDatasetTypeCommand.Execute(null);
+        
+        Assert.Null(viewModel.SelectedDatasetType);
+        Assert.DoesNotContain(viewModel.DatasetTypes, dst => dst.Id == 1);
+    }
 }

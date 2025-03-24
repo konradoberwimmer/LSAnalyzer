@@ -78,7 +78,7 @@ public class AppConfiguration(string datasetTypesConfigFilePath) : IAppConfigura
         try
         {
             storedDatasetTypes = JsonSerializer.Deserialize<List<DatasetType>>(fileContent) ?? storedDatasetTypes;
-        } catch (JsonException) { }{ }
+        } catch (JsonException) { }
 
         storedDatasetTypes.RemoveAll(dst => dst.Id == datasetType.Id);
 

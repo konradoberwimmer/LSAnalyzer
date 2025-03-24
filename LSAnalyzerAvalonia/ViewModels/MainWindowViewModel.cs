@@ -9,7 +9,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public string Greeting { get; } = "Welcome to Avalonia!";
 
     [RelayCommand]
-    public static void OpenWindow(Type windowType)
+    private static void OpenWindow(Type windowType)
     {
         WeakReferenceMessenger.Default.Send(new OpenWindowMessage(windowType));
     }

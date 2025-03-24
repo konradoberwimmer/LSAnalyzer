@@ -4,22 +4,99 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:LSAnalyzerAvalonia.ViewModels"
         xmlns:dialogHost="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
         x:Class="LSAnalyzerAvalonia.Views.DatasetTypes"
         x:DataType="vm:DatasetTypesViewModel"
-        Title="DatasetTypes">
+        Title="Dataset types" Width="1000" MinWidth="1000" Height="700" MinHeight="700">
     
     <Design.DataContext>
         <vm:DatasetTypesViewModel/>
     </Design.DataContext>
     
-        
     <dialogHost:DialogHost CloseOnClickAway="True" IsOpen="{Binding ShowMessage}">
         <dialogHost:DialogHost.DialogContent>
             <TextBlock Text="{Binding Message}"/>
         </dialogHost:DialogHost.DialogContent>
-        <StackPanel>
-            <ComboBox ItemsSource="{Binding DatasetTypes}"></ComboBox>
-        </StackPanel>
+        <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,Auto,*">
+                <ComboBox Grid.Column="0" Width="500" ItemsSource="{Binding DatasetTypes}" DisplayMemberBinding="{Binding Name}" SelectedItem="{Binding SelectedDatasetType}"/>
+                <Button Grid.Column="1" Content="New" HorizontalContentAlignment="Center" Width="80" Margin="5,0,0,0" Command="{Binding NewDatasetTypeCommand}"/>
+                <Button Grid.Column="2" Content="Import ..." HorizontalContentAlignment="Center" Width="80" Margin="5,0,0,0"/>
+                <Button Grid.Column="3" Content="Remove" HorizontalContentAlignment="Center" Width="80" Margin="5,0,0,0" HorizontalAlignment="Right" IsEnabled="{Binding SelectedDatasetType, Converter={x:Static ObjectConverters.IsNotNull}}" Command="{Binding RemoveDatasetTypeCommand}"/>
+            </Grid>
+            <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" Margin="0,5,0,0" IsEnabled="{Binding SelectedDatasetType, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <Label Grid.Row="0" Grid.Column="0" Content="Name:" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" Text="{Binding SelectedDatasetType.Name, FallbackValue={x:Null}}"/>
+                <Label Grid.Row="1" Grid.Column="0" Content="Group:" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Margin="5,5,0,0" Text="{Binding SelectedDatasetType.Group, FallbackValue={x:Null}}"/>
+                <Label Grid.Row="2" Grid.Column="0" Content="Description:" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Margin="5,5,0,0" Text="{Binding SelectedDatasetType.Description, FallbackValue={x:Null}}"/>
+                <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="5,5,0,0">
+                    <CheckBox Content="Auto-encapsulate regular expressions" IsChecked="{Binding SelectedDatasetType.AutoEncapsulateRegex, FallbackValue={x:False}}"/>
+                    <PathIcon Height="15" Width="15" Foreground="Blue" Data="{StaticResource InfoRegular}" Margin="5,0,0,0" ToolTip.Tip="If checked, any regular expression XY will be treated as ^XY$ when used."/>
+                </StackPanel>
+                <Label Grid.Row="4" Grid.Column="0" Content="Weight variable(s):" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Margin="5,5,0,0" Text="{Binding SelectedDatasetType.Weight, FallbackValue={x:Null}}"/>
+                <StackPanel Grid.Row="5" Grid.Column="0" Orientation="Horizontal">
+                    <Label Content="ID variable:" VerticalAlignment="Center"/>
+                    <PathIcon Height="15" Width="15" Foreground="Blue" Data="{StaticResource InfoRegular}" ToolTip.Tip="Providing a unique ID variable is not necessary but will guarantee sorting and correct associations between cases when using MI indicator variable."/>
+                </StackPanel>
+                <TextBox Grid.Row="5" Grid.Column="1" Margin="5,5,0,0" Text="{Binding SelectedDatasetType.IDvar, FallbackValue={x:Null}}"/>
+            </Grid>
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,5,0,0" IsEnabled="{Binding SelectedDatasetType, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <HeaderedContentControl Grid.Column="0" Header="Multiple Imputation / Plausible Values">
+                    <Grid RowDefinitions="Auto,*">
+                        <StackPanel Grid.Row="0" Orientation="Vertical">
+                            <TextBlock TextWrapping="Wrap" Text="Number of multiple imputations or plausible values:"/>
+                            <NumericUpDown Value="{Binding SelectedDatasetType.NMI, FallbackValue={x:Null}}" Minimum="1" Increment="1" FormatString="0" Width="180" HorizontalAlignment="Left" Margin="0,5,0,0"/>
+                            <Border Margin="0,10,0,10" BorderThickness="0,1,0,0" BorderBrush="Gray">
+                                <Canvas Height="0" HorizontalAlignment="Stretch"></Canvas>
+                            </Border>
+                            <TextBlock TextWrapping="Wrap" Text="Variable indicating imputation count:"/>
+                            <TextBox Text="{Binding SelectedDatasetType.MIvar, FallbackValue={x:Null}}" Margin="0,5,0,0"/>
+                            <TextBlock TextWrapping="Wrap" Text="OR" Margin="0,5,0,0" FontWeight="DemiBold"/>
+                            <TextBlock TextWrapping="Wrap" Text="Variables with plausible values:" Margin="0,5,0,0"/>
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Button Grid.Column="0" Content="Add" Width="40" HorizontalContentAlignment="Center" FontSize="10" Margin="0,5,0,0"/>
+                                <Button Grid.Column="1" Content="Remove" Width="60" HorizontalContentAlignment="Center" FontSize="10" Margin="0,5,0,0" HorizontalAlignment="Right" IsEnabled="{Binding ElementName=DataGridPVvars, Path=SelectedItem, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                            </Grid>
+                        </StackPanel>                           
+                        <DataGrid Grid.Row="1" Name="DataGridPVvars" ItemsSource="{Binding SelectedDatasetType.PVvarsList, FallbackValue={x:Null}}" AutoGenerateColumns="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,5,0,0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Regex" Binding="{Binding Regex}" Width="175"/>
+                                <DataGridTextColumn Header="Display name" Binding="{Binding DisplayName}" Width="175"/>
+                                <DataGridCheckBoxColumn Header="Mandatory" Binding="{Binding Mandatory}" Width="125"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </HeaderedContentControl>
+                <HeaderedContentControl Grid.Column="1" Header="Replicate weights" Margin="5,0,0,0">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock TextWrapping="Wrap" Text="Replication variance adjustment factor:"/>
+                        <NumericUpDown Value="{Binding SelectedDatasetType.FayFac, FallbackValue={x:Null}}" Minimum="0.00" Increment="0.05" FormatString="0.0000" Width="180" HorizontalAlignment="Left" Margin="0,5,0,0"/>
+                        <Border Margin="0,10,0,10" BorderThickness="0,1,0,0" BorderBrush="Gray">
+                            <Canvas Height="0" HorizontalAlignment="Stretch"></Canvas>
+                        </Border>
+                        <TextBlock TextWrapping="Wrap" Text="Variables with replicate weights (regex):"/>
+                        <TextBox Text="{Binding SelectedDatasetType.RepWgts, FallbackValue={x:Null}}" Margin="0,5,0,0"/>
+                        <TextBlock TextWrapping="Wrap" Text="OR" Margin="0,5,0,0" FontWeight="DemiBold"/>
+                        <TextBlock TextWrapping="Wrap" Text="Variable indicating jackknife zones:" Margin="0,5,0,0"/>
+                        <TextBox Text="{Binding SelectedDatasetType.JKzone, FallbackValue={x:Null}}" Margin="0,5,0,0"/>
+                        <TextBlock TextWrapping="Wrap" Text="Variable indicating inclusion/exclusion within jackknife zone:" Margin="0,5,0,0"/>
+                        <TextBox Text="{Binding SelectedDatasetType.JKrep, FallbackValue={x:Null}}" Margin="0,5,0,0"/>
+                        <CheckBox Content="Use reverse inclusion/exclusion?" Margin="0,5,0,0" IsChecked="{Binding SelectedDatasetType.JKreverse, FallbackValue={x:False}}"/>
+                    </StackPanel>
+                </HeaderedContentControl>
+            </Grid>
+            <Grid Grid.Row="3" ColumnDefinitions="Auto,*" Margin="0,5,0,0">
+                <Button Grid.Column="0" Content="Export..." Width="80" HorizontalContentAlignment="Center" IsEnabled="{Binding SelectedDatasetType, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                <Button Grid.Column="1" Content="Save" Width="80" HorizontalContentAlignment="Center" HorizontalAlignment="Right" Command="{Binding SaveSelectedDatasetTypeCommand}">
+                    <Button.IsEnabled><MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="SelectedDatasetType" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+                        <Binding Path="SelectedDatasetType.IsChanged" FallbackValue="{x:False}"/>
+                    </MultiBinding></Button.IsEnabled>
+                </Button>
+            </Grid>
+        </Grid>
     </dialogHost:DialogHost>
 </Window>

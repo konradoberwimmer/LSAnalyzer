@@ -6,5 +6,5 @@ public partial class ViewModelBase : ObservableObject
 {
     [ObservableProperty] protected bool showMessage = false;
 
-    [ObservableProperty] protected string message;
+    [ObservableProperty] protected string message = string.Empty;
 }
