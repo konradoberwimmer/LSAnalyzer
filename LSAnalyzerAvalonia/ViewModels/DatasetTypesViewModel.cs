@@ -87,9 +87,12 @@ public partial class DatasetTypesViewModel : ViewModelBase
         {
             return;
         }
-
+        
         _appConfiguration.RemoveDatasetType(SelectedDatasetType);
-
+        
+        Message = $"Removed { SelectedDatasetType.Name }";
+        ShowMessage = true;
+        
         DatasetTypes.Remove(SelectedDatasetType);
         SelectedDatasetType = null;
     }

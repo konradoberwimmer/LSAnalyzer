@@ -108,6 +108,7 @@ public class TestDatasetTypesViewModel
         
         Assert.Null(viewModel.SelectedDatasetType);
         Assert.DoesNotContain(viewModel.DatasetTypes, dst => dst.Id == 1);
+        Assert.True(viewModel.ShowMessage);
     }
 
     [Fact]

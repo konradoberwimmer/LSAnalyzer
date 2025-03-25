@@ -120,6 +120,7 @@ public class TestAppConfiguration
         
         var datasetTypes = appConfiguration.GetStoredDatasetTypes();
         
+        Assert.NotNull(datasetTypes);
         Assert.Single(datasetTypes);
         Assert.Equal(123454321, datasetTypes.First().Id);
         
@@ -129,6 +130,7 @@ public class TestAppConfiguration
         
         datasetTypes = appConfiguration.GetStoredDatasetTypes();
         
+        Assert.NotNull(datasetTypes);
         Assert.Empty(datasetTypes);
     }
 }

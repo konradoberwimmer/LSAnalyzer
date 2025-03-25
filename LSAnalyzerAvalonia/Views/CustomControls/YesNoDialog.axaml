@@ -1,0 +1,12 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="LSAnalyzerAvalonia.Views.CustomControls.YesNoDialog">
+    <Grid RowDefinitions="Auto,*" ColumnDefinitions="Auto,*" Margin="5">
+        <TextBlock Name="Question" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="0,0,0,5" Text="QUESTION"/>
+        <Button Grid.Row="1" Grid.Column="0" Content="No" Classes="standard" Click="No_OnClick"/>
+        <Button Grid.Row="1" Grid.Column="1" Content="Yes" Classes="standard" HorizontalAlignment="Right" Click="Yes_OnClick"></Button>
+    </Grid>
+</UserControl>
