@@ -57,14 +57,14 @@
                             <TextBlock TextWrapping="Wrap" Text="OR" Margin="0,5,0,0" FontWeight="DemiBold"/>
                             <TextBlock TextWrapping="Wrap" Text="Variables with plausible values:" Margin="0,5,0,0"/>
                             <Grid ColumnDefinitions="Auto,*">
-                                <Button Grid.Column="0" Content="Add" Width="40" HorizontalContentAlignment="Center" FontSize="10" Margin="0,5,0,0"/>
-                                <Button Grid.Column="1" Content="Remove" Width="60" HorizontalContentAlignment="Center" FontSize="10" Margin="0,5,0,0" HorizontalAlignment="Right" IsEnabled="{Binding ElementName=DataGridPVvars, Path=SelectedItem, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                <Button Grid.Column="0" Content="Add" Width="40" HorizontalContentAlignment="Center" FontSize="10" Margin="0,5,0,0" Command="{Binding AddPlausibleValueVariableCommand}"/>
+                                <Button Grid.Column="1" Content="Remove" Width="60" HorizontalContentAlignment="Center" FontSize="10" Margin="0,5,0,0" HorizontalAlignment="Right" IsEnabled="{Binding ElementName=DataGridPVvars, Path=SelectedItem, Converter={x:Static ObjectConverters.IsNotNull}}" Command="{Binding RemovePlausibleValueVariablesCommand}" CommandParameter="{Binding ElementName=DataGridPVvars, Path=SelectedItem}"/>
                             </Grid>
                         </StackPanel>                           
-                        <DataGrid Grid.Row="1" Name="DataGridPVvars" ItemsSource="{Binding SelectedDatasetType.PVvarsList, FallbackValue={x:Null}}" AutoGenerateColumns="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,5,0,0">
+                        <DataGrid Grid.Row="1" Name="DataGridPVvars" ItemsSource="{Binding SelectedDatasetType.PVvarsList, FallbackValue={x:Null}}" AutoGenerateColumns="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,5,0,0" SelectionMode="Single">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Regex" Binding="{Binding Regex}" Width="175"/>
-                                <DataGridTextColumn Header="Display name" Binding="{Binding DisplayName}" Width="175"/>
+                                <DataGridTextColumn Header="Regex" Binding="{Binding Regex, UpdateSourceTrigger=LostFocus}" Width="175"/>
+                                <DataGridTextColumn Header="Display name" Binding="{Binding DisplayName, UpdateSourceTrigger=LostFocus}" Width="175"/>
                                 <DataGridCheckBoxColumn Header="Mandatory" Binding="{Binding Mandatory}" Width="125"/>
                             </DataGrid.Columns>
                         </DataGrid>

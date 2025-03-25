@@ -109,4 +109,44 @@ public class TestDatasetTypesViewModel
         Assert.Null(viewModel.SelectedDatasetType);
         Assert.DoesNotContain(viewModel.DatasetTypes, dst => dst.Id == 1);
     }
+
+    [Fact]
+    public void TestAddPlausibleValuesVariableCommand()
+    {
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.Setup(x => x.GetStoredDatasetTypes()).Returns(DatasetType.CreateDefaultDatasetTypes());
+        
+        DatasetTypesViewModel viewModel = new(appConfiguration.Object);
+        
+        var exception = Record.Exception(() => { viewModel.AddPlausibleValueVariableCommand.Execute(null); });
+        Assert.Null(exception);
+        
+        viewModel.SelectedDatasetType = viewModel.DatasetTypes.First();
+        
+        var numberOfPvVars = viewModel.SelectedDatasetType.PVvarsList.Count;
+        
+        viewModel.AddPlausibleValueVariableCommand.Execute(null);
+        
+        Assert.Equal(numberOfPvVars + 1, viewModel.SelectedDatasetType.PVvarsList.Count);
+    }
+    
+    [Fact]
+    public void TestRemovePlausibleValuesVariableCommand()
+    {
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.Setup(x => x.GetStoredDatasetTypes()).Returns(DatasetType.CreateDefaultDatasetTypes());
+        
+        DatasetTypesViewModel viewModel = new(appConfiguration.Object);
+        
+        var exception = Record.Exception(() => { viewModel.RemovePlausibleValueVariablesCommand.Execute(new PlausibleValueVariable()); });
+        Assert.Null(exception);
+        
+        viewModel.SelectedDatasetType = viewModel.DatasetTypes.First(dst => dst.PVvarsList.Count > 0);
+        
+        var numberOfPvVars = viewModel.SelectedDatasetType.PVvarsList.Count;
+        
+        viewModel.RemovePlausibleValueVariablesCommand.Execute(viewModel.SelectedDatasetType.PVvarsList.First());
+        
+        Assert.Equal(numberOfPvVars - 1, viewModel.SelectedDatasetType.PVvarsList.Count);
+    }
 }

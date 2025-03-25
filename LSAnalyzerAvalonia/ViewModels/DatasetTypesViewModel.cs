@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -91,5 +92,17 @@ public partial class DatasetTypesViewModel : ViewModelBase
 
         DatasetTypes.Remove(SelectedDatasetType);
         SelectedDatasetType = null;
+    }
+
+    [RelayCommand]
+    private void AddPlausibleValueVariable()
+    {
+        SelectedDatasetType?.PVvarsList.Add(new PlausibleValueVariable { Regex = string.Empty, DisplayName = string.Empty, Mandatory = false });
+    }
+
+    [RelayCommand]
+    private void RemovePlausibleValueVariables(PlausibleValueVariable plausibleValueVariable)
+    { 
+        SelectedDatasetType?.PVvarsList.Remove(plausibleValueVariable);
     }
 }
