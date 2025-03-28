@@ -1,3 +1,5 @@
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using LSAnalyzerAvalonia.Models;
 using LSAnalyzerAvalonia.Services;
@@ -38,6 +40,27 @@ public class TestDatasetTypesViewModel
         
         Assert.False(viewModel.ShowMessage);
         Assert.Empty(viewModel.DatasetTypes);
+    }
+
+    [Fact]
+    public void TestUnsavedDatasetTypeNames()
+    {
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.Setup(x => x.GetStoredDatasetTypes()).Returns(DatasetType.CreateDefaultDatasetTypes());
+        
+        DatasetTypesViewModel viewModel = new(appConfiguration.Object);
+
+        Assert.Empty(viewModel.UnsavedDatasetTypeNames);
+        
+        viewModel.NewDatasetTypeCommand.Execute(null);
+        
+        Assert.Single(viewModel.UnsavedDatasetTypeNames);
+        Assert.Contains("New dataset type", viewModel.UnsavedDatasetTypeNames);
+        
+        viewModel.SelectedDatasetType = viewModel.DatasetTypes.First();
+        viewModel.SelectedDatasetType.Name = "changed";
+        
+        Assert.Equal(2, viewModel.UnsavedDatasetTypeNames.Count);
     }
 
     [Fact]
@@ -149,5 +172,112 @@ public class TestDatasetTypesViewModel
         viewModel.RemovePlausibleValueVariablesCommand.Execute(viewModel.SelectedDatasetType.PVvarsList.First());
         
         Assert.Equal(numberOfPvVars - 1, viewModel.SelectedDatasetType.PVvarsList.Count);
+    }
+
+    [Fact]
+    public void TestExportDatasetTypeCommand()
+    {
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.Setup(x => x.GetStoredDatasetTypes()).Returns(DatasetType.CreateDefaultDatasetTypes());
+        
+        DatasetTypesViewModel viewModel = new(appConfiguration.Object);
+        
+        var exception = Record.Exception(() => { viewModel.ExportDatasetTypeCommand.Execute(string.Empty); });
+        Assert.Null(exception);
+        
+        viewModel.NewDatasetTypeCommand.Execute(null);
+        
+        exception = Record.Exception(() => { viewModel.ExportDatasetTypeCommand.Execute(string.Empty); });
+        Assert.Null(exception);
+        
+        viewModel.SelectedDatasetType!.Weight = "weight";
+        viewModel.SelectedDatasetType.NMI = 1;
+
+        viewModel.ExportDatasetTypeCommand.Execute(Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "test_export_dataset_type.json"));
+        
+        Assert.True(viewModel.ShowMessage);
+        Assert.Matches("Exported New dataset type to", viewModel.Message);
+        
+        appConfiguration.VerifySet(x => x.LastOutFileLocation = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Times.Once);
+    }
+
+    [Fact]
+    public void TestImportDatasetTypeCommandInvalidCases()
+    {
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.Setup(x => x.GetStoredDatasetTypes()).Returns(DatasetType.CreateDefaultDatasetTypes());
+        
+        DatasetTypesViewModel viewModel = new(appConfiguration.Object);
+        
+        viewModel.ImportDatasetTypeCommand.Execute(string.Empty);
+        
+        Assert.True(viewModel.ShowMessage);
+        Assert.Matches("Invalid file", viewModel.Message);
+        viewModel.ShowMessage = false;
+        
+        File.WriteAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "test_import_dataset_type_null.json"), "null");
+        
+        viewModel.ImportDatasetTypeCommand.Execute(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "test_import_dataset_type_null.json"));
+        
+        Assert.True(viewModel.ShowMessage);
+        Assert.Matches("Invalid file", viewModel.Message);
+        viewModel.ShowMessage = false;
+        
+        File.WriteAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "test_import_dataset_type_wrong.json"), "{}");
+        
+        viewModel.ImportDatasetTypeCommand.Execute(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "test_import_dataset_type_wrong.json"));
+        
+        Assert.True(viewModel.ShowMessage);
+        Assert.Matches("Invalid dataset type", viewModel.Message);
+        viewModel.ShowMessage = false;
+
+        DatasetType newDatasetType = new();
+        JsonSerializerOptions jsonSerializerOptions = new(JsonSerializerOptions.Default)
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            WriteIndented = true
+        };
+        File.WriteAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "test_import_dataset_type_invalid.json"), JsonSerializer.Serialize(newDatasetType, jsonSerializerOptions));
+        
+        viewModel.ImportDatasetTypeCommand.Execute(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "test_import_dataset_type_invalid.json"));
+        
+        Assert.True(viewModel.ShowMessage);
+        Assert.Matches("Invalid dataset type", viewModel.Message);
+    }
+    
+    [Fact]
+    public void TestImportDatasetTypeCommandHappyCase()
+    {
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.Setup(x => x.GetStoredDatasetTypes()).Returns(DatasetType.CreateDefaultDatasetTypes());
+        
+        DatasetTypesViewModel viewModel = new(appConfiguration.Object);
+        
+        JsonSerializerOptions jsonSerializerOptions = new(JsonSerializerOptions.Default)
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            WriteIndented = true
+        };
+        File.WriteAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "test_import_dataset_type.json"), JsonSerializer.Serialize(viewModel.DatasetTypes.First(), jsonSerializerOptions));
+        
+        viewModel.ImportDatasetTypeCommand.Execute(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "test_import_dataset_type.json"));
+        
+        appConfiguration.Verify(x => x.StoreDatasetType(It.IsAny<DatasetType>()), Times.Once);
+        Assert.Equal(DatasetType.CreateDefaultDatasetTypes().Count + 1, viewModel.DatasetTypes.Count);
+        Assert.Equal(1, viewModel.SelectedDatasetType!.Id);
+        Assert.False(viewModel.SelectedDatasetType.IsChanged);
+        appConfiguration.VerifySet(x => x.LastInFileLocation = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Times.Once);
+        Assert.True(viewModel.ShowMessage);
+        Assert.Matches("Imported", viewModel.Message);
+        viewModel.ShowMessage = false;
+        
+        viewModel.ImportDatasetTypeCommand.Execute(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "test_import_dataset_type.json"));
+
+        Assert.Equal(DatasetType.CreateDefaultDatasetTypes().Count + 2, viewModel.DatasetTypes.Count);
+        Assert.Equal(2, viewModel.SelectedDatasetType!.Id);
+        Assert.True(viewModel.ShowMessage);
+        Assert.Matches("Imported", viewModel.Message);
     }
 }

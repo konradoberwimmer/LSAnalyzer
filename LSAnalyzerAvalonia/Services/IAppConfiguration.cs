@@ -5,6 +5,10 @@ namespace LSAnalyzerAvalonia.Services;
 
 public interface IAppConfiguration
 {
+    public string LastInFileLocation { get; set; }
+    
+    public string LastOutFileLocation { get; set; }
+    
     public string DatasetTypesConfigFilePath { get; }
     
     public bool RestoreDefaultDatasetTypesStorage();

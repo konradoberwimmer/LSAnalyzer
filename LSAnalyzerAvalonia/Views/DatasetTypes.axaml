@@ -7,13 +7,13 @@
         mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
         x:Class="LSAnalyzerAvalonia.Views.DatasetTypes"
         x:DataType="vm:DatasetTypesViewModel"
-        Title="Dataset types" Width="1000" MinWidth="1000" Height="700" MinHeight="700">
+        Title="Dataset types" Width="1000" MinWidth="1000" Height="700" MinHeight="700" Closing="Window_OnClosing">
     
     <Design.DataContext>
         <vm:DatasetTypesViewModel/>
     </Design.DataContext>
     
-    <dialogHost:DialogHost CloseOnClickAway="True" IsOpen="False" Identifier="questions">
+    <dialogHost:DialogHost CloseOnClickAway="False" IsOpen="False" Identifier="questions">
         <dialogHost:DialogHost CloseOnClickAway="True" IsOpen="{Binding ShowMessage}" Identifier="messages">
             <dialogHost:DialogHost.DialogContent>
                 <TextBlock Text="{Binding Message}"/>
@@ -22,8 +22,8 @@
                 <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,Auto,*">
                     <ComboBox Grid.Column="0" Width="500" ItemsSource="{Binding DatasetTypes}" DisplayMemberBinding="{Binding Name}" SelectedItem="{Binding SelectedDatasetType}"/>
                     <Button Grid.Column="1" Content="New" Classes="standard" Margin="5,0,0,0" Command="{Binding NewDatasetTypeCommand}"/>
-                    <Button Grid.Column="2" Content="Import ..." Classes="standard" Width="80" Margin="5,0,0,0"/>
-                    <Button Grid.Column="3" Content="Remove" Classes="standard" Margin="5,0,0,0" HorizontalAlignment="Right" IsEnabled="{Binding SelectedDatasetType, Converter={x:Static ObjectConverters.IsNotNull}}" Click="RemoveDatasetType_OnClick"/>
+                    <Button Grid.Column="2" Content="Import ..." Classes="standard" Width="80" Margin="5,0,0,0" Click="Import_OnClick"/>
+                    <Button Grid.Column="3" Content="Remove" Classes="standard" Margin="5,0,0,0" HorizontalAlignment="Right" IsEnabled="{Binding SelectedDatasetType, Converter={x:Static ObjectConverters.IsNotNull}}" Click="Remove_OnClick"/>
                 </Grid>
                 <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" Margin="0,5,0,0" IsEnabled="{Binding SelectedDatasetType, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <Label Grid.Row="0" Grid.Column="0" Content="Name:" VerticalAlignment="Center"/>
@@ -90,7 +90,7 @@
                     </HeaderedContentControl>
                 </Grid>
                 <Grid Grid.Row="3" ColumnDefinitions="Auto,*" Margin="0,5,0,0">
-                    <Button Grid.Column="0" Content="Export..." Classes="standard" IsEnabled="{Binding SelectedDatasetType, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                    <Button Grid.Column="0" Content="Export..." Classes="standard" IsEnabled="{Binding SelectedDatasetType, Converter={x:Static ObjectConverters.IsNotNull}}" Click="Export_OnClick"/>
                     <Button Grid.Column="1" Content="Save" Classes="standard" HorizontalAlignment="Right" Command="{Binding SaveSelectedDatasetTypeCommand}">
                         <Button.IsEnabled><MultiBinding Converter="{x:Static BoolConverters.And}">
                             <Binding Path="SelectedDatasetType" Converter="{x:Static ObjectConverters.IsNotNull}"/>

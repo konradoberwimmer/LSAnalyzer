@@ -29,7 +29,10 @@ public partial class App : Application
     private static void AddCommonServices(IServiceCollection collection)
     {
         collection.AddSingleton<IAppConfiguration, AppConfiguration>(_ => 
-            new AppConfiguration(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "lsanalyzer_dataset_types.json"))
+            new AppConfiguration(
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "lsanalyzer_user_settings.json"), 
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "lsanalyzer_dataset_types.json")
+            )
         );
         collection.AddSingleton<MainWindowViewModel>();
         collection.AddTransient<DatasetTypesViewModel>();

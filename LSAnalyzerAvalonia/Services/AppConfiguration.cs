@@ -6,8 +6,53 @@ using LSAnalyzerAvalonia.Models;
 
 namespace LSAnalyzerAvalonia.Services;
 
-public class AppConfiguration(string datasetTypesConfigFilePath) : IAppConfiguration
+public class AppConfiguration(string userSettingsFilePath, string datasetTypesConfigFilePath) : IAppConfiguration
 {
+    private UserSettings CurrentUserSettings
+    {
+        get
+        {
+            try
+            {
+                return JsonSerializer.Deserialize<UserSettings>(File.ReadAllText(userSettingsFilePath)) ?? new UserSettings();
+            }
+            catch (Exception)
+            {
+                return new UserSettings();
+            }
+        }
+    }
+    
+    public string LastInFileLocation
+    {
+        get => CurrentUserSettings.LastInFileLocation;
+        set
+        {
+            var currentUserSettings = CurrentUserSettings;
+            currentUserSettings.LastInFileLocation = value;
+            
+            try
+            {
+                File.WriteAllText(userSettingsFilePath, JsonSerializer.Serialize(currentUserSettings));
+            } catch { }
+        }
+    }
+
+    public string LastOutFileLocation
+    {
+        get => CurrentUserSettings.LastOutFileLocation;
+        set
+        {
+            var currentUserSettings = CurrentUserSettings;
+            currentUserSettings.LastOutFileLocation = value;
+            
+            try
+            {
+                File.WriteAllText(userSettingsFilePath, JsonSerializer.Serialize(currentUserSettings));
+            } catch { }
+        }
+    }
+    
     public string DatasetTypesConfigFilePath => datasetTypesConfigFilePath;
     
     public bool RestoreDefaultDatasetTypesStorage()
@@ -83,5 +128,11 @@ public class AppConfiguration(string datasetTypesConfigFilePath) : IAppConfigura
         storedDatasetTypes.RemoveAll(dst => dst.Id == datasetType.Id);
 
         File.WriteAllText(datasetTypesConfigFilePath, JsonSerializer.Serialize(storedDatasetTypes));
+    }
+
+    public class UserSettings
+    {
+        public string LastInFileLocation { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        public string LastOutFileLocation { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     }
 }

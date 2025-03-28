@@ -1,7 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LSAnalyzerAvalonia.Models;
@@ -16,6 +20,8 @@ public partial class DatasetTypesViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<DatasetType> _datasetTypes = null!;
     
     [ObservableProperty] private DatasetType? _selectedDatasetType;
+    
+    public List<string> UnsavedDatasetTypeNames => DatasetTypes.Where(dst => dst.IsChanged).Select(dst => dst.Name).ToList();
 
     [ExcludeFromCodeCoverage]
     public DatasetTypesViewModel() // design-time only parameterless constructor
@@ -36,8 +42,7 @@ public partial class DatasetTypesViewModel : ViewModelBase
         {
             if (!_appConfiguration.RestoreDefaultDatasetTypesStorage())
             {
-                Message = $"Something is seriously wrong with the dataset types configuration file at {_appConfiguration.DatasetTypesConfigFilePath}!";
-                ShowMessage = true;
+                DisplayMessage($"Something is seriously wrong with the dataset types configuration file at {_appConfiguration.DatasetTypesConfigFilePath}!");
                 storedDatasetTypes = [];
             }
             else
@@ -90,8 +95,7 @@ public partial class DatasetTypesViewModel : ViewModelBase
         
         _appConfiguration.RemoveDatasetType(SelectedDatasetType);
         
-        Message = $"Removed { SelectedDatasetType.Name }";
-        ShowMessage = true;
+        DisplayMessage($"Removed { SelectedDatasetType.Name }");
         
         DatasetTypes.Remove(SelectedDatasetType);
         SelectedDatasetType = null;
@@ -107,5 +111,75 @@ public partial class DatasetTypesViewModel : ViewModelBase
     private void RemovePlausibleValueVariables(PlausibleValueVariable plausibleValueVariable)
     { 
         SelectedDatasetType?.PVvarsList.Remove(plausibleValueVariable);
+    }
+
+    [RelayCommand]
+    private void ExportDatasetType(string file)
+    {
+        if (SelectedDatasetType == null || !SelectedDatasetType.Validate())
+        {
+            return;
+        }
+
+        JsonSerializerOptions jsonSerializerOptions = new(JsonSerializerOptions.Default)
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            WriteIndented = true
+        };
+
+        File.WriteAllText(file, JsonSerializer.Serialize(SelectedDatasetType, jsonSerializerOptions));
+        
+        _appConfiguration.LastOutFileLocation = Path.GetDirectoryName(file)!;
+        DisplayMessage($"Exported { SelectedDatasetType.Name } to { file }");
+    }
+
+    [RelayCommand]
+    private void ImportDatasetType(string file)
+    {
+        try
+        {
+            var fileContent = File.ReadAllText(file);
+            var newDatasetType = JsonSerializer.Deserialize<DatasetType>(fileContent);
+                
+            if (newDatasetType == null)
+            {
+                DisplayMessage("Invalid file");
+                return;
+            }
+
+            var minAvailableDatasetTypeId = 1;
+            while (DatasetTypes.Any(dst => dst.Id == minAvailableDatasetTypeId))
+            {
+                minAvailableDatasetTypeId++;
+            }
+            newDatasetType.Id = minAvailableDatasetTypeId;
+
+            var newDatasetTypeOriginalName = newDatasetType.Name;
+            var newDatasetTypeNameCounter = 1;
+            while (DatasetTypes.Any(dst => dst.Name == newDatasetType.Name))
+            {
+                newDatasetType.Name = newDatasetTypeOriginalName + " (" + newDatasetTypeNameCounter + ")";
+                newDatasetTypeNameCounter++;
+            }
+
+            if (!newDatasetType.Validate())
+            {
+                DisplayMessage("Invalid dataset type");
+                return;
+            }
+
+            _appConfiguration.StoreDatasetType(newDatasetType);
+
+            DatasetTypes.Add(newDatasetType);
+            newDatasetType.AcceptChanges();
+            SelectedDatasetType = newDatasetType;
+
+            _appConfiguration.LastInFileLocation = Path.GetDirectoryName(file)!;
+            DisplayMessage($"Imported { newDatasetType.Name } from { file }");
+        }
+        catch (Exception)
+        {
+            DisplayMessage("Invalid file");
+        }
     }
 }
