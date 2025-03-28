@@ -3,6 +3,7 @@ using LSAnalyzerAvalonia.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,8 @@ public class TestObjectTools
     [Fact]
     public void TestPublicInstancePropertiesEqual()
     {
+        Assert.True(ObjectTools.PublicInstancePropertiesEqual((DatasetType?)null, (DatasetType?)null));
+        
         DatasetType dst1 = new DatasetType();
         DatasetType dst2 = new DatasetType(dst1);
 
@@ -26,6 +29,13 @@ public class TestObjectTools
         dst2.FayFac = 2;
 
         Assert.True(ObjectTools.PublicInstancePropertiesEqual(dst1, dst2, new string[] { "PVvarsList", "Errors" }));
+    }
+
+    [Fact]
+    public void TestDoesPropertyExist()
+    {
+        Assert.False(ObjectTools.DoesPropertyExist(new ExpandoObject(), "Errors"));
+        Assert.True(ObjectTools.DoesPropertyExist(new DatasetType(), "PVvarsList"));
     }
 
     [Fact]
