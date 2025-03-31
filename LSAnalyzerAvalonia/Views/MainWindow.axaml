@@ -4,6 +4,7 @@
         xmlns:view="using:LSAnalyzerAvalonia.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:dialogHost="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="LSAnalyzerAvalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -16,24 +17,29 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
     
-    <StackPanel>
-        <DockPanel Dock="Top">
-            <Menu>
-                <MenuItem Header="File" IsEnabled="False">
-                    
-                </MenuItem>
-                <MenuItem Header="Analysis" IsEnabled="False">
-                    
-                </MenuItem>
-                <MenuItem Header="_Config">
-                    <MenuItem Header="Dataset types ..." Command="{Binding OpenWindowCommand}" CommandParameter="{x:Type view:DatasetTypes}"></MenuItem>
-                    <MenuItem Header="Data providers ..." IsEnabled="False"></MenuItem>
-                    <Separator></Separator>
-                    <MenuItem Header="System ..." IsEnabled="False"></MenuItem>
-                </MenuItem>
-            </Menu>
-        </DockPanel>
-
-        <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-    </StackPanel>
+    <dialogHost:DialogHost CloseOnClickAway="False" IsOpen="False" Identifier="questions">
+        <dialogHost:DialogHost CloseOnClickAway="True" IsOpen="{Binding ShowMessage}" Identifier="messages">
+            <dialogHost:DialogHost.DialogContent>
+                <TextBlock Text="{Binding Message}"/>
+            </dialogHost:DialogHost.DialogContent>
+            <StackPanel>
+                <DockPanel Dock="Top">
+                    <Menu>
+                        <MenuItem Header="File">
+                            <MenuItem Header="Select file ..." Command="{Binding OpenWindowCommand}" CommandParameter="{x:Type view:SelectAnalysisFile}"></MenuItem>
+                        </MenuItem>
+                        <MenuItem Header="Analysis" IsEnabled="False">
+                            
+                        </MenuItem>
+                        <MenuItem Header="_Config">
+                            <MenuItem Header="Dataset types ..." Command="{Binding OpenWindowCommand}" CommandParameter="{x:Type view:DatasetTypes}"></MenuItem>
+                            <MenuItem Header="Data providers ..." IsEnabled="False"></MenuItem>
+                            <Separator></Separator>
+                            <MenuItem Header="System ..." IsEnabled="False"></MenuItem>
+                        </MenuItem>
+                    </Menu>
+                </DockPanel>
+            </StackPanel>
+        </dialogHost:DialogHost>
+    </dialogHost:DialogHost>
 </Window>
