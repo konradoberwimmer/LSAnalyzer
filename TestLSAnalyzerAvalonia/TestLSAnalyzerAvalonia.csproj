@@ -23,4 +23,40 @@
       <ProjectReference Include="..\LSAnalyzerAvalonia\LSAnalyzerAvalonia.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx.zip">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_CorruptDll.zip">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_MissingManifest.zip">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_WrongDll.zip">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_WrongManifest.zip">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestPluginTools\not_a_zip_file">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_CorruptManifest.zip">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_WrongManifestBadDll.zip">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_WrongManifestMissingDll.zip">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataProviderDataverse.zip">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

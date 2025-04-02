@@ -25,17 +25,17 @@
             <StackPanel>
                 <DockPanel Dock="Top">
                     <Menu>
-                        <MenuItem Header="File">
+                        <MenuItem Header="_File">
                             <MenuItem Header="Select file ..." Command="{Binding OpenWindowCommand}" CommandParameter="{x:Type view:SelectAnalysisFile}"></MenuItem>
                         </MenuItem>
-                        <MenuItem Header="Analysis" IsEnabled="False">
+                        <MenuItem Header="_Analysis" IsEnabled="False">
                             
                         </MenuItem>
                         <MenuItem Header="_Config">
                             <MenuItem Header="Dataset types ..." Command="{Binding OpenWindowCommand}" CommandParameter="{x:Type view:DatasetTypes}"></MenuItem>
                             <MenuItem Header="Data providers ..." IsEnabled="False"></MenuItem>
                             <Separator></Separator>
-                            <MenuItem Header="System ..." IsEnabled="False"></MenuItem>
+                            <MenuItem Header="Manage plugins ..." Command="{Binding OpenWindowCommand}" CommandParameter="{x:Type view:ManagePlugins}"></MenuItem>
                         </MenuItem>
                     </Menu>
                 </DockPanel>

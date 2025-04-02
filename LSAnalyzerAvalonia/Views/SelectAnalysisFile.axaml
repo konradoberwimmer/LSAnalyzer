@@ -14,7 +14,7 @@
     
     <Grid Margin="5">
         <StackPanel>
-            <ComboBox ItemsSource="{Binding DataReaderPlugins}" DisplayMemberBinding="{Binding Name}" SelectedItem="{Binding SelectedDataReaderPlugin}" Width="400"/>
+            <ComboBox ItemsSource="{Binding DataReaderPlugins}" DisplayMemberBinding="{Binding DisplayName}" SelectedItem="{Binding SelectedDataReaderPlugin}" Width="400"/>
             <TextBox Text="{Binding DummyOutput}"></TextBox>
         </StackPanel>
     </Grid>

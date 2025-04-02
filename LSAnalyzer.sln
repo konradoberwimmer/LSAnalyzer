@@ -20,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LSAnalyzerAvalonia.Plugins"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LSAnalyzerDataReaderXlsx", "LSAnalyzerDataReaderXlsx\LSAnalyzerDataReaderXlsx.csproj", "{1B73268B-F971-4939-B7C0-C4258AEB2E31}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LSAnalyzerDataProviderDataverse", "LSAnalyzerDataProviderDataverse\LSAnalyzerDataProviderDataverse.csproj", "{1B5C9467-833F-461F-8539-068726A88E6C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -126,6 +128,22 @@ Global
 		{1B73268B-F971-4939-B7C0-C4258AEB2E31}.Release|x64.Build.0 = Release|Any CPU
 		{1B73268B-F971-4939-B7C0-C4258AEB2E31}.Release|x86.ActiveCfg = Release|Any CPU
 		{1B73268B-F971-4939-B7C0-C4258AEB2E31}.Release|x86.Build.0 = Release|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Debug|x64.Build.0 = Debug|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Debug|x86.Build.0 = Debug|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Release|ARM64.Build.0 = Release|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Release|x64.ActiveCfg = Release|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Release|x64.Build.0 = Release|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Release|x86.ActiveCfg = Release|Any CPU
+		{1B5C9467-833F-461F-8539-068726A88E6C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -135,5 +153,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1B73268B-F971-4939-B7C0-C4258AEB2E31} = {12177E3C-7131-4144-BE39-402EE0C3A130}
+		{1B5C9467-833F-461F-8539-068726A88E6C} = {12177E3C-7131-4144-BE39-402EE0C3A130}
 	EndGlobalSection
 EndGlobal

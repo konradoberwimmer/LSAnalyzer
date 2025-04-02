@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:LSAnalyzerAvalonia.ViewModels"
+        xmlns:dialogHost="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="LSAnalyzerAvalonia.Views.ManagePlugins"
+        x:DataType="vm:ManagePluginsViewModel"
+        Title="ManagePlugins" Width="800" MinWidth="800" Height="400" MinHeight="400">
+    
+    <Design.DataContext>
+        <vm:ManagePluginsViewModel/>
+    </Design.DataContext>
+    
+    <dialogHost:DialogHost CloseOnClickAway="False" IsOpen="False" Identifier="questions">
+        <dialogHost:DialogHost CloseOnClickAway="True" IsOpen="{Binding ShowMessage}" Identifier="messages">
+            <dialogHost:DialogHost.DialogContent>
+                <TextBlock Text="{Binding Message}"/>
+            </dialogHost:DialogHost.DialogContent>
+            <Grid RowDefinitions="Auto,*,Auto" Margin="5" ColumnDefinitions="Auto,*">
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Installed plugins:"/>
+                <DataGrid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="DataGridPlugins" Margin="0,5,0,0" ItemsSource="{Binding Plugins}" AutoGenerateColumns="False" SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Type" Binding="{Binding PluginType}" Width="100"/>
+                        <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="100"/>
+                        <DataGridTextColumn Header="Name" Binding="{Binding ClassName}" Width="250"/>
+                        <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Button Grid.Row="2" Grid.Column="0" Classes="standard" Margin="0,5,0,0" Content="Add ..." Click="Add_OnClick"/>
+                <Button Grid.Row="2" Grid.Column="1" Classes="standard" Margin="0,5,0,0" HorizontalAlignment="Right" Content="Remove" IsEnabled="{Binding ElementName=DataGridPlugins, Path=SelectedItem, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+            </Grid>
+        </dialogHost:DialogHost>
+    </dialogHost:DialogHost>
+</Window>

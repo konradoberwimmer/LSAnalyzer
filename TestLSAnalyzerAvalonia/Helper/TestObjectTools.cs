@@ -15,7 +15,9 @@ public class TestObjectTools
     [Fact]
     public void TestPublicInstancePropertiesEqual()
     {
+#pragma warning disable CS8634
         Assert.True(ObjectTools.PublicInstancePropertiesEqual((DatasetType?)null, (DatasetType?)null));
+#pragma warning restore CS8634
         
         DatasetType dst1 = new DatasetType();
         DatasetType dst2 = new DatasetType(dst1);

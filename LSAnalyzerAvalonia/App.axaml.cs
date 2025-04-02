@@ -30,33 +30,6 @@ public partial class App : Application
         AddCommonServices(collection);
         Services = collection.BuildServiceProvider();
     }
-    
-    private Assembly? LoadPlugin(string fullPath)
-    {
-        PluginLoadContext pluginLoadContext = new();
-
-        if (!pluginLoadContext.SetAssemblyDependencyResolverFromFullPath(fullPath))
-        {
-            _startupMessages.Add($"Failed to load plugin '{fullPath}'!");
-            return null;
-        }
-        
-        return pluginLoadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(fullPath))) ;
-    }
-    
-    private IDataReaderPlugin? CreateDataReader(Assembly assembly)
-    {
-        foreach (var type in assembly.GetTypes())
-        {
-            if (typeof(IDataReaderPlugin).IsAssignableFrom(type))
-            {
-                return Activator.CreateInstance(type) as IDataReaderPlugin;
-            }
-        }
-        
-        _startupMessages.Add($"Failed to find usable plugin interface in assembly '{assembly.FullName}'!");
-        return null;
-    }
 
     private void AddCommonServices(IServiceCollection collection)
     {
@@ -75,9 +48,11 @@ public partial class App : Application
         collection.AddSingleton<MainWindowViewModel>();
         collection.AddTransient<SelectAnalysisFileViewModel>();
         collection.AddTransient<DatasetTypesViewModel>();
+        collection.AddTransient<ManagePluginsViewModel>();
         collection.AddSingleton<MainWindow>();
         collection.AddTransient<SelectAnalysisFile>();
         collection.AddTransient<DatasetTypes>();
+        collection.AddTransient<ManagePlugins>();
     }
 
     public override void OnFrameworkInitializationCompleted()

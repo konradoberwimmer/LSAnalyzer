@@ -7,7 +7,7 @@ public class Plugins : IPlugins
 {
     private List<IDataReaderPlugin> _dataReaderPlugins = [];
 
-    public void AddDataReaderPlugin(IDataReaderPlugin plugin) => _dataReaderPlugins.Add(plugin);
-    
     public List<IDataReaderPlugin> DataReaderPlugins => _dataReaderPlugins;
+    
+    public void AddDataReaderPlugin(IDataReaderPlugin plugin) => _dataReaderPlugins.Add(plugin);
 }

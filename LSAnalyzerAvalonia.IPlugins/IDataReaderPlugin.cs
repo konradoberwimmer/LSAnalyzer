@@ -2,9 +2,9 @@
 
 namespace LSAnalyzerAvalonia.IPlugins;
 
-public interface IDataReaderPlugin
+public interface IDataReaderPlugin : IPluginCommons
 {
-    public string Name { get; }
+    public new static PluginTypes PluginType => PluginTypes.DataReader;
     
     public Matrix<double> ReadDataFile(string path);
 }
