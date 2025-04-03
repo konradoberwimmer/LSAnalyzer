@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace LSAnalyzerAvalonia.IPlugins;
 
 public interface IPluginCommons
 {
+    [ExcludeFromCodeCoverage]
     public static virtual PluginTypes PluginType => PluginTypes.Undefined;
     
     public string DllName { get; }
@@ -31,6 +33,10 @@ public interface IPluginCommons
     public record Manifest
     {
         [JsonPropertyName("dll")]
-        public required string Dll { get; set; }
+        public required string Dll { get; init; }
+        
+        [JsonPropertyName("type")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public required PluginTypes Type { get; init; }
     }
 }

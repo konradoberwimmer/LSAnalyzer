@@ -12,7 +12,7 @@ public static class PluginTools
 {
     private static DirectoryInfo? _tempDirectory;
     
-    public static Validity IsValidPlugin(string pluginPath, IPluginCommons.PluginTypes pluginType)
+    public static Validity IsValidPlugin(string pluginPath)
     {
         if (!File.Exists(pluginPath)) return Validity.FileNotFound;
         
@@ -69,7 +69,7 @@ public static class PluginTools
         try
         {
             IPluginCommons? plugin;
-            switch (pluginType)
+            switch (manifest.Type)
             {
                 case IPluginCommons.PluginTypes.Undefined:
                     CleanUp();

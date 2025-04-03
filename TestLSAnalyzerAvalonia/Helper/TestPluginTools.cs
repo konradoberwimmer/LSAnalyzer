@@ -37,58 +37,47 @@ public class TestPluginTools
     public void TestIsValidPlugin()
     {
         Assert.Equal(PluginTools.Validity.FileNotFound, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "not_here" ]), 
-            IPluginCommons.PluginTypes.DataReader
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "not_here" ])
         ));
         
         Assert.Equal(PluginTools.Validity.FileNotZip, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "not_a_zip_file" ]), 
-            IPluginCommons.PluginTypes.DataReader
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "not_a_zip_file" ])
         ));
         
         Assert.Equal(PluginTools.Validity.ManifestNotFound, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_MissingManifest.zip" ]), 
-            IPluginCommons.PluginTypes.DataReader
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_MissingManifest.zip" ])
         ));
         
         Assert.Equal(PluginTools.Validity.ManifestCorrupt, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_CorruptManifest.zip" ]), 
-            IPluginCommons.PluginTypes.DataReader
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_CorruptManifest.zip" ])
         ));
         
         Assert.Equal(PluginTools.Validity.DllNotFound, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_WrongManifestMissingDll.zip" ]), 
-            IPluginCommons.PluginTypes.DataReader
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_WrongManifestMissingDll.zip" ])
         ));
         
         Assert.Equal(PluginTools.Validity.AssemblyInaccessible, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_WrongManifestBadDll.zip" ]), 
-            IPluginCommons.PluginTypes.DataReader
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_WrongManifestBadDll.zip" ])
         ));
         
         Assert.Equal(PluginTools.Validity.PluginTypeUndefined, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx.zip" ]), 
-            IPluginCommons.PluginTypes.Undefined
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_WrongManifestUndefinedType.zip" ])
         ));
         
         Assert.Equal(PluginTools.Validity.PluginNotCreatable, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataProviderDataverse.zip" ]), 
-            IPluginCommons.PluginTypes.DataReader
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataProviderDataverse_WrongType.zip" ])
         ));
         
         Assert.Equal(PluginTools.Validity.PluginNotCreatable, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx.zip" ]), 
-            IPluginCommons.PluginTypes.DataProvider
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_WrongType.zip" ])
         ));
         
         Assert.Equal(PluginTools.Validity.Valid, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx.zip" ]), 
-            IPluginCommons.PluginTypes.DataReader
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx.zip" ])
         ));
         
         Assert.Equal(PluginTools.Validity.Valid, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataProviderDataverse.zip" ]), 
-            IPluginCommons.PluginTypes.DataProvider
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataProviderDataverse.zip" ])
         ));
     }
 }
