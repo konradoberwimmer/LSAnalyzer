@@ -33,51 +33,22 @@ public class TestPluginTools
         Assert.NotNull(PluginTools.CreatePlugin<IDataReaderPlugin>(assembly));
     }
 
-    [Fact]
-    public void TestIsValidPlugin()
+    [Theory]
+    [InlineData(PluginTools.Validity.FileNotFound, "not_here")]
+    [InlineData(PluginTools.Validity.FileNotZip, "not_a_zip_file")]
+    [InlineData(PluginTools.Validity.ManifestNotFound, "LSAnalyzerDataReaderXlsx_MissingManifest.zip")]
+    [InlineData(PluginTools.Validity.ManifestCorrupt, "LSAnalyzerDataReaderXlsx_CorruptManifest.zip")]
+    [InlineData(PluginTools.Validity.DllNotFound, "LSAnalyzerDataReaderXlsx_WrongManifestMissingDll.zip")]
+    [InlineData(PluginTools.Validity.AssemblyInaccessible, "LSAnalyzerDataReaderXlsx_WrongManifestBadDll.zip")]
+    [InlineData(PluginTools.Validity.PluginTypeUndefined, "LSAnalyzerDataReaderXlsx_WrongManifestUndefinedType.zip")]
+    [InlineData(PluginTools.Validity.PluginNotCreatable, "LSAnalyzerDataProviderDataverse_WrongType.zip")]
+    [InlineData(PluginTools.Validity.PluginNotCreatable, "LSAnalyzerDataReaderXlsx_WrongType.zip")]
+    [InlineData(PluginTools.Validity.Valid, "LSAnalyzerDataReaderXlsx.zip")]
+    [InlineData(PluginTools.Validity.Valid, "LSAnalyzerDataProviderDataverse.zip")]
+    public void TestIsValidPlugin(PluginTools.Validity validity, string fileName)
     {
-        Assert.Equal(PluginTools.Validity.FileNotFound, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "not_here" ])
-        ));
-        
-        Assert.Equal(PluginTools.Validity.FileNotZip, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "not_a_zip_file" ])
-        ));
-        
-        Assert.Equal(PluginTools.Validity.ManifestNotFound, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_MissingManifest.zip" ])
-        ));
-        
-        Assert.Equal(PluginTools.Validity.ManifestCorrupt, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_CorruptManifest.zip" ])
-        ));
-        
-        Assert.Equal(PluginTools.Validity.DllNotFound, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_WrongManifestMissingDll.zip" ])
-        ));
-        
-        Assert.Equal(PluginTools.Validity.AssemblyInaccessible, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_WrongManifestBadDll.zip" ])
-        ));
-        
-        Assert.Equal(PluginTools.Validity.PluginTypeUndefined, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_WrongManifestUndefinedType.zip" ])
-        ));
-        
-        Assert.Equal(PluginTools.Validity.PluginNotCreatable, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataProviderDataverse_WrongType.zip" ])
-        ));
-        
-        Assert.Equal(PluginTools.Validity.PluginNotCreatable, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_WrongType.zip" ])
-        ));
-        
-        Assert.Equal(PluginTools.Validity.Valid, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx.zip" ])
-        ));
-        
-        Assert.Equal(PluginTools.Validity.Valid, PluginTools.IsValidPlugin(
-            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataProviderDataverse.zip" ])
+        Assert.Equal(validity, PluginTools.IsValidPlugin(
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", fileName ])
         ));
     }
 }
