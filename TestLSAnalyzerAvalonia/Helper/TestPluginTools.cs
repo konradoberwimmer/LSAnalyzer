@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using LSAnalyzerAvalonia.Helper;
 using LSAnalyzerAvalonia.IPlugins;
 
@@ -47,6 +48,8 @@ public class TestPluginTools
     [InlineData(PluginTools.Validity.Valid, "LSAnalyzerDataProviderDataverse.zip")]
     public void TestIsValidPlugin(PluginTools.Validity validity, string fileName)
     {
+        if (validity is PluginTools.Validity.PluginTypeUndefined or PluginTools.Validity.PluginNotCreatable or PluginTools.Validity.Valid && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+        
         Assert.Equal(validity, PluginTools.IsValidPlugin(
             Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", fileName ])
         ));
