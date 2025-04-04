@@ -6,4 +6,6 @@ namespace LSAnalyzerAvalonia.Services;
 public interface IPlugins
 {
     public List<IDataReaderPlugin> DataReaderPlugins { get; }
+    
+    public List<IDataProviderPlugin> DataProviderPlugins { get; }
 }

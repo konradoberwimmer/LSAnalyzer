@@ -6,8 +6,7 @@ namespace LSAnalyzerAvalonia.IPlugins;
 
 public interface IPluginCommons
 {
-    [ExcludeFromCodeCoverage]
-    public static virtual PluginTypes PluginType => PluginTypes.Undefined;
+    public PluginTypes PluginType { get; }
     
     public string DllName { get; }
     

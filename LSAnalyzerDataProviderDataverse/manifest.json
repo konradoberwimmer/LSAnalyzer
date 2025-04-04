@@ -1,3 +1,4 @@
 {
-  "dll" : "LSAnalyzerDataProviderDataverse.dll"
+  "dll" : "LSAnalyzerDataProviderDataverse.dll",
+  "type" : "DataProvider"
 }

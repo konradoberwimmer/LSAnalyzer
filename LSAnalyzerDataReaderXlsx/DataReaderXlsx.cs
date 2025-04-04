@@ -7,6 +7,8 @@ namespace LSAnalyzerDataReaderXlsx;
 
 public class DataReaderXlsx : IDataReaderPlugin
 {
+    public IPluginCommons.PluginTypes PluginType => IPluginCommons.PluginTypes.DataReader;
+    
     public string DllName => "LSAnalyzerDataReaderXlsx.dll";
     
     public Version Version => Assembly.GetAssembly(typeof(DataReaderXlsx))!.GetName().Version ?? new Version(0, 0, 0);

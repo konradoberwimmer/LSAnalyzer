@@ -17,8 +17,8 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
     
-    <dialogHost:DialogHost CloseOnClickAway="False" IsOpen="False" Identifier="questions">
-        <dialogHost:DialogHost CloseOnClickAway="True" IsOpen="{Binding ShowMessage}" Identifier="messages">
+    <dialogHost:DialogHost CloseOnClickAway="False" IsOpen="False" Identifier="questions_mainWindow">
+        <dialogHost:DialogHost CloseOnClickAway="True" IsOpen="{Binding ShowMessage}" Identifier="messages_mainWindow">
             <dialogHost:DialogHost.DialogContent>
                 <TextBlock Text="{Binding Message}"/>
             </dialogHost:DialogHost.DialogContent>

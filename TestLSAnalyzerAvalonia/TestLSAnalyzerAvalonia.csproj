@@ -21,6 +21,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\LSAnalyzerAvalonia\LSAnalyzerAvalonia.csproj" />
+      <ProjectReference Include="..\LSAnalyzerDataProviderDataverse\LSAnalyzerDataProviderDataverse.csproj" />
+      <ProjectReference Include="..\LSAnalyzerDataReaderXlsx\LSAnalyzerDataReaderXlsx.csproj" />
     </ItemGroup>
 
     <ItemGroup>

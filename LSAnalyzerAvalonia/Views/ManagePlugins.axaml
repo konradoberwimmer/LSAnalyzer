@@ -29,7 +29,7 @@
                     </DataGrid.Columns>
                 </DataGrid>
                 <Button Grid.Row="2" Grid.Column="0" Classes="standard" Margin="0,5,0,0" Content="Add ..." Click="Add_OnClick"/>
-                <Button Grid.Row="2" Grid.Column="1" Classes="standard" Margin="0,5,0,0" HorizontalAlignment="Right" Content="Remove" IsEnabled="{Binding ElementName=DataGridPlugins, Path=SelectedItem, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                <Button Grid.Row="2" Grid.Column="1" Classes="standard" Margin="0,5,0,0" HorizontalAlignment="Right" Content="Remove" IsEnabled="{Binding ElementName=DataGridPlugins, Path=SelectedItem, Converter={x:Static ObjectConverters.IsNotNull}}" Click="Remove_OnClick"/>
             </Grid>
         </dialogHost:DialogHost>
     </dialogHost:DialogHost>
