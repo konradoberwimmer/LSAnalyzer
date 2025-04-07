@@ -62,40 +62,31 @@ public partial class ManagePluginsViewModel : ViewModelBase
             return;
         }
         
+        // the following is null-safe because of validity check above
+        
         var assembly = PluginTools.LoadPlugin(Path.Combine(preservedPluginFolder, manifest!.Dll))!;
         
+        IPluginCommons plugin = null!;
         switch (manifest.Type)
         {
             case IPluginCommons.PluginTypes.DataReader:
-                var dataReaderPlugin = PluginTools.CreatePlugin<IDataReaderPlugin>(assembly)!;
-                _pluginService.DataReaderPlugins.Add(dataReaderPlugin);
-                Plugins.Add(dataReaderPlugin);
-                Message = $"Added plugin: { dataReaderPlugin.ClassName }";
+                plugin = PluginTools.CreatePlugin<IDataReaderPlugin>(assembly)!;
                 break;
             case IPluginCommons.PluginTypes.DataProvider:
-                var dataProviderPlugin = PluginTools.CreatePlugin<IDataProviderPlugin>(assembly)!;
-                _pluginService.DataProviderPlugins.Add(dataProviderPlugin);
-                Plugins.Add(dataProviderPlugin);
-                Message = $"Added plugin: { dataProviderPlugin.ClassName }";
+                plugin  = PluginTools.CreatePlugin<IDataProviderPlugin>(assembly)!;
                 break;
         }
         
+        _pluginService.AddPlugin(plugin, preservedPluginFolder);
+        Plugins.Add(plugin);
+        Message = $"Added plugin: {plugin.ClassName}";
         ShowMessage = true;
     }
 
     [RelayCommand]
     private void RemovePlugin(IPluginCommons plugin)
     {
-        switch (plugin.PluginType)
-        {
-            case IPluginCommons.PluginTypes.DataReader:
-                _pluginService.DataReaderPlugins.Remove((plugin as IDataReaderPlugin)!);
-                break;
-            case IPluginCommons.PluginTypes.DataProvider:
-                _pluginService.DataProviderPlugins.Remove((plugin as IDataProviderPlugin)!);
-                break;
-        }
-        
+        _pluginService.RemovePlugin(plugin);
         Plugins.Remove(plugin);
 
         Message = $"Removed plugin: { plugin.ClassName }";

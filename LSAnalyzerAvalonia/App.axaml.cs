@@ -33,18 +33,13 @@ public partial class App : Application
 
     private void AddCommonServices(IServiceCollection collection)
     {
-        collection.AddSingleton<Services.IPlugins, Plugins>(_ =>
-        {
-            Plugins plugins = new();
-            
-            return plugins;
-        });
         collection.AddSingleton<IAppConfiguration, AppConfiguration>(_ => 
             new AppConfiguration(
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "lsanalyzer_user_settings.json"), 
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "lsanalyzer_dataset_types.json")
             )
         );
+        collection.AddSingleton<Services.IPlugins, Plugins>();
         collection.AddSingleton<MainWindowViewModel>();
         collection.AddTransient<SelectAnalysisFileViewModel>();
         collection.AddTransient<DatasetTypesViewModel>();

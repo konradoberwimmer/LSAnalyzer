@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using LSAnalyzerAvalonia.IPlugins;
 using LSAnalyzerAvalonia.Services;
 using LSAnalyzerAvalonia.ViewModels;
 using LSAnalyzerDataProviderDataverse;
@@ -49,8 +50,7 @@ public class TestManagePluginsViewModel
         viewModel.AddPluginCommand.Execute(Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx.zip" ]));
         viewModel.AddPluginCommand.Execute(Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataProviderDataverse.zip" ]));
         
-        pluginService.VerifyGet(x => x.DataReaderPlugins, Times.Exactly(2));
-        pluginService.VerifyGet(x => x.DataProviderPlugins, Times.Exactly(2));
+        pluginService.Verify(x => x.AddPlugin(It.IsAny<IPluginCommons>(), It.IsAny<string>()), Times.Exactly(2));
         Assert.Equal(2, viewModel.Plugins.Count);
         Assert.Matches($"Added.*{ nameof(DataProviderDataverse) }", viewModel.Message);
 
@@ -83,13 +83,13 @@ public class TestManagePluginsViewModel
         
         viewModel.RemovePluginCommand.Execute(viewModel.Plugins.First());
         
-        pluginService.VerifyGet(x => x.DataReaderPlugins, Times.Exactly(2));
+        pluginService.Verify(x => x.RemovePlugin(It.IsAny<IPluginCommons>()), Times.Once);
         Assert.Single(viewModel.Plugins);
         Assert.Matches($"Removed.*{ nameof(DataReaderXlsx) }", viewModel.Message);
         
         viewModel.RemovePluginCommand.Execute(viewModel.Plugins.First());
 
-        pluginService.VerifyGet(x => x.DataProviderPlugins, Times.Exactly(2));
+        pluginService.Verify(x => x.RemovePlugin(It.IsAny<IPluginCommons>()), Times.Exactly(2));
         Assert.Empty(viewModel.Plugins);
         Assert.Matches($"Removed.*{ nameof(DataProviderDataverse) }", viewModel.Message);
     }

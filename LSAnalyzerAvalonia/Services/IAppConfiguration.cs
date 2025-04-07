@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using LSAnalyzerAvalonia.Models;
 
 namespace LSAnalyzerAvalonia.Services;
@@ -18,4 +19,10 @@ public interface IAppConfiguration
     public void StoreDatasetType(DatasetType datasetType);
 
     public void RemoveDatasetType(DatasetType datasetType);
+
+    public List<string> PreservedPluginLocations { get; }
+    
+    public void StorePreservedPluginLocation(string preservedPluginLocation);
+    
+    public void RemovePreservedPluginLocation(string preservedPluginLocation);
 }

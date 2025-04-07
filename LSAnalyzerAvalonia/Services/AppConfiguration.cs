@@ -130,9 +130,34 @@ public class AppConfiguration(string userSettingsFilePath, string datasetTypesCo
         File.WriteAllText(datasetTypesConfigFilePath, JsonSerializer.Serialize(storedDatasetTypes));
     }
 
+    public List<string> PreservedPluginLocations => CurrentUserSettings.PreservedPluginLocations;
+
+    public void StorePreservedPluginLocation(string preservedPluginLocation)
+    {
+        var currentUserSettings = CurrentUserSettings;
+        currentUserSettings.PreservedPluginLocations.Add(preservedPluginLocation);
+        
+        try
+        {
+            File.WriteAllText(userSettingsFilePath, JsonSerializer.Serialize(currentUserSettings));
+        } catch { }
+    }
+    
+    public void RemovePreservedPluginLocation(string preservedPluginLocation)
+    {
+        var currentUserSettings = CurrentUserSettings;
+        currentUserSettings.PreservedPluginLocations.Remove(preservedPluginLocation);
+        
+        try
+        {
+            File.WriteAllText(userSettingsFilePath, JsonSerializer.Serialize(currentUserSettings));
+        } catch { }
+    }
+
     public class UserSettings
     {
         public string LastInFileLocation { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         public string LastOutFileLocation { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        public List<string> PreservedPluginLocations { get; set; } = [];
     }
 }
