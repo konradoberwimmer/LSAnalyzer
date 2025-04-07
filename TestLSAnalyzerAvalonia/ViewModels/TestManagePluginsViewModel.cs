@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using LSAnalyzerAvalonia.IPlugins;
 using LSAnalyzerAvalonia.Services;
 using LSAnalyzerAvalonia.ViewModels;
@@ -27,47 +28,95 @@ public class TestManagePluginsViewModel
     }
 
     [Fact]
-    public void TestAddPluginCommand()
+    public void TestAddPluginCommandFileNotFound()
+    {
+        var pluginService = new Mock<IPlugins>();
+        pluginService.SetupGet(x => x.DataReaderPlugins).Returns([]);
+        pluginService.SetupGet(x => x.DataProviderPlugins).Returns([]);
+
+        var pathFileNotFound =
+            Path.Combine([Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "not_here"]);
+        
+        pluginService
+            .Setup(x => x.IsValidPlugin(It.Is<string>(v => v == pathFileNotFound))).Returns((IPlugins.Validity.FileNotFound, null));
+        
+        ManagePluginsViewModel viewModel = new(pluginService.Object);
+        
+        viewModel.AddPluginCommand.Execute(pathFileNotFound);
+        
+        Assert.Empty(viewModel.Plugins);
+        Assert.Matches("not found", viewModel.Message);
+    }
+    
+    
+    [Fact]
+    public void TestAddPluginCommandMissingManifest()
     {
         var pluginService = new Mock<IPlugins>();
         pluginService.SetupGet(x => x.DataReaderPlugins).Returns([]);
         pluginService.SetupGet(x => x.DataProviderPlugins).Returns([]);
         
+        var pathMissingManifest =
+            Path.Combine([Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "LSAnalyzerDataReaderXlsx_MissingManifest.zip"]);
+        
+        pluginService
+            .Setup(x => x.IsValidPlugin(It.Is<string>(v => v == pathMissingManifest))).Returns((IPlugins.Validity.ManifestNotFound, null));
+        
         ManagePluginsViewModel viewModel = new(pluginService.Object);
         
-        viewModel.AddPluginCommand.Execute(Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "not_here" ]));
-        
-        Assert.Empty(viewModel.Plugins);
-        Assert.Matches("not found", viewModel.Message);
-        
-        viewModel.AddPluginCommand.Execute(Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx_MissingManifest.zip" ]));
+        viewModel.AddPluginCommand.Execute(pathMissingManifest);
         
         Assert.Empty(viewModel.Plugins);
         Assert.Matches("not a valid.*plugin", viewModel.Message);
+    }
+    
+    
+    [Fact]
+    public void TestAddPluginCommandCannotPreserve()
+    {
+        var pluginService = new Mock<IPlugins>();
+        pluginService.SetupGet(x => x.DataReaderPlugins).Returns([]);
+        pluginService.SetupGet(x => x.DataProviderPlugins).Returns([]);
 
+        var pathCannotPreserve =
+            Path.Combine([Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "cannot_preserve"]);
+        
+        pluginService
+            .Setup(x => x.IsValidPlugin(It.Is<string>(v => v == pathCannotPreserve))).Returns((IPlugins.Validity.Valid, new IPluginCommons.Manifest { Dll = string.Empty, Type = IPluginCommons.PluginTypes.DataProvider }));
+        pluginService
+            .Setup(x => x.PreservePlugin(It.Is<string>(v => v == pathCannotPreserve))).Returns((string?)null);
+        
+        ManagePluginsViewModel viewModel = new(pluginService.Object);
+        
+        viewModel.AddPluginCommand.Execute(pathCannotPreserve);
+        
+        Assert.Empty(viewModel.Plugins);
+        Assert.Matches("not preserve", viewModel.Message);
+    }
+    
+    
+    [Fact]
+    public void TestAddPluginCommand()
+    {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
         
-        viewModel.AddPluginCommand.Execute(Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx.zip" ]));
-        viewModel.AddPluginCommand.Execute(Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataProviderDataverse.zip" ]));
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.SetupGet(x => x.PreservedPluginLocations).Returns([]);
         
-        pluginService.Verify(x => x.AddPlugin(It.IsAny<IPluginCommons>(), It.IsAny<string>()), Times.Exactly(2));
+        Plugins pluginService = new(appConfiguration.Object);
+
+        var pathDataReaderXlsx =
+            Path.Combine([Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "LSAnalyzerDataReaderXlsx.zip"]);
+        var pathDataProviderDataverse =
+            Path.Combine([Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "LSAnalyzerDataProviderDataverse.zip"]);
+        
+        ManagePluginsViewModel viewModel = new(pluginService);
+        
+        viewModel.AddPluginCommand.Execute(pathDataReaderXlsx);
+        viewModel.AddPluginCommand.Execute(pathDataProviderDataverse);
+        
         Assert.Equal(2, viewModel.Plugins.Count);
         Assert.Matches($"Added.*{ nameof(DataProviderDataverse) }", viewModel.Message);
-
-        // this raises code coverage to 100% but is a risky test
-        
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) return;
-                
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var permissionsStored = File.GetUnixFileMode(localAppData);
-        File.SetUnixFileMode(localAppData, UnixFileMode.UserRead);
-        
-        viewModel.AddPluginCommand.Execute(Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestPluginTools", "LSAnalyzerDataReaderXlsx.zip" ]));
-        
-        Assert.Equal(2, viewModel.Plugins.Count);
-        Assert.Matches("not preserve", viewModel.Message);
-        
-        File.SetUnixFileMode(localAppData, permissionsStored);
     }
     
     [Fact]

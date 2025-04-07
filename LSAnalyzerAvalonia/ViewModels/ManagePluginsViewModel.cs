@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LSAnalyzerAvalonia.Helper;
 using LSAnalyzerAvalonia.IPlugins;
 
 namespace LSAnalyzerAvalonia.ViewModels;
@@ -38,13 +37,13 @@ public partial class ManagePluginsViewModel : ViewModelBase
     [RelayCommand]
     private void AddPlugin(string path)
     {
-        var (validity, manifest) = PluginTools.IsValidPlugin(path);
+        var (validity, manifest) = _pluginService.IsValidPlugin(path);
 
-        if (validity is not PluginTools.Validity.Valid)
+        if (validity is not Services.IPlugins.Validity.Valid)
         {
             var error = validity switch
             {
-                PluginTools.Validity.FileNotFound => $"File { path } not found.",
+                Services.IPlugins.Validity.FileNotFound => $"File { path } not found.",
                 _ => $"File { Path.GetFileName(path) } is not a valid LSAnalyzer plugin."
             };
             
@@ -53,7 +52,7 @@ public partial class ManagePluginsViewModel : ViewModelBase
             return;
         }
 
-        var preservedPluginFolder = PluginTools.PreservePlugin(path);
+        var preservedPluginFolder = _pluginService.PreservePlugin(path);
 
         if (preservedPluginFolder is null)
         {
@@ -64,16 +63,16 @@ public partial class ManagePluginsViewModel : ViewModelBase
         
         // the following is null-safe because of validity check above
         
-        var assembly = PluginTools.LoadPlugin(Path.Combine(preservedPluginFolder, manifest!.Dll))!;
+        var assembly = _pluginService.LoadPlugin(Path.Combine(preservedPluginFolder, manifest!.Dll))!;
         
         IPluginCommons plugin = null!;
         switch (manifest.Type)
         {
             case IPluginCommons.PluginTypes.DataReader:
-                plugin = PluginTools.CreatePlugin<IDataReaderPlugin>(assembly)!;
+                plugin = _pluginService.CreatePlugin<IDataReaderPlugin>(assembly)!;
                 break;
             case IPluginCommons.PluginTypes.DataProvider:
-                plugin  = PluginTools.CreatePlugin<IDataProviderPlugin>(assembly)!;
+                plugin  = _pluginService.CreatePlugin<IDataProviderPlugin>(assembly)!;
                 break;
         }
         

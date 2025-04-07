@@ -26,46 +26,46 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx.dll">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx.dll">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx.zip">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_CorruptDll.zip">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx_CorruptDll.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_MissingManifest.zip">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx_MissingManifest.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_WrongDll.zip">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx_WrongDll.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_WrongManifest.zip">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx_WrongManifest.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\not_a_zip_file">
+      <None Update="_testFiles\TestServicesPlugins\not_a_zip_file">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_CorruptManifest.zip">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx_CorruptManifest.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_WrongManifestBadDll.zip">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx_WrongManifestBadDll.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_WrongManifestMissingDll.zip">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx_WrongManifestMissingDll.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataProviderDataverse.zip">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataProviderDataverse.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataProviderDataverse_WrongType.zip">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataProviderDataverse_WrongType.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_WrongManifestUndefinedType.zip">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx_WrongManifestUndefinedType.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="_testFiles\TestPluginTools\LSAnalyzerDataReaderXlsx_WrongType.zip">
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx_WrongType.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>
