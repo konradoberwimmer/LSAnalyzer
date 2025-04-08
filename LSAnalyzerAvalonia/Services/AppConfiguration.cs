@@ -34,7 +34,10 @@ public class AppConfiguration(string userSettingsFilePath, string datasetTypesCo
             try
             {
                 File.WriteAllText(userSettingsFilePath, JsonSerializer.Serialize(currentUserSettings));
-            } catch { }
+            } catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
     }
 
@@ -49,7 +52,10 @@ public class AppConfiguration(string userSettingsFilePath, string datasetTypesCo
             try
             {
                 File.WriteAllText(userSettingsFilePath, JsonSerializer.Serialize(currentUserSettings));
-            } catch { }
+            } catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
     }
     
@@ -140,7 +146,10 @@ public class AppConfiguration(string userSettingsFilePath, string datasetTypesCo
         try
         {
             File.WriteAllText(userSettingsFilePath, JsonSerializer.Serialize(currentUserSettings));
-        } catch { }
+        } catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
     
     public void RemovePreservedPluginLocation(string preservedPluginLocation)
@@ -151,13 +160,16 @@ public class AppConfiguration(string userSettingsFilePath, string datasetTypesCo
         try
         {
             File.WriteAllText(userSettingsFilePath, JsonSerializer.Serialize(currentUserSettings));
-        } catch { }
+        } catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 
     public class UserSettings
     {
         public string LastInFileLocation { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         public string LastOutFileLocation { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        public List<string> PreservedPluginLocations { get; set; } = [];
+        public List<string> PreservedPluginLocations { get; init; } = [];
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Reflection;
 using LSAnalyzerAvalonia.IPlugins;
 
@@ -11,7 +12,9 @@ public interface IPlugins
     
     public ImmutableList<IDataProviderPlugin> DataProviderPlugins { get; }
 
-    public (Validity, IPluginCommons.Manifest?) IsValidPlugin(string pluginPath);
+    public (Validity, IPluginCommons.Manifest?) IsValidPluginZip(string pluginPath);
+
+    public (IPlugins.Validity, IPluginCommons.Manifest?, IPluginCommons?) IsValidPluginExtracted(DirectoryInfo pluginDirectory);
 
     public Assembly? LoadPlugin(string fullPath);
 

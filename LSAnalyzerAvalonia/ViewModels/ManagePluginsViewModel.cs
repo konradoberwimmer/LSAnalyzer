@@ -37,7 +37,7 @@ public partial class ManagePluginsViewModel : ViewModelBase
     [RelayCommand]
     private void AddPlugin(string path)
     {
-        var (validity, manifest) = _pluginService.IsValidPlugin(path);
+        var (validity, manifest) = _pluginService.IsValidPluginZip(path);
 
         if (validity is not Services.IPlugins.Validity.Valid)
         {

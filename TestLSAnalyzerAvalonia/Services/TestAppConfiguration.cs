@@ -161,4 +161,53 @@ public class TestAppConfiguration
         Assert.NotNull(datasetTypes);
         Assert.Empty(datasetTypes);
     }
+
+    [Fact]
+    public void TestPreservedPluginLocations()
+    {
+        AppConfiguration appConfiguration = new(string.Empty, string.Empty);
+        
+        Assert.Empty(appConfiguration.PreservedPluginLocations);
+    }
+
+    [Fact]
+    public void TestStorePreservedPluginLocation()
+    {
+        var testFileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "test_store_lsanalyzer_preserved_plugin_location.json");
+        
+        if (File.Exists(testFileName)) File.Delete(testFileName);
+        
+        AppConfiguration appConfiguration = new(testFileName, string.Empty);
+        
+        appConfiguration.StorePreservedPluginLocation("/somewhereA");
+        Assert.Single(appConfiguration.PreservedPluginLocations);
+        
+        appConfiguration = new("/", string.Empty);
+        
+        appConfiguration.StorePreservedPluginLocation("/somewhereB");
+        Assert.Empty(appConfiguration.PreservedPluginLocations);
+    }
+    
+    [Fact]
+    public void TestRemovePreservedPluginLocation()
+    {
+        var testFileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "test_remove_lsanalyzer_preserved_plugin_location.json");
+        
+        if (File.Exists(testFileName)) File.Delete(testFileName);
+        
+        AppConfiguration appConfiguration = new(testFileName, string.Empty);
+        
+        appConfiguration.StorePreservedPluginLocation("/somewhereA");
+        Assert.Single(appConfiguration.PreservedPluginLocations);
+        
+        appConfiguration.RemovePreservedPluginLocation("/somewhereA");
+        Assert.Empty(appConfiguration.PreservedPluginLocations);
+        
+        appConfiguration = new("/", string.Empty);
+
+        var exception = Record.Exception(() => { appConfiguration.RemovePreservedPluginLocation("/somewhereB"); });
+        Assert.Null(exception);
+    }
 }

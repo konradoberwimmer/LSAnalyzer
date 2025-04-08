@@ -1,12 +1,30 @@
 using System.Runtime.InteropServices;
 using LSAnalyzerAvalonia.IPlugins;
 using LSAnalyzerAvalonia.Services;
+using LSAnalyzerDataProviderDataverse;
+using LSAnalyzerDataReaderXlsx;
 using Moq;
 
 namespace TestLSAnalyzerAvalonia.Services;
 
 public class TestPlugins
 {
+    [Fact]
+    public void TestConstructor()
+    {
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.SetupGet(x => x.PreservedPluginLocations).Returns([
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "LSAnalyzerDataReaderXlsx" ]),
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "LSAnalyzerDataProviderDataverse" ]),
+            Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins" ])
+        ]);
+        
+        Plugins plugins = new(appConfiguration.Object);
+        
+        Assert.Single(plugins.DataReaderPlugins);
+        Assert.Single(plugins.DataProviderPlugins);
+    }
+    
     [Fact]
     public void TestLoadPlugin()
     {
@@ -56,7 +74,7 @@ public class TestPlugins
         
         if (validity is IPlugins.Validity.PluginTypeUndefined or IPlugins.Validity.PluginNotCreatable or IPlugins.Validity.Valid && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
 
-        Assert.Equal((validity, manifest), plugins.IsValidPlugin(
+        Assert.Equal((validity, manifest), plugins.IsValidPluginZip(
             Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", fileName ])
         ));
     }
@@ -96,5 +114,57 @@ public class TestPlugins
         Assert.NotNull(plugins.PreservePlugin(Path.Combine([
             Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "LSAnalyzerDataReaderXlsx.zip"
         ])));
+    }
+
+    [Fact]
+    public void TestAddPlugin()
+    {
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.SetupGet(x => x.PreservedPluginLocations).Returns([]);
+        
+        Plugins plugins = new(appConfiguration.Object);
+        
+        plugins.AddPlugin(new DataReaderXlsx(), "/somewhereA");
+        plugins.AddPlugin(new DataProviderDataverse(), "/somewhereB");
+        
+        Assert.Single(plugins.DataReaderPlugins);
+        Assert.Single(plugins.DataProviderPlugins);
+        
+        appConfiguration.Verify(x => x.StorePreservedPluginLocation(It.Is<string>(location => location == "/somewhereA")), Times.Once);
+        appConfiguration.Verify(x => x.StorePreservedPluginLocation(It.Is<string>(location => location == "/somewhereB")), Times.Once);
+    }
+
+    [Fact]
+    public void TestRemovePlugin()
+    {
+        var tempDirectoryA = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(tempDirectoryA);
+        var tempDirectoryB = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(tempDirectoryB);
+        
+        foreach(var file in Directory.GetFiles(Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "LSAnalyzerDataReaderXlsx" ])))
+            File.Copy(file, Path.Combine(tempDirectoryA, Path.GetFileName(file)));
+        foreach(var file in Directory.GetFiles(Path.Combine([ Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "LSAnalyzerDataProviderDataverse" ])))
+            File.Copy(file, Path.Combine(tempDirectoryB, Path.GetFileName(file)));
+        
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.SetupGet(x => x.PreservedPluginLocations).Returns([ tempDirectoryA, tempDirectoryB ]);
+
+        var mockPlugin = new Mock<IPluginCommons>();
+        mockPlugin.SetupGet(x => x.PluginType).Returns(IPluginCommons.PluginTypes.Undefined);
+        
+        Plugins plugins = new(appConfiguration.Object);
+        
+        Directory.Delete(tempDirectoryA, true);
+        
+        plugins.RemovePlugin(mockPlugin.Object);
+        plugins.RemovePlugin(plugins.DataReaderPlugins.First());
+        plugins.RemovePlugin(plugins.DataProviderPlugins.First());
+        
+        Assert.Empty(plugins.DataReaderPlugins);
+        Assert.Empty(plugins.DataProviderPlugins);
+        
+        appConfiguration.Verify(x => x.RemovePreservedPluginLocation(It.Is<string>(location => location == tempDirectoryA)), Times.Once);
+        appConfiguration.Verify(x => x.RemovePreservedPluginLocation(It.Is<string>(location => location == tempDirectoryB)), Times.Once);
     }
 }

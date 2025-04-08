@@ -38,7 +38,7 @@ public class TestManagePluginsViewModel
             Path.Combine([Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "not_here"]);
         
         pluginService
-            .Setup(x => x.IsValidPlugin(It.Is<string>(v => v == pathFileNotFound))).Returns((IPlugins.Validity.FileNotFound, null));
+            .Setup(x => x.IsValidPluginZip(It.Is<string>(v => v == pathFileNotFound))).Returns((IPlugins.Validity.FileNotFound, null));
         
         ManagePluginsViewModel viewModel = new(pluginService.Object);
         
@@ -60,7 +60,7 @@ public class TestManagePluginsViewModel
             Path.Combine([Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "LSAnalyzerDataReaderXlsx_MissingManifest.zip"]);
         
         pluginService
-            .Setup(x => x.IsValidPlugin(It.Is<string>(v => v == pathMissingManifest))).Returns((IPlugins.Validity.ManifestNotFound, null));
+            .Setup(x => x.IsValidPluginZip(It.Is<string>(v => v == pathMissingManifest))).Returns((IPlugins.Validity.ManifestNotFound, null));
         
         ManagePluginsViewModel viewModel = new(pluginService.Object);
         
@@ -82,7 +82,7 @@ public class TestManagePluginsViewModel
             Path.Combine([Directory.GetCurrentDirectory(), "_testFiles", "TestServicesPlugins", "cannot_preserve"]);
         
         pluginService
-            .Setup(x => x.IsValidPlugin(It.Is<string>(v => v == pathCannotPreserve))).Returns((IPlugins.Validity.Valid, new IPluginCommons.Manifest { Dll = string.Empty, Type = IPluginCommons.PluginTypes.DataProvider }));
+            .Setup(x => x.IsValidPluginZip(It.Is<string>(v => v == pathCannotPreserve))).Returns((IPlugins.Validity.Valid, new IPluginCommons.Manifest { Dll = string.Empty, Type = IPluginCommons.PluginTypes.DataProvider }));
         pluginService
             .Setup(x => x.PreservePlugin(It.Is<string>(v => v == pathCannotPreserve))).Returns((string?)null);
         

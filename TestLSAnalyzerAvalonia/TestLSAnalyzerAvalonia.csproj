@@ -68,6 +68,18 @@
       <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx_WrongType.zip">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataProviderDataverse\LSAnalyzerDataProviderDataverse.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataProviderDataverse\manifest.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx\LSAnalyzerDataReaderXlsx.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx\manifest.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

@@ -14,13 +14,13 @@ public class Plugins : IPlugins
 {
     private readonly IAppConfiguration _appConfiguration;
     
-    private readonly List<IDataReaderPlugin> _dataReaderPlugins = [];
+    private readonly List<(string location, IDataReaderPlugin plugin)> _dataReaderPlugins = [];
 
-    public ImmutableList<IDataReaderPlugin> DataReaderPlugins => _dataReaderPlugins.ToImmutableList();
+    public ImmutableList<IDataReaderPlugin> DataReaderPlugins => _dataReaderPlugins.Select(t => t.plugin).ToImmutableList();
     
-    private readonly List<IDataProviderPlugin> _dataProviderPlugins = [];
+    private readonly List<(string location, IDataProviderPlugin plugin)> _dataProviderPlugins = [];
     
-    public ImmutableList<IDataProviderPlugin> DataProviderPlugins => _dataProviderPlugins.ToImmutableList();
+    public ImmutableList<IDataProviderPlugin> DataProviderPlugins => _dataProviderPlugins.Select(t => t.plugin).ToImmutableList();
 
     public Plugins(IAppConfiguration appConfiguration)
     {
@@ -28,40 +28,25 @@ public class Plugins : IPlugins
 
         foreach (var preservedPluginLocation in _appConfiguration.PreservedPluginLocations)
         {
-            if (!File.Exists(Path.Combine(preservedPluginLocation, "manifest.json"))) continue;
-
-            IPluginCommons.Manifest? manifest = null;
-            try
-            {
-                var manifestJson = File.ReadAllText(Path.Combine(preservedPluginLocation, "manifest.json"));
-                manifest = JsonSerializer.Deserialize<IPluginCommons.Manifest>(manifestJson);
-            } catch
-            {
-                continue;
-            }
-
-            var assembly = LoadPlugin(Path.Combine(preservedPluginLocation, manifest.Dll));
+            var (validity, manifest, plugin) = IsValidPluginExtracted(new DirectoryInfo(preservedPluginLocation));
             
-            if (assembly == null) continue;
+            if (validity != IPlugins.Validity.Valid) continue;
 
-            switch (manifest.Type)
+            // the following is null-safe because of validity check above
+            
+            switch (manifest!.Type)
             {
                 case IPluginCommons.PluginTypes.DataReader:
-                    var dataReaderPlugin = CreatePlugin<IDataReaderPlugin>(assembly);
-                    if (dataReaderPlugin == null) continue;
-                    _dataReaderPlugins.Add(dataReaderPlugin);
+                    _dataReaderPlugins.Add((location: preservedPluginLocation, plugin: (plugin as IDataReaderPlugin)!));
                     break;
                 case IPluginCommons.PluginTypes.DataProvider:
-                    var dataProviderPlugin = CreatePlugin<IDataProviderPlugin>(assembly);
-                    if (dataProviderPlugin == null) continue;
-                    _dataProviderPlugins.Add(dataProviderPlugin);
+                    _dataProviderPlugins.Add((location: preservedPluginLocation, plugin: (plugin as IDataProviderPlugin)!));
                     break;
             }
-            
         }
     }
     
-    public (IPlugins.Validity, IPluginCommons.Manifest?) IsValidPlugin(string pluginPath)
+    public (IPlugins.Validity, IPluginCommons.Manifest?) IsValidPluginZip(string pluginPath)
     {
         if (!File.Exists(pluginPath)) return (IPlugins.Validity.FileNotFound, null);
         
@@ -73,73 +58,72 @@ public class Plugins : IPlugins
         }
         catch
         {
-            tempDirectory?.Delete(true);
+            tempDirectory.Delete(true);
             return (IPlugins.Validity.FileNotZip, null);
         }
 
+        var (validity, manifest, _) = IsValidPluginExtracted(tempDirectory);
+        
+        tempDirectory.Delete(true);
+        return (validity, manifest);
+    }
+
+    public (IPlugins.Validity, IPluginCommons.Manifest?, IPluginCommons?) IsValidPluginExtracted(DirectoryInfo pluginDirectory)
+    { 
         string manifestSource;
         try
         {
-            manifestSource = File.ReadAllText(Path.Combine(tempDirectory.FullName, "manifest.json"));
+            manifestSource = File.ReadAllText(Path.Combine(pluginDirectory.FullName, "manifest.json"));
         } catch
         {
-            tempDirectory?.Delete(true);
-            return (IPlugins.Validity.ManifestNotFound, null);
+            return (IPlugins.Validity.ManifestNotFound, null, null);
         }
 
         IPluginCommons.Manifest manifest;
         try
         {
             manifest = JsonSerializer.Deserialize<IPluginCommons.Manifest>(manifestSource)!;
-        }
-        catch
+        } catch
         {
-            tempDirectory?.Delete(true);
-            return (IPlugins.Validity.ManifestCorrupt, null);
+            return (IPlugins.Validity.ManifestCorrupt, null, null);
         }
 
-        if (!File.Exists(Path.Combine(tempDirectory.FullName, manifest.Dll)))
+        if (!File.Exists(Path.Combine(pluginDirectory.FullName, manifest.Dll)))
         {
-            tempDirectory?.Delete(true);
-            return (IPlugins.Validity.DllNotFound, manifest);
+            return (IPlugins.Validity.DllNotFound, manifest, null);
         }
 
         Assembly assembly;
         try
         {
-            assembly = LoadPlugin(Path.Combine(tempDirectory.FullName, manifest.Dll))!;
-        }
-        catch
+            assembly = LoadPlugin(Path.Combine(pluginDirectory.FullName, manifest.Dll))!;
+        } catch
         {
-            tempDirectory?.Delete(true);
-            return (IPlugins.Validity.AssemblyInaccessible, manifest);
+            return (IPlugins.Validity.AssemblyInaccessible, manifest, null);
         }
         
         try
         {
-            IPluginCommons? plugin;
+            IPluginCommons? plugin = null;
             switch (manifest.Type)
             {
                 case IPluginCommons.PluginTypes.Undefined:
-                    tempDirectory?.Delete(true);
-                    return (IPlugins.Validity.PluginTypeUndefined, manifest);
+                    return (IPlugins.Validity.PluginTypeUndefined, manifest, null);
                 case IPluginCommons.PluginTypes.DataReader:
                     plugin = CreatePlugin<IDataReaderPlugin>(assembly);
-                    if (plugin == null) throw new Exception("Failed to create plugin");
                     break;
                 case IPluginCommons.PluginTypes.DataProvider:
                     plugin = CreatePlugin<IDataProviderPlugin>(assembly);
-                    if (plugin == null) throw new Exception("Failed to create plugin");
                     break;
             }
+            
+            if (plugin == null) throw new Exception("Failed to create plugin");
+        
+            return (IPlugins.Validity.Valid, manifest, plugin);
         } catch
         {
-            tempDirectory?.Delete(true);
-            return (IPlugins.Validity.PluginNotCreatable, manifest);
+            return (IPlugins.Validity.PluginNotCreatable, manifest, null);
         }
-        
-        tempDirectory?.Delete(true);
-        return (IPlugins.Validity.Valid, manifest);
     }
     
     public Assembly? LoadPlugin(string fullPath)
@@ -182,10 +166,10 @@ public class Plugins : IPlugins
         switch (plugin.PluginType)
         {
             case IPluginCommons.PluginTypes.DataReader:
-                _dataReaderPlugins.Add((IDataReaderPlugin)plugin);
+                _dataReaderPlugins.Add((location, plugin: (IDataReaderPlugin)plugin));
                 break;
             case IPluginCommons.PluginTypes.DataProvider:
-                _dataProviderPlugins.Add((IDataProviderPlugin)plugin);
+                _dataProviderPlugins.Add((location, (IDataProviderPlugin)plugin));
                 break;
         }
 
@@ -194,14 +178,31 @@ public class Plugins : IPlugins
 
     public void RemovePlugin(IPluginCommons plugin)
     {
+        string preservedPluginLocation;
+        
         switch (plugin.PluginType)
         {
             case IPluginCommons.PluginTypes.DataReader:
-                _dataReaderPlugins.Remove((IDataReaderPlugin)plugin);
+                preservedPluginLocation = _dataReaderPlugins.FirstOrDefault(t => t.plugin == (IDataReaderPlugin)plugin).location ?? string.Empty;
+                _dataReaderPlugins.RemoveAll(t => t.plugin == (IDataReaderPlugin)plugin);
                 break;
             case IPluginCommons.PluginTypes.DataProvider:
-                _dataProviderPlugins.Remove((IDataProviderPlugin)plugin);
+                preservedPluginLocation = _dataProviderPlugins.FirstOrDefault(t => t.plugin == (IDataProviderPlugin)plugin).location ?? string.Empty;
+                _dataProviderPlugins.RemoveAll(t => t.plugin == (IDataProviderPlugin)plugin);
                 break;
+            case IPluginCommons.PluginTypes.Undefined:
+            default:
+                return;
+        }
+        
+        _appConfiguration.RemovePreservedPluginLocation(preservedPluginLocation);
+
+        try
+        {
+            Directory.Delete(preservedPluginLocation, true);
+        } catch (Exception e)
+        {
+            Console.WriteLine(e);
         }
     }
 }
