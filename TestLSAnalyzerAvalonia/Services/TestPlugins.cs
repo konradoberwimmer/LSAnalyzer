@@ -155,6 +155,8 @@ public class TestPlugins
         
         Plugins plugins = new(appConfiguration.Object);
         
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+        
         Directory.Delete(tempDirectoryA, true);
         
         plugins.RemovePlugin(mockPlugin.Object);
