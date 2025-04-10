@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Avalonia.Controls;
 using ClosedXML.Excel;
 using LSAnalyzerAvalonia.IPlugins;
 using MathNet.Numerics.LinearAlgebra;
@@ -18,6 +19,23 @@ public class DataReaderXlsx : IDataReaderPlugin
     public string Description => "Read data from XLSX files (Microsoft Excel 2007-current)";
     
     public string DisplayName => "Microsoft Excel (XLSX)";
+
+    public object? View { get; private set; }
+    
+    public object ViewModel => string.Empty;
+
+    public void CreateView(Type uiType)
+    {
+        if (View != null) return;
+        
+        if (uiType == typeof(UserControl))
+        { 
+            View = new Views.DataReaderXlsx();
+            return;
+        }
+        
+        Console.WriteLine($"Could not provide view for type {uiType.FullName}.");
+    }
 
     public Matrix<double> ReadDataFile(string path)
     {

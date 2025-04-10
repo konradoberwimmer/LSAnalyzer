@@ -7,6 +7,7 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using System.Reflection;
+using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using LSAnalyzerAvalonia.IPlugins;
 using LSAnalyzerAvalonia.Services;
@@ -41,7 +42,9 @@ public partial class App : Application
         );
         collection.AddSingleton<Services.IPlugins, Plugins>();
         collection.AddSingleton<MainWindowViewModel>();
-        collection.AddTransient<SelectAnalysisFileViewModel>();
+        collection.AddTransient<SelectAnalysisFileViewModel>(
+            provider => new SelectAnalysisFileViewModel(provider.GetRequiredService<Services.IPlugins>(), typeof(UserControl))
+        );
         collection.AddTransient<DatasetTypesViewModel>();
         collection.AddTransient<ManagePluginsViewModel>();
         collection.AddSingleton<MainWindow>();

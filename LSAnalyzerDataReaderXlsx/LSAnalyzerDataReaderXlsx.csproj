@@ -15,6 +15,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.2.1">
+            <ExcludeAssets>runtime</ExcludeAssets>
+        </PackageReference>
         <PackageReference Include="ClosedXML" Version="0.104.2" />
         <PackageReference Include="MathNet.Numerics" Version="5.0.0">
             <ExcludeAssets>runtime</ExcludeAssets>    
@@ -25,6 +28,12 @@
       <None Update="manifest.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Avalonia.Controls">
+        <HintPath>..\..\..\.nuget\packages\avalonia\11.2.1\ref\net8.0\Avalonia.Controls.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>
