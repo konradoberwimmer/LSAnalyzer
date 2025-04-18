@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LSAnalyzerAvalonia.IPlugins;
 
@@ -8,15 +11,15 @@ namespace LSAnalyzerAvalonia.ViewModels;
 
 public partial class SelectAnalysisFileViewModel : ViewModelBase
 {
-    private readonly Type _uiType = null!;
-    
     [ObservableProperty] private ObservableCollection<IDataReaderPlugin> _dataReaderPlugins = [];
     
     [ObservableProperty] private IDataReaderPlugin? _selectedDataReaderPlugin;
     partial void OnSelectedDataReaderPluginChanged(IDataReaderPlugin? value)
     {
-        value?.CreateView(_uiType);
+        OnPropertyChanged(nameof(IsReadyToLoad));
     }
+
+    public bool IsReadyToLoad => SelectedDataReaderPlugin?.ViewModel.IsCompletelyFilled ?? false;
     
     [ExcludeFromCodeCoverage]
     public SelectAnalysisFileViewModel() // design-time only parameterless constructor
@@ -24,13 +27,18 @@ public partial class SelectAnalysisFileViewModel : ViewModelBase
         
     }
 
-    public SelectAnalysisFileViewModel(Services.IPlugins plugins, Type uiType)
+    public SelectAnalysisFileViewModel(List<IDataReaderPlugin> builtins, Services.IPlugins plugins, Type uiType)
     {
-        foreach (var dataReaderPlugin in plugins.DataReaderPlugins)
+        foreach (var plugin in builtins.Concat(plugins.DataReaderPlugins))
         {
-            DataReaderPlugins.Add(dataReaderPlugin);    
+            plugin.CreateView(uiType);
+            plugin.ViewModel.PropertyChanged += ListenSelectedDataReaderPluginViewModel;
+            DataReaderPlugins.Add(plugin);
         }
-        
-        _uiType = uiType;
+    }
+
+    private void ListenSelectedDataReaderPluginViewModel(object? sender, PropertyChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(IsReadyToLoad));
     }
 }

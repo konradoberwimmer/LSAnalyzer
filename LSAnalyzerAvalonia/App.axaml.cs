@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using LSAnalyzerAvalonia.Builtins.DataReader;
 using LSAnalyzerAvalonia.IPlugins;
 using LSAnalyzerAvalonia.Services;
 using LSAnalyzerAvalonia.ViewModels;
@@ -43,7 +44,11 @@ public partial class App : Application
         collection.AddSingleton<Services.IPlugins, Plugins>();
         collection.AddSingleton<MainWindowViewModel>();
         collection.AddTransient<SelectAnalysisFileViewModel>(
-            provider => new SelectAnalysisFileViewModel(provider.GetRequiredService<Services.IPlugins>(), typeof(UserControl))
+            provider => new SelectAnalysisFileViewModel(
+                [ new DataReaderCsv() ],
+                provider.GetRequiredService<Services.IPlugins>(), 
+                typeof(UserControl)
+            )
         );
         collection.AddTransient<DatasetTypesViewModel>();
         collection.AddTransient<ManagePluginsViewModel>();

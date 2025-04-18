@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LSAnalyzerAvalonia.Builtins.DataReader.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="vm:DataReaderCsvViewModel"
+             x:Class="LSAnalyzerAvalonia.Builtins.DataReader.Views.DataReaderCsv">
+    
+    <Design.DataContext>
+        <vm:DataReaderCsvViewModel/>
+    </Design.DataContext>
+    
+    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto, Auto">
+        <CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Content="Read column header from first row" IsChecked="{Binding HasHeader}"/>
+        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,5,0,0" Orientation="Horizontal">
+            <TextBox Text="{Binding SeparatorCharacter}"/>
+            <TextBlock Margin="5,5,0,0" Text="Separator character" VerticalAlignment="Center"/>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="1" Margin="5,5,0,0" Orientation="Horizontal">
+            <TextBox Text="{Binding QuotingCharacter}"/>
+            <TextBlock Margin="5,5,0,0" Text="Quoting character" VerticalAlignment="Center"/>
+        </StackPanel>
+    </Grid>
+    
+</UserControl>

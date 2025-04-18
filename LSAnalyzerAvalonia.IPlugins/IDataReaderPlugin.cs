@@ -1,14 +1,13 @@
-﻿using MathNet.Numerics.LinearAlgebra;
+﻿using LSAnalyzerAvalonia.IPlugins.ViewModels;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace LSAnalyzerAvalonia.IPlugins;
 
 public interface IDataReaderPlugin : IPluginCommons
 {
-    public object ViewModel { get; }
+    public ICompletelyFilled ViewModel { get; }
     
     public object? View { get; }
-    
-    public Type ViewType => View?.GetType() ?? typeof(object);
     
     public void CreateView(Type uiType);
     

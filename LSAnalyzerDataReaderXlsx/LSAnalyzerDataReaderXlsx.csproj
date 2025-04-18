@@ -19,6 +19,9 @@
             <ExcludeAssets>runtime</ExcludeAssets>
         </PackageReference>
         <PackageReference Include="ClosedXML" Version="0.104.2" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1">
+            <ExcludeAssets>runtime</ExcludeAssets>
+        </PackageReference>
         <PackageReference Include="MathNet.Numerics" Version="5.0.0">
             <ExcludeAssets>runtime</ExcludeAssets>    
         </PackageReference>

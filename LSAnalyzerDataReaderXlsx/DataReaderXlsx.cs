@@ -2,6 +2,8 @@
 using Avalonia.Controls;
 using ClosedXML.Excel;
 using LSAnalyzerAvalonia.IPlugins;
+using LSAnalyzerAvalonia.IPlugins.ViewModels;
+using LSAnalyzerDataReaderXlsx.ViewModels;
 using MathNet.Numerics.LinearAlgebra;
 
 namespace LSAnalyzerDataReaderXlsx;
@@ -22,7 +24,7 @@ public class DataReaderXlsx : IDataReaderPlugin
 
     public object? View { get; private set; }
     
-    public object ViewModel => string.Empty;
+    public ICompletelyFilled ViewModel { get; } = new DataReaderXlsxViewModel();
 
     public void CreateView(Type uiType)
     {
@@ -30,7 +32,7 @@ public class DataReaderXlsx : IDataReaderPlugin
         
         if (uiType == typeof(UserControl))
         { 
-            View = new Views.DataReaderXlsx();
+            View = new Views.DataReaderXlsx((ViewModel as DataReaderXlsxViewModel)!);
             return;
         }
         

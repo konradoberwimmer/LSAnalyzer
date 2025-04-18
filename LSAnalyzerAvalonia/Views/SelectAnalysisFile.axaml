@@ -12,17 +12,9 @@
         <vm:SelectAnalysisFileViewModel/>
     </Design.DataContext>
     
-    <Window.Resources>
-        <StackPanel x:Key="EmptyStackPanel"/>
-    </Window.Resources>
-    
     <Grid Margin="5" RowDefinitions="Auto,*,Auto">
         <ComboBox Grid.Row="0" ItemsSource="{Binding DataReaderPlugins}" DisplayMemberBinding="{Binding DisplayName}" SelectedItem="{Binding SelectedDataReaderPlugin}" Width="400"/>
-        <ContentControl Grid.Row="1" Content="{Binding SelectedDataReaderPlugin.ViewModel, FallbackValue={x:Null}}" x:CompileBindings="False">
-            <ContentControl.ContentTemplate>
-                <!--<DataTemplate Content="{Binding SelectedDataReaderPlugin.View, FallbackValue={StaticResource EmptyStackPanel}}"></DataTemplate>-->
-            </ContentControl.ContentTemplate>
-        </ContentControl>
-        <Button Grid.Row="2" Content="Load" Classes="standard" HorizontalAlignment="Right"/>
+        <ContentControl Grid.Row="1" Margin="0,5,0,0" Name="ContentControlPlugin" Content="{Binding SelectedDataReaderPlugin.View, FallbackValue={x:Null}}"/>
+        <Button Grid.Row="2" Margin="0,5,0,0" Content="Load" Classes="standard" HorizontalAlignment="Right" IsEnabled="{Binding IsReadyToLoad}"/>
     </Grid>
 </Window>

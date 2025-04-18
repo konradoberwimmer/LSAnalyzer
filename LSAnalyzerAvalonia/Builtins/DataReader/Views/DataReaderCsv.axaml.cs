@@ -2,19 +2,19 @@ using System.Diagnostics.CodeAnalysis;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using LSAnalyzerDataReaderXlsx.ViewModels;
+using LSAnalyzerAvalonia.Builtins.DataReader.ViewModels;
 
-namespace LSAnalyzerDataReaderXlsx.Views;
+namespace LSAnalyzerAvalonia.Builtins.DataReader.Views;
 
-public partial class DataReaderXlsx : UserControl
+public partial class DataReaderCsv : UserControl
 {
     [ExcludeFromCodeCoverage]
-    public DataReaderXlsx() // design-time only parameterless constructor
+    public DataReaderCsv()
     {
         InitializeComponent();
     }
 
-    public DataReaderXlsx(DataReaderXlsxViewModel viewModel)
+    public DataReaderCsv(DataReaderCsvViewModel viewModel)
     {
         InitializeComponent();
         
