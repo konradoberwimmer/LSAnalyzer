@@ -3,18 +3,45 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:LSAnalyzerAvalonia.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:dialogHost="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
+        mc:Ignorable="d"
         x:Class="LSAnalyzerAvalonia.Views.SelectAnalysisFile"
         x:DataType="vm:SelectAnalysisFileViewModel"
-        Title="Select file for analyses">
+        Title="Select file for analyses"
+        SizeToContent="WidthAndHeight" CanResize="False" Closing="Window_OnClosing">
     
     <Design.DataContext>
         <vm:SelectAnalysisFileViewModel/>
     </Design.DataContext>
     
-    <Grid Margin="5" RowDefinitions="Auto,*,Auto">
-        <ComboBox Grid.Row="0" ItemsSource="{Binding DataReaderPlugins}" DisplayMemberBinding="{Binding DisplayName}" SelectedItem="{Binding SelectedDataReaderPlugin}" Width="400"/>
-        <ContentControl Grid.Row="1" Margin="0,5,0,0" Name="ContentControlPlugin" Content="{Binding SelectedDataReaderPlugin.View, FallbackValue={x:Null}}"/>
-        <Button Grid.Row="2" Margin="0,5,0,0" Content="Load" Classes="standard" HorizontalAlignment="Right" IsEnabled="{Binding IsReadyToLoad}"/>
-    </Grid>
+    <dialogHost:DialogHost CloseOnClickAway="False" IsOpen="False" Identifier="questions">
+        <dialogHost:DialogHost CloseOnClickAway="True" IsOpen="{Binding ShowMessage}" Identifier="messages">
+            <dialogHost:DialogHost.DialogContent>
+                <TextBlock Text="{Binding Message}"/>
+            </dialogHost:DialogHost.DialogContent>
+            <Grid Margin="5" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,Auto,Auto">
+                <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="File path:"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" Width="600" Text="{Binding FilePath}" IsReadOnly="True"/>
+                <Button Grid.Row="0" Grid.Column="2" Margin="5,0,0,0" Classes="standard" Content="Select ..." Click="SelectFile_OnClick"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,5,0,0" VerticalAlignment="Center" Text="File type:"/>
+                <ComboBox Grid.Row="1" Grid.Column="1" Margin="5,5,0,0" HorizontalAlignment="Stretch" ItemsSource="{Binding DataReaderPlugins}" DisplayMemberBinding="{Binding DisplayName}" SelectedItem="{Binding SelectedDataReaderPlugin}"/>
+                <ContentControl Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,5,0,0" Name="ContentControlPlugin" Content="{Binding SelectedDataReaderPlugin.View, FallbackValue={x:Null}}"/>
+                <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,5,0,0" Orientation="Horizontal">
+                    <CheckBox Content="Convert non-numerical columns" IsChecked="{Binding ConvertNonNumerical}"/>
+                    <PathIcon Height="15" Width="15" Foreground="Blue" Data="{StaticResource InfoRegular}" ToolTip.Tip="LSAnalyzer can only handle numerical data. If this is not checked, non-numerical data will simply be ignored."/>
+                </StackPanel>
+                <TextBlock Grid.Row="4" Grid.Column="0" Margin="0,5,0,0" VerticalAlignment="Center" Text="Dataset type:"/>
+                <ComboBox Grid.Row="4" Grid.Column="1" Margin="5,5,0,0" HorizontalAlignment="Stretch" ItemsSource="{Binding DatasetTypes}" DisplayMemberBinding="{Binding Name}" SelectedItem="{Binding SelectedDatasetType}"/>
+                <Button Grid.Row="4" Grid.Column="2" Margin="5,5,0,0" Classes="standard" Content="Guess" Command="{Binding GuessDatasetTypeCommand}">
+                    <Button.IsEnabled><MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="FilePath" Converter="{x:Static StringConverters.IsNotNullOrEmpty}"/>
+                        <Binding Path="SelectedDataReaderPlugin" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+                    </MultiBinding></Button.IsEnabled>
+                </Button>
+                <TextBlock Grid.Row="5" Grid.Column="0" Margin="0,5,0,0" VerticalAlignment="Center" Text="Weight:"/>
+                <ComboBox Grid.Row="5" Grid.Column="1" Margin="5,5,0,0" HorizontalAlignment="Stretch" ItemsSource="{Binding Weights}" SelectedItem="{Binding SelectedWeight}" IsEnabled="{Binding SelectedDatasetType, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                <Button Grid.Row="6" Grid.Column="2" Margin="0,5,0,0" Content="Load" Classes="standard" HorizontalAlignment="Right" IsEnabled="{Binding IsReadyToLoad}" Command="{Binding LoadDataCommand}"/>
+            </Grid>
+        </dialogHost:DialogHost>
+    </dialogHost:DialogHost>
 </Window>

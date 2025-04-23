@@ -47,7 +47,8 @@ public partial class App : Application
             provider => new SelectAnalysisFileViewModel(
                 [ new DataReaderCsv() ],
                 provider.GetRequiredService<Services.IPlugins>(), 
-                typeof(UserControl)
+                typeof(UserControl),
+                provider.GetRequiredService<IAppConfiguration>()
             )
         );
         collection.AddTransient<DatasetTypesViewModel>();

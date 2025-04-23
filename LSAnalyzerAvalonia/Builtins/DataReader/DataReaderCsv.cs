@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Avalonia.Controls;
@@ -28,6 +29,9 @@ public class DataReaderCsv : IDataReaderPlugin
     
     [ExcludeFromCodeCoverage]
     public string DisplayName => "Comma-separated values (CSV)";
+    
+    [ExcludeFromCodeCoverage]
+    public List<string> SuggestedFileExtensions => [ "csv", "tsv" ];
     
     public ICompletelyFilled ViewModel { get; } = new DataReaderCsvViewModel();
     

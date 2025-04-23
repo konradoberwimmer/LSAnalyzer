@@ -5,6 +5,8 @@ namespace LSAnalyzerAvalonia.IPlugins;
 
 public interface IDataReaderPlugin : IPluginCommons
 {
+    public List<string> SuggestedFileExtensions { get; }
+    
     public ICompletelyFilled ViewModel { get; }
     
     public object? View { get; }

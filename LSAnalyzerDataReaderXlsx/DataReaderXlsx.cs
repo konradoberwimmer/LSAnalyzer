@@ -21,6 +21,8 @@ public class DataReaderXlsx : IDataReaderPlugin
     public string Description => "Read data from XLSX files (Microsoft Excel 2007-current)";
     
     public string DisplayName => "Microsoft Excel (XLSX)";
+    
+    public List<string> SuggestedFileExtensions => [ "xlsx" ];
 
     public object? View { get; private set; }
     
