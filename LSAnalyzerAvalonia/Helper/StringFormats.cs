@@ -1,19 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace LSAnalyzer.Helper
+namespace LSAnalyzerAvalonia.Helper
 {
     public class StringFormats
     {
         public static int GetMaxRelevantDigits(double[] values, int maxDigits = 3)
         {
-            int digits = 0;
+            var digits = 0;
             while (digits < maxDigits)
             {
-                bool allSatisfied = true;
+                var allSatisfied = true;
 
                 foreach (var value in values)
                 {

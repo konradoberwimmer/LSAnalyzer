@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using LSAnalyzerAvalonia.Builtins.DataReader;
 using LSAnalyzerAvalonia.Builtins.DataReader.ViewModels;
+using LSAnalyzerAvalonia.IPlugins;
 using LSAnalyzerAvalonia.Models;
 using LSAnalyzerAvalonia.Services;
 using LSAnalyzerAvalonia.ViewModels;
@@ -52,6 +53,67 @@ public class TestSelectAnalysisFileViewModel
         
         Assert.NotNull(viewModel.SelectedDataReaderPlugin);
         Assert.Equal(viewModel.SelectedDataReaderPlugin, viewModel.DataReaderPlugins.First());;
+    }
+
+    [Fact]
+    public void TestGuessDatasetTypeCommand()
+    {
+        var dataReaderCsv = new Mock<IDataReaderPlugin>();
+        dataReaderCsv.SetupGet(reader => reader.ViewModel).Returns(new DataReaderCsvViewModel());
+        var pluginService = new Mock<IPlugins>();
+        pluginService.SetupGet(x => x.DataReaderPlugins).Returns([]);
+        var appConfiguration = new Mock<IAppConfiguration>();
+        appConfiguration.Setup(x => x.GetStoredDatasetTypes()).Returns(DatasetType.CreateDefaultDatasetTypes());
+        
+        SelectAnalysisFileViewModel viewModel = new([ dataReaderCsv.Object ], pluginService.Object, typeof(UserControl), appConfiguration.Object);
+        
+        viewModel.GuessDatasetTypeCommand.Execute(null);
+        
+        Assert.Null(viewModel.SelectedDatasetType);
+        Assert.False(viewModel.IsBusy);
+        Assert.False(viewModel.ShowMessage);
+        
+        viewModel.FilePath = "/some/crazy/path";
+        viewModel.GuessDatasetTypeCommand.Execute(null);
+        
+        Assert.Null(viewModel.SelectedDatasetType);
+        Assert.False(viewModel.IsBusy);
+        Assert.False(viewModel.ShowMessage);
+        
+        viewModel.SelectedDataReaderPlugin = viewModel.DataReaderPlugins.First();
+        dataReaderCsv.Setup(reader => reader.ReadFileHeader(It.IsAny<string>())).Returns((false, []));
+        viewModel.GuessDatasetTypeCommand.Execute(null);
+        
+        Assert.Null(viewModel.SelectedDatasetType);
+        Assert.False(viewModel.IsBusy);
+        Assert.True(viewModel.ShowMessage);
+        Assert.Matches("Failed to read file", viewModel.Message);
+        
+        viewModel.ShowMessage = false;
+        dataReaderCsv.Setup(reader => reader.ReadFileHeader(It.IsAny<string>())).Returns((true, [ "a", "b", "c" ]));
+        viewModel.GuessDatasetTypeCommand.Execute(null);
+        
+        Assert.Null(viewModel.SelectedDatasetType);
+        Assert.False(viewModel.IsBusy);
+        Assert.True(viewModel.ShowMessage);
+        Assert.Matches("No compatible dataset type", viewModel.Message);
+        
+        viewModel.ShowMessage = false;
+        dataReaderCsv.Setup(reader => reader.ReadFileHeader(It.IsAny<string>())).Returns((true, [ "TCHWGT", "IDTEACH", "TRWGT01", "TRWGT02", "TRWGT03" ]));
+        viewModel.GuessDatasetTypeCommand.Execute(null);
+        
+        Assert.NotNull(viewModel.SelectedDatasetType); // has to be TALIS teacher level
+        Assert.False(viewModel.IsBusy);
+        Assert.False(viewModel.ShowMessage);
+
+        viewModel.SelectedDatasetType = null;
+        dataReaderCsv.Setup(reader => reader.ReadFileHeader(It.IsAny<string>())).Returns((true, [ "TCHWGT", "MATWGT", "SCIWGT", "IDSTUD", "JKZONE", "JKREP" ]));
+        viewModel.GuessDatasetTypeCommand.Execute(null);
+
+        Assert.Null(viewModel.SelectedDatasetType);
+        Assert.False(viewModel.IsBusy);
+        Assert.True(viewModel.ShowMessage);
+        Assert.Matches("Multiple compatible dataset types", viewModel.Message);
     }
 
     [Fact]

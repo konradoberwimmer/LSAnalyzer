@@ -11,15 +11,14 @@
         <vm:DataReaderCsvViewModel/>
     </Design.DataContext>
     
-    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto, Auto">
-        <CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Content="Read column header from first row" IsChecked="{Binding HasHeader}"/>
-        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,5,0,0" Orientation="Horizontal">
-            <TextBox Text="{Binding SeparatorCharacter}"/>
-            <TextBlock Margin="5,5,0,0" Text="Separator character" VerticalAlignment="Center"/>
+    <Grid Margin="0,5,0,0" RowDefinitions="Auto" ColumnDefinitions="Auto, Auto">
+        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+            <TextBlock Text="Separator character:" VerticalAlignment="Center"/>
+            <TextBox Margin="5,0,0,0" Text="{Binding SeparatorCharacter}"/>
         </StackPanel>
-        <StackPanel Grid.Row="1" Grid.Column="1" Margin="5,5,0,0" Orientation="Horizontal">
-            <TextBox Text="{Binding QuotingCharacter}"/>
-            <TextBlock Margin="5,5,0,0" Text="Quoting character" VerticalAlignment="Center"/>
+        <StackPanel Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" Orientation="Horizontal">
+            <TextBlock Text="Quoting character:" VerticalAlignment="Center"/>
+            <TextBox Margin="5,0,0,0" Text="{Binding QuotingCharacter}"/>
         </StackPanel>
     </Grid>
     

@@ -80,6 +80,9 @@
       <None Update="_testFiles\TestServicesPlugins\LSAnalyzerDataReaderXlsx\manifest.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="_testFiles\_general\asgusam8.csv">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

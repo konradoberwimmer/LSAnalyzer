@@ -8,7 +8,7 @@
         x:Class="LSAnalyzerAvalonia.Views.SelectAnalysisFile"
         x:DataType="vm:SelectAnalysisFileViewModel"
         Title="Select file for analyses"
-        SizeToContent="WidthAndHeight" CanResize="False" Closing="Window_OnClosing">
+        SizeToContent="WidthAndHeight" CanResize="False" Closing="Window_OnClosing" IsEnabled="{Binding IsBusy, Converter={x:Static BoolConverters.Not}}">
     
     <Design.DataContext>
         <vm:SelectAnalysisFileViewModel/>

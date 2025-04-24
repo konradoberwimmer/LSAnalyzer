@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Immutable;
+using System.Reflection;
 using Avalonia.Controls;
 using ClosedXML.Excel;
 using LSAnalyzerAvalonia.IPlugins;
@@ -41,11 +42,13 @@ public class DataReaderXlsx : IDataReaderPlugin
         Console.WriteLine($"Could not provide view for type {uiType.FullName}.");
     }
 
+    public (bool success, ImmutableList<string> columns) ReadFileHeader(string path)
+    {
+        throw new NotImplementedException();
+    }
+
     public Matrix<double> ReadDataFile(string path)
     {
-        using XLWorkbook workbook = new();
-        workbook.AddWorksheet("new");
-        
-        return Matrix<double>.Build.Random(3, 4);
+        throw new NotImplementedException();
     }
 }
