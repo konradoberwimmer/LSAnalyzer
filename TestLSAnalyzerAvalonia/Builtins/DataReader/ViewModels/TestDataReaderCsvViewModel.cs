@@ -11,10 +11,6 @@ public class TestDataReaderCsvViewModel
         
         Assert.True(viewModel.IsCompletelyFilled);
         
-        viewModel.HasHeader = false;
-        
-        Assert.True(viewModel.IsCompletelyFilled);
-        
         viewModel.SeparatorCharacter = string.Empty;
         
         Assert.False(viewModel.IsCompletelyFilled);

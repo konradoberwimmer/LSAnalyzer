@@ -25,7 +25,7 @@ public interface IPluginCommons
         [Display(Name="Data reader")]
         DataReader,
         
-        [Display(Name="Data reader")]
+        [Display(Name="Data provider")]
         DataProvider,
     }
 

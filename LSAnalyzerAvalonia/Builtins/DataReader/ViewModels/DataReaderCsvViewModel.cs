@@ -6,8 +6,6 @@ namespace LSAnalyzerAvalonia.Builtins.DataReader.ViewModels;
 
 public partial class DataReaderCsvViewModel : ObservableObject, ICompletelyFilled
 {
-    [ObservableProperty] private bool _hasHeader = true;
-
     [ObservableProperty] private string _separatorCharacter = CultureInfo.CurrentCulture.TextInfo.ListSeparator;
     partial void OnSeparatorCharacterChanged(string value)
     {

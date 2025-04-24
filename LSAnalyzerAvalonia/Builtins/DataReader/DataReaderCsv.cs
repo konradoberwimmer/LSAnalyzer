@@ -1,8 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Avalonia.Controls;
+using CsvHelper;
+using CsvHelper.Configuration;
 using LSAnalyzerAvalonia.Builtins.DataReader.ViewModels;
 using LSAnalyzerAvalonia.IPlugins;
 using LSAnalyzerAvalonia.IPlugins.ViewModels;
@@ -48,6 +54,36 @@ public class DataReaderCsv : IDataReaderPlugin
         }
         
         Console.WriteLine($"Could not provide view for type {uiType.FullName}.");
+    }
+    
+    public (bool success, ImmutableList<string> columns) ReadFileHeader(string path)
+    {
+        try
+        {
+            using StreamReader fileReader = new(path);
+            
+            var dataReaderCsvViewModel = (ViewModel as DataReaderCsvViewModel)!;
+            
+            CsvConfiguration configuration = new(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                Delimiter = Regex.Unescape(dataReaderCsvViewModel.SeparatorCharacter),
+                Mode =  string.IsNullOrWhiteSpace(dataReaderCsvViewModel.QuotingCharacter) ? CsvMode.NoEscape : CsvMode.RFC4180,
+                Quote = string.IsNullOrWhiteSpace(dataReaderCsvViewModel.QuotingCharacter) ? '"' : dataReaderCsvViewModel.QuotingCharacter[0],
+                LineBreakInQuotedFieldIsBadData = false,
+            };
+            
+            using CsvReader csvReader = new(fileReader, configuration);
+            csvReader.Read();
+            var canReadHeader = csvReader.ReadHeader();
+
+            return !canReadHeader ? (false, []) : (true, ImmutableList.Create(csvReader.HeaderRecord!));
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return (false, []);
+        }
     }
 
     public Matrix<double> ReadDataFile(string path)

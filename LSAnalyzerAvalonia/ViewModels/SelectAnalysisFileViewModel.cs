@@ -14,6 +14,8 @@ namespace LSAnalyzerAvalonia.ViewModels;
 
 public partial class SelectAnalysisFileViewModel : ViewModelBase
 {
+    [ObservableProperty] private bool _isBusy = false;
+    
     [ObservableProperty] private string _filePath = string.Empty;
     partial void OnFilePathChanged(string value)
     {
@@ -96,7 +98,42 @@ public partial class SelectAnalysisFileViewModel : ViewModelBase
     [RelayCommand]
     private void GuessDatasetType()
     {
-        Message = "Not implemented yet.";
+        if (string.IsNullOrWhiteSpace(FilePath) || SelectedDataReaderPlugin is null) return;
+        
+        IsBusy = true;
+
+        var (successReadHeader, columns) = SelectedDataReaderPlugin.ReadFileHeader(FilePath);
+        
+        if (!successReadHeader)
+        {
+            IsBusy = false;
+            Message = $"Failed to read file '{ FilePath }' with { SelectedDataReaderPlugin.DisplayName }.";
+            ShowMessage = true;
+            return;
+        }
+
+        var possibleDataseTypes = DatasetTypes.GetCompatibleDatasetTypes(columns);
+
+        if (possibleDataseTypes.Count == 0)
+        {
+            IsBusy = false;
+            Message = "No compatible dataset type found.";
+            ShowMessage = true;
+            return;
+        }
+
+        var maxPriority = possibleDataseTypes.Select(dst => dst.priority).Max();
+        if (possibleDataseTypes.Count(dst => dst.priority == maxPriority) == 1)
+        {
+            IsBusy = false;
+            SelectedDatasetType = possibleDataseTypes.First(dst => dst.priority == maxPriority).datasetType;
+            return;
+        }
+        
+        IsBusy = false;
+        Message = $"Multiple compatible dataset types found:\n{
+            string.Join("\n", possibleDataseTypes.Where(dst => dst.priority == maxPriority).Select(dst => "- " + dst.datasetType.Name))
+        }.";
         ShowMessage = true;
     }
 
