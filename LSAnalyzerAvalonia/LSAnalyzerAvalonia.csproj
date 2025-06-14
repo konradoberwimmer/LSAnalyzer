@@ -33,4 +33,11 @@
     <ItemGroup>
       <ProjectReference Include="..\LSAnalyzerAvalonia.IPlugins\LSAnalyzerAvalonia.IPlugins.csproj"/>
     </ItemGroup>
+
+    <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+      <AdditionalFiles Include="Deps\replicest_server_ubuntu">
+        <Link>replicest_server</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </AdditionalFiles>
+    </ItemGroup>
 </Project>
