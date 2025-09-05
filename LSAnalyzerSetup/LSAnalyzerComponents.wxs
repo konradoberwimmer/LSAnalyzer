@@ -3,7 +3,7 @@
 		<ComponentGroup Id="LSAnalyzerComponents" Directory="INSTALLFOLDER">
 			<Component Id="LSAnalyzer" Bitness="always64">
 				<File Id="LSAnalyzer.exe"
-					  Source="$(var.LSAnalyzer.ProjectDir)bin\Release\net8.0-windows10.0.22621.0\publish\win-x64\LSAnalyzer.exe"
+					  Source="$(var.LSAnalyzer.ProjectDir)bin\Release\net9.0-windows\publish\LSAnalyzer.exe"
 					  KeyPath="true" />
 				<File Id="favicon.ico"
 					  Source="$(var.LSAnalyzer.ProjectDir)app.ico" />
