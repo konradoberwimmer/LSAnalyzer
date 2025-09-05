@@ -37,7 +37,7 @@ namespace TestLSAnalyzer.Services.DataProvider
             {
                 Id = 1,
                 Name = "test (thx to AUSSDA)",
-                Url = "https://data.aussda.at/",
+                Url = "https://dat.ausda.at/",
                 ApiToken = "not a valid api token",
             };
 
@@ -48,6 +48,7 @@ namespace TestLSAnalyzer.Services.DataProvider
             Assert.False(result.IsSuccess);
             Assert.Contains("not working", result.Message);
 
+            dataverseConfiguration.Url = "https://data.aussda.at/";
             dataverseConfiguration.ApiToken = GetTestApiToken();
 
             result = dataverseService.TestProvider();
