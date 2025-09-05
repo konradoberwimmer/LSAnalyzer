@@ -96,16 +96,16 @@ namespace LSAnalyzer
 
             if (!rService.CheckNecessaryRPackages())
             {
-                var wantsInstall = MessageBox.Show("It seems that not all necessary R packages (BIFIEsurvey, foreign) are available.\n\nDo you want to install them now?\nNOTE: This requires an active internat connection and may take a while!", "R packages not available", MessageBoxButton.YesNo, MessageBoxImage.Error);
+                var wantsInstall = MessageBox.Show("It seems that not all necessary R packages (BIFIEsurvey, foreign) are available.\n\nDo you want to install them now?\nNOTE: This requires an active internet connection and may take a while!", "R packages not available", MessageBoxButton.YesNo, MessageBoxImage.Error);
                 if (wantsInstall == MessageBoxResult.Yes)
                 {
-                    var succesfulInstall = rService.InstallNecessaryRPackages();
-                    if (succesfulInstall)
+                    var successfulInstall = rService.InstallNecessaryRPackages();
+                    if (successfulInstall)
                     {
-                        MessageBox.Show("R package installation successful. Please restart application!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show("R package installation successful. Please restart LSAnalyzer!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                     } else
                     {
-                        MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart app afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart LSAnalyzer afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
 

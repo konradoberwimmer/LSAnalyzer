@@ -114,7 +114,7 @@ namespace LSAnalyzer.Services
                     return false;
                 }
 
-                EvaluateAndLog("if (!dir.exists(Sys.getenv('R_LIBS_USER'))) { dir.create(Sys.getenv('R_LIBS_USER')) }");
+                EvaluateAndLog("if (!dir.exists(Sys.getenv('R_LIBS_USER'))) { dir.create(Sys.getenv('R_LIBS_USER'), recursive = TRUE) }");
 
                 foreach (string rPackage in rPackagesToInstall)
                 {
