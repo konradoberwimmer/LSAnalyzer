@@ -80,6 +80,11 @@ namespace LSAnalyzer.Services
             }
         }
 
+        public string? GetRPath()
+        {
+            return _rPath;
+        }
+
         public virtual bool CheckNecessaryRPackages(string? packageName = null)
         {
             string[] rPackagesToCheck = (packageName == null ? _rPackagesNecessary : new string[] { packageName });
@@ -114,7 +119,7 @@ namespace LSAnalyzer.Services
                     return false;
                 }
 
-                EvaluateAndLog("if (!dir.exists(Sys.getenv('R_LIBS_USER'))) { dir.create(Sys.getenv('R_LIBS_USER')) }");
+                EvaluateAndLog("if (!dir.exists(Sys.getenv('R_LIBS_USER'))) { dir.create(Sys.getenv('R_LIBS_USER'), recursive = TRUE) }");
 
                 foreach (string rPackage in rPackagesToInstall)
                 {
