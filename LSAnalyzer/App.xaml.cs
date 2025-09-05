@@ -96,7 +96,17 @@ namespace LSAnalyzer
 
             if (!rService.CheckNecessaryRPackages())
             {
-                var wantsInstall = MessageBox.Show("It seems that not all necessary R packages (BIFIEsurvey, foreign) are available.\n\nDo you want to install them now?\nNOTE: This requires an active internet connection and may take a while!", "R packages not available", MessageBoxButton.YesNo, MessageBoxImage.Error);
+                var rVersion = rService.GetRVersion()!;
+                var rLibraryLocation = rService.GetRPath()!;
+                
+                var wantsInstall = MessageBox.Show($"""
+                                                   It seems that not all necessary R packages (BIFIEsurvey, foreign) are available. 
+                                                   
+                                                   Do you want to install them now? 
+                                                   NOTE: This requires an active internet connection and may take a while!
+                                                   
+                                                   [Found {rVersion} with library path {rLibraryLocation}]
+                                                   """, "R packages not available", MessageBoxButton.YesNo, MessageBoxImage.Error);
                 if (wantsInstall == MessageBoxResult.Yes)
                 {
                     var successfulInstall = rService.InstallNecessaryRPackages();

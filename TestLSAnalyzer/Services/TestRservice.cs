@@ -24,6 +24,15 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
+        public void TestGetRPath()
+        {
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            
+            Assert.NotNull(rservice.GetRPath());
+        }
+
+        [Fact]
         public void TestExecute()
         {
             Rservice rservice = new(new());

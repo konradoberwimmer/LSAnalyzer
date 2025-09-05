@@ -80,6 +80,11 @@ namespace LSAnalyzer.Services
             }
         }
 
+        public string? GetRPath()
+        {
+            return _rPath;
+        }
+
         public virtual bool CheckNecessaryRPackages(string? packageName = null)
         {
             string[] rPackagesToCheck = (packageName == null ? _rPackagesNecessary : new string[] { packageName });
