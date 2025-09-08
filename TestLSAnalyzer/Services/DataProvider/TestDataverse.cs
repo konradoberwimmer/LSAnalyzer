@@ -46,9 +46,15 @@ namespace TestLSAnalyzer.Services.DataProvider
             result = dataverseService.TestProvider();
 
             Assert.False(result.IsSuccess);
-            Assert.Contains("not working", result.Message);
+            Assert.Contains("URL wrong?", result.Message);
 
             dataverseConfiguration.Url = "https://data.aussda.at/";
+            
+            result = dataverseService.TestProvider();
+
+            Assert.False(result.IsSuccess);
+            Assert.Contains("API token wrong?", result.Message);
+            
             dataverseConfiguration.ApiToken = GetTestApiToken();
 
             result = dataverseService.TestProvider();

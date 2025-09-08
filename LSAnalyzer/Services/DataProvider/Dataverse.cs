@@ -6,6 +6,8 @@ using RDotNet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -35,13 +37,31 @@ namespace LSAnalyzer.Services.DataProvider
                 return new() { IsSuccess = false, Message = "Missing R package 'dataverse'" };
             }
 
-            var success = _rservice.Execute($$"""
-                Sys.setenv(DATAVERSE_SERVER = "{{ dataverseConfiguration.Url }}");
-                Sys.setenv(DATAVERSE_KEY = "{{ dataverseConfiguration.ApiToken }}")
-                dataverse1 <- dataverse::get_dataverse(dataverse::dataverse_search("*", type = "dataverse")[1, "identifier"])
-                """);
+            using HttpClient client = new();
+            client.DefaultRequestHeaders.Add("X-Dataverse-key", dataverseConfiguration.ApiToken);
+            var testTokenEndpoint = dataverseConfiguration.Url + "/api/users/token";
+            HttpResponseMessage response;
+            
+            try
+            {
+                response = client.GetAsync(testTokenEndpoint).Result;
+            }
+            catch
+            {
+                return new() { IsSuccess = false, Message = "Data provider not working: URL wrong?" };
+            }
 
-            return new() { IsSuccess = success, Message = success ? "Data provider works" : "Data provider not working " };
+            if (!response.IsSuccessStatusCode)
+            {
+                switch (response.StatusCode)
+                {
+                    case HttpStatusCode.Unauthorized: return new() { IsSuccess = false, Message = "Data provider not working: API token wrong?" };
+                    case HttpStatusCode.NotFound: return new() { IsSuccess = false, Message = "Data provider not working: API token wrong?" };
+                    default: return new() { IsSuccess = false, Message = "Data provider not working: URL wrong?" }; 
+                }
+            }
+            
+            return new() { IsSuccess = true, Message = "Data provider works" };
         }
 
         public bool InstallDependencies()
