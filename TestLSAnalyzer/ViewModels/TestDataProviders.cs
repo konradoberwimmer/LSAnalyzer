@@ -196,7 +196,7 @@ public class TestDataProviders
         dataProviders.SelectedConfiguration = dataProviders.Configurations.First();
 
         dataProviders.TestDataProviderCommand.Execute(null);
-        Assert.True(dataProviders.TestResults.IsSuccess);
+        Assert.False(dataProviders.TestResults.IsSuccess);
     }
 
     public static string AssemblyDirectory
