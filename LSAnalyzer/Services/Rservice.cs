@@ -972,7 +972,7 @@ namespace LSAnalyzer.Services
 
                 string baseCall = string.Empty;
                 string varsArg = ", vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                string breaksArg = ", breaks = c(" + string.Join(", ", analysis.Percentiles.ConvertAll(val => val.ToString(CultureInfo.InvariantCulture))) + ")";
+                string breaksArg = ", breaks = c(" + string.Join(", ", analysis.Percentiles.OrderBy(val => val).Select(val => val.ToString(CultureInfo.InvariantCulture))) + ")";
 
                 if (!analysis.CalculateSE)
                 {
