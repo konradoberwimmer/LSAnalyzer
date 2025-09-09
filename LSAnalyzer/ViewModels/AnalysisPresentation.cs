@@ -761,9 +761,16 @@ namespace LSAnalyzer.ViewModels
                             List<object?> cellValues = new();
                             foreach (var column in columns.Keys)
                             {
-                                if (Regex.IsMatch(column, "^groupval[0-9]*$") && groupColumns.ContainsKey(columns[column].ColumnName))
+                                if (Regex.IsMatch(column, "^groupval[0-9]*$"))
                                 {
-                                    cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                                    if (groupColumns.ContainsKey(columns[column].ColumnName))
+                                    {
+                                        cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                                    }
+                                    else
+                                    {
+                                        cellValues.Add(null);
+                                    }
                                 }
                                 else if (Regex.IsMatch(column, "^\\$label_"))
                                 {
@@ -989,9 +996,16 @@ namespace LSAnalyzer.ViewModels
                             List<object?> cellValues = new();
                             foreach (var column in columns.Keys)
                             {
-                                if (Regex.IsMatch(column, "^groupval[0-9]*$") && groupColumns.ContainsKey(columns[column].ColumnName))
+                                if (Regex.IsMatch(column, "^groupval[0-9]*$"))
                                 {
-                                    cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                                    if (groupColumns.ContainsKey(columns[column].ColumnName))
+                                    {
+                                        cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                                    }
+                                    else
+                                    {
+                                        cellValues.Add(null);
+                                    }
                                 }
                                 else if (Regex.IsMatch(column, "^\\$label_"))
                                 {
@@ -1201,9 +1215,16 @@ namespace LSAnalyzer.ViewModels
                         List<object?> cellValues = new();
                         foreach (var column in columns.Keys)
                         {
-                            if (Regex.IsMatch(column, "^groupval[0-9]*$") && groupColumns.ContainsKey(columns[column].ColumnName))
+                            if (Regex.IsMatch(column, "^groupval[0-9]*$"))
                             {
-                                cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                                if (groupColumns.ContainsKey(columns[column].ColumnName))
+                                {
+                                    cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
+                                }
+                                else
+                                {
+                                    cellValues.Add(null);
+                                }
                             }
                             else if (Regex.IsMatch(column, "^\\$label_"))
                             {

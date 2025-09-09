@@ -145,6 +145,46 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
+        public void TestAnalysisResultUnivarWithMultipleGroupBy()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+            
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
+            
+            AnalysisUnivar analysisUnivar = new(analysisConfiguration)
+            {
+                Vars = [ new(1, "cat", false) ],
+                GroupBy = [ new(1, "item1", false), new(1, "item2", false), new(1, "item3", false) ],
+                CalculateOverall = true,
+            };
+            
+            var result = rservice.CalculateUnivar(analysisUnivar);
+            
+            AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+            
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(80, analysisPresentationViewModel.DataTable.Rows.Count); //not all items have all values
+            
+            // assert that there are rows that are empty at the first group column but have values in the latter two (concerning issue #7)
+            Assert.NotEmpty(analysisPresentationViewModel.DataTable.Select("[item1] is null AND [item2] is not null AND [item3] is not null"));
+        }
+
+        [Fact]
         public void TestSetAnalysisResultMeanDiff()
         {
             AnalysisConfiguration analysisConfiguration = new()

@@ -92,9 +92,16 @@ public class ResultService : IResultService
 
     private object? GetValueFromDataFrameRow(DataFrameRow row, string value, Dictionary<string, string> groupColumns, object? lastValue = null)
     {
-        if (Regex.IsMatch(value, "^groupval[0-9]*$") && groupColumns.ContainsKey(Analysis!.TableColumns[value].ColumnName))
+        if (Regex.IsMatch(value, "^groupval[0-9]*$"))
         {
-            return row[groupColumns[Analysis!.TableColumns[value].ColumnName]];
+            if (groupColumns.ContainsKey(Analysis!.TableColumns[value].ColumnName))
+            {
+                return row[groupColumns[Analysis!.TableColumns[value].ColumnName]];
+            }
+            else
+            {
+                return null;
+            }
         }
         else if (Regex.IsMatch(value, "^\\$label_"))
         {
