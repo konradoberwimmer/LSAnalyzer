@@ -813,6 +813,45 @@ namespace TestLSAnalyzer.Services
             stats = lastResult["stat"].AsDataFrame();
             Assert.True(Math.Abs((double)stats["quant"][0] - 4.420020) < 0.0001);
         }
+        
+                [Fact]
+        public void TestCalculatePercentialesUnorderedWithoutSE()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, 1));
+
+            AnalysisPercentiles analysisPercentiles = new(analysisConfiguration)
+            {
+                Vars = [ new(1, "x", false) ],
+                Percentiles = new() { 0.25, 0.50, 0.75, 0.05, 0.95 },
+                CalculateSE = false,
+            };
+
+            var result = rservice.CalculatePercentiles(analysisPercentiles);
+            Assert.NotNull(result);
+            Assert.Single(result);
+            var firstResult = result.First();
+            var stats = firstResult["stat"].AsDataFrame();
+
+            for (int i = 1; i < stats.RowCount; i++)
+            {
+                Assert.True((stats[i, "quant"] as double?) >= (stats[i - 1, "quant"] as double?));
+            }
+        }
 
         [Fact]
         public void TestCalculatePercentialesWithSE()
