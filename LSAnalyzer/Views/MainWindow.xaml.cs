@@ -48,6 +48,11 @@ namespace LSAnalyzer.Views
             {
                 MessageBox.Show("Something went wrong with analysis '" + m.Value.AnalysisName + "'!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             });
+            
+            WeakReferenceMessenger.Default.Register<AnalysisPresentation.FileInUseMessage>(this, (r, m) =>
+            {
+                MessageBox.Show("File '" + m.FileName + "' is currently in use by another process. Please close the file and start export again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
         }
 
         private void WindowClosed(object? sender, EventArgs e)
