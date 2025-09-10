@@ -20,6 +20,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace LSAnalyzer.ViewModels
 {
@@ -1758,7 +1759,15 @@ namespace LSAnalyzer.ViewModels
 
             if (File.Exists(filename))
             {
-                File.Delete(filename);
+                try
+                {
+                    File.Delete(filename);
+                }
+                catch (IOException)
+                {
+                    WeakReferenceMessenger.Default.Send(new FileInUseMessage { FileName = filename });
+                    return;
+                }
             }
             wb.SaveAs(filename);
         }
@@ -1777,5 +1786,10 @@ namespace LSAnalyzer.ViewModels
 
         [GeneratedRegex("^[0-9\\.]+$")]
         private static partial Regex RegexJustCategoryValue();
+
+        public class FileInUseMessage
+        {
+            public required string FileName { get; init; }
+        }
     }
 }

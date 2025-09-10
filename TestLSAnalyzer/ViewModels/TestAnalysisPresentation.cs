@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace TestLSAnalyzer.ViewModels
 {
@@ -812,6 +813,52 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal("Linear regression", (string)wb.Worksheet("Meta").Cell("B1").Value);
             Assert.Equal("Variables with labels:", (string)wb.Worksheet("Meta").Cell("A7").Value);
             Assert.Equal("what ever?", (string)wb.Worksheet("Meta").Cell("B8").Value);
+        }
+        
+        [Fact]
+        public void TestSaveDataTableXlsxSendsFileInUseMessage()
+        {
+
+            AnalysisPresentation analysisPresentationViewModel = new();
+
+            analysisPresentationViewModel.DataTable = new("results")
+            {
+                Columns = { { "var", typeof(string) }, { "mean", typeof(double) }, { "mean__se", typeof(double) }, { "sd", typeof(double) }, { "sd__se", typeof(double) } },
+                Rows =
+                {
+                    { "x1", 0.5, 0.01, 0.1, 0.001 },
+                    { "x2", 12.5, 0.12, 1.41, 0.023 },
+                    { "x3", -2.28, 0.23, 0.5, 0.012 },
+                }
+            };
+            analysisPresentationViewModel.DataView = new(analysisPresentationViewModel.DataTable);
+
+            var filename = Path.Combine(Path.GetTempPath(), "TestSaveDataTableXlsxFileInUse.xlsx");
+
+            if (File.Exists(filename))
+            {
+                File.Delete(filename);
+            }
+
+            var openFile = File.Create(filename);
+
+            var sentFileInUseMessage = false;
+            WeakReferenceMessenger.Default.Register<AnalysisPresentation.FileInUseMessage>(this, (r, m) =>
+            {
+                sentFileInUseMessage = true;
+            });
+            
+            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(filename);
+
+            Assert.True(sentFileInUseMessage);
+            
+            openFile.Close();
+            
+            sentFileInUseMessage = false;
+            
+            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(filename);
+
+            Assert.False(sentFileInUseMessage);
         }
 
         public static string AssemblyDirectory
