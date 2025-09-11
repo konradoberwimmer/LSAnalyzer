@@ -9,7 +9,7 @@
 	<PublishSingleFile>true</PublishSingleFile>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	<DebugType>embedded</DebugType>
-	<Version>1.0.0</Version>
+	<Version>1.1.0</Version>
 	<UserSecretsId>d3240506-05c8-4245-94c4-b73aa99f14f3</UserSecretsId>
   </PropertyGroup>
 
