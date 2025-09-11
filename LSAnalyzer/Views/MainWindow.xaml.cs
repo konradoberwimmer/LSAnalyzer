@@ -79,7 +79,8 @@ namespace LSAnalyzer.Views
             var mainWindowViewModel = DataContext as ViewModels.MainWindow;
             if (mainWindowViewModel?.AnalysisConfiguration?.FileName != null)
             {
-                selectAnalysisFileView.InitialDirectory = Path.GetDirectoryName(mainWindowViewModel.AnalysisConfiguration.FileName);
+                var lastDirectory = Path.GetDirectoryName(mainWindowViewModel.AnalysisConfiguration.FileName);
+                selectAnalysisFileView.InitialDirectory = Directory.Exists(lastDirectory) ? lastDirectory : null;
             }
 
             selectAnalysisFileView.ShowDialog();
