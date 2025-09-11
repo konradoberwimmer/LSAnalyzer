@@ -2,7 +2,7 @@
 
 <?define Name = "LSAnalyzer" ?>
 <?define Manufacturer = "KonradOberwimmer" ?>
-<?define Version = "1.0.0" ?>
+<?define Version = "1.1.0" ?>
 <?define UpgradeCode = "DEF8B87E-0A4F-4DE5-8E72-44DF0EBFA957" ?>
 
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
