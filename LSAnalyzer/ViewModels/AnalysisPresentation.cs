@@ -1648,7 +1648,7 @@ namespace LSAnalyzer.ViewModels
             using XLWorkbook wb = new();
             wb.ColumnWidth = 22.14;
 
-            wb.AddWorksheetDataTable(DataView.Table!);
+            wb.AddWorksheetDataTable(DataView.ToTable(DataView.Table?.TableName ?? Analysis.AnalysisName));
             
             if (Analysis is AnalysisFreq analysisFreq)
             {
@@ -1706,7 +1706,7 @@ namespace LSAnalyzer.ViewModels
 
             if (SecondaryDataView != null)
             {
-                wb.AddWorksheetDataTable(SecondaryDataView.Table!);
+                wb.AddWorksheetDataTable(SecondaryDataView.ToTable(SecondaryDataView.Table?.TableName ?? Analysis.AnalysisName + " (secondary)"));
             }
 
             var metaInformation = Analysis?.MetaInformation;
