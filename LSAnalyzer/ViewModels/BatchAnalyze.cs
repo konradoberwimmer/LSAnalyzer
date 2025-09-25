@@ -133,7 +133,7 @@ namespace LSAnalyzer.ViewModels
                     }
                 }
 
-                if (m.Id == _analysesDictionary?.Keys.Last())
+                if ((m.Success || m.Message != "Working ...") && m.Id == _analysesDictionary?.Keys.Last())
                 {
                     IsBusy = false;
                     FinishedAllCalculations = true;
