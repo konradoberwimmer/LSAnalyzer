@@ -85,14 +85,16 @@
                 </StackPanel>
             </StatusBarItem>
             <Separator Grid.Column="1"/>
-            <StatusBarItem Grid.Column="2">
+            <StatusBarItem Grid.Column="4">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Subset: "/>
-                    <TextBlock x:Name="textBlockAnalysisSubsetting" Text="{Binding SubsettingExpression}"/>
+                    <TextBlock Text="Weight: "/>
+                    <TextBlock x:Name="textBlockAnalysisDatasetWeight" Text="{Binding AnalysisConfiguration.DatasetType.Weight }"/>
+                    <TextBlock Text="; Subset: " Visibility="{Binding SubsettingExpression, Converter={StaticResource NullToVisibilityCollapsedConverter}}"/>
+                    <TextBlock x:Name="textBlockAnalysisSubsetting" Text="{Binding SubsettingExpression}" Visibility="{Binding SubsettingExpression, Converter={StaticResource NullToVisibilityCollapsedConverter}}"/>
                 </StackPanel>
             </StatusBarItem>
             <Separator Grid.Column="3"/>
-            <StatusBarItem Grid.Column="4">
+            <StatusBarItem Grid.Column="2">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Dataset Type: "/>
                     <TextBlock x:Name="textBlockAnalysisDatasetType" Text="{Binding AnalysisConfiguration.DatasetType.Name}"/>
