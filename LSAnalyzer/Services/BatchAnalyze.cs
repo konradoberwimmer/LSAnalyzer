@@ -60,10 +60,10 @@ namespace LSAnalyzer.Services
                     Message = "Working ..."
                 });
 
-                if (!_useCurrentFile && 
-                    (!ObjectTools.PublicInstancePropertiesEqual(analysis.Value.AnalysisConfiguration!, previousAnalysisConfiguration!, new[] { "DatasetType" }) ||
-                     !ObjectTools.PublicInstancePropertiesEqual(analysis.Value.AnalysisConfiguration?.DatasetType!, previousAnalysisConfiguration?.DatasetType!, new[] { "Errors", "IsChanged" }) ||
-                     analysis.Value.SubsettingExpression != previousSubsettingExpression))
+                if (!_useCurrentFile && (
+                        previousAnalysisConfiguration == null || 
+                        !analysis.Value.AnalysisConfiguration.IsEqual(previousAnalysisConfiguration) || 
+                        analysis.Value.SubsettingExpression != previousSubsettingExpression))
                 {
                     if (analysis.Value.AnalysisConfiguration!.FileName?.StartsWith("[") ?? false)
                     {

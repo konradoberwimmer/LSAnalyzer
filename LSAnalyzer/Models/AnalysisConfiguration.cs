@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LSAnalyzer.Helper;
 
 namespace LSAnalyzer.Models
 {
@@ -30,6 +31,15 @@ namespace LSAnalyzer.Models
         public List<string> GetRegexNecessaryVariables()
         {
             return DatasetType?.GetRegexNecessaryVariables() ?? new();
+        }
+
+        public bool IsEqual(AnalysisConfiguration analysisConfiguration)
+        {
+            return 
+                ObjectTools.PublicInstancePropertiesEqual(this, analysisConfiguration, [ "DatasetType" ]) &&
+                DatasetType != null && analysisConfiguration.DatasetType != null &&
+                ObjectTools.PublicInstancePropertiesEqual(DatasetType, analysisConfiguration.DatasetType, [ "Errors", "IsChanged", "PVvarsList" ]) &&
+                DatasetType.PVvarsList.ElementObjectsEqual(analysisConfiguration.DatasetType.PVvarsList, [ "Errors" ]);
         }
     }
 }
