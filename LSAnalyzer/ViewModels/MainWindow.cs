@@ -180,7 +180,7 @@ namespace LSAnalyzer.ViewModels
 
             WeakReferenceMessenger.Default.Register<BatchAnalyzeChangedSubsettingMessage>(this, (r, m) =>
             {
-                SubsettingExpression = m.SubsettingExpression;
+                SubsettingExpression = string.IsNullOrEmpty(m.SubsettingExpression) ? null : m.SubsettingExpression;
             });
 
             WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (r, m) =>

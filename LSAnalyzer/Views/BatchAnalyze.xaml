@@ -7,12 +7,10 @@
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels"
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=ViewModels:BatchAnalyze, IsDesignTimeCreatable=True}"
         x:Name="windowBatchAnalyze"
         Closing="Window_Closing"
         Title="Batch analyze" Height="auto" MinHeight="450" Width="auto" MinWidth="665" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight">
-    <Window.DataContext>
-        <ViewModels:BatchAnalyze/>
-    </Window.DataContext>
     <Window.Resources>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
         <Style x:Key="wordWrapStyle" TargetType="TextBlock">
@@ -40,8 +38,8 @@
         <Button x:Name="buttonSelectFile" Grid.Column="2" Content="Select ..." HorizontalAlignment="Left" Margin="10,0,0,0" Width="80" Height="22" Click="ButtonSelectFile_Click"/>
         <TextBlock Grid.Row="1" Text="Target:" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top"/>
         <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Vertical" Margin="10,10,0,0">
-            <RadioButton x:Name="radioButtonTargetCurrent" Content="Current file for analyses" HorizontalAlignment="Left" Height="15" GroupName="Target" IsChecked="{Binding UseCurrentFile}" IsEnabled="{Binding HasCurrentFile, Mode=OneTime}"/>
             <RadioButton x:Name="radioButtonTargetReload" Content="Reload files specified in file" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="Target" IsChecked="{Binding UseCurrentFile, Converter={StaticResource InverseBoolConverter}}"/>
+            <RadioButton x:Name="radioButtonTargetCurrent" Content="Current file for analyses" HorizontalAlignment="Left" Height="15" GroupName="Target" IsChecked="{Binding UseCurrentFile}" IsEnabled="{Binding HasCurrentFile}"/>
         </StackPanel>
         <Button Grid.Row="2" Grid.Column="2" Content="Analyze" HorizontalAlignment="Left" Margin="10,10,0,0" Height="22" Width="80" Command="{Binding RunBatchCommand}" IsEnabled="{Binding ElementName=textBoxFileName, Path=Text.Length}"/>
         <Border x:Name="dataGridWidthHelper" Grid.Row="3" Grid.ColumnSpan="3" Margin="0,10,0,0" >
