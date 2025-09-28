@@ -251,12 +251,14 @@ namespace LSAnalyzer.Views
             var mainWindowViewModel = DataContext as ViewModels.MainWindow;
 
             ViewModels.BatchAnalyze batchAnalyzeViewModel = _serviceProvider.GetRequiredService<ViewModels.BatchAnalyze>();
+            batchAnalyzeViewModel.ClearAnalysisData();
             batchAnalyzeViewModel.HasCurrentFile = mainWindowViewModel!.AnalysisConfiguration != null;
-            if (batchAnalyzeViewModel.HasCurrentFile)
-            {
-                batchAnalyzeViewModel.UseCurrentFile = true;
-            }
             batchAnalyzeViewModel.CurrentConfiguration = mainWindowViewModel.AnalysisConfiguration;
+
+            if (batchAnalyzeViewModel.FileName != null && !File.Exists(batchAnalyzeViewModel.FileName))
+            {
+                batchAnalyzeViewModel.FileName = null;
+            }
 
             Views.BatchAnalyze batchAnalyzeView = new(batchAnalyzeViewModel);
             batchAnalyzeView.ShowDialog();

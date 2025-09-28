@@ -72,7 +72,7 @@ namespace LSAnalyzer
             services.AddTransient<Subsetting>();
             services.AddTransient<RequestAnalysis>();
             services.AddTransient<MainWindow>();
-            services.AddTransient<ViewModels.BatchAnalyze>();
+            services.AddSingleton<ViewModels.BatchAnalyze>();
             services.AddTransient<Views.ConfigDatasetTypes>();
             services.AddTransient<Views.DataProviders>();
             services.AddTransient<Views.SystemSettings>();

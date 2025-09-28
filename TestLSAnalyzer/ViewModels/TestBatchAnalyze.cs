@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using BatchAnalyzeViewModel = LSAnalyzer.ViewModels.BatchAnalyze;
 
 namespace TestLSAnalyzer.ViewModels
 {
@@ -141,6 +142,23 @@ namespace TestLSAnalyzer.ViewModels
             await Task.Delay(200);
 
             Assert.Equal(4, analysisReadyMessagesSent);
+        }
+
+        [Fact]
+        public void TestClearAnalysisData()
+        {
+            BatchAnalyzeViewModel batchAnalyzeViewModel = new()
+            {
+                AnalysesTable = new DataTable { Columns = { "A", "B" } },
+                IsBusy = true,
+                FinishedAllCalculations = true
+            };
+            
+            batchAnalyzeViewModel.ClearAnalysisData();
+            
+            Assert.Null(batchAnalyzeViewModel.AnalysesTable);
+            Assert.False(batchAnalyzeViewModel.IsBusy);
+            Assert.False(batchAnalyzeViewModel.FinishedAllCalculations);
         }
 
         public static string AssemblyDirectory

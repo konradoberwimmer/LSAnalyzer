@@ -42,7 +42,7 @@ namespace LSAnalyzer.ViewModels
                 _hasCurrentFile = value;
                 NotifyPropertyChanged(nameof(HasCurrentFile));
 
-                if (!HasCurrentFile)
+                if (!value)
                 {
                     UseCurrentFile = false;
                 }
@@ -139,6 +139,19 @@ namespace LSAnalyzer.ViewModels
                     FinishedAllCalculations = true;
                 }
             });
+            
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeChangedStoredRawDataFileMessage>(this, (r, m) =>
+            {
+                HasCurrentFile = false;
+            });
+        }
+
+        public void ClearAnalysisData()
+        { 
+            _analysesDictionary = null;
+            AnalysesTable = null;
+            IsBusy = false;
+            FinishedAllCalculations = false;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
