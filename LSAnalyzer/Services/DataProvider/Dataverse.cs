@@ -76,6 +76,22 @@ namespace LSAnalyzer.Services.DataProvider
             success = success && _rservice.Execute($$"""
                 Sys.setenv(DATAVERSE_SERVER = "{{dataverseConfiguration.Url}}");
                 Sys.setenv(DATAVERSE_KEY = "{{dataverseConfiguration.ApiToken}}")
+                Sys.setenv(DATAVERSE_USE_CACHE = "none")
+                
+                if (utils::packageVersion("dataverse") == "0.3.15") {
+                  library(dataverse)
+                
+                  api_get_impl_fixed <- function (url, ..., key = NULL, as = "text") 
+                  {
+                    if (!is.null(key)) 
+                      key <- httr::add_headers("X-Dataverse-key" = key)
+                    r <- httr::GET(url, ..., key)
+                    httr::stop_for_status(r, task = httr::content(r)$message)
+                    httr::content(r, as = as, encoding = "UTF-8")
+                  }
+                  
+                  assignInNamespace("api_get_impl", api_get_impl_fixed, ns = "dataverse")
+                }
                 """);
 
             if (format == "tsv")
