@@ -64,7 +64,7 @@
                     <RowDefinition/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <DataGrid Grid.Row="0" ItemsSource="{Binding SessionLog.LogEntries}" AutoGenerateColumns="False" IsReadOnly="True">
+                <DataGrid Grid.Row="0" ItemsSource="{Binding SessionLog, Mode=OneTime}" AutoGenerateColumns="False" IsReadOnly="True">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Time" Binding="{Binding When}"/>
                         <DataGridTextColumn Header="Analysis" Binding="{Binding AnalysisName}"/>

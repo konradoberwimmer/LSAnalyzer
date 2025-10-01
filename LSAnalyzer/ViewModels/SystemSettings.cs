@@ -5,6 +5,7 @@ using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -68,9 +69,15 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        public Logging SessionLog
+        private ObservableCollection<LogEntry> _sessionLog;
+        public ObservableCollection<LogEntry> SessionLog
         {
-            get => _logger;
+            get => _sessionLog;
+            set
+            {
+                _sessionLog = value;
+                NotifyPropertyChanged();
+            }
         }
 
         [ExcludeFromCodeCoverage]
@@ -85,6 +92,7 @@ namespace LSAnalyzer.ViewModels
             _logger = new();
             _logger.AddEntry(new LogEntry(DateTime.Now, "stats::sd(c(1,2,3))"));
             _logger.AddEntry(new LogEntry(DateTime.Now, "rm(dummy_result)"));
+            SessionLog = new(_logger.LogEntries);
         }
 
         public SystemSettings(Rservice rservice, Configuration configuration, Logging logger)
@@ -95,6 +103,7 @@ namespace LSAnalyzer.ViewModels
             _configuration = configuration;
             CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
             _logger = logger;
+            SessionLog = new(_logger.LogEntries);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
