@@ -156,5 +156,117 @@ namespace LSAnalyzer.Services
 
             File.WriteAllText(_datasetTypesConfigFile, JsonSerializer.Serialize(storedDatasetTypes));
         }
+
+        public List<string> GetStoredRecentSubsettingExpressions(int datasetTypeId)
+        {
+            try
+            {
+                var storedRecentSubsettingExpressions =
+                    JsonSerializer.Deserialize<Dictionary<int, List<string>>>(Properties.Settings.Default.recentSubsettingExpressions) ??
+                    new();
+                
+                if (storedRecentSubsettingExpressions.TryGetValue(datasetTypeId, out var recentSubsettingExpressions))
+                {
+                    return recentSubsettingExpressions;
+                }
+            }
+            catch
+            {
+                return [];
+            }
+
+            return [];
+        }
+        
+        public void StoreRecentSubsettingExpression(int datasetTypeId, string subsettingExpression)
+        {
+            if (Properties.Settings.Default.numberRecentSubsettingExpressions < 1)
+            {
+                return;
+            }
+            
+            try
+            {
+                var storedRecentSubsettingExpressions =
+                    JsonSerializer.Deserialize<Dictionary<int, List<string>>>(Properties.Settings.Default
+                        .recentSubsettingExpressions) ??
+                    new();
+                
+                if (!storedRecentSubsettingExpressions.ContainsKey(datasetTypeId))
+                {
+                    storedRecentSubsettingExpressions.Add(datasetTypeId, [ subsettingExpression ]);
+                }
+                else
+                {
+                    storedRecentSubsettingExpressions[datasetTypeId].Remove(subsettingExpression);
+                    storedRecentSubsettingExpressions[datasetTypeId] =
+                        storedRecentSubsettingExpressions[datasetTypeId].Prepend(subsettingExpression).ToList();
+                }
+
+                if (storedRecentSubsettingExpressions[datasetTypeId].Count >
+                    Properties.Settings.Default.numberRecentSubsettingExpressions)
+                {
+                    storedRecentSubsettingExpressions[datasetTypeId].RemoveAt(storedRecentSubsettingExpressions[datasetTypeId].Count - 1);
+                }
+                
+                Properties.Settings.Default.recentSubsettingExpressions =
+                    JsonSerializer.Serialize(storedRecentSubsettingExpressions);
+                Properties.Settings.Default.Save();
+            }
+            catch
+            {
+                Properties.Settings.Default.recentSubsettingExpressions =
+                    JsonSerializer.Serialize(new Dictionary<int, List<string>> { { datasetTypeId, [ subsettingExpression ] } });
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        public void RemoveRecentSubsettingExpressions(int datasetTypeId)
+        {
+            try
+            {
+                var storedRecentSubsettingExpressions =
+                    JsonSerializer.Deserialize<Dictionary<int, List<string>>>(Properties.Settings.Default
+                        .recentSubsettingExpressions) ??
+                    new();
+                
+                storedRecentSubsettingExpressions.Remove(datasetTypeId);
+                
+                Properties.Settings.Default.recentSubsettingExpressions =
+                    JsonSerializer.Serialize(storedRecentSubsettingExpressions);
+                Properties.Settings.Default.Save();
+            } catch { }
+        }
+
+        public void TrimRecentSubsettingExpressions(int numberOfRecentSubsettingExpressions)
+        {
+            if (numberOfRecentSubsettingExpressions < 1)
+            {
+                Properties.Settings.Default.recentSubsettingExpressions =
+                    JsonSerializer.Serialize(new Dictionary<int, List<string>>());
+                Properties.Settings.Default.Save();
+                return;
+            }
+            
+            try
+            {
+                var storedRecentSubsettingExpressions =
+                    JsonSerializer.Deserialize<Dictionary<int, List<string>>>(Properties.Settings.Default
+                        .recentSubsettingExpressions) ??
+                    new();
+                
+                foreach (var entry in storedRecentSubsettingExpressions)
+                {
+                    while (entry.Value.Count > numberOfRecentSubsettingExpressions)
+                    {
+                        entry.Value.RemoveAt(entry.Value.Count - 1);
+                    }
+                }
+                
+                Properties.Settings.Default.recentSubsettingExpressions =
+                    JsonSerializer.Serialize(storedRecentSubsettingExpressions);
+                Properties.Settings.Default.Save();
+            } catch { }
+        }
     }
 }

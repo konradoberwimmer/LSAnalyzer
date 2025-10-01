@@ -57,5 +57,17 @@ namespace LSAnalyzer.Properties {
                 this["numberRecentSubsettingExpressions"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string recentSubsettingExpressions {
+            get {
+                return ((string)(this["recentSubsettingExpressions"]));
+            }
+            set {
+                this["recentSubsettingExpressions"] = value;
+            }
+        }
     }
 }

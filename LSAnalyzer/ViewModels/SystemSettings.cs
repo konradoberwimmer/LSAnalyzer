@@ -102,6 +102,7 @@ namespace LSAnalyzer.ViewModels
             foreach (var defaultDatasetType in DatasetType.CreateDefaultDatasetTypes())
             {
                 _configuration.RemoveDatasetType(defaultDatasetType);
+                _configuration.RemoveRecentSubsettingExpressions(defaultDatasetType.Id);
                 _configuration.StoreDatasetType(defaultDatasetType);
             }
 
@@ -122,6 +123,7 @@ namespace LSAnalyzer.ViewModels
             Properties.Settings.Default.Save();
             
             AcceptChanges();
+            _configuration.TrimRecentSubsettingExpressions(NumberRecentSubsettingExpressions);
             
             WeakReferenceMessenger.Default.Send<SavedSettingsMessage>();
         }

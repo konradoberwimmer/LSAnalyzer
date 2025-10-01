@@ -8,7 +8,7 @@
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewModels:SystemSettings, IsDesignTimeCreatable=True}"
-        x:Name="windowSystemSettings" Title="System information" Height="600" MinHeight="300" Width="600" MinWidth="300" WindowStartupLocation="CenterScreen">
+        x:Name="windowSystemSettings" Title="System information" Height="600" MinHeight="300" Width="600" MinWidth="300" WindowStartupLocation="CenterScreen" Closing="SystemSettings_OnClosing">
     <Window.Resources>
         <converter:IntegerToStringLenient x:Key="IntegerToStringLenientConverter"/>
     </Window.Resources>

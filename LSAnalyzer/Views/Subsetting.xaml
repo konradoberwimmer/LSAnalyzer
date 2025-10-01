@@ -45,18 +45,30 @@
             <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.ModeKeep, Converter={StaticResource BoolToAnalysisModeConverter}, FallbackValue=AnalysisMode}" Margin="10,49,10,-5"/>
         </Grid>
         <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Label Grid.Column="0" Content="Variables in dataset:" Margin="10,0,0,0"/>
-            <Border x:Name="HeightHelperPanelVariablesDataset" Grid.Column="0" Margin="10,27,10,22">
+            <Label Grid.Row="0" Grid.Column="0" Content="Variables in dataset:" Margin="10,0,0,0"/>
+            <Border x:Name="HeightHelperPanelVariablesDataset" Grid.Row="0" Grid.Column="0" Margin="10,27,10,5">
                 <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDataset}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Name" SelectionMode="Single" MouseDoubleClick="ListBoxVariablesDataset_MouseDoubleClick"/>
             </Border>
-            <CheckBox x:Name="checkBoxIncludeSystemVariables" Grid.Column="0" Margin="10,0,10,0" VerticalAlignment="Bottom" IsChecked="False" Content="Include system variables (weights, ...)" Checked="CheckBoxIncludeSystemVariables_Checked" Unchecked="CheckBoxIncludeSystemVariables_Checked"/>
-            <Label Grid.Column="1" Content="Expression for selecting subset:"/>
-            <TextBox Grid.Column="1" Margin="0,27,10,22" x:Name="textBoxSubsettingExpression" Text="{Binding SubsetExpression, UpdateSourceTrigger=PropertyChanged}"/>
-            <TextBlock Grid.Column="1" VerticalAlignment="Bottom" Text="{Binding SubsettingInformation.Stringify}" Foreground="{Binding SubsettingInformation.ValidSubset, Converter={StaticResource BoolToRedGreenConverter}}"/>
+            <CheckBox Grid.Row="1" Grid.Column="0" Margin="10,0,10,0" VerticalAlignment="Bottom" IsChecked="False" Content="Include system variables (weights, ...)" Checked="CheckBoxIncludeSystemVariables_Checked" Unchecked="CheckBoxIncludeSystemVariables_Checked"/>
+            <Grid Grid.Row="0" Grid.Column="1" Margin="0,0,10,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" Content="Recently used:"/>
+                <ComboBox Grid.Row="0" Margin="0,27,0,5" ItemsSource="{Binding RecentSubsettingExpressions}"/>
+                <Label Grid.Row="1" Content="Expression for selecting subset:"/>
+                <TextBox Grid.Row="1" Margin="0,27,0,5" x:Name="textBoxSubsettingExpression" Text="{Binding SubsetExpression, UpdateSourceTrigger=PropertyChanged}"/>
+            </Grid>
+            <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom" Text="{Binding SubsettingInformation.Stringify}" Foreground="{Binding SubsettingInformation.ValidSubset, Converter={StaticResource BoolToRedGreenConverter}}"/>
         </Grid>
         <Button Grid.Row="2" Content="Clear" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,10" Width="80" Height="22" Command="{Binding ClearSubsettingCommand}" CommandParameter="{Binding ElementName=windowSubsetting}" IsEnabled="{Binding IsCurrentlySubsetting}"/>
         <StackPanel Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,10" Orientation="Horizontal">

@@ -11,6 +11,9 @@
     <Setting Name="numberRecentSubsettingExpressions" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">20</Value>
     </Setting>
+    <Setting Name="recentSubsettingExpressions" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>
 
