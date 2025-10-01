@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -16,58 +17,32 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace LSAnalyzer.ViewModels
 {
-    public class SystemSettings : INotifyPropertyChanged
+    public partial class SystemSettings : ObservableValidatorExtended, IChangeTracking
     {
         private readonly Rservice _rservice;
         private readonly Logging _logger;
         private readonly Configuration _configuration;
 
-        private string _version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
-        public string Version
-        {
-            get => _version;
-            set
-            {
-                _version = value;
-                NotifyPropertyChanged(nameof(Version));
-            }
-        }
+        [ObservableProperty] private string _version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
 
-        private int _countConfiguredDatasetTypes;
-        public int CountConfiguredDatasetTypes
-        {
-            get => _countConfiguredDatasetTypes;
-            set
-            {
-                _countConfiguredDatasetTypes = value;
-                NotifyPropertyChanged(nameof(CountConfiguredDatasetTypes));
-            }
-        }
+        [ObservableProperty] private int _countConfiguredDatasetTypes;
 
-        private string? _rVersion;
-        public string? RVersion
+        [Range(0, int.MaxValue)]
+        [ObservableProperty]
+        private int _numberRecentSubsettingExpressions = Properties.Settings.Default.numberRecentSubsettingExpressions;
+        partial void OnNumberRecentSubsettingExpressionsChanged(int value)
         {
-            get => _rVersion;
-            set
-            {
-                _rVersion = value;
-                NotifyPropertyChanged(nameof(RVersion));
-            }
+            OnPropertyChanged(nameof(IsChanged));
         }
+        private int _storedNumberRecentSubsettingExpressions = Properties.Settings.Default.numberRecentSubsettingExpressions;
 
-        private string? _bifieSurveyVersion;
-        public string? BifieSurveyVersion
-        {
-            get => _bifieSurveyVersion;
-            set
-            {
-                _bifieSurveyVersion = value;
-                NotifyPropertyChanged(nameof(BifieSurveyVersion));
-            }
-        }
+        [ObservableProperty] private string? _rVersion;
+
+        [ObservableProperty] private string? _bifieSurveyVersion;
 
         private ObservableCollection<LogEntry> _sessionLog;
         public ObservableCollection<LogEntry> SessionLog
@@ -133,6 +108,22 @@ namespace LSAnalyzer.ViewModels
             CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
 
             WeakReferenceMessenger.Default.Send(new LoadedDefaultDatasetTypesMessage());
+        }
+
+        [RelayCommand]
+        public void SaveSettings()
+        {
+            if (!Validate())
+            {
+                return;
+            }
+            
+            Properties.Settings.Default.numberRecentSubsettingExpressions = NumberRecentSubsettingExpressions;
+            Properties.Settings.Default.Save();
+            
+            AcceptChanges();
+            
+            WeakReferenceMessenger.Default.Send<SavedSettingsMessage>();
         }
 
         private RelayCommand<object?> _updateBifieSurveyCommand = null!;
@@ -207,7 +198,17 @@ namespace LSAnalyzer.ViewModels
             using StreamWriter streamWriter = new(filename, false);
             streamWriter.Write(_logger.GetRcode());
         }
+
+        public void AcceptChanges()
+        {
+            _storedNumberRecentSubsettingExpressions = NumberRecentSubsettingExpressions;
+            OnPropertyChanged(nameof(IsChanged));
+        }
+
+        public bool IsChanged => NumberRecentSubsettingExpressions != _storedNumberRecentSubsettingExpressions;
     }
 
     internal class LoadedDefaultDatasetTypesMessage { }
+    
+    internal class SavedSettingsMessage { }
 }

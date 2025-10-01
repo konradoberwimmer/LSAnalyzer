@@ -69,5 +69,27 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal(DatasetType.CreateDefaultDatasetTypes().Count + 1, configuration.GetStoredDatasetTypes()!.Count);
             Assert.NotEmpty(configuration.GetStoredDatasetTypes()!.Where(dst => dst.Id == 33));
         }
+        
+        [Fact]
+        public void TestSaveSettingsCommand()
+        {
+            SystemSettings systemSettingsViewModel = new();
+            int oldValue = systemSettingsViewModel.NumberRecentSubsettingExpressions;            
+            
+            systemSettingsViewModel.NumberRecentSubsettingExpressions = -1;
+            systemSettingsViewModel.SaveSettingsCommand.Execute(null);
+            systemSettingsViewModel = new();
+            
+            Assert.Equal(oldValue, systemSettingsViewModel.NumberRecentSubsettingExpressions);
+            
+            systemSettingsViewModel.NumberRecentSubsettingExpressions = 127;
+            systemSettingsViewModel.SaveSettingsCommand.Execute(null);
+            systemSettingsViewModel = new();
+            
+            Assert.Equal(127, systemSettingsViewModel.NumberRecentSubsettingExpressions);
+            
+            systemSettingsViewModel.NumberRecentSubsettingExpressions = oldValue;
+            systemSettingsViewModel.SaveSettingsCommand.Execute(null);
+        }
     }
 }

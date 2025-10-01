@@ -33,6 +33,8 @@ namespace LSAnalyzer.Views
             {
                 MessageBox.Show("Loading default dataset types successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             });
+            
+            WeakReferenceMessenger.Default.Register<SavedSettingsMessage>(this, (_, _) => MessageBox.Show("Settings saved.", "Info", MessageBoxButton.OK, MessageBoxImage.Information));
         }
 
         [ExcludeFromCodeCoverage]
