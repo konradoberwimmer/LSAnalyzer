@@ -26,7 +26,7 @@ namespace TestLSAnalyzer.ViewModels
                 new(3, "z", false),
             });
             
-            Subsetting subsettingViewModel = new(mockRservice.Object);
+            Subsetting subsettingViewModel = new(mockRservice.Object, new Mock<Configuration>().Object);
 
             Assert.Empty(subsettingViewModel.AvailableVariables);
 
@@ -40,7 +40,7 @@ namespace TestLSAnalyzer.ViewModels
         public void TestSetCurrentSubsetting()
         {
             var mockRservice = new Mock<Rservice>();
-            Subsetting subsettingViewModel = new(mockRservice.Object);
+            Subsetting subsettingViewModel = new(mockRservice.Object, new Mock<Configuration>().Object);
 
             Assert.False(subsettingViewModel.IsCurrentlySubsetting);
             Assert.Null(subsettingViewModel.SubsetExpression);
@@ -58,7 +58,7 @@ namespace TestLSAnalyzer.ViewModels
             mockRservice.Setup(rservice => rservice.TestSubsetting("invalid", null)).Returns(new SubsettingInformation() { ValidSubset = false });
             mockRservice.Setup(rservice => rservice.TestSubsetting("valid", null)).Returns(new SubsettingInformation() { ValidSubset = true });
 
-            Subsetting subsettingViewModel = new(mockRservice.Object);
+            Subsetting subsettingViewModel = new(mockRservice.Object, new Mock<Configuration>().Object);
             
             subsettingViewModel.SubsetExpression = "invalid";
             subsettingViewModel.TestSubsettingCommand.Execute(null);
@@ -82,8 +82,8 @@ namespace TestLSAnalyzer.ViewModels
             mockRservice.Setup(rservice => rservice.TestSubsetting("valid", null)).Returns(new SubsettingInformation() { ValidSubset = true });
             mockRservice.Setup(rservice => rservice.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>())).Returns(true);
 
-            Subsetting subsettingViewModel = new(mockRservice.Object);
-            subsettingViewModel.AnalysisConfiguration = new() { ModeKeep = false };
+            Subsetting subsettingViewModel = new(mockRservice.Object, new Mock<Configuration>().Object);
+            subsettingViewModel.AnalysisConfiguration = new() { ModeKeep = false, DatasetType = new() { Id = 1234 } };
 
             string? message = null;
             WeakReferenceMessenger.Default.Register<SetSubsettingExpressionMessage>(this, (r, m) =>
@@ -110,7 +110,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal("valid", message);
 
             message = null;
-            subsettingViewModel.AnalysisConfiguration = new() { ModeKeep = true };
+            subsettingViewModel.AnalysisConfiguration = new() { ModeKeep = true, DatasetType = new() { Id = 1234 } };
             subsettingViewModel.UseSubsettingCommand.Execute(null);
             await Task.Delay(100);
             Assert.NotNull(message);
@@ -124,8 +124,8 @@ namespace TestLSAnalyzer.ViewModels
             mockRservice.Setup(rservice => rservice.TestSubsetting("valid", null)).Returns(new SubsettingInformation() { ValidSubset = true });
             mockRservice.Setup(rservice => rservice.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>())).Returns(true);
 
-            Subsetting subsettingViewModel = new(mockRservice.Object);
-            subsettingViewModel.AnalysisConfiguration = new() { ModeKeep = true };
+            Subsetting subsettingViewModel = new(mockRservice.Object, new Mock<Configuration>().Object);
+            subsettingViewModel.AnalysisConfiguration = new() { ModeKeep = true, DatasetType = new() { Id = 1234 } };
 
             bool messageReceived = false;
             string? message = null;

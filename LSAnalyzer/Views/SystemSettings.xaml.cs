@@ -3,6 +3,7 @@ using LSAnalyzer.ViewModels;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -33,6 +34,8 @@ namespace LSAnalyzer.Views
             {
                 MessageBox.Show("Loading default dataset types successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             });
+            
+            WeakReferenceMessenger.Default.Register<SavedSettingsMessage>(this, (_, _) => MessageBox.Show("Settings saved.", "Info", MessageBoxButton.OK, MessageBoxImage.Information));
         }
 
         [ExcludeFromCodeCoverage]
@@ -100,6 +103,11 @@ namespace LSAnalyzer.Views
             }
 
             systemSettingsViewModel.LoadDefaultDatasetTypesCommand.Execute(null);
+        }
+
+        private void SystemSettings_OnClosing(object? sender, CancelEventArgs e)
+        {
+            WeakReferenceMessenger.Default.UnregisterAll(this);
         }
     }
 }

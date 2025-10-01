@@ -21,6 +21,8 @@ namespace LSAnalyzer.ViewModels
     public class Subsetting : INotifyPropertyChanged
     {
         private readonly Rservice _rservice;
+        
+        private readonly Configuration _configuration;
 
         private AnalysisConfiguration? _analysisConfiguration;
         public AnalysisConfiguration? AnalysisConfiguration
@@ -31,19 +33,24 @@ namespace LSAnalyzer.ViewModels
                 _analysisConfiguration = value;
                 NotifyPropertyChanged(nameof(AnalysisConfiguration));
 
-                if (AnalysisConfiguration != null)
+                if (AnalysisConfiguration == null)
                 {
-                    var currentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, true);
-                    if (currentDatasetVariables != null)
-                    {
-                        ObservableCollection<Variable> newAvailableVariables = new();
-                        foreach (var variable in currentDatasetVariables)
-                        {
-                            newAvailableVariables.Add(variable);
-                        }
-                        AvailableVariables = newAvailableVariables;
-                    }
+                    return;
                 }
+                
+                var currentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, true);
+                if (currentDatasetVariables != null)
+                {
+                    ObservableCollection<Variable> newAvailableVariables = new();
+                    foreach (var variable in currentDatasetVariables)
+                    {
+                        newAvailableVariables.Add(variable);
+                    }
+                    AvailableVariables = newAvailableVariables;
+                }
+
+                RecentSubsettingExpressions =
+                    new(_configuration.GetStoredRecentSubsettingExpressions(AnalysisConfiguration.DatasetType?.Id ?? -1));
             }
         }
 
@@ -64,6 +71,17 @@ namespace LSAnalyzer.ViewModels
             get => _isCurrentlySubsetting;
         }
 
+        private ObservableCollection<string> _recentSubsettingExpressions;
+        public ObservableCollection<string> RecentSubsettingExpressions
+        {
+            get => _recentSubsettingExpressions;
+            set
+            {
+                _recentSubsettingExpressions = value;
+                NotifyPropertyChanged();
+            }
+        }
+        
         private string? _subsetExpression;
         public string? SubsetExpression
         {
@@ -103,12 +121,15 @@ namespace LSAnalyzer.ViewModels
         {
             // design-time-only constructor
             SubsettingInformation = new() { ValidSubset = true, NCases = 100, NSubset = 57 };
+            RecentSubsettingExpressions = ["x == 1", "y == 2"];
         }
 
-        public Subsetting(Rservice rservice)
+        public Subsetting(Rservice rservice, Configuration configuration)
         {
             _rservice = rservice;
+            _configuration = configuration;
             AvailableVariables = new ObservableCollection<Variable>();
+            RecentSubsettingExpressions = [];
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -240,6 +261,8 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
+            _configuration.StoreRecentSubsettingExpression(AnalysisConfiguration!.DatasetType!.Id, SubsetExpression!);
+            
             if (AnalysisConfiguration!.ModeKeep == true)
             {
                 if (!_rservice.TestAnalysisConfiguration(AnalysisConfiguration!, SubsetExpression))

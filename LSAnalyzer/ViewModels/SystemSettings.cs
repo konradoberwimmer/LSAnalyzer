@@ -5,7 +5,9 @@ using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -15,62 +17,42 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace LSAnalyzer.ViewModels
 {
-    public class SystemSettings : INotifyPropertyChanged
+    public partial class SystemSettings : ObservableValidatorExtended, IChangeTracking
     {
         private readonly Rservice _rservice;
         private readonly Logging _logger;
         private readonly Configuration _configuration;
 
-        private string _version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
-        public string Version
+        [ObservableProperty] private string _version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
+
+        [ObservableProperty] private int _countConfiguredDatasetTypes;
+
+        [Range(0, int.MaxValue)]
+        [ObservableProperty]
+        private int _numberRecentSubsettingExpressions = Properties.Settings.Default.numberRecentSubsettingExpressions;
+        partial void OnNumberRecentSubsettingExpressionsChanged(int value)
         {
-            get => _version;
+            OnPropertyChanged(nameof(IsChanged));
+        }
+        private int _storedNumberRecentSubsettingExpressions = Properties.Settings.Default.numberRecentSubsettingExpressions;
+
+        [ObservableProperty] private string? _rVersion;
+
+        [ObservableProperty] private string? _bifieSurveyVersion;
+
+        private ObservableCollection<LogEntry> _sessionLog;
+        public ObservableCollection<LogEntry> SessionLog
+        {
+            get => _sessionLog;
             set
             {
-                _version = value;
-                NotifyPropertyChanged(nameof(Version));
+                _sessionLog = value;
+                NotifyPropertyChanged();
             }
-        }
-
-        private int _countConfiguredDatasetTypes;
-        public int CountConfiguredDatasetTypes
-        {
-            get => _countConfiguredDatasetTypes;
-            set
-            {
-                _countConfiguredDatasetTypes = value;
-                NotifyPropertyChanged(nameof(CountConfiguredDatasetTypes));
-            }
-        }
-
-        private string? _rVersion;
-        public string? RVersion
-        {
-            get => _rVersion;
-            set
-            {
-                _rVersion = value;
-                NotifyPropertyChanged(nameof(RVersion));
-            }
-        }
-
-        private string? _bifieSurveyVersion;
-        public string? BifieSurveyVersion
-        {
-            get => _bifieSurveyVersion;
-            set
-            {
-                _bifieSurveyVersion = value;
-                NotifyPropertyChanged(nameof(BifieSurveyVersion));
-            }
-        }
-
-        public Logging SessionLog
-        {
-            get => _logger;
         }
 
         [ExcludeFromCodeCoverage]
@@ -85,6 +67,7 @@ namespace LSAnalyzer.ViewModels
             _logger = new();
             _logger.AddEntry(new LogEntry(DateTime.Now, "stats::sd(c(1,2,3))"));
             _logger.AddEntry(new LogEntry(DateTime.Now, "rm(dummy_result)"));
+            SessionLog = new(_logger.LogEntries);
         }
 
         public SystemSettings(Rservice rservice, Configuration configuration, Logging logger)
@@ -95,6 +78,7 @@ namespace LSAnalyzer.ViewModels
             _configuration = configuration;
             CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
             _logger = logger;
+            SessionLog = new(_logger.LogEntries);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -118,12 +102,30 @@ namespace LSAnalyzer.ViewModels
             foreach (var defaultDatasetType in DatasetType.CreateDefaultDatasetTypes())
             {
                 _configuration.RemoveDatasetType(defaultDatasetType);
+                _configuration.RemoveRecentSubsettingExpressions(defaultDatasetType.Id);
                 _configuration.StoreDatasetType(defaultDatasetType);
             }
 
             CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
 
             WeakReferenceMessenger.Default.Send(new LoadedDefaultDatasetTypesMessage());
+        }
+
+        [RelayCommand]
+        public void SaveSettings()
+        {
+            if (!Validate())
+            {
+                return;
+            }
+            
+            Properties.Settings.Default.numberRecentSubsettingExpressions = NumberRecentSubsettingExpressions;
+            Properties.Settings.Default.Save();
+            
+            AcceptChanges();
+            _configuration.TrimRecentSubsettingExpressions(NumberRecentSubsettingExpressions);
+            
+            WeakReferenceMessenger.Default.Send<SavedSettingsMessage>();
         }
 
         private RelayCommand<object?> _updateBifieSurveyCommand = null!;
@@ -198,7 +200,17 @@ namespace LSAnalyzer.ViewModels
             using StreamWriter streamWriter = new(filename, false);
             streamWriter.Write(_logger.GetRcode());
         }
+
+        public void AcceptChanges()
+        {
+            _storedNumberRecentSubsettingExpressions = NumberRecentSubsettingExpressions;
+            OnPropertyChanged(nameof(IsChanged));
+        }
+
+        public bool IsChanged => NumberRecentSubsettingExpressions != _storedNumberRecentSubsettingExpressions;
     }
 
     internal class LoadedDefaultDatasetTypesMessage { }
+    
+    internal class SavedSettingsMessage { }
 }
