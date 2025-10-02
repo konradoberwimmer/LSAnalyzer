@@ -49,8 +49,11 @@ namespace LSAnalyzer.Views
                 if (dialogResult  == MessageBoxResult.No) 
                 {
                     e.Cancel = true;
+                    return;
                 }
             }
+            
+            WeakReferenceMessenger.Default.UnregisterAll(this);
         }
 
         private void ButtonRemoveDatasetTypeClick(object? sender, RoutedEventArgs e)

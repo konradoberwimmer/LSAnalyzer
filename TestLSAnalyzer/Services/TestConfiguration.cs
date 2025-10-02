@@ -118,8 +118,8 @@ public class TestConfiguration
         systemSettings.NumberRecentFiles = 20;
         systemSettings.SaveSettingsCommand.Execute(null);
         
-        configuration.RemoveRecentFiles(1);
-        configuration.RemoveRecentFiles(2);
+        configuration.RemoveRecentFilesByDataProviderId(1);
+        configuration.RemoveRecentFilesByDataProviderId(2);
         
         Assert.Empty(configuration.GetStoredRecentFiles(1));
         
@@ -138,7 +138,7 @@ public class TestConfiguration
         systemSettings.NumberRecentFiles = 3;
         systemSettings.SaveSettingsCommand.Execute(null);
         
-        configuration.RemoveRecentFiles(1);
+        configuration.RemoveRecentFilesByDataProviderId(1);
         
         configuration.StoreRecentFile(1, new() { FileName = "test", DatasetTypeId = 12, ModeKeep = false });
         
@@ -170,7 +170,7 @@ public class TestConfiguration
     }
     
     [Fact]
-    public void TestRemoveRecentFiles()
+    public void TestRemoveRecentFilesByDataProviderId()
     {
         Configuration configuration = new();
         
@@ -182,9 +182,49 @@ public class TestConfiguration
         
         Assert.NotEmpty(configuration.GetStoredRecentFiles(3));
         
-        configuration.RemoveRecentFiles(3);
+        configuration.RemoveRecentFilesByDataProviderId(3);
         
         Assert.Empty(configuration.GetStoredRecentFiles(3));
+    }
+    
+    [Fact]
+    public void TestRemoveRecentFilesByDatasetTypeId()
+    {
+        Configuration configuration = new();
+        
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object);
+        systemSettings.NumberRecentFiles = 20;
+        systemSettings.SaveSettingsCommand.Execute(null);
+        
+        configuration.RemoveRecentFilesByDataProviderId(17);
+        configuration.StoreRecentFile(17, new() { FileName = "test", DatasetTypeId = 42, Weight = "wgt" });
+        configuration.StoreRecentFile(17, new() { FileName = "test other", DatasetTypeId = 43, Weight = "wgt" });
+
+        Assert.Equal(2, configuration.GetStoredRecentFiles(17).Count);
+        
+        configuration.RemoveRecentFilesByDatasetTypeId(42);
+        
+        Assert.Single(configuration.GetStoredRecentFiles(17));
+    }
+    
+    [Fact]
+    public void TestRemoveRecentFile()
+    {
+        Configuration configuration = new();
+        
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object);
+        systemSettings.NumberRecentFiles = 20;
+        systemSettings.SaveSettingsCommand.Execute(null);
+        
+        configuration.RemoveRecentFilesByDataProviderId(66);
+        configuration.StoreRecentFile(66, new() { FileName = "test", DatasetTypeId = 42, Weight = "wgt" });
+        configuration.StoreRecentFile(66, new() { FileName = "test other", DatasetTypeId = 43, Weight = "wgt", ConvertCharacters = true });
+
+        Assert.Equal(2, configuration.GetStoredRecentFiles(66).Count);
+
+        configuration.RemoveRecentFile(new() { FileName = "test other", DatasetTypeId = 43, Weight = "wgt", ConvertCharacters = false });
+        
+        Assert.Single(configuration.GetStoredRecentFiles(66));
     }
 
     [Fact]
@@ -196,7 +236,7 @@ public class TestConfiguration
         systemSettings.NumberRecentFiles = 20;
         systemSettings.SaveSettingsCommand.Execute(null);
         
-        configuration.RemoveRecentFiles(4);
+        configuration.RemoveRecentFilesByDataProviderId(4);
         
         configuration.StoreRecentFile(4, new() { FileName = "test", DatasetTypeId = 1 });
         configuration.StoreRecentFile(4, new() { FileName = "test again", DatasetTypeId = 1 });

@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace LSAnalyzer.Services;
@@ -333,7 +334,7 @@ public class Configuration
         }
     }
 
-    public void RemoveRecentFiles(int dataProviderId)
+    public void RemoveRecentFilesByDataProviderId(int dataProviderId)
     {
         try
         {
@@ -343,6 +344,46 @@ public class Configuration
                 new();
             
             storedRecentFiles.Remove(dataProviderId);
+            
+            Properties.Settings.Default.recentFiles =
+                JsonSerializer.Serialize(storedRecentFiles);
+            Properties.Settings.Default.Save();
+        } catch { }
+    }
+    
+    public void RemoveRecentFilesByDatasetTypeId(int datasetTypeId)
+    {
+        try
+        {
+            var storedRecentFiles =
+                JsonSerializer.Deserialize<Dictionary<int, List<RecentFileForAnalysis>>>(Properties.Settings.Default
+                    .recentFiles) ??
+                new();
+            
+            foreach (var entry in storedRecentFiles)
+            {
+                entry.Value.RemoveAll(srf => srf.DatasetTypeId == datasetTypeId);
+            }
+            
+            Properties.Settings.Default.recentFiles =
+                JsonSerializer.Serialize(storedRecentFiles);
+            Properties.Settings.Default.Save();
+        } catch { }
+    }
+    
+    public void RemoveRecentFile(RecentFileForAnalysis recentFileForAnalysis)
+    {
+        try
+        {
+            var storedRecentFiles =
+                JsonSerializer.Deserialize<Dictionary<int, List<RecentFileForAnalysis>>>(Properties.Settings.Default
+                    .recentFiles) ??
+                new();
+            
+            foreach (var entry in storedRecentFiles)
+            {
+                entry.Value.RemoveAll(srf => srf.IsEqualFile(recentFileForAnalysis));
+            }
             
             Properties.Settings.Default.recentFiles =
                 JsonSerializer.Serialize(storedRecentFiles);
@@ -397,5 +438,8 @@ public class Configuration
         
         public bool IsEqualFile(RecentFileForAnalysis other) => 
             FileName == other.FileName && DatasetTypeId == other.DatasetTypeId && Weight == other.Weight;
+        
+        [JsonIgnore]
+        public string DisplayString => $"{FileName} ({Weight})";
     }
 }
