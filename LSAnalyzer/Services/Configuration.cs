@@ -268,12 +268,12 @@ public class Configuration
         } catch { }
     }
     
-    public List<string> GetStoredRecentFiles(int dataProviderId)
+    public List<RecentFileForAnalysis> GetStoredRecentFiles(int dataProviderId)
     {
         try
         {
             var storedRecentFiles =
-                JsonSerializer.Deserialize<Dictionary<int, List<string>>>(Properties.Settings.Default.recentFiles) ??
+                JsonSerializer.Deserialize<Dictionary<int, List<RecentFileForAnalysis>>>(Properties.Settings.Default.recentFiles) ??
                 new();
             
             if (storedRecentFiles.TryGetValue(dataProviderId, out var recentFiles))
@@ -289,7 +289,7 @@ public class Configuration
         return [];
     }
     
-    public void StoreRecentFile(int dataProviderId, string fileName)
+    public void StoreRecentFile(int dataProviderId, RecentFileForAnalysis recentFile)
     {
         if (Properties.Settings.Default.numberRecentFiles < 1)
         {
@@ -299,19 +299,20 @@ public class Configuration
         try
         {
             var storedRecentFiles =
-                JsonSerializer.Deserialize<Dictionary<int, List<string>>>(Properties.Settings.Default
+                JsonSerializer.Deserialize<Dictionary<int, List<RecentFileForAnalysis>>>(Properties.Settings.Default
                     .recentFiles) ??
                 new();
             
             if (!storedRecentFiles.ContainsKey(dataProviderId))
             {
-                storedRecentFiles.Add(dataProviderId, [ fileName ]);
+                storedRecentFiles.Add(dataProviderId, [ recentFile ]);
             }
             else
             {
-                storedRecentFiles[dataProviderId].Remove(fileName);
+                storedRecentFiles[dataProviderId].RemoveAll(srf => srf.IsEqualFile(recentFile));
+                
                 storedRecentFiles[dataProviderId] =
-                    storedRecentFiles[dataProviderId].Prepend(fileName).ToList();
+                    storedRecentFiles[dataProviderId].Prepend(recentFile).ToList();
             }
 
             if (storedRecentFiles[dataProviderId].Count >
@@ -327,7 +328,7 @@ public class Configuration
         catch
         {
             Properties.Settings.Default.recentFiles =
-                JsonSerializer.Serialize(new Dictionary<int, List<string>> { { dataProviderId, [ fileName ] } });
+                JsonSerializer.Serialize(new Dictionary<int, List<RecentFileForAnalysis>> { { dataProviderId, [ recentFile ] } });
             Properties.Settings.Default.Save();
         }
     }
@@ -337,7 +338,7 @@ public class Configuration
         try
         {
             var storedRecentFiles =
-                JsonSerializer.Deserialize<Dictionary<int, List<string>>>(Properties.Settings.Default
+                JsonSerializer.Deserialize<Dictionary<int, List<RecentFileForAnalysis>>>(Properties.Settings.Default
                     .recentFiles) ??
                 new();
             
@@ -354,7 +355,7 @@ public class Configuration
         if (numberOfRecentFiles < 1)
         {
             Properties.Settings.Default.recentFiles =
-                JsonSerializer.Serialize(new Dictionary<int, List<string>>());
+                JsonSerializer.Serialize(new Dictionary<int, List<RecentFileForAnalysis>>());
             Properties.Settings.Default.Save();
             return;
         }
@@ -362,7 +363,7 @@ public class Configuration
         try
         {
             var storedRecentFiles =
-                JsonSerializer.Deserialize<Dictionary<int, List<string>>>(Properties.Settings.Default
+                JsonSerializer.Deserialize<Dictionary<int, List<RecentFileForAnalysis>>>(Properties.Settings.Default
                     .recentFiles) ??
                 new();
             
@@ -378,5 +379,23 @@ public class Configuration
                 JsonSerializer.Serialize(storedRecentFiles);
             Properties.Settings.Default.Save();
         } catch { }
+    }
+
+    public class RecentFileForAnalysis
+    {
+        public string FileName { get; set; } = string.Empty;
+        
+        public Dictionary<string, object> UsageAttributes { get; set; } = new();
+
+        public bool ConvertCharacters { get; set; } = true;
+
+        public int DatasetTypeId { get; set; } = 0;
+        
+        public string Weight { get; set; } = string.Empty;
+        
+        public bool ModeKeep { get; set; } = true;
+        
+        public bool IsEqualFile(RecentFileForAnalysis other) => 
+            FileName == other.FileName && DatasetTypeId == other.DatasetTypeId && Weight == other.Weight;
     }
 }

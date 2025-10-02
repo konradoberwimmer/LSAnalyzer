@@ -123,7 +123,7 @@ public class TestConfiguration
         
         Assert.Empty(configuration.GetStoredRecentFiles(1));
         
-        configuration.StoreRecentFile(1, "test");
+        configuration.StoreRecentFile(1, new() { FileName = "test", DatasetTypeId = 12 });
         
         Assert.Single(configuration.GetStoredRecentFiles(1));
         Assert.Empty(configuration.GetStoredRecentFiles(2));
@@ -140,22 +140,22 @@ public class TestConfiguration
         
         configuration.RemoveRecentFiles(1);
         
-        configuration.StoreRecentFile(1, "test");
+        configuration.StoreRecentFile(1, new() { FileName = "test", DatasetTypeId = 12, ModeKeep = false });
         
         Assert.Single(configuration.GetStoredRecentFiles(1));
         
-        configuration.StoreRecentFile(1, "test again");
+        configuration.StoreRecentFile(1, new() { FileName = "test again", DatasetTypeId = 13 });
         
         Assert.Equal(2, configuration.GetStoredRecentFiles(1).Count);
-        Assert.Equal("test again", configuration.GetStoredRecentFiles(1).First());
+        Assert.True(configuration.GetStoredRecentFiles(1).First().IsEqualFile(new() { FileName = "test again", DatasetTypeId = 13 }));
         
-        configuration.StoreRecentFile(1, "test");
+        configuration.StoreRecentFile(1, new() { FileName = "test", DatasetTypeId = 12, ModeKeep = true });
         
         Assert.Equal(2, configuration.GetStoredRecentFiles(1).Count);
-        Assert.Equal("test", configuration.GetStoredRecentFiles(1).First());
+        Assert.True(configuration.GetStoredRecentFiles(1).First().IsEqualFile(new() { FileName = "test", DatasetTypeId = 12, ModeKeep = true }));
         
-        configuration.StoreRecentFile(1, "test another");
-        configuration.StoreRecentFile(1, "test yet another");
+        configuration.StoreRecentFile(1, new() { FileName = "test another", DatasetTypeId = 2 });
+        configuration.StoreRecentFile(1, new() { FileName = "test yet another", DatasetTypeId = 4 });
         
         Assert.Equal(3, configuration.GetStoredRecentFiles(1).Count);
         
@@ -164,7 +164,7 @@ public class TestConfiguration
         
         Assert.Empty(configuration.GetStoredRecentFiles(1));
         
-        configuration.StoreRecentFile(1, "test");
+        configuration.StoreRecentFile(1, new() { FileName = "test", DatasetTypeId = 12 });
         
         Assert.Empty(configuration.GetStoredRecentFiles(1));
     }
@@ -178,7 +178,7 @@ public class TestConfiguration
         systemSettings.NumberRecentFiles = 20;
         systemSettings.SaveSettingsCommand.Execute(null);
         
-        configuration.StoreRecentFile(3, "test");
+        configuration.StoreRecentFile(3, new() { FileName = "test", DatasetTypeId = 1, Weight = "wgt" });
         
         Assert.NotEmpty(configuration.GetStoredRecentFiles(3));
         
@@ -198,17 +198,17 @@ public class TestConfiguration
         
         configuration.RemoveRecentFiles(4);
         
-        configuration.StoreRecentFile(4, "test");
-        configuration.StoreRecentFile(4, "test again");
-        configuration.StoreRecentFile(4, "test again again");
-        configuration.StoreRecentFile(4, "test again again again");
+        configuration.StoreRecentFile(4, new() { FileName = "test", DatasetTypeId = 1 });
+        configuration.StoreRecentFile(4, new() { FileName = "test again", DatasetTypeId = 1 });
+        configuration.StoreRecentFile(4, new() { FileName = "test again again", DatasetTypeId = 1 });
+        configuration.StoreRecentFile(4, new() { FileName = "test again again again", DatasetTypeId = 1 });
         
         Assert.Equal(4, configuration.GetStoredRecentFiles(4).Count);
         
         configuration.TrimRecentFiles(2);
         
         Assert.Equal(2, configuration.GetStoredRecentFiles(4).Count);
-        Assert.Equal("test again again again", configuration.GetStoredRecentFiles(4).First());
-        Assert.Equal("test again again", configuration.GetStoredRecentFiles(4).Last());
+        Assert.True(configuration.GetStoredRecentFiles(4).First().IsEqualFile(new() { FileName = "test again again again", DatasetTypeId = 1 }));
+        Assert.True(configuration.GetStoredRecentFiles(4).Last().IsEqualFile(new() { FileName = "test again again", DatasetTypeId = 1 }));
     }
 }
