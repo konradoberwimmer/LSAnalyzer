@@ -81,5 +81,17 @@ namespace LSAnalyzer.Properties {
                 this["numberRecentFiles"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string recentFiles {
+            get {
+                return ((string)(this["recentFiles"]));
+            }
+            set {
+                this["recentFiles"] = value;
+            }
+        }
     }
 }

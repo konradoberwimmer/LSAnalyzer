@@ -108,4 +108,107 @@ public class TestConfiguration
         Assert.Equal("test again again again", configuration.GetStoredRecentSubsettingExpressions(4).First());
         Assert.Equal("test again again", configuration.GetStoredRecentSubsettingExpressions(4).Last());
     }
+    
+    [Fact]
+    public void TestGetStoredRecentFiles()
+    {
+        Configuration configuration = new();
+        
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object);
+        systemSettings.NumberRecentFiles = 20;
+        systemSettings.SaveSettingsCommand.Execute(null);
+        
+        configuration.RemoveRecentFiles(1);
+        configuration.RemoveRecentFiles(2);
+        
+        Assert.Empty(configuration.GetStoredRecentFiles(1));
+        
+        configuration.StoreRecentFile(1, "test");
+        
+        Assert.Single(configuration.GetStoredRecentFiles(1));
+        Assert.Empty(configuration.GetStoredRecentFiles(2));
+    }
+    
+    [Fact]
+    public void TestStoreRecentFile()
+    {
+        Configuration configuration = new();
+        
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object);
+        systemSettings.NumberRecentFiles = 3;
+        systemSettings.SaveSettingsCommand.Execute(null);
+        
+        configuration.RemoveRecentFiles(1);
+        
+        configuration.StoreRecentFile(1, "test");
+        
+        Assert.Single(configuration.GetStoredRecentFiles(1));
+        
+        configuration.StoreRecentFile(1, "test again");
+        
+        Assert.Equal(2, configuration.GetStoredRecentFiles(1).Count);
+        Assert.Equal("test again", configuration.GetStoredRecentFiles(1).First());
+        
+        configuration.StoreRecentFile(1, "test");
+        
+        Assert.Equal(2, configuration.GetStoredRecentFiles(1).Count);
+        Assert.Equal("test", configuration.GetStoredRecentFiles(1).First());
+        
+        configuration.StoreRecentFile(1, "test another");
+        configuration.StoreRecentFile(1, "test yet another");
+        
+        Assert.Equal(3, configuration.GetStoredRecentFiles(1).Count);
+        
+        systemSettings.NumberRecentFiles = 0;
+        systemSettings.SaveSettingsCommand.Execute(null);
+        
+        Assert.Empty(configuration.GetStoredRecentFiles(1));
+        
+        configuration.StoreRecentFile(1, "test");
+        
+        Assert.Empty(configuration.GetStoredRecentFiles(1));
+    }
+    
+    [Fact]
+    public void TestRemoveRecentFiles()
+    {
+        Configuration configuration = new();
+        
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object);
+        systemSettings.NumberRecentFiles = 20;
+        systemSettings.SaveSettingsCommand.Execute(null);
+        
+        configuration.StoreRecentFile(3, "test");
+        
+        Assert.NotEmpty(configuration.GetStoredRecentFiles(3));
+        
+        configuration.RemoveRecentFiles(3);
+        
+        Assert.Empty(configuration.GetStoredRecentFiles(3));
+    }
+
+    [Fact]
+    public void TestTrimRecentFiles()
+    {
+        Configuration configuration = new();
+        
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object);
+        systemSettings.NumberRecentFiles = 20;
+        systemSettings.SaveSettingsCommand.Execute(null);
+        
+        configuration.RemoveRecentFiles(4);
+        
+        configuration.StoreRecentFile(4, "test");
+        configuration.StoreRecentFile(4, "test again");
+        configuration.StoreRecentFile(4, "test again again");
+        configuration.StoreRecentFile(4, "test again again again");
+        
+        Assert.Equal(4, configuration.GetStoredRecentFiles(4).Count);
+        
+        configuration.TrimRecentFiles(2);
+        
+        Assert.Equal(2, configuration.GetStoredRecentFiles(4).Count);
+        Assert.Equal("test again again again", configuration.GetStoredRecentFiles(4).First());
+        Assert.Equal("test again again", configuration.GetStoredRecentFiles(4).Last());
+    }
 }

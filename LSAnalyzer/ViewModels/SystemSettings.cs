@@ -133,6 +133,7 @@ namespace LSAnalyzer.ViewModels
             Properties.Settings.Default.Save();
             
             AcceptChanges();
+            _configuration.TrimRecentFiles(NumberRecentFiles);
             _configuration.TrimRecentSubsettingExpressions(NumberRecentSubsettingExpressions);
             
             WeakReferenceMessenger.Default.Send<SavedSettingsMessage>();
