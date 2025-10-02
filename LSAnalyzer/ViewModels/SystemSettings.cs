@@ -33,6 +33,15 @@ namespace LSAnalyzer.ViewModels
 
         [Range(0, int.MaxValue)]
         [ObservableProperty]
+        private int _numberRecentFiles = Properties.Settings.Default.numberRecentFiles;
+        partial void OnNumberRecentFilesChanged(int value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
+        private int _storedNumberRecentFiles = Properties.Settings.Default.numberRecentFiles;
+        
+        [Range(0, int.MaxValue)]
+        [ObservableProperty]
         private int _numberRecentSubsettingExpressions = Properties.Settings.Default.numberRecentSubsettingExpressions;
         partial void OnNumberRecentSubsettingExpressionsChanged(int value)
         {
@@ -118,7 +127,8 @@ namespace LSAnalyzer.ViewModels
             {
                 return;
             }
-            
+
+            Properties.Settings.Default.numberRecentFiles = NumberRecentFiles;
             Properties.Settings.Default.numberRecentSubsettingExpressions = NumberRecentSubsettingExpressions;
             Properties.Settings.Default.Save();
             
@@ -203,11 +213,14 @@ namespace LSAnalyzer.ViewModels
 
         public void AcceptChanges()
         {
+            _storedNumberRecentFiles = NumberRecentFiles;
             _storedNumberRecentSubsettingExpressions = NumberRecentSubsettingExpressions;
             OnPropertyChanged(nameof(IsChanged));
         }
 
-        public bool IsChanged => NumberRecentSubsettingExpressions != _storedNumberRecentSubsettingExpressions;
+        public bool IsChanged => 
+            NumberRecentSubsettingExpressions != _storedNumberRecentSubsettingExpressions ||
+            NumberRecentFiles != _storedNumberRecentFiles;
     }
 
     internal class LoadedDefaultDatasetTypesMessage { }

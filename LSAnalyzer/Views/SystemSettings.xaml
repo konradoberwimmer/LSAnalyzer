@@ -66,14 +66,17 @@
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="0">Number of recent subsetting expressions (per dataset type):</TextBlock>
-                <TextBox Grid.Row="0" Grid.Column="1" Width="40" HorizontalAlignment="Left" Margin="5,0,0,0" TextAlignment="Right" Text="{Binding NumberRecentSubsettingExpressions, Converter={StaticResource IntegerToStringLenientConverter}, UpdateSourceTrigger=PropertyChanged}"/>
-                <Button Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" Width="80" Content="Save" Command="{Binding SaveSettingsCommand}" IsEnabled="{Binding IsChanged}"/>
+                <TextBlock Grid.Row="0" Grid.Column="0">Number of recent files (per file system / data provider):</TextBlock>
+                <TextBox Grid.Row="0" Grid.Column="1" Width="40" HorizontalAlignment="Left" Margin="5,0,0,0" TextAlignment="Right" Text="{Binding NumberRecentFiles, Converter={StaticResource IntegerToStringLenientConverter}, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,5,0,0">Number of recent subsetting expressions (per dataset type):</TextBlock>
+                <TextBox Grid.Row="1" Grid.Column="1" Width="40" HorizontalAlignment="Left" Margin="5,5,0,0" TextAlignment="Right" Text="{Binding NumberRecentSubsettingExpressions, Converter={StaticResource IntegerToStringLenientConverter}, UpdateSourceTrigger=PropertyChanged}"/>
+                <Button Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" Width="80" Content="Save" Command="{Binding SaveSettingsCommand}" IsEnabled="{Binding IsChanged}"/>
             </Grid>
         </GroupBox>
         <GroupBox Grid.Row="3" Margin="10,0,10,10" Padding="5">
