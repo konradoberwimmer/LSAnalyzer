@@ -59,5 +59,15 @@ namespace LSAnalyzer.Views
                 textBoxSubsettingExpression.CaretIndex = textBoxSubsettingExpression.Text.Length;
             }
         }
+
+        private void ComboBoxRecentSubsettingExpressions_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is not ComboBox comboBox)
+            {
+                return;
+            }
+            
+            comboBox.SelectedItem = null;
+        }
     }
 }
