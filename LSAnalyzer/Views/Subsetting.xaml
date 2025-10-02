@@ -64,7 +64,7 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <Label Grid.Row="0" Content="Recently used:"/>
-                <ComboBox Grid.Row="0" Margin="0,27,0,5" ItemsSource="{Binding RecentSubsettingExpressions}"/>
+                <ComboBox Grid.Row="0" x:Name="ComboBoxRecentSubsettingExpressions" Margin="0,27,0,5" ItemsSource="{Binding RecentSubsettingExpressions}" SelectedItem="{Binding SelectedRecentSubsettingExpression, Mode=OneWayToSource}" SelectionChanged="ComboBoxRecentSubsettingExpressions_OnSelectionChanged"/>
                 <Label Grid.Row="1" Content="Expression for selecting subset:"/>
                 <TextBox Grid.Row="1" Margin="0,27,0,5" x:Name="textBoxSubsettingExpression" Text="{Binding SubsetExpression, UpdateSourceTrigger=PropertyChanged}"/>
             </Grid>
