@@ -79,7 +79,7 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private bool _showVariableLabels = true;
+        private bool _showVariableLabels = Properties.Settings.Default.showLabelsDefault;
         public bool ShowVariableLabels
         {
             get => _showVariableLabels;
