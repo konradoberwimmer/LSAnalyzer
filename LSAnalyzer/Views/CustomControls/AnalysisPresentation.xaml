@@ -111,7 +111,7 @@
                             </CheckBox>
                             <Separator/>
                         </StackPanel>
-                        <CheckBox Content="Show variable labels" IsChecked="{Binding ShowVariableLabels}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
+                        <CheckBox Content="Show variable/value labels" IsChecked="{Binding ShowVariableLabels}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
                             <CheckBox.Visibility>
                                 <Binding Path="HasVariableLabels" Converter="{StaticResource BoolToVisibilityConverter}">
                                     <Binding.ConverterParameter>

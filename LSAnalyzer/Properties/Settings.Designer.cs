@@ -93,5 +93,17 @@ namespace LSAnalyzer.Properties {
                 this["recentFiles"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool showLabelsDefault {
+            get {
+                return ((bool)(this["showLabelsDefault"]));
+            }
+            set {
+                this["showLabelsDefault"] = value;
+            }
+        }
     }
 }

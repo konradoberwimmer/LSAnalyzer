@@ -79,7 +79,7 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private bool _showVariableLabels = true;
+        private bool _showVariableLabels = Properties.Settings.Default.showLabelsDefault;
         public bool ShowVariableLabels
         {
             get => _showVariableLabels;
@@ -1077,6 +1077,11 @@ namespace LSAnalyzer.ViewModels
 
             ResultService.Analysis = analysisCorr;
             DataTable table = ResultService.CreatePrimaryTable()!;
+            
+            if (analysisCorr.VariableLabels.Count > 0)
+            {
+                HasVariableLabels = true;
+            }
 
             string[] sortBy = { "variable A", "variable B" };
             table.DefaultView.Sort = String.Join(", ", analysisCorr.GroupBy.ConvertAll(var => var.Name).ToArray().Concat(sortBy));
@@ -1409,6 +1414,45 @@ namespace LSAnalyzer.ViewModels
             return null;
         }
 
+        private void RemoveLabelColumns(DataView dataView)
+        {
+            if (dataView.Table == null)
+            {
+                return;
+            }
+            
+            List<string> columnsToRemove = [];
+            foreach (DataColumn column in dataView.Table.Columns)
+            {
+                if (column.ColumnName.EndsWith(" (label)") || column.ColumnName.EndsWith(" - label"))
+                {
+                    columnsToRemove.Add(column.ColumnName);
+                }
+            }
+                
+            foreach (var columnToRemove in columnsToRemove)
+            {
+                dataView.Table!.Columns.Remove(columnToRemove);
+            }
+        }
+
+        private DataView PreserveCurrentSorting(DataView dataView, DataView? oldDataView)
+        {
+            if (string.IsNullOrEmpty(oldDataView?.Sort) || dataView.Table == null)
+            {
+                return dataView;
+            }
+
+            var sortings = oldDataView.Sort.Split(',');
+            var newColumnNames = dataView.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+
+            if (sortings.All(sorting => newColumnNames.Contains(Regex.Match(sorting, @"\[(.*?)\]").Groups[1].Value)))
+            {
+                dataView.Sort = oldDataView.Sort;
+            }
+
+            return dataView;
+        }
 
         private void SetDataTableViewUnivar()
         {
@@ -1420,7 +1464,7 @@ namespace LSAnalyzer.ViewModels
             }
             if (HasVariableLabels && !ShowVariableLabels)
             {
-                dataView.Table!.Columns.Remove("variable (label)");
+                RemoveLabelColumns(dataView);
             }
             if (!ShowRank) dataView.Table!.Columns.Remove("rank of mean (per variable)");
             if (!ShowPValues) dataView.Table!.Columns.Remove("mean - p value");
@@ -1428,7 +1472,7 @@ namespace LSAnalyzer.ViewModels
             if (!ShowPValues) dataView.Table!.Columns.Remove("standard deviation - p value");
             if (!ShowFMI) dataView.Table!.Columns.Remove("standard deviation - FMI");
 
-            DataView = dataView;
+            DataView = PreserveCurrentSorting(dataView, DataView);
         }
 
         private void SetDataTableViewMeanDiff()
@@ -1437,12 +1481,12 @@ namespace LSAnalyzer.ViewModels
 
             if (HasVariableLabels && !ShowVariableLabels)
             {
-                dataView.Table!.Columns.Remove("variable (label)");
+                RemoveLabelColumns(dataView);
             }
             if (!ShowPValues) dataView.Table!.Columns.Remove("Cohens d - p value");
             if (!ShowFMI) dataView.Table!.Columns.Remove("Cohens d - FMI");
 
-            DataView = dataView;
+            DataView = PreserveCurrentSorting(dataView, DataView);
             
             if (TableSecondary != null)
             {
@@ -1450,11 +1494,11 @@ namespace LSAnalyzer.ViewModels
 
                 if (HasVariableLabels && !ShowVariableLabels)
                 {
-                    secondaryDataView.Table!.Columns.Remove("variable (label)");
+                    RemoveLabelColumns(secondaryDataView);
                 }
                 if (!ShowFMI) secondaryDataView.Table!.Columns.Remove("eta - FMI");
 
-                SecondaryDataView = secondaryDataView;
+                SecondaryDataView = PreserveCurrentSorting(secondaryDataView, SecondaryDataView);
             }
         }
 
@@ -1462,9 +1506,13 @@ namespace LSAnalyzer.ViewModels
         {
             DataView dataView = new(DataTable.Copy());
 
+            if (HasVariableLabels && !ShowVariableLabels)
+            {
+                RemoveLabelColumns(dataView);
+            }
+            
             Dictionary<string, string> toggles = new()
             {
-                ["ShowVariableLabels"] = "variable\\s\\(label\\)",
                 ["ShowRank"] = "^rank\\sof\\slowest\\scategory",
                 ["ShowPValues"] = "p\\svalue$",
                 ["ShowFMI"] = "FMI$",
@@ -1491,7 +1539,7 @@ namespace LSAnalyzer.ViewModels
                 }
             }
             
-            DataView = dataView;
+            DataView = PreserveCurrentSorting(dataView, DataView);
 
             if (TableSecondary != null)
             {
@@ -1499,12 +1547,12 @@ namespace LSAnalyzer.ViewModels
 
                 if (HasVariableLabels && !ShowVariableLabels)
                 {
-                    secondaryDataView.Table!.Columns.Remove("X (label)");
-                    secondaryDataView.Table!.Columns.Remove("Y (label)");
+                    RemoveLabelColumns(secondaryDataView);
                 }
+                
                 if (!ShowFMI) secondaryDataView.Table!.Columns.Remove("estimate - FMI");
 
-                SecondaryDataView = secondaryDataView;
+                SecondaryDataView = PreserveCurrentSorting(secondaryDataView, SecondaryDataView);
             }
         }
 
@@ -1514,19 +1562,23 @@ namespace LSAnalyzer.ViewModels
 
             if (HasVariableLabels && !ShowVariableLabels)
             {
-                dataView.Table!.Columns.Remove("variable (label)");
+                RemoveLabelColumns(dataView);
             }
 
-            DataView = dataView;
+            DataView = PreserveCurrentSorting(dataView, DataView);
         }
 
         private void SetDataTableViewCorr()
         {
             DataView dataView = new(DataTable.Copy());
+            
+            if (HasVariableLabels && !ShowVariableLabels)
+            {
+                RemoveLabelColumns(dataView);
+            }
 
             Dictionary<string, string> toggles = new()
             {
-                ["ShowVariableLabels"] = "variable\\s(A|B)\\s\\(label\\)",
                 ["ShowPValues"] = "p\\svalue$",
                 ["ShowFMI"] = "FMI$",
             };
@@ -1550,7 +1602,7 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            DataView = dataView;
+            DataView = PreserveCurrentSorting(dataView, DataView);
 
             if (TableSecondary != null)
             {
@@ -1558,11 +1610,10 @@ namespace LSAnalyzer.ViewModels
 
                 if (HasVariableLabels && !ShowVariableLabels)
                 {
-                    secondaryDataView.Table!.Columns.Remove("variable A (label)");
-                    secondaryDataView.Table!.Columns.Remove("variable B (label)");
+                    RemoveLabelColumns(secondaryDataView);
                 }
 
-                SecondaryDataView = secondaryDataView;
+                SecondaryDataView = PreserveCurrentSorting(secondaryDataView, SecondaryDataView);
             }
         }
 
@@ -1570,9 +1621,13 @@ namespace LSAnalyzer.ViewModels
         {
             DataView dataView = new(DataTable.Copy());
 
+            if (HasVariableLabels && !ShowVariableLabels)
+            {
+                RemoveLabelColumns(dataView);
+            }
+            
             Dictionary<string, string> toggles = new()
             {
-                ["ShowVariableLabels"] = "variable\\s\\(label\\)",
                 ["ShowPValues"] = "p\\svalue$",
                 ["ShowFMI"] = "FMI$",
             };
@@ -1596,7 +1651,7 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            DataView = dataView;
+            DataView = PreserveCurrentSorting(dataView, DataView);
         }
 
         private void ResetDataView()
