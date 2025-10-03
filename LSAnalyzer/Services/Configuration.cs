@@ -438,8 +438,11 @@ public class Configuration
         
         public bool IsEqualFile(RecentFileForAnalysis other) => 
             FileName == other.FileName && DatasetTypeId == other.DatasetTypeId && Weight == other.Weight;
+
+        [JsonIgnore]
+        public Func<string, string> FormatFileName { get; set; } = fileName => fileName;
         
         [JsonIgnore]
-        public string DisplayString => $"{FileName} ({Weight})";
+        public string DisplayString => $"{FormatFileName(FileName)} ({Weight})";
     }
 }

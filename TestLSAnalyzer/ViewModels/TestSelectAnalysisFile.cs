@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using TestLSAnalyzer.Services;
@@ -326,7 +327,7 @@ public class TestSelectAnalysisFile
     }
 
     [Fact]
-    public void TestInitializeFromRecentFileFileSystem()
+    public void TestInitializeFromRecentFile()
     {
         SelectAnalysisFile selectAnalysisFile = new(Mock.Of<Configuration>(), Mock.Of<Rservice>(), Mock.Of<IServiceProvider>());
 
@@ -338,7 +339,7 @@ public class TestSelectAnalysisFile
 
         selectAnalysisFile.RecentFilesForAnalyses =
         [
-            new() { FileName = tempFile, UsageAttributes = { { "UseCsv2", false } }, ConvertCharacters = false, DatasetTypeId = 3, Weight = "wgt", ModeKeep = false },
+            JsonSerializer.Deserialize<Configuration.RecentFileForAnalysis>($$"""{"FileName":"{{System.Web.HttpUtility.JavaScriptStringEncode(tempFile)}}","UsageAttributes":{"UseCsv2":false},"ConvertCharacters":false,"DatasetTypeId":3,"Weight":"wgt","ModeKeep":false}""")!,
             new() { FileName = "C:\\not_here", DatasetTypeId = 2, Weight = "weight" }
         ];
 

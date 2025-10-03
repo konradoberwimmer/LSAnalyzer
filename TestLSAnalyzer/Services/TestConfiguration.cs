@@ -251,4 +251,21 @@ public class TestConfiguration
         Assert.True(configuration.GetStoredRecentFiles(4).First().IsEqualFile(new() { FileName = "test again again again", DatasetTypeId = 1 }));
         Assert.True(configuration.GetStoredRecentFiles(4).Last().IsEqualFile(new() { FileName = "test again again", DatasetTypeId = 1 }));
     }
+
+    [Fact]
+    public void TestRecentFileForAnalysisIntricacies()
+    {
+        Configuration.RecentFileForAnalysis rf1 = new() { FileName = "C:\\meine_Daten.csv", DatasetTypeId = 2, Weight = "wgt", ConvertCharacters = true };
+        Configuration.RecentFileForAnalysis rf2 = new() { FileName = "C:\\meine_Daten.csv", DatasetTypeId = 2, Weight = "wgt", ConvertCharacters = false };
+        Configuration.RecentFileForAnalysis rf3 = new() { FileName = "C:\\meine_Daten.csv", DatasetTypeId = 2, Weight = "otherwgt", ConvertCharacters = true };
+        
+        Assert.True(rf1.IsEqualFile(rf2));
+        Assert.False(rf1.IsEqualFile(rf3));
+        
+        Assert.Equal("C:\\meine_Daten.csv (wgt)", rf1.DisplayString);
+
+        rf1.FormatFileName = f => "File: " + f;
+        
+        Assert.Equal("File: C:\\meine_Daten.csv (wgt)", rf1.DisplayString);
+    }
 }

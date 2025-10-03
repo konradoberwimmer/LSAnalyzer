@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -66,7 +67,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
     private Configuration.RecentFileForAnalysis? _selectedRecentFileForAnalysis;
     partial void OnSelectedRecentFileForAnalysisChanged(Configuration.RecentFileForAnalysis? value)
     {
-        if (value != null)
+        if (value != null && TabControlValue == "File system")
         {
             InitializeFromRecentFile(value);
         }
@@ -216,7 +217,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
 
             if (SelectedDataProviderConfiguration != null)
             {
-                DataProviderViewModel = SelectedDataProviderConfiguration.GetViewModel(_serviceProvider);
+                DataProviderViewModel = SelectedDataProviderConfiguration.GetViewModel(_serviceProvider, _configuration);
                 DataProviderViewModel.ParentViewModel = this;
             } else
             {
@@ -324,14 +325,6 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
 
     public void InitializeFromRecentFile(Configuration.RecentFileForAnalysis recentFileForAnalysis)
     {
-        if (TabControlValue == "File system")
-        {
-            InitializeFromRecentFileFileSystem(recentFileForAnalysis);
-        }
-    }
-
-    private void InitializeFromRecentFileFileSystem(Configuration.RecentFileForAnalysis recentFileForAnalysis)
-    {
         if (!File.Exists(recentFileForAnalysis.FileName) || 
             DatasetTypes.All(dst => dst.Id != recentFileForAnalysis.DatasetTypeId) ||
             !DatasetTypes.First(dst => dst.Id == recentFileForAnalysis.DatasetTypeId).Weight.Split(';').Contains(recentFileForAnalysis.Weight))
@@ -345,10 +338,14 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         }
         
         FileName = recentFileForAnalysis.FileName;
-        if (recentFileForAnalysis.UsageAttributes.TryGetValue("UseCsv2", out var useCsv2) && useCsv2 is bool)
+        if (recentFileForAnalysis.UsageAttributes.TryGetValue("UseCsv2", out var useCsv2) && useCsv2 is JsonElement
+            {
+                ValueKind: JsonValueKind.True or JsonValueKind.False
+            } useCsv2Element)
         {
-            UseCsv2 = (bool)useCsv2;
+            UseCsv2 = useCsv2Element.GetBoolean();
         }
+        
         ReplaceCharacterVectors = recentFileForAnalysis.ConvertCharacters;
         SelectedDatasetType = DatasetTypes.First(dst => dst.Id == recentFileForAnalysis.DatasetTypeId);
         SelectedWeightVariable = recentFileForAnalysis.Weight;
@@ -549,6 +546,9 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
 
         if (TabControlValue == "Data provider" && DataProviderViewModel != null)
         {
+            recentFileForAnalysis.FileName = DataProviderViewModel.SerializeFileInformation();
+            recentFileForAnalysis.UsageAttributes = DataProviderViewModel.GetUsageAttributes();
+            
             if (!DataProviderViewModel.LoadDataForUsage())
             {
                 WeakReferenceMessenger.Default.Send(new FailureDataProviderMessage());
@@ -601,7 +601,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
 
         if (!string.IsNullOrWhiteSpace(recentFileForAnalysis.FileName))
         {
-            _configuration.StoreRecentFile(0, recentFileForAnalysis);
+            _configuration.StoreRecentFile(TabControlValue == "File system" ? 0 : SelectedDataProviderConfiguration?.Id ?? -1, recentFileForAnalysis);
         }
         
         WeakReferenceMessenger.Default.Send(new SetAnalysisConfigurationMessage(analysisConfiguration));

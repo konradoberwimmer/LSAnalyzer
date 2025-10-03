@@ -12,6 +12,10 @@ namespace LSAnalyzer.ViewModels
         public string ProviderName { get; }
 
         public string? FileInformation {  get; }
+        
+        public string SerializeFileInformation();
+
+        public Dictionary<string, object> GetUsageAttributes();
 
         public SelectAnalysisFile ParentViewModel { get; set; }
 
