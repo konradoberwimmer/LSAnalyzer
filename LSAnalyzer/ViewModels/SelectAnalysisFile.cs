@@ -316,12 +316,12 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         DataProviderConfigurations = configuration.GetDataProviderConfigurations().OrderBy(dpc => dpc.Name).ToList();
         _serviceProvider = serviceProvider;
         
-        if (Application.Current.Properties.Contains("SelectAnalysisFile_TabControlIndex"))
+        if (Application.Current?.Properties.Contains("SelectAnalysisFile_TabControlIndex") ?? false)
         {
             TabControlIndex = (int)Application.Current.Properties["SelectAnalysisFile_TabControlIndex"]!;
         }
 
-        if (Application.Current.Properties.Contains("SelectAnalysisFile_SelectedDataProviderConfiguration_id"))
+        if (Application.Current?.Properties.Contains("SelectAnalysisFile_SelectedDataProviderConfiguration_id") ?? false)
         {
             var selectedDataProviderConfigurationId =
                 (int)Application.Current.Properties["SelectAnalysisFile_SelectedDataProviderConfiguration_id"]!;
@@ -630,8 +630,12 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         
         WeakReferenceMessenger.Default.Send(new SetAnalysisConfigurationMessage(analysisConfiguration));
         IsBusy = false;
-        Application.Current.Properties["SelectAnalysisFile_TabControlIndex"] = TabControlIndex;
-        Application.Current.Properties["SelectAnalysisFile_SelectedDataProviderConfiguration_id"] = SelectedDataProviderConfiguration?.Id;
+        if (Application.Current != null)
+        {
+            Application.Current.Properties["SelectAnalysisFile_TabControlIndex"] = TabControlIndex;
+            Application.Current.Properties["SelectAnalysisFile_SelectedDataProviderConfiguration_id"] =
+                SelectedDataProviderConfiguration?.Id;
+        }
 
         if (e.Argument is ICloseable window)
         {
