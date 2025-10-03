@@ -4,6 +4,7 @@ using Moq;
 
 namespace TestLSAnalyzer.Services;
 
+[Collection("Sequential")]
 public class TestConfiguration
 {
     [Fact]

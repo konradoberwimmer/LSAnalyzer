@@ -1077,6 +1077,11 @@ namespace LSAnalyzer.ViewModels
 
             ResultService.Analysis = analysisCorr;
             DataTable table = ResultService.CreatePrimaryTable()!;
+            
+            if (analysisCorr.VariableLabels.Count > 0)
+            {
+                HasVariableLabels = true;
+            }
 
             string[] sortBy = { "variable A", "variable B" };
             table.DefaultView.Sort = String.Join(", ", analysisCorr.GroupBy.ConvertAll(var => var.Name).ToArray().Concat(sortBy));
@@ -1409,6 +1414,27 @@ namespace LSAnalyzer.ViewModels
             return null;
         }
 
+        private void RemoveLabelColumns(DataView dataView)
+        {
+            if (dataView.Table == null)
+            {
+                return;
+            }
+            
+            List<string> columnsToRemove = [];
+            foreach (DataColumn column in dataView.Table.Columns)
+            {
+                if (column.ColumnName.EndsWith(" (label)") || column.ColumnName.EndsWith(" - label"))
+                {
+                    columnsToRemove.Add(column.ColumnName);
+                }
+            }
+                
+            foreach (var columnToRemove in columnsToRemove)
+            {
+                dataView.Table!.Columns.Remove(columnToRemove);
+            }
+        }
 
         private void SetDataTableViewUnivar()
         {
@@ -1420,7 +1446,7 @@ namespace LSAnalyzer.ViewModels
             }
             if (HasVariableLabels && !ShowVariableLabels)
             {
-                dataView.Table!.Columns.Remove("variable (label)");
+                RemoveLabelColumns(dataView);
             }
             if (!ShowRank) dataView.Table!.Columns.Remove("rank of mean (per variable)");
             if (!ShowPValues) dataView.Table!.Columns.Remove("mean - p value");
@@ -1437,7 +1463,7 @@ namespace LSAnalyzer.ViewModels
 
             if (HasVariableLabels && !ShowVariableLabels)
             {
-                dataView.Table!.Columns.Remove("variable (label)");
+                RemoveLabelColumns(dataView);
             }
             if (!ShowPValues) dataView.Table!.Columns.Remove("Cohens d - p value");
             if (!ShowFMI) dataView.Table!.Columns.Remove("Cohens d - FMI");
@@ -1450,7 +1476,7 @@ namespace LSAnalyzer.ViewModels
 
                 if (HasVariableLabels && !ShowVariableLabels)
                 {
-                    secondaryDataView.Table!.Columns.Remove("variable (label)");
+                    RemoveLabelColumns(secondaryDataView);
                 }
                 if (!ShowFMI) secondaryDataView.Table!.Columns.Remove("eta - FMI");
 
@@ -1462,9 +1488,13 @@ namespace LSAnalyzer.ViewModels
         {
             DataView dataView = new(DataTable.Copy());
 
+            if (HasVariableLabels && !ShowVariableLabels)
+            {
+                RemoveLabelColumns(dataView);
+            }
+            
             Dictionary<string, string> toggles = new()
             {
-                ["ShowVariableLabels"] = "variable\\s\\(label\\)",
                 ["ShowRank"] = "^rank\\sof\\slowest\\scategory",
                 ["ShowPValues"] = "p\\svalue$",
                 ["ShowFMI"] = "FMI$",
@@ -1499,9 +1529,9 @@ namespace LSAnalyzer.ViewModels
 
                 if (HasVariableLabels && !ShowVariableLabels)
                 {
-                    secondaryDataView.Table!.Columns.Remove("X (label)");
-                    secondaryDataView.Table!.Columns.Remove("Y (label)");
+                    RemoveLabelColumns(secondaryDataView);
                 }
+                
                 if (!ShowFMI) secondaryDataView.Table!.Columns.Remove("estimate - FMI");
 
                 SecondaryDataView = secondaryDataView;
@@ -1514,7 +1544,7 @@ namespace LSAnalyzer.ViewModels
 
             if (HasVariableLabels && !ShowVariableLabels)
             {
-                dataView.Table!.Columns.Remove("variable (label)");
+                RemoveLabelColumns(dataView);
             }
 
             DataView = dataView;
@@ -1523,10 +1553,14 @@ namespace LSAnalyzer.ViewModels
         private void SetDataTableViewCorr()
         {
             DataView dataView = new(DataTable.Copy());
+            
+            if (HasVariableLabels && !ShowVariableLabels)
+            {
+                RemoveLabelColumns(dataView);
+            }
 
             Dictionary<string, string> toggles = new()
             {
-                ["ShowVariableLabels"] = "variable\\s(A|B)\\s\\(label\\)",
                 ["ShowPValues"] = "p\\svalue$",
                 ["ShowFMI"] = "FMI$",
             };
@@ -1558,8 +1592,7 @@ namespace LSAnalyzer.ViewModels
 
                 if (HasVariableLabels && !ShowVariableLabels)
                 {
-                    secondaryDataView.Table!.Columns.Remove("variable A (label)");
-                    secondaryDataView.Table!.Columns.Remove("variable B (label)");
+                    RemoveLabelColumns(secondaryDataView);
                 }
 
                 SecondaryDataView = secondaryDataView;
@@ -1570,9 +1603,13 @@ namespace LSAnalyzer.ViewModels
         {
             DataView dataView = new(DataTable.Copy());
 
+            if (HasVariableLabels && !ShowVariableLabels)
+            {
+                RemoveLabelColumns(dataView);
+            }
+            
             Dictionary<string, string> toggles = new()
             {
-                ["ShowVariableLabels"] = "variable\\s\\(label\\)",
                 ["ShowPValues"] = "p\\svalue$",
                 ["ShowFMI"] = "FMI$",
             };
