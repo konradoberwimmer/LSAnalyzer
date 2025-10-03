@@ -1436,6 +1436,24 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        private DataView PreserveCurrentSorting(DataView dataView, DataView? oldDataView)
+        {
+            if (string.IsNullOrEmpty(oldDataView?.Sort) || dataView.Table == null)
+            {
+                return dataView;
+            }
+
+            var sortings = oldDataView.Sort.Split(',');
+            var newColumnNames = dataView.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+
+            if (sortings.All(sorting => newColumnNames.Contains(Regex.Match(sorting, @"\[(.*?)\]").Groups[1].Value)))
+            {
+                dataView.Sort = oldDataView.Sort;
+            }
+
+            return dataView;
+        }
+
         private void SetDataTableViewUnivar()
         {
             DataView dataView = new(DataTable.Copy());
@@ -1454,7 +1472,7 @@ namespace LSAnalyzer.ViewModels
             if (!ShowPValues) dataView.Table!.Columns.Remove("standard deviation - p value");
             if (!ShowFMI) dataView.Table!.Columns.Remove("standard deviation - FMI");
 
-            DataView = dataView;
+            DataView = PreserveCurrentSorting(dataView, DataView);
         }
 
         private void SetDataTableViewMeanDiff()
@@ -1468,7 +1486,7 @@ namespace LSAnalyzer.ViewModels
             if (!ShowPValues) dataView.Table!.Columns.Remove("Cohens d - p value");
             if (!ShowFMI) dataView.Table!.Columns.Remove("Cohens d - FMI");
 
-            DataView = dataView;
+            DataView = PreserveCurrentSorting(dataView, DataView);
             
             if (TableSecondary != null)
             {
@@ -1480,7 +1498,7 @@ namespace LSAnalyzer.ViewModels
                 }
                 if (!ShowFMI) secondaryDataView.Table!.Columns.Remove("eta - FMI");
 
-                SecondaryDataView = secondaryDataView;
+                SecondaryDataView = PreserveCurrentSorting(secondaryDataView, SecondaryDataView);
             }
         }
 
@@ -1521,7 +1539,7 @@ namespace LSAnalyzer.ViewModels
                 }
             }
             
-            DataView = dataView;
+            DataView = PreserveCurrentSorting(dataView, DataView);
 
             if (TableSecondary != null)
             {
@@ -1534,7 +1552,7 @@ namespace LSAnalyzer.ViewModels
                 
                 if (!ShowFMI) secondaryDataView.Table!.Columns.Remove("estimate - FMI");
 
-                SecondaryDataView = secondaryDataView;
+                SecondaryDataView = PreserveCurrentSorting(secondaryDataView, SecondaryDataView);
             }
         }
 
@@ -1547,7 +1565,7 @@ namespace LSAnalyzer.ViewModels
                 RemoveLabelColumns(dataView);
             }
 
-            DataView = dataView;
+            DataView = PreserveCurrentSorting(dataView, DataView);
         }
 
         private void SetDataTableViewCorr()
@@ -1584,7 +1602,7 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            DataView = dataView;
+            DataView = PreserveCurrentSorting(dataView, DataView);
 
             if (TableSecondary != null)
             {
@@ -1595,7 +1613,7 @@ namespace LSAnalyzer.ViewModels
                     RemoveLabelColumns(secondaryDataView);
                 }
 
-                SecondaryDataView = secondaryDataView;
+                SecondaryDataView = PreserveCurrentSorting(secondaryDataView, SecondaryDataView);
             }
         }
 
@@ -1633,7 +1651,7 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            DataView = dataView;
+            DataView = PreserveCurrentSorting(dataView, DataView);
         }
 
         private void ResetDataView()
