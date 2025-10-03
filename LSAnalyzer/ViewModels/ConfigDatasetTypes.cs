@@ -157,6 +157,7 @@ namespace LSAnalyzer.ViewModels
 
             _configuration.RemoveDatasetType(SelectedDatasetType);
             _configuration.RemoveRecentSubsettingExpressions(SelectedDatasetType.Id);
+            _configuration.RemoveRecentFilesByDatasetTypeId(SelectedDatasetType.Id);
 
             DatasetTypes.Remove(SelectedDatasetType);
             SelectedDatasetType = null;

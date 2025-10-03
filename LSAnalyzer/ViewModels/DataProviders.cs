@@ -117,6 +117,7 @@ public partial class DataProviders : ObservableObject
         }
 
         _configuration.DeleteDataProviderConfiguration(SelectedConfiguration);
+        _configuration.RemoveRecentFilesByDataProviderId(SelectedConfiguration.Id);
         
         Configurations.Remove(SelectedConfiguration);
         SelectedConfiguration = null;

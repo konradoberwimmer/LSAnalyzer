@@ -73,9 +73,9 @@ namespace LSAnalyzer.Models.DataProviderConfiguration
             return new Dataverse(serviceProvider.GetRequiredService<Rservice>()) { Configuration = this };
         }
 
-        public IDataProviderViewModel GetViewModel(IServiceProvider serviceProvider)
+        public IDataProviderViewModel GetViewModel(IServiceProvider serviceProvider, Configuration configuration)
         {
-            return _dataverseViewModel ??= new ViewModels.DataProvider.Dataverse((Dataverse)CreateService(serviceProvider));
+            return _dataverseViewModel ??= new ViewModels.DataProvider.Dataverse((Dataverse)CreateService(serviceProvider), configuration);
         }
     }
 }

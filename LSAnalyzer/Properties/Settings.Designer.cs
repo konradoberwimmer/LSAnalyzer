@@ -69,5 +69,29 @@ namespace LSAnalyzer.Properties {
                 this["recentSubsettingExpressions"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("20")]
+        public int numberRecentFiles {
+            get {
+                return ((int)(this["numberRecentFiles"]));
+            }
+            set {
+                this["numberRecentFiles"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string recentFiles {
+            get {
+                return ((string)(this["recentFiles"]));
+            }
+            set {
+                this["recentFiles"] = value;
+            }
+        }
     }
 }

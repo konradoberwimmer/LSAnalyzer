@@ -59,10 +59,11 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <TabControl Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,10" SelectedValue="{Binding TabControlValue, Converter={StaticResource TabItemToHeaderStringConverter}, Mode=OneWayToSource}">
+        <TabControl Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,10" SelectedValue="{Binding TabControlValue, Converter={StaticResource TabItemToHeaderStringConverter}, Mode=OneWayToSource}" SelectedIndex="{Binding TabControlIndex}">
             <TabItem Header="File system">
                 <Grid Margin="5">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
@@ -71,10 +72,12 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="File:" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <TextBox x:Name="textBoxFileName" Grid.Column="1" HorizontalAlignment="Stretch" Margin="10,00,0,0" TextWrapping="Wrap" Text="{Binding FileName}" IsEnabled="False" Height="22"/>
-                    <Button x:Name="buttonSelectFile" Grid.Column="2" Content="Select ..." HorizontalAlignment="Left" Margin="10,00,0,0" Width="80" Height="22" Click="ButtonSelectFile_Click"/>
-                    <CheckBox Grid.Row="1" Grid.Column="1" Content="Use read.csv2()" Margin="10,10,0,0" IsChecked="{Binding UseCsv2}" IsEnabled="{Binding IsCsv}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center">Recent:</TextBlock>
+                    <ComboBox Grid.Row="0" Grid.Column="1" Margin="10,0,0,0" ItemsSource="{Binding RecentFilesForAnalyses}" DisplayMemberPath="DisplayString" SelectedItem="{Binding SelectedRecentFileForAnalysis, Mode=OneWayToSource}"></ComboBox>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,10,0,0" Text="File:" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Margin="10,10,0,0" TextWrapping="Wrap" Text="{Binding FileName}" IsEnabled="False" Height="22"/>
+                    <Button Grid.Row="1" Grid.Column="2" Content="Select ..." HorizontalAlignment="Left" Margin="10,10,0,0" Width="80" Height="22" Click="ButtonSelectFile_Click"/>
+                    <CheckBox Grid.Row="2" Grid.Column="1" Content="Use read.csv2()" Margin="10,10,0,0" IsChecked="{Binding UseCsv2}" IsEnabled="{Binding IsCsv}"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Data provider" IsEnabled="{Binding DataProviderConfigurations.Count}">

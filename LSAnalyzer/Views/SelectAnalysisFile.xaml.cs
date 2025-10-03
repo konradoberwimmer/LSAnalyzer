@@ -33,6 +33,9 @@ namespace LSAnalyzer.Views
 
             DataContext = selectAnalysisFileViewModel;
 
+            WeakReferenceMessenger.Default.Register<RecentFileInvalidMessage>(this, (_, m) => 
+                MessageBox.Show($"File '{ m.FileName }' is no longer available (or dataset type/weight have changed).", "Error", MessageBoxButton.OK, MessageBoxImage.Error));
+            
             WeakReferenceMessenger.Default.Register<FailureAnalysisFileMessage>(this, (r, m) =>
             {
                 MessageBox.Show("Unable to read column names from data file '" + m.Value + "'.\n\nTake note:\n- Supported file types are R data frames (.rds), SPSS (.sav), CSV (.csv) and Excel (.xlsx)\n- File ending must match file type\n- All formats have to provide column headers (in first row for Excel and CSV)\n-With SPSS (.sav), make sure there are no non-ASCII characters in path and filename (eg. no German umlauts)\n- With Excel (.xlsx), package openxlsx has to be installed\n- With Excel (.xlsx), data has to be on the first worksheet", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
