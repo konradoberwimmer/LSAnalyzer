@@ -634,7 +634,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         {
             Application.Current.Properties["SelectAnalysisFile_TabControlIndex"] = TabControlIndex;
             Application.Current.Properties["SelectAnalysisFile_SelectedDataProviderConfiguration_id"] =
-                SelectedDataProviderConfiguration?.Id;
+                SelectedDataProviderConfiguration?.Id ?? -1;
         }
 
         if (e.Argument is ICloseable window)
