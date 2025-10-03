@@ -59,7 +59,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <TabControl Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,10" SelectedValue="{Binding TabControlValue, Converter={StaticResource TabItemToHeaderStringConverter}, Mode=OneWayToSource}">
+        <TabControl Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,10" SelectedValue="{Binding TabControlValue, Converter={StaticResource TabItemToHeaderStringConverter}, Mode=OneWayToSource}" SelectedIndex="{Binding TabControlIndex}">
             <TabItem Header="File system">
                 <Grid Margin="5">
                     <Grid.RowDefinitions>

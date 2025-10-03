@@ -52,6 +52,9 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         }
     }
 
+    [ObservableProperty]
+    private int _tabControlIndex = 0;
+    
     private ObservableCollection<Configuration.RecentFileForAnalysis> _recentFilesForAnalyses;
     public ObservableCollection<Configuration.RecentFileForAnalysis> RecentFilesForAnalyses
     {
@@ -312,6 +315,27 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         DatasetTypes = new ObservableCollection<DatasetType>(configuration.GetStoredDatasetTypes()?.OrderBy(dst => dst.Name).ToList() ?? new List<DatasetType>());
         DataProviderConfigurations = configuration.GetDataProviderConfigurations().OrderBy(dpc => dpc.Name).ToList();
         _serviceProvider = serviceProvider;
+        
+        if (Application.Current.Properties.Contains("SelectAnalysisFile_TabControlIndex"))
+        {
+            TabControlIndex = (int)Application.Current.Properties["SelectAnalysisFile_TabControlIndex"]!;
+        }
+
+        if (Application.Current.Properties.Contains("SelectAnalysisFile_SelectedDataProviderConfiguration_id"))
+        {
+            var selectedDataProviderConfigurationId =
+                (int)Application.Current.Properties["SelectAnalysisFile_SelectedDataProviderConfiguration_id"]!;
+
+            if (DataProviderConfigurations.Any(dpc => dpc.Id == selectedDataProviderConfigurationId))
+            {
+                SelectedDataProviderConfiguration = DataProviderConfigurations.First(dpc => dpc.Id == selectedDataProviderConfigurationId);
+            }
+        }
+        
+        if (SelectedDataProviderConfiguration == null && DataProviderConfigurations.Count == 1)
+        {
+            SelectedDataProviderConfiguration = DataProviderConfigurations.First();
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -606,6 +630,8 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         
         WeakReferenceMessenger.Default.Send(new SetAnalysisConfigurationMessage(analysisConfiguration));
         IsBusy = false;
+        Application.Current.Properties["SelectAnalysisFile_TabControlIndex"] = TabControlIndex;
+        Application.Current.Properties["SelectAnalysisFile_SelectedDataProviderConfiguration_id"] = SelectedDataProviderConfiguration?.Id;
 
         if (e.Argument is ICloseable window)
         {
