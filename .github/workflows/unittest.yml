@@ -29,11 +29,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 9.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: |
+        dotnet restore LSAnalyzer
+        dotnet restore TestLSAnalyzer
     - name: Build
       run: dotnet build TestLSAnalyzer --no-restore
     - name: Test
       working-directory: ./TestLSAnalyzer
-      run: dotnet test --no-build --verbosity quiet --filter "(FullyQualifiedName!~TestLSAnalyzerUI) & (FullyQualifiedName!~TestDataverse)"
+      run: dotnet test --no-build --filter "(FullyQualifiedName!~TestLSAnalyzerUI) & (FullyQualifiedName!~TestDataverse)"

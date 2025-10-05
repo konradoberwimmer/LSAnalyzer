@@ -269,7 +269,7 @@ public class Configuration
         } catch { }
     }
     
-    public List<RecentFileForAnalysis> GetStoredRecentFiles(int dataProviderId)
+    public virtual List<RecentFileForAnalysis> GetStoredRecentFiles(int dataProviderId)
     {
         try
         {

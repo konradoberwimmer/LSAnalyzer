@@ -42,7 +42,10 @@ public class TestDataverse
     [Fact]
     public void TestInitializeFromRecentFile()
     {
-        SelectAnalysisFile selectAnalysisFile = new(Mock.Of<Configuration>(), Mock.Of<Rservice>(), Mock.Of<IServiceProvider>());
+        var configurationMock = new Mock<Configuration>();
+        configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
+        
+        SelectAnalysisFile selectAnalysisFile = new(configurationMock.Object, Mock.Of<Rservice>(), Mock.Of<IServiceProvider>());
         Dataverse dataverse = new();
         dataverse.ParentViewModel = selectAnalysisFile;
         
@@ -88,10 +91,16 @@ public class TestDataverse
         rserviceMock.SetupSequence(rservice => rservice.Execute(It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(false)
             .Returns(true).Returns(true).Returns(true);
+        
+        var configurationMock = new Mock<Configuration>();
+        configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
+        
+        var serviceProvider = new ServiceCollection()
+            .AddSingleton(rserviceMock.Object)
+            .AddSingleton(configurationMock.Object)
+            .BuildServiceProvider();
 
-        var serviceProvider = new ServiceCollection().AddSingleton(rserviceMock.Object).BuildServiceProvider();
-
-        var viewModel = configuration.GetViewModel(serviceProvider, Mock.Of<Configuration>()) as Dataverse;
+        var viewModel = configuration.GetViewModel(serviceProvider, configurationMock.Object) as Dataverse;
 
         viewModel!.TestFileAccessCommand.Execute(null);
         Assert.False(viewModel.TestResults.IsSuccess);
@@ -139,9 +148,15 @@ public class TestDataverse
         rserviceMock.SetupSequence(rservice => rservice.Fetch(It.IsAny<string>()))
             .Returns((CharacterVector?)null);
 
-        var serviceProvider = new ServiceCollection().AddSingleton(rserviceMock.Object).BuildServiceProvider();
+        var configurationMock = new Mock<Configuration>();
+        configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
+        
+        var serviceProvider = new ServiceCollection()
+            .AddSingleton(rserviceMock.Object)
+            .AddSingleton(configurationMock.Object)
+            .BuildServiceProvider();
 
-        var viewModel = configuration.GetViewModel(serviceProvider, Mock.Of<Configuration>()) as Dataverse;
+        var viewModel = configuration.GetViewModel(serviceProvider, configurationMock.Object) as Dataverse;
         viewModel!.File = "test.tab";
         viewModel.Dataset = "doi:99.99999/ABCDEFGHI";
         viewModel.SelectedFileFormat = new("tsv", "Archive (TSV)");
@@ -170,9 +185,15 @@ public class TestDataverse
             .Returns(true).Returns(false)
             .Returns(true).Returns(true).Returns(true).Returns(true).Returns(true);
 
-        var serviceProvider = new ServiceCollection().AddSingleton(rserviceMock.Object).BuildServiceProvider();
+        var configurationMock = new Mock<Configuration>();
+        configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
+        
+        var serviceProvider = new ServiceCollection()
+            .AddSingleton(rserviceMock.Object)
+            .AddSingleton(configurationMock.Object)
+            .BuildServiceProvider();
 
-        var viewModel = configuration.GetViewModel(serviceProvider, Mock.Of<Configuration>()) as Dataverse;
+        var viewModel = configuration.GetViewModel(serviceProvider, configurationMock.Object) as Dataverse;
         viewModel!.File = "test.tab";
         viewModel.Dataset = "doi:99.99999/ABCDEFGHI";
         viewModel.SelectedFileFormat = new("tsv", "Archive (TSV)");

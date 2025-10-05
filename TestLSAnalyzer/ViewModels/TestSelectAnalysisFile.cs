@@ -164,6 +164,8 @@ public class TestSelectAnalysisFile
     public async Task TestGuessDatasetTypeSendsFileTypeError()
     {
         var datasetTypesConfiguration = new Mock<Configuration>();
+        datasetTypesConfiguration.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
+
         Rservice rservice = new(new());
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
@@ -329,9 +331,13 @@ public class TestSelectAnalysisFile
     [Fact]
     public void TestInitializeFromRecentFile()
     {
-        SelectAnalysisFile selectAnalysisFile = new(Mock.Of<Configuration>(), Mock.Of<Rservice>(), Mock.Of<IServiceProvider>());
+        var configurationMock = new Mock<Configuration>();
+        configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
 
-        selectAnalysisFile.TabControlValue = "File system";
+        SelectAnalysisFile selectAnalysisFile = new(configurationMock.Object, Mock.Of<Rservice>(), Mock.Of<IServiceProvider>());
+
+        configurationMock.Verify(conf => conf.GetStoredRecentFiles(It.Is<int>(val => val == 0)), Times.Once);
+        
         selectAnalysisFile.DatasetTypes =
             [ new() { Id = 3, Name = "Test", Weight = "wgt", NMI = 10, MIvar = "mi", RepWgts = "repwgt" } ];
         
@@ -340,10 +346,12 @@ public class TestSelectAnalysisFile
         selectAnalysisFile.RecentFilesForAnalyses =
         [
             JsonSerializer.Deserialize<Configuration.RecentFileForAnalysis>($$"""{"FileName":"{{System.Web.HttpUtility.JavaScriptStringEncode(tempFile)}}","UsageAttributes":{"UseCsv2":false},"ConvertCharacters":false,"DatasetTypeId":3,"Weight":"wgt","ModeKeep":false}""")!,
-            new() { FileName = "C:\\not_here", DatasetTypeId = 2, Weight = "weight" }
+            new() { FileName = "C:\\not_here_16413", DatasetTypeId = 2, Weight = "weight" }
         ];
 
         selectAnalysisFile.InitializeFromRecentFile(selectAnalysisFile.RecentFilesForAnalyses.First());
+
+        configurationMock.Verify(conf => conf.GetStoredRecentFiles(It.Is<int>(val => val == 0)), Times.Once);
         
         Assert.Equal(tempFile, selectAnalysisFile.FileName);
         Assert.False(selectAnalysisFile.UseCsv2);
@@ -353,6 +361,8 @@ public class TestSelectAnalysisFile
         Assert.Equal(SelectAnalysisFile.AnalysisModes.Build, selectAnalysisFile.SelectedAnalysisMode);
         
         selectAnalysisFile.InitializeFromRecentFile(selectAnalysisFile.RecentFilesForAnalyses.Last());
+
+        configurationMock.Verify(conf => conf.GetStoredRecentFiles(It.Is<int>(val => val == 0)), Times.Exactly(2));
         
         Assert.Equal(tempFile, selectAnalysisFile.FileName);
         Assert.Empty(selectAnalysisFile.RecentFilesForAnalyses); // because the mock won't return any recent files when they are fetched again after removing one

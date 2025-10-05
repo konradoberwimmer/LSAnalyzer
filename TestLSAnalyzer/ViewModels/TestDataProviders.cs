@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 
 namespace TestLSAnalyzer.ViewModels;
 
+[Collection("Sequential")]
 public class TestDataProviders
 {
     [Fact]

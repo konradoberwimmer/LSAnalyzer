@@ -235,7 +235,10 @@ namespace TestLSAnalyzer.ViewModels
 
             MainWindow mainWindowViewModel = new(rservice);
 
-            SelectAnalysisFile selectAnalysisFileViewModel = new(new Mock<Configuration>().Object, rservice, new ServiceCollection().AddSingleton(rservice).BuildServiceProvider());
+            var configurationMock = new Mock<Configuration>();
+            configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
+            
+            SelectAnalysisFile selectAnalysisFileViewModel = new(configurationMock.Object, rservice, new ServiceCollection().AddSingleton(rservice).BuildServiceProvider());
             selectAnalysisFileViewModel.FileName = fileName;
             selectAnalysisFileViewModel.SelectedDatasetType = datasetType;
             selectAnalysisFileViewModel.SelectedWeightVariable = selectAnalysisFileViewModel.PossibleWeightVariables.First();
