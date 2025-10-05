@@ -65,6 +65,7 @@ namespace LSAnalyzer.Views.CustomControls
             {
                 DataGridBoundColumn dataGridBoundColumn = (e.Column as DataGridBoundColumn)!;
                 dataGridBoundColumn.Binding = new Binding("[" + e.PropertyName + "]");
+                dataGridBoundColumn.SortMemberPath = e.PropertyName;
             }
 
             if (e.PropertyType == typeof(double) && e.Column is DataGridTextColumn dataGridTextColumn)
