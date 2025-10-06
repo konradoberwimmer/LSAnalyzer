@@ -12,6 +12,8 @@ using TestLSAnalyzer.Services;
 using Moq;
 using Microsoft.Extensions.DependencyInjection;
 using LSAnalyzer.Helper;
+using Polly;
+using Xunit.Sdk;
 
 namespace TestLSAnalyzer.ViewModels;
 
@@ -113,7 +115,7 @@ public class TestSelectAnalysisFile
     }
 
     [Fact]
-    public async Task TestGuessDatasetTypeAutoEncapsulateRegex()
+    public void TestGuessDatasetTypeAutoEncapsulateRegex()
     {
         Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
@@ -136,11 +138,12 @@ public class TestSelectAnalysisFile
             PVvarsList = new() { new() { Regex = "x[0-9]+", DisplayName = "x", Mandatory = true } },
             RepWgts = "repwgt",
         });
+        selectAnalysisFileViewModel.SelectedDatasetType = selectAnalysisFileViewModel.DatasetTypes.First();
 
         selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
-        await Task.Delay(1000);
 
-        Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType);
+        Policy.Handle<NullException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType));
 
         selectAnalysisFileViewModel.DatasetTypes.Add(new()
         {
@@ -154,14 +157,14 @@ public class TestSelectAnalysisFile
         });
 
         selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
-        await Task.Delay(1000);
 
-        Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType);
+        Policy.Handle<NotNullException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType));
         Assert.Equal(selectAnalysisFileViewModel.DatasetTypes.Last(), selectAnalysisFileViewModel.SelectedDatasetType);
     }
 
     [Fact]
-    public async Task TestGuessDatasetTypeSendsFileTypeError()
+    public void TestGuessDatasetTypeSendsFileTypeError()
     {
         var datasetTypesConfiguration = new Mock<Configuration>();
         datasetTypesConfiguration.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
@@ -180,14 +183,14 @@ public class TestSelectAnalysisFile
         });
 
         selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
-        await Task.Delay(500);
-
+        
+        Policy.Handle<TrueException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.True(messageSent));
         Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType);
-        Assert.True(messageSent);
     }
 
     [Fact]
-    public async Task TestUseFileForAnalysisSendsMessageOnFailure()
+    public void TestUseFileForAnalysisSendsMessageOnFailure()
     {
         DispatcherHelper.Initialize();
 
@@ -210,17 +213,17 @@ public class TestSelectAnalysisFile
         });
 
         selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
-        await Task.Delay(500);
-
-        Assert.True(messageSent);
+        
+        Policy.Handle<TrueException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.True(messageSent));
 
         messageSent = false;
         selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
 
         selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
-        await Task.Delay(500);
-
-        Assert.True(messageSent);
+        
+        Policy.Handle<TrueException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.True(messageSent));
 
         messageSent = false;
         selectAnalysisFileViewModel.SelectedDatasetType = new()
@@ -234,9 +237,9 @@ public class TestSelectAnalysisFile
         };
 
         selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
-        await Task.Delay(500);
 
-        Assert.True(messageSent);
+        Policy.Handle<TrueException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.True(messageSent));
     }
 
     [Fact]
@@ -277,10 +280,8 @@ public class TestSelectAnalysisFile
     }
 
     [Fact]
-    public async Task TestUseFileForAnalysisWithAutoEncapsulatedRegex()
+    public void TestUseFileForAnalysisWithAutoEncapsulatedRegex()
     {
-        DispatcherHelper.Initialize();
-
         Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
@@ -301,26 +302,32 @@ public class TestSelectAnalysisFile
             FayFac = 0.5,
         };
 
+        var failureMessageSent = false;
+        WeakReferenceMessenger.Default.Register<FailureAnalysisConfigurationMessage>(this, (r, m) =>
+        {
+            failureMessageSent = true;
+        });
         AnalysisConfiguration? analysisConfiguration = null;
-        bool messageSent = false;
+        var successMessageSent = false;
         WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (r, m) =>
         {
-            messageSent = true;
+            successMessageSent = true;
             analysisConfiguration = m.Value;
         });
 
         selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
-        await Task.Delay(5000);
-
-        Assert.False(messageSent);
-
+        
+        Policy.Handle<TrueException>().WaitAndRetry(5000, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.True(failureMessageSent));
+        Assert.Null(analysisConfiguration);
+        
         selectAnalysisFileViewModel.SelectedDatasetType.PVvarsList = new() { new() { Regex = "x[0-9]+", DisplayName = "x", Mandatory = false }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = false } };
         selectAnalysisFileViewModel.SelectedDatasetType.RepWgts = "repwgt[0-9]+";
 
         selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
-        await Task.Delay(5000);
 
-        Assert.True(messageSent);
+        Policy.Handle<TrueException>().WaitAndRetry(5000, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.True(successMessageSent));
         Assert.NotNull(analysisConfiguration);
 
         var currentVariables = rservice.GetCurrentDatasetVariables(analysisConfiguration);

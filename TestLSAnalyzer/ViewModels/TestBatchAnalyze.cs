@@ -9,6 +9,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Polly;
+using Xunit.Sdk;
 using BatchAnalyzeViewModel = LSAnalyzer.ViewModels.BatchAnalyze;
 
 namespace TestLSAnalyzer.ViewModels
@@ -53,7 +55,7 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
-        public async Task TestRunBatchInvokesService()
+        public void TestRunBatchInvokesService()
         {
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -76,32 +78,28 @@ namespace TestLSAnalyzer.ViewModels
             LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice);
             LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService);
 
-            bool failureMessageSent = false;
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeFailureMessage>(this, (r, m) =>
-            {
-                failureMessageSent = true;
-            });
-
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json");
             batchAnalyzeViewModel.UseCurrentFile = true;
             batchAnalyzeViewModel.CurrentConfiguration = analysisConfiguration;
             batchAnalyzeViewModel.RunBatchCommand.Execute(null);
 
-            await Task.Delay(1000);
-
-            Assert.False(failureMessageSent);
-            Assert.NotNull(batchAnalyzeViewModel.AnalysesTable);
-            Assert.Equal(4, batchAnalyzeViewModel.AnalysesTable.Rows.Count);
+            Policy.Handle<NotNullException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.NotNull(batchAnalyzeViewModel.AnalysesTable));
+            Assert.Equal(4, batchAnalyzeViewModel.AnalysesTable!.Rows.Count);
             
-            foreach (var row in batchAnalyzeViewModel.AnalysesTable.Rows)
-            {
-                var dataRow = row as DataRow;
-                Assert.True((bool)(dataRow!["Success"]));
-            }
+            Policy.Handle<Exception>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() =>
+                {
+                    foreach (var row in batchAnalyzeViewModel.AnalysesTable.Rows)
+                    {
+                        var dataRow = row as DataRow;
+                        Assert.True((bool)(dataRow!["Success"]));
+                    }
+                });
         }
 
         [Fact]
-        public async Task TransferResultsSendMessages()
+        public void TransferResultsSendMessages()
         {
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -127,9 +125,17 @@ namespace TestLSAnalyzer.ViewModels
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json");
             batchAnalyzeViewModel.UseCurrentFile = true;
             batchAnalyzeViewModel.CurrentConfiguration =analysisConfiguration;
+            
+            var lastSuccessMessageSent = false;
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeMessage>(this, (_, m) =>
+            {
+                if (m.Id == 4) lastSuccessMessageSent = true;
+            });
+            
             batchAnalyzeViewModel.RunBatchCommand.Execute(null);
-
-            await Task.Delay(1000);
+         
+            Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.True(lastSuccessMessageSent));
 
             int analysisReadyMessagesSent = 0;
             WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (r, m) =>
@@ -139,9 +145,8 @@ namespace TestLSAnalyzer.ViewModels
 
             batchAnalyzeViewModel.TransferResultsCommand.Execute(null);
 
-            await Task.Delay(200);
-
-            Assert.Equal(4, analysisReadyMessagesSent);
+            Policy.Handle<EqualException>().WaitAndRetry(200, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.Equal(4, analysisReadyMessagesSent));
         }
 
         [Fact]

@@ -11,6 +11,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LSAnalyzer.ViewModels;
+using Polly;
+using Xunit.Sdk;
 
 namespace TestLSAnalyzer.ViewModels.DataProvider;
 
@@ -76,7 +78,7 @@ public class TestDataverse
     }
     
     [Fact]
-    public async Task TestTestFileAccess()
+    public void TestTestFileAccess()
     {
         DataverseConfiguration configuration = new();
         configuration.Name = "test";
@@ -110,26 +112,23 @@ public class TestDataverse
         viewModel.Dataset = "doi:99.99999/ABCDEFGHI";
         viewModel.SelectedFileFormat = new("tsv", "Archive (TSV)");
 
-        viewModel!.TestFileAccessCommand.Execute(null);
+        viewModel.TestFileAccessCommand.Execute(null);
 
-        await Task.Delay(500);
-
+        Policy.Handle<EqualException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.Equal("Missing R package 'dataverse'", viewModel.TestResults.Message));
         Assert.False(viewModel.TestResults.IsSuccess);
-        Assert.Equal("Missing R package 'dataverse'", viewModel.TestResults.Message);
 
-        viewModel!.TestFileAccessCommand.Execute(null);
+        viewModel.TestFileAccessCommand.Execute(null);
 
-        await Task.Delay(500);
-
+        Policy.Handle<EqualException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.Equal("File access not working", viewModel.TestResults.Message));
         Assert.False(viewModel.TestResults.IsSuccess);
-        Assert.Equal("File access not working", viewModel.TestResults.Message);
-
+        
         viewModel!.TestFileAccessCommand.Execute(null);
 
-        await Task.Delay(500);
-
+        Policy.Handle<EqualException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.Equal("File access works", viewModel.TestResults.Message));
         Assert.True(viewModel.TestResults.IsSuccess);
-        Assert.Equal("File access works", viewModel.TestResults.Message);
     }
 
     [Fact]

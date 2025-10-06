@@ -10,6 +10,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Polly;
+using Xunit.Sdk;
 
 namespace TestLSAnalyzer.ViewModels
 {
@@ -44,7 +46,7 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
-        public async Task TestStartAnalysis()
+        public void TestStartAnalysis()
         {
             AnalysisConfiguration analysisConfiguration = new()
             {
@@ -79,10 +81,9 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Empty(mainWindowViewModel.Analyses.Last().DataTable.Rows);
 
             mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelUnivar);
-            await Task.Delay(500);
-
-            Assert.NotNull(mainWindowViewModel.Analyses.Last().DataTable);
-            Assert.NotEmpty(mainWindowViewModel.Analyses.Last().DataTable.Rows);
+            
+            Policy.Handle<NotEmptyException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.NotEmpty(mainWindowViewModel.Analyses.Last().DataTable.Rows));
 
             AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
             {
@@ -96,10 +97,9 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Empty(mainWindowViewModel.Analyses.Last().DataTable.Rows);
 
             mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelMeanDiff);
-            await Task.Delay(500);
 
-            Assert.NotNull(mainWindowViewModel.Analyses.Last().DataTable);
-            Assert.NotEmpty(mainWindowViewModel.Analyses.Last().DataTable.Rows);
+            Policy.Handle<NotEmptyException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.NotEmpty(mainWindowViewModel.Analyses.Last().DataTable.Rows));
 
             analysisConfiguration = new()
             {
@@ -128,14 +128,13 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Empty(mainWindowViewModel.Analyses.Last().DataTable.Rows);
 
             mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelFreq);
-            await Task.Delay(500);
 
-            Assert.NotNull(mainWindowViewModel.Analyses.Last().DataTable);
-            Assert.NotEmpty(mainWindowViewModel.Analyses.Last().DataTable.Rows);
+            Policy.Handle<NotEmptyException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.NotEmpty(mainWindowViewModel.Analyses.Last().DataTable.Rows));
         }
 
         [Fact]
-        public async Task TestStartAnalysisSendsFailureMessage()
+        public void TestStartAnalysisSendsFailureMessage()
         {
             AnalysisConfiguration analysisConfiguration = new()
             {
@@ -174,10 +173,10 @@ namespace TestLSAnalyzer.ViewModels
 
             mainWindowViewModel.Analyses.Add(analysisPresentationViewModel);
             mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModel);
-            await Task.Delay(1000);
 
+            Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.True(messageSent));
             Assert.Empty(mainWindowViewModel.Analyses.First().DataTable.Rows);
-            Assert.True(messageSent);
         }
 
         [Fact]
@@ -218,7 +217,7 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
-        public async Task TestAnalysisWithDifferentWeights()
+        public void TestAnalysisWithDifferentWeights()
         {
             // will also test ViewModels.SelectAnalysisFile
             var fileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiwgt.sav");
@@ -245,9 +244,9 @@ namespace TestLSAnalyzer.ViewModels
             selectAnalysisFileViewModel.SelectedAnalysisMode = SelectAnalysisFile.AnalysisModes.Build;
             selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
 
-            await Task.Delay(5000);
-            Assert.NotNull(mainWindowViewModel.AnalysisConfiguration);
-            Assert.Equal("wgt", mainWindowViewModel.AnalysisConfiguration.DatasetType!.Weight);
+            Policy.Handle<NotNullException>().WaitAndRetry(5000, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.NotNull(mainWindowViewModel.AnalysisConfiguration));
+            Assert.Equal("wgt", mainWindowViewModel.AnalysisConfiguration!.DatasetType!.Weight);
 
             AnalysisCorr analysisCorrWgt = new(mainWindowViewModel.AnalysisConfiguration)
             {
@@ -258,14 +257,14 @@ namespace TestLSAnalyzer.ViewModels
             AnalysisPresentation analysisPresentationViewModelWgt = new(analysisCorrWgt);
 
             mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelWgt);
-            await Task.Delay(500);
-            Assert.NotEmpty(analysisPresentationViewModelWgt.DataTable.Rows);
+            Policy.Handle<NotEmptyException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.NotEmpty(analysisPresentationViewModelWgt.DataTable.Rows));
 
             selectAnalysisFileViewModel.SelectedWeightVariable = selectAnalysisFileViewModel.PossibleWeightVariables.Last();
             selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
 
-            await Task.Delay(5000);
-            Assert.Equal("wgt100", mainWindowViewModel.AnalysisConfiguration.DatasetType!.Weight);
+            Policy.Handle<EqualException>().WaitAndRetry(5000, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.Equal("wgt100", mainWindowViewModel.AnalysisConfiguration.DatasetType!.Weight));
 
             AnalysisCorr analysisCorrWgt100 = new(mainWindowViewModel.AnalysisConfiguration)
             {
@@ -276,8 +275,8 @@ namespace TestLSAnalyzer.ViewModels
             AnalysisPresentation analysisPresentationViewModelWgt100 = new(analysisCorrWgt100);
 
             mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelWgt100);
-            await Task.Delay(500);
-            Assert.NotEmpty(analysisPresentationViewModelWgt100.DataTable.Rows);
+            Policy.Handle<NotEmptyException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.NotEmpty(analysisPresentationViewModelWgt100.DataTable.Rows));
 
             var columnNweight = analysisPresentationViewModelWgt100.DataTable.Columns.IndexOf("N - weighted");
             var columnEstimate = analysisPresentationViewModelWgt100.DataTable.Columns.IndexOf("correlation");
