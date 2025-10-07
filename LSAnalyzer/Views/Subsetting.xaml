@@ -55,7 +55,7 @@
             </Grid.ColumnDefinitions>
             <Label Grid.Row="0" Grid.Column="0" Content="Variables in dataset:" Margin="10,0,0,0"/>
             <Border x:Name="HeightHelperPanelVariablesDataset" Grid.Row="0" Grid.Column="0" Margin="10,27,10,5">
-                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDataset}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Name" SelectionMode="Single" MouseDoubleClick="ListBoxVariablesDataset_MouseDoubleClick"/>
+                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDataset}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Name" SelectionMode="Single" MouseDoubleClick="ListBoxVariablesDataset_MouseDoubleClick" ScrollViewer.CanContentScroll="False"/>
             </Border>
             <CheckBox Grid.Row="1" Grid.Column="0" Margin="10,0,10,0" VerticalAlignment="Bottom" IsChecked="False" Content="Include system variables (weights, ...)" Checked="CheckBoxIncludeSystemVariables_Checked" Unchecked="CheckBoxIncludeSystemVariables_Checked"/>
             <Grid Grid.Row="0" Grid.Column="1" Margin="0,0,10,0">
@@ -66,7 +66,9 @@
                 <Label Grid.Row="0" Content="Recently used:"/>
                 <ComboBox Grid.Row="0" x:Name="ComboBoxRecentSubsettingExpressions" Margin="0,27,0,5" ItemsSource="{Binding RecentSubsettingExpressions}" SelectedItem="{Binding SelectedRecentSubsettingExpression, Mode=OneWayToSource}" SelectionChanged="ComboBoxRecentSubsettingExpressions_OnSelectionChanged"/>
                 <Label Grid.Row="1" Content="Expression for selecting subset:"/>
-                <TextBox Grid.Row="1" Margin="0,27,0,5" x:Name="textBoxSubsettingExpression" Text="{Binding SubsetExpression, UpdateSourceTrigger=PropertyChanged}"/>
+                <Border Grid.Row="1" x:Name="WidthHelperTextBoxSubset">
+                    <TextBox  Margin="0,27,0,5" x:Name="textBoxSubsettingExpression" Text="{Binding SubsetExpression, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" Width="{Binding ActualWidth, ElementName=WidthHelperTextBoxSubset}"/>
+                </Border>
             </Grid>
             <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom" Text="{Binding SubsettingInformation.Stringify}" Foreground="{Binding SubsettingInformation.ValidSubset, Converter={StaticResource BoolToRedGreenConverter}}"/>
         </Grid>

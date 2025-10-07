@@ -83,7 +83,16 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         set
         {
             _fileName = value;
-            NotifyPropertyChanged(nameof(FileName));
+            NotifyPropertyChanged();
+
+            if (SelectedRecentFileForAnalysis?.FileName != null && SelectedRecentFileForAnalysis.FileName != value)
+            {
+                var currentRecentFilesForAnalyses = RecentFilesForAnalyses.ToList();
+                RecentFilesForAnalyses = new([]);
+                RecentFilesForAnalyses = new(currentRecentFilesForAnalyses);
+                SelectedWeightVariable = null;
+                SelectedDatasetType = null;
+            }
             
             if (!String.IsNullOrWhiteSpace(FileName) && FileName.Substring(FileName.LastIndexOf(".") + 1).ToLower() == "csv")
             {

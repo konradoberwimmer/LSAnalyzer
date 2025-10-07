@@ -69,7 +69,7 @@
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Content="Variables in dataset:" Margin="10,0,0,0"/>
             <Border x:Name="HeightHelperPanelVariablesDataset" Grid.Column="0" Margin="10,27,10,22">
-                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDataset}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesDataset}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Info" SelectionMode="Extended" MouseDoubleClick="ListBoxVariables_MouseDoubleClick"/>
+                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDataset}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesDataset}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Info" SelectionMode="Extended" MouseDoubleClick="ListBoxVariables_MouseDoubleClick" ScrollViewer.CanContentScroll="False"/>
             </Border>
             <CheckBox x:Name="checkBoxIncludeSystemVariables" Grid.Column="0" Margin="10,0,10,0" VerticalAlignment="Bottom" IsChecked="False" Content="Include system variables (weights, ...)" Checked="CheckBoxIncludeSystemVariables_Checked" Unchecked="CheckBoxIncludeSystemVariables_Checked"/>
             <Grid Grid.Column="1">
@@ -97,7 +97,7 @@
                     </Grid.ColumnDefinitions>
                     <Button x:Name="buttonMoveToAndFromAnalysisVariables" Grid.Column="0" Content="&#x21D4;" Margin="10,-5,10,0" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Command="{Binding MoveToAndFromAnalysisVariablesCommand}" Click="ButtonMoveToAndFromAnalysisVariables_Click"/>
                     <Border x:Name="HeightHelperPanelVariablesAnalyze" Grid.Column="1" Margin="0,0,10,0">
-                        <ListBox x:Name="listBoxVariablesAnalyze" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesAnalyze}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesAnalyze}" ItemsSource="{Binding AnalysisVariables}" DisplayMemberPath="Info" SelectionMode="Extended" MouseDoubleClick="ListBoxVariables_MouseDoubleClick"/>
+                        <ListBox x:Name="listBoxVariablesAnalyze" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesAnalyze}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesAnalyze}" ItemsSource="{Binding AnalysisVariables}" DisplayMemberPath="Info" SelectionMode="Extended" MouseDoubleClick="ListBoxVariables_MouseDoubleClick" ScrollViewer.CanContentScroll="False"/>
                     </Border>
                 </Grid>
                 <Label Grid.Row="2" Content="Group by:" Margin="10,0,10,0"/>
@@ -109,7 +109,7 @@
                     <Button Grid.Column="0" Content="&#x21D4;" Margin="10,-5,10,22" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Foreground="Gray"/>
                     <Button x:Name="buttonMoveToAndFromGroupByVariables" Grid.Column="0" Content="&#x21D4;" Margin="10,-5,10,22" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Command="{Binding MoveToAndFromGroupByVariablesCommand}" Click="ButtonMoveToAndFromGroupByVariables_Click" Visibility="{Binding RegressionSequenceIsAllIn, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     <Border x:Name="HeightHelperPanelVariablesGroupBy" Grid.Column="1" Margin="0,0,10,22">
-                        <ListBox x:Name="listBoxVariablesGroupBy" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesGroupBy}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesGroupBy}" ItemsSource="{Binding GroupByVariables}" DisplayMemberPath="Info" SelectionMode="Extended" MouseDoubleClick="ListBoxVariables_MouseDoubleClick"/>
+                        <ListBox x:Name="listBoxVariablesGroupBy" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesGroupBy}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesGroupBy}" ItemsSource="{Binding GroupByVariables}" DisplayMemberPath="Info" SelectionMode="Extended" MouseDoubleClick="ListBoxVariables_MouseDoubleClick" ScrollViewer.CanContentScroll="False"/>
                     </Border>
                     <CheckBox x:Name="checkBoxCalculateOverall" Grid.Column="1" VerticalAlignment="Bottom" Content="Calculate overall coefficients" IsChecked="{Binding CalculateOverall}" IsEnabled="{Binding GroupByVariables.Count}"/>
                 </Grid>
