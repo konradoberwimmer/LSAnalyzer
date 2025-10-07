@@ -10,7 +10,7 @@ Version 1 uses WPF as GUI framework and is therefore Windows-only.
 
 Version 1 has [releases](https://github.com/konradoberwimmer/LSAnalyzer/releases) and will be further maintained (bugfixes and minor extensions).
 
-Source code of the first version is in branch [https://github.com/konradoberwimmer/LSAnalyzer/tree/v1/v1_master](https://github.com/konradoberwimmer/LSAnalyzer/tree/v1/v1_master). Besides the main project, there are projects for the Microsoft installer (powered by the WiX toolset) and two test projects (xUnit), one with unit and integration tests and one for full system tests (using [FlaUI](https://www.nuget.org/packages/FlaUI.Core)).
+Source code of the first version is in branch [https://github.com/konradoberwimmer/LSAnalyzer/tree/v1/v1_master](https://github.com/konradoberwimmer/LSAnalyzer/tree/v1/v1_master). Besides the main project, there are projects for the Microsoft installer (powered by the WiX toolset) and a test project with unit and integration tests (xUnit).
 
 ## Version 2 - "Stand-alone" and cross-platform
 The second version, that is now my main focus of development, aims at overcoming the limitations version 1 imposes: On the one hand, I try to cut the dependency to an R installation by including my own Rust crate [replicest](https://github.com/konradoberwimmer/replicest) for calculations. On the other hand, [Avalonia](https://www.nuget.org/packages/avalonia) is used as GUI framework, making LSAnalyzer cross-platform with Windows, Linux and MacOS as targets.
