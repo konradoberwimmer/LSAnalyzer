@@ -4,19 +4,13 @@ using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace LSAnalyzer.ViewModels
@@ -68,7 +62,7 @@ namespace LSAnalyzer.ViewModels
             set
             {
                 _sessionLog = value;
-                NotifyPropertyChanged();
+                OnPropertyChanged();
             }
         }
 
@@ -84,7 +78,7 @@ namespace LSAnalyzer.ViewModels
             _logger = new();
             _logger.AddEntry(new LogEntry(DateTime.Now, "stats::sd(c(1,2,3))"));
             _logger.AddEntry(new LogEntry(DateTime.Now, "rm(dummy_result)"));
-            SessionLog = new(_logger.LogEntries);
+            _sessionLog = new(_logger.LogEntries);
         }
 
         public SystemSettings(Rservice rservice, Configuration configuration, Logging logger)
@@ -95,25 +89,10 @@ namespace LSAnalyzer.ViewModels
             _configuration = configuration;
             CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
             _logger = logger;
-            SessionLog = new(_logger.LogEntries);
+            _sessionLog = new(_logger.LogEntries);
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        private RelayCommand<object?> _loadDefaultDatasetTypesCommand = null!;
-        public ICommand LoadDefaultDatasetTypesCommand
-        {
-            get
-            {
-                _loadDefaultDatasetTypesCommand ??= new RelayCommand<object?>(this.LoadDefaultDatasetTypes);
-                return _loadDefaultDatasetTypesCommand;
-            }
-        }
-
+        [RelayCommand]
         private void LoadDefaultDatasetTypes(object? dummy)
         {
             foreach (var defaultDatasetType in DatasetType.CreateDefaultDatasetTypes())
@@ -129,7 +108,7 @@ namespace LSAnalyzer.ViewModels
         }
 
         [RelayCommand]
-        public void SaveSettings()
+        private void SaveSettings()
         {
             if (!Validate())
             {
@@ -148,16 +127,7 @@ namespace LSAnalyzer.ViewModels
             WeakReferenceMessenger.Default.Send<SavedSettingsMessage>();
         }
 
-        private RelayCommand<object?> _updateBifieSurveyCommand = null!;
-        public ICommand UpdateBifieSurveyCommand
-        {
-            get
-            {
-                _updateBifieSurveyCommand ??= new RelayCommand<object?>(this.UpdateBifieSurvey);
-                return _updateBifieSurveyCommand;
-            }
-        }
-
+        [RelayCommand]
         private void UpdateBifieSurvey(object? dummy)
         {
             var result = _rservice.UpdateBifieSurvey();
@@ -174,21 +144,10 @@ namespace LSAnalyzer.ViewModels
                     BifieSurveyVersion = _rservice.GetBifieSurveyVersion();
                     MessageBox.Show("Update successful, now at version '" + BifieSurveyVersion + "'.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
                     break;
-                default: 
-                    break;
             }
         }
 
-        private RelayCommand<string?> _saveSessionLogCommand = null!;
-        public ICommand SaveSessionLogCommand
-        {
-            get
-            {
-                _saveSessionLogCommand ??= new RelayCommand<string?>(this.SaveSessionLog);
-                return _saveSessionLogCommand;
-            }
-        }
-
+        [RelayCommand]
         private void SaveSessionLog(string? filename)
         {
             if (filename == null)
@@ -200,16 +159,7 @@ namespace LSAnalyzer.ViewModels
             streamWriter.Write(_logger.GetFullText());
         }
 
-        private RelayCommand<string?> _saveSessionRcodeCommand = null!;
-        public ICommand SaveSessionRcodeCommand
-        {
-            get
-            {
-                _saveSessionRcodeCommand ??= new RelayCommand<string?>(this.SaveSessionRcode);
-                return _saveSessionRcodeCommand;
-            }
-        }
-
+        [RelayCommand]
         private void SaveSessionRcode(string? filename)
         {
             if (filename == null)
