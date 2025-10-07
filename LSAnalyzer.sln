@@ -12,11 +12,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestLSAnalyzer", "TestLSAna
 EndProject
 Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "LSAnalyzerSetup", "LSAnalyzerSetup\LSAnalyzerSetup.wixproj", "{D214C530-106D-4401-AF12-0352E01B503C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestLSAnalyzerUI", "TestLSAnalyzerUI\TestLSAnalyzerUI.csproj", "{06454E21-8397-473C-B6F8-94ECED437AC4}"
-	ProjectSection(ProjectDependencies) = postProject
-		{9BB62CDE-4EC2-44DF-A80F-733D452BBD28} = {9BB62CDE-4EC2-44DF-A80F-733D452BBD28}
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,22 +72,6 @@ Global
 		{D214C530-106D-4401-AF12-0352E01B503C}.Release|x64.Build.0 = Release|x64
 		{D214C530-106D-4401-AF12-0352E01B503C}.Release|x86.ActiveCfg = Release|x86
 		{D214C530-106D-4401-AF12-0352E01B503C}.Release|x86.Build.0 = Release|x86
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Debug|x64.Build.0 = Debug|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Debug|x86.Build.0 = Debug|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Release|ARM64.Build.0 = Release|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Release|x64.ActiveCfg = Release|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Release|x64.Build.0 = Release|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Release|x86.ActiveCfg = Release|Any CPU
-		{06454E21-8397-473C-B6F8-94ECED437AC4}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
