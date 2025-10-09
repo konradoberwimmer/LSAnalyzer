@@ -11,15 +11,15 @@
 
 		<Media Id="1" Cabinet="Cab1.cab" EmbedCab="yes" />
 
-		<Directory Id="ProgramFiles64Folder">
+		<StandardDirectory Id="ProgramFiles64Folder">
 			<Directory Id="ROOTDIRECTORY" Name="$(var.Manufacturer)">
 				<Directory Id="INSTALLFOLDER" Name="$(Name)" />
 			</Directory>
-		</Directory>
+		</StandardDirectory>
 		
-		<Directory Id="ProgramMenuFolder">
+		<StandardDirectory Id="ProgramMenuFolder">
 			<Directory Id="ApplicationProgramsFolder" Name="LSAnalyzer"/>
-		</Directory>
+		</StandardDirectory>
 
 		<DirectoryRef Id="ApplicationProgramsFolder">
 			<Component Id="ApplicationShortcut" Guid="$(var.UpgradeCode)">
