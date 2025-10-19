@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Polly;
+using Xunit.Sdk;
 
 namespace TestLSAnalyzer.ViewModels
 {
@@ -53,7 +55,7 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
-        public async Task TestTestSubsetting()
+        public void TestTestSubsetting()
         {
             var mockRservice = new Mock<Rservice>();
             mockRservice.Setup(rservice => rservice.TestSubsetting("invalid", null)).Returns(new SubsettingInformation() { ValidSubset = false });
@@ -63,16 +65,18 @@ namespace TestLSAnalyzer.ViewModels
             
             subsettingViewModel.SubsetExpression = "invalid";
             subsettingViewModel.TestSubsettingCommand.Execute(null);
-            await Task.Delay(100);
-            Assert.NotNull(subsettingViewModel.SubsettingInformation);
-            Assert.False(subsettingViewModel.SubsettingInformation.ValidSubset);
+            
+            Policy.Handle<NotNullException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.NotNull(subsettingViewModel.SubsettingInformation));
+            Assert.False(subsettingViewModel.SubsettingInformation!.ValidSubset);
 
             subsettingViewModel.SubsetExpression = "valid";
             Assert.Null(subsettingViewModel.SubsettingInformation);
             subsettingViewModel.TestSubsettingCommand.Execute(null);
-            await Task.Delay(100);
-            Assert.NotNull(subsettingViewModel.SubsettingInformation);
-            Assert.True(subsettingViewModel.SubsettingInformation.ValidSubset);
+            
+            Policy.Handle<NotNullException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.NotNull(subsettingViewModel.SubsettingInformation));
+            Assert.True(subsettingViewModel.SubsettingInformation!.ValidSubset);
         }
 
         [Fact]
