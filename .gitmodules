@@ -1,0 +1,3 @@
+[submodule "rdotnet"]
+	path = rdotnet
+	url = https://github.com/konradoberwimmer/rdotnet.git

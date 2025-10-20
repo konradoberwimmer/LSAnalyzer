@@ -23,7 +23,6 @@
     <PackageReference Include="FontAwesome.Sharp" Version="6.3.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="R.NET" Version="1.9.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -54,6 +53,10 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\rdotnet\src\R.NET\RDotNet.csproj" />
   </ItemGroup>
 
 </Project>
