@@ -51,7 +51,7 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
-        public async Task TestRunBatchWithReloadingFiles()
+        public void TestRunBatchWithReloadingFiles()
         {
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -115,11 +115,9 @@ namespace TestLSAnalyzer.Services
 
             batchAnalyze.RunBatch(analyses, false, null);
 
-            while (messages.Count < 10)
-            {
-                await Task.Delay(100);
-            }
-
+            Policy.Handle<EqualException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.Equal(10, messages.Count));
+            
             Assert.False(messages[1].Success);
             Assert.True(messages[3].Success);
             Assert.False(messages[5].Success);
@@ -128,7 +126,7 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
-        public async Task TestRunBatchOnCurrentFileModeKeep()
+        public void TestRunBatchOnCurrentFileModeKeep()
         {
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -190,10 +188,8 @@ namespace TestLSAnalyzer.Services
 
             batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5);
 
-            while (messages.Count < 8)
-            {
-                await Task.Delay(100);
-            }
+            Policy.Handle<EqualException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.Equal(8, messages.Count));
 
             Assert.False(messages[1].Success);
             Assert.True(messages[3].Success);
@@ -202,7 +198,7 @@ namespace TestLSAnalyzer.Services
         }
 
         [Fact]
-        public async Task TestRunBatchOnCurrentFileModeBuild()
+        public void TestRunBatchOnCurrentFileModeBuild()
         {
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -264,10 +260,8 @@ namespace TestLSAnalyzer.Services
 
             batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat);
 
-            while (messages.Count < 8)
-            {
-                await Task.Delay(100);
-            }
+            Policy.Handle<EqualException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.Equal(8, messages.Count));
 
             Assert.False(messages[1].Success);
             Assert.False(messages[3].Success);

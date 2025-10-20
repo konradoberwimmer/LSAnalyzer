@@ -80,7 +80,7 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
-        public async Task TestUseSubsetting()
+        public void TestUseSubsetting()
         {
             var mockRservice = new Mock<Rservice>();
             mockRservice.Setup(rservice => rservice.TestSubsetting("invalid", null)).Returns(new SubsettingInformation() { ValidSubset = false });
@@ -97,33 +97,36 @@ namespace TestLSAnalyzer.ViewModels
             });
 
             subsettingViewModel.UseSubsettingCommand.Execute(null);
-            await Task.Delay(100);
             Assert.Null(message);
             Assert.Null(subsettingViewModel.SubsettingInformation);
 
+            subsettingViewModel.SubsettingInformation = new SubsettingInformation { ValidSubset = true };
             subsettingViewModel.SubsetExpression = "invalid";
             subsettingViewModel.UseSubsettingCommand.Execute(null);
-            await Task.Delay(100);
+            
+            Policy.Handle<FalseException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.False(subsettingViewModel.SubsettingInformation?.ValidSubset));
             Assert.Null(message);
             Assert.NotNull(subsettingViewModel.SubsettingInformation);
-            Assert.False(subsettingViewModel.SubsettingInformation.ValidSubset);
-
+            
             subsettingViewModel.SubsetExpression = "valid";
             subsettingViewModel.UseSubsettingCommand.Execute(null);
-            await Task.Delay(100);
-            Assert.NotNull(message);
+            
+            Policy.Handle<NotNullException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.NotNull(message));
             Assert.Equal("valid", message);
 
             message = null;
             subsettingViewModel.AnalysisConfiguration = new() { ModeKeep = true, DatasetType = new() { Id = 1234 } };
             subsettingViewModel.UseSubsettingCommand.Execute(null);
-            await Task.Delay(100);
-            Assert.NotNull(message);
+            
+            Policy.Handle<NotNullException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.NotNull(message));
             Assert.Equal("valid", message);
         }
 
         [Fact]
-        public async Task TestClearSubsetting()
+        public void TestClearSubsetting()
         {
             var mockRservice = new Mock<Rservice>();
             mockRservice.Setup(rservice => rservice.TestSubsetting("valid", null)).Returns(new SubsettingInformation() { ValidSubset = true });
@@ -142,16 +145,19 @@ namespace TestLSAnalyzer.ViewModels
 
             subsettingViewModel.SubsetExpression = "valid";
             subsettingViewModel.UseSubsettingCommand.Execute(null);
-            await Task.Delay(100);
-            Assert.True(messageReceived);
+            
+            
+            Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.True(messageReceived));
             Assert.NotNull(message);
             Assert.Equal("valid", message);
 
             messageReceived = false;
             message = null;
             subsettingViewModel.ClearSubsettingCommand.Execute(null);
-            await Task.Delay(100);
-            Assert.True(messageReceived);
+            
+            Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.True(messageReceived));
             Assert.Null(message);
         }
     }

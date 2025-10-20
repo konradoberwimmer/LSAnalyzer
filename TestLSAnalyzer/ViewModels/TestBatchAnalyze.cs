@@ -19,7 +19,7 @@ namespace TestLSAnalyzer.ViewModels
     public class TestBatchAnalyze
     {
         [Fact]
-        public async Task TestRunBatchSendsFailureMessageOnInvalidJSON()
+        public void TestRunBatchSendsFailureMessageOnInvalidJSON()
         {
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -49,9 +49,8 @@ namespace TestLSAnalyzer.ViewModels
             batchAnalyzeViewModel.FileName = tmpFile;
             batchAnalyzeViewModel.RunBatchCommand.Execute(null);
 
-            await Task.Delay(100);
-
-            Assert.True(messageSent);
+            Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.True(messageSent));
         }
 
         [Fact]

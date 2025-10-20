@@ -21,7 +21,7 @@ namespace TestLSAnalyzer.ViewModels;
 public class TestSelectAnalysisFile
 {
     [Fact]
-    public async Task TestGuessDatasetType()
+    public void TestGuessDatasetType()
     {
         Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
@@ -33,6 +33,7 @@ public class TestSelectAnalysisFile
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
         selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
+        selectAnalysisFileViewModel.SelectedDatasetType = selectAnalysisFileViewModel.DatasetTypes.First();
         
         bool messageSent = false;
         WeakReferenceMessenger.Default.Register<MultiplePossibleDatasetTypesMessage>(this, (r, m) =>
@@ -41,9 +42,9 @@ public class TestSelectAnalysisFile
         });
 
         selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
-        await Task.Delay(100);
-
-        Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType);
+        
+        Policy.Handle<NullException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType));
         Assert.False(messageSent);
 
         selectAnalysisFileViewModel.DatasetTypes.Add(new()
@@ -57,9 +58,9 @@ public class TestSelectAnalysisFile
         });
 
         selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
-        await Task.Delay(100);
 
-        Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType);
+        Policy.Handle<NotNullException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType));
         Assert.Equal("Test with NMI 10 and NREP 5", selectAnalysisFileViewModel.SelectedDatasetType.Name);
         Assert.False(messageSent);
 
@@ -74,10 +75,11 @@ public class TestSelectAnalysisFile
         });
 
         selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
-        await Task.Delay(100);
 
-        Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType);
-        Assert.True(messageSent);
+        Policy.Handle<NullException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType));
+        Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.True(messageSent));
 
         selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_pv10_nrep5.sav");
         selectAnalysisFileViewModel.DatasetTypes.Add(new()
@@ -92,11 +94,12 @@ public class TestSelectAnalysisFile
         selectAnalysisFileViewModel.SelectedAnalysisMode = SelectAnalysisFile.AnalysisModes.Build;
 
         selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
-        await Task.Delay(100);
-
-        Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType);
+        
+        Policy.Handle<NotNullException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType));
         Assert.Equal(selectAnalysisFileViewModel.DatasetTypes.Last(), selectAnalysisFileViewModel.SelectedDatasetType);
 
+        selectAnalysisFileViewModel.SelectedDatasetType = null;
         selectAnalysisFileViewModel.DatasetTypes.Add(new()
         {
             Id = 999994,
@@ -107,11 +110,11 @@ public class TestSelectAnalysisFile
         });
 
         selectAnalysisFileViewModel.GuessDatasetTypeCommand.Execute(null);
-        await Task.Delay(100);
-
-        Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType);
+        
+        Policy.Handle<NotNullException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.NotNull(selectAnalysisFileViewModel.SelectedDatasetType));
         Assert.NotEqual(selectAnalysisFileViewModel.DatasetTypes.Last(), selectAnalysisFileViewModel.SelectedDatasetType);
-        Assert.Equal(999993, selectAnalysisFileViewModel.SelectedDatasetType.Id);
+        Assert.Equal(999993, selectAnalysisFileViewModel.SelectedDatasetType!.Id);
     }
 
     [Fact]
@@ -243,7 +246,7 @@ public class TestSelectAnalysisFile
     }
 
     [Fact]
-    public async Task TestUseFileForAnalysisSendsMessageOnSuccess()
+    public void TestUseFileForAnalysisSendsMessageOnSuccess()
     {
         DispatcherHelper.Initialize();
 
@@ -274,9 +277,9 @@ public class TestSelectAnalysisFile
         });
 
         selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
-        await Task.Delay(100);
-
-        Assert.True(messageSent);
+        
+        Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.True(messageSent));
     }
 
     [Fact]
