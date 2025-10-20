@@ -4,7 +4,7 @@ LSAnalyzer is my take on a software that enables GUI-driven data analysis for La
 Any version is written in C#, uses .NET (>=7.0) and follows the MVVM pattern.
 
 ## Version 1 - R-based and Windows-only
-The first version usesa fork of [R.NET](https://www.nuget.org/packages/R.NET/) to call into an R.dll and makes calculations via R-package [BIFIEsurvey](https://cran.r-project.org/web/packages/BIFIEsurvey/index.html), which is co-authored by me. In order to access R.dll, a separate R installation is necessary und package BIFIEsurvey has to be installed in its global library.
+The first version uses a fork of [R.NET](https://www.nuget.org/packages/R.NET/) to call into an R.dll and makes calculations via R-package [BIFIEsurvey](https://cran.r-project.org/web/packages/BIFIEsurvey/index.html), which is co-authored by me. In order to access R.dll, a separate R installation is necessary und package BIFIEsurvey has to be installed in its global library.
 
 Version 1 uses WPF as GUI framework and is therefore Windows-only.
 
