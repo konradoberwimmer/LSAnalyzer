@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Polly;
 using Xunit.Sdk;
 
 namespace TestLSAnalyzer.Services
@@ -14,7 +15,7 @@ namespace TestLSAnalyzer.Services
     public class TestBatchAnalyze
     {
         [Fact]
-        public async Task TestRunBatchSendsMessage()
+        public void TestRunBatchSendsMessage()
         {
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -41,9 +42,10 @@ namespace TestLSAnalyzer.Services
                 { 1, new AnalysisUnivar(analysisConfiguration) }, 
                 { 2, new AnalysisFreq(analysisConfiguration) }, 
             }, true, analysisConfiguration);
-            await Task.Delay(100);
 
-            Assert.Equal(4, messageCounter);
+            Policy.Handle<EqualException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.Equal(4, messageCounter));
+            
             Assert.NotNull(lastMessage);
             Assert.False(lastMessage.Success);
         }
