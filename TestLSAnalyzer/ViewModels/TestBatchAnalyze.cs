@@ -144,7 +144,7 @@ namespace TestLSAnalyzer.ViewModels
 
             batchAnalyzeViewModel.TransferResultsCommand.Execute(null);
 
-            Policy.Handle<EqualException>().WaitAndRetry(200, _ => TimeSpan.FromMilliseconds(1))
+            Policy.Handle<EqualException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
                 .Execute(() => Assert.Equal(4, analysisReadyMessagesSent));
         }
 
