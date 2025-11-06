@@ -811,8 +811,8 @@ namespace TestLSAnalyzer.ViewModels
 
             Assert.Equal(2, wb.Worksheets.Count);
             Assert.Equal("Linear regression", (string)wb.Worksheet("Meta").Cell("B1").Value);
-            Assert.Equal("Variables with labels:", (string)wb.Worksheet("Meta").Cell("A7").Value);
-            Assert.Equal("what ever?", (string)wb.Worksheet("Meta").Cell("B8").Value);
+            Assert.Equal("Variables with labels:", (string)wb.Worksheet("Meta").Cell("A8").Value);
+            Assert.Equal("what ever?", (string)wb.Worksheet("Meta").Cell("B9").Value);
         }
         
         [Fact]

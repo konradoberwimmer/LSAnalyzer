@@ -23,7 +23,7 @@ namespace TestLSAnalyzer.Models
         public static IEnumerable<object[]> MetaInformationTestCases =>
             new List<object[]>
             {
-                new object[] { new AnalysisUnivar(new()), new Dictionary<string, object?>() { { "Analysis:", "Univariate" }, { "Dependent variable:", null }, { "Type of percentiles:", null }, { "Mode:", "Build BIFIEdata object for analyses" }, } },
+                new object[] { new AnalysisUnivar(new AnalysisConfiguration { DatasetType = new DatasetType { Weight = "myWgt" } }), new Dictionary<string, object?>() { { "Analysis:", "Univariate" }, { "Dependent variable:", null }, { "Type of percentiles:", null }, { "Weight:", "myWgt" }, { "Mode:", "Build BIFIEdata object for analyses" }, } },
                 new object[] { new AnalysisLinreg(new()) { Dependent = new(1, "y", false) }, new Dictionary<string, object?>() { { "Analysis:", "Linear regression" }, { "Dependent variable:", "y" }, } },
                 new object[] { new AnalysisPercentiles(new()) { CalculateSE = true, MimicIdbAnalyzer = true }, new Dictionary<string, object?>() { { "Analysis:", "Percentiles" }, { "Type of percentiles:", "With standard errors and with interpolation (mimic BIFIE.ecdf, quanttype = 1)" }, } },
             };
