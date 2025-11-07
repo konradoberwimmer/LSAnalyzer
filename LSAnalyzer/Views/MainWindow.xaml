@@ -113,7 +113,7 @@
                 <ColumnDefinition/>
                 <ColumnDefinition Width="200"/>
             </Grid.ColumnDefinitions>
-            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Visible">
                 <ItemsControl x:Name="itemsControlAnalysesFull" ItemsSource="{Binding Analyses}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -146,6 +146,7 @@
                     </Border>
                 </ScrollViewer>
             </Grid>
+            <GridSplitter Grid.Column="0" VerticalAlignment="Stretch" Width="1"/>
         </Grid>
     </DockPanel>
 </Window>
