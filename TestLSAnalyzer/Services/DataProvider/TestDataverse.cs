@@ -113,6 +113,14 @@ namespace TestLSAnalyzer.Services.DataProvider
 
             Assert.True(result.IsSuccess, "dataverse access (https://data.aussda.at/) not working - be sure to set up an API key in your user secrets");
             Assert.Contains("works", result.Message);
+            
+            fileAccessValues.File = "10715_vi_de_v1_0.tab ";
+            fileAccessValues.Dataset = " doi:10.11587/5ZCVJY ";
+            fileAccessValues.FileFormat = "tsv";
+            result = dataverseService.TestFileAccess(fileAccessValues);
+
+            Assert.True(result.IsSuccess, "dataverse access (https://data.aussda.at/) not working - be sure to set up an API key in your user secrets");
+            Assert.Contains("works", result.Message);
         }
 
         [Fact]

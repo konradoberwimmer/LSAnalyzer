@@ -29,6 +29,11 @@ public class TestDataverse
         dataverse.Dataset = "doi:99.99999/ABCDEFGHI";
         
         Assert.Equal("""{"File":"test.tab","Dataset":"doi:99.99999/ABCDEFGHI"}""", dataverse.SerializeFileInformation());
+        
+        dataverse.File = "test.tab ";
+        dataverse.Dataset = " doi:99.99999/ABCDEFGHI ";
+        
+        Assert.Equal("""{"File":"test.tab","Dataset":"doi:99.99999/ABCDEFGHI"}""", dataverse.SerializeFileInformation());
     }
 
     [Fact]
