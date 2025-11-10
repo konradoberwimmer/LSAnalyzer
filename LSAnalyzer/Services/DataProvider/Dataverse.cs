@@ -98,15 +98,15 @@ namespace LSAnalyzer.Services.DataProvider
             {
                 success = success && _rservice.Execute($$"""
                     {{objectName}} <- as.data.frame(dataverse::get_dataframe_by_name(
-                        filename = "{{fileName}}",
-                        dataset = "{{dataset}}",
+                        filename = "{{fileName.Trim()}}",
+                        dataset = "{{dataset.Trim()}}",
                         original = FALSE))
                     """);
             } else if (format == "spss") {
                 success = success && _rservice.Execute($$"""
                     {{objectName}} <- as.data.frame(dataverse::get_dataframe_by_name(
-                        filename = "{{fileName}}",
-                        dataset = "{{dataset}}",
+                        filename = "{{fileName.Trim()}}",
+                        dataset = "{{dataset.Trim()}}",
                         .f = function(file) { return(foreign::read.spss(file, use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)) },
                         original = TRUE))
                     """);
