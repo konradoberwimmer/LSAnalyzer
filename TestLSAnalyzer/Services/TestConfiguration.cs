@@ -263,7 +263,7 @@ public class TestConfiguration
         Assert.True(rf1.IsEqualFile(rf2));
         Assert.False(rf1.IsEqualFile(rf3));
         
-        Assert.Equal("C:\\meine_Daten.csv (wgt)", rf1.DisplayString);
+        Assert.Equal("meine_Daten.csv - C:\\ (wgt)", rf1.DisplayString);
 
         rf1.FormatFileName = f => "File: " + f;
         

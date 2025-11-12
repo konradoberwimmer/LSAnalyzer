@@ -20,6 +20,7 @@
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisConverter"/>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <converter:EmptyEnumerableToVisibilityCollapsed x:Key="EmptyEnumerableToVisibilityCollapsedConverter"/>
+        <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
         <converter:NullToBool x:Key="NullToBoolConverter"/>
         <converter:NullToVisibilityCollapsed x:Key="NullToVisibilityCollapsedConverter"/>
@@ -82,7 +83,7 @@
             <StatusBarItem Grid.Column="0">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="File: "/>
-                    <TextBlock x:Name="textBlockAnalysisDatasetFile" Text="{Binding AnalysisConfiguration.FileName}"/>
+                    <TextBlock x:Name="textBlockAnalysisDatasetFile" Text="{Binding AnalysisConfiguration.FileName, Converter={StaticResource LeftSideFileNameConverter}}"/>
                 </StackPanel>
             </StatusBarItem>
             <Separator Grid.Column="1"/>

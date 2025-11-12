@@ -29,7 +29,9 @@
             <ColumnDefinition Width="auto"/>
         </Grid.ColumnDefinitions>
         <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,10">Recent:</TextBlock>
-        <ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,10" ItemsSource="{Binding RecentFilesForAnalyses}" DisplayMemberPath="DisplayString" SelectedItem="{Binding SelectedRecentFileForAnalysis, Mode=OneWayToSource}"/>
+        <Border x:Name="borderComboBoxRecentFilesForAnalyses" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,10">
+            <ComboBox ItemsSource="{Binding RecentFilesForAnalyses}" DisplayMemberPath="DisplayString" SelectedItem="{Binding SelectedRecentFileForAnalysis, Mode=OneWayToSource}" MaxWidth="{Binding ElementName=borderComboBoxRecentFilesForAnalyses, Path=ActualWidth}"/>
+        </Border>
         <TextBlock Grid.Row="1" Grid.Column="0" Text="Filename:" VerticalAlignment="Center" Margin="0,0,10,10"/>
         <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Height="22" Margin="0,0,0,10" Text="{Binding File, UpdateSourceTrigger=PropertyChanged}"/>
         <TextBlock Grid.Row="2" Grid.Column="0" Text="Dataset:" VerticalAlignment="Center" Margin="0,0,10,10"/>
