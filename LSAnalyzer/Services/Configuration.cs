@@ -4,12 +4,14 @@ using Microsoft.Extensions.Configuration.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using LSAnalyzer.ViewModels.ValueConverter;
 
 namespace LSAnalyzer.Services;
 
@@ -424,6 +426,8 @@ public class Configuration
 
     public class RecentFileForAnalysis
     {
+        protected static LeftSideFileName _leftSideFileNameConverter = new();
+        
         public string FileName { get; set; } = string.Empty;
         
         public Dictionary<string, object> UsageAttributes { get; set; } = new();
@@ -440,7 +444,7 @@ public class Configuration
             FileName == other.FileName && DatasetTypeId == other.DatasetTypeId && Weight == other.Weight;
 
         [JsonIgnore]
-        public Func<string, string> FormatFileName { get; set; } = fileName => fileName;
+        public Func<string, string> FormatFileName { get; set; } = fileName => (_leftSideFileNameConverter.Convert(fileName, typeof(string), null, CultureInfo.InvariantCulture) as string)!;
         
         [JsonIgnore]
         public string DisplayString => $"{FormatFileName(FileName)} ({Weight})";
