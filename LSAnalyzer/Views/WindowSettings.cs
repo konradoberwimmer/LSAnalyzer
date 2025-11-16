@@ -9,6 +9,8 @@ public class WindowSettings
         { "Univar", (width: 800, height: 600) },
         { "Freq", (width: 800, height: 600) },
         { "Percentiles", (width: 800, height: 600) },
+        { "MeanDiff", (width: 800, height: 600) },
+        { "Corr" , (width: 800, height: 600) },
     };
 
     public static int WidthUnivar
@@ -74,6 +76,50 @@ public class WindowSettings
             var currentSettings = _settings["Percentiles"];
             currentSettings.height = value;
             _settings["Percentiles"] = currentSettings;
+        }
+    }
+    
+    public static int WidthMeanDiff
+    {
+        get => _settings["MeanDiff"].width;
+        set
+        {
+            var currentSettings = _settings["MeanDiff"];
+            currentSettings.width = value;
+            _settings["MeanDiff"] = currentSettings;
+        }
+    }
+    
+    public static int HeightMeanDiff
+    {
+        get => _settings["MeanDiff"].height;
+        set
+        {
+            var currentSettings = _settings["MeanDiff"];
+            currentSettings.height = value;
+            _settings["MeanDiff"] = currentSettings;
+        }
+    }
+
+    public static int WidthCorr
+    {
+        get => _settings["Corr"].width;
+        set
+        {
+            var currentSettings = _settings["Corr"];
+            currentSettings.width = value;
+            _settings["Corr"] = currentSettings;
+        }
+    }
+
+    public static int HeightCorr
+    {
+        get => _settings["Corr"].height;
+        set
+        {
+            var currentSettings = _settings["Corr"];
+            currentSettings.height = value;
+            _settings["Corr"] = currentSettings;
         }
     }
 }
