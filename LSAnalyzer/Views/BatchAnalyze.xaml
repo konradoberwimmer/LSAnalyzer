@@ -10,14 +10,21 @@
         d:DataContext="{d:DesignInstance Type=ViewModels:BatchAnalyze, IsDesignTimeCreatable=True}"
         x:Name="windowBatchAnalyze"
         Closing="Window_Closing"
-        Title="Batch analyze" Height="auto" MinHeight="450" Width="auto" MinWidth="665" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight">
+        Title="Batch analyze" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
         <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
         <Style x:Key="wordWrapStyle" TargetType="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
+        <local:WindowSettings x:Key="WindowSettings"/>
     </Window.Resources>
+    <Window.Width>
+        <Binding Source="{StaticResource WindowSettings}" Path="WidthBatchAnalyze" Mode="TwoWay"/>
+    </Window.Width>
+    <Window.Height>
+        <Binding Source="{StaticResource WindowSettings}" Path="HeightBatchAnalyze" Mode="TwoWay"/>
+    </Window.Height>
     <Window.IsEnabled>
         <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
     </Window.IsEnabled>

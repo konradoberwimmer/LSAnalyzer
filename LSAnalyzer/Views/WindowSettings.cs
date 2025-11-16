@@ -13,6 +13,8 @@ public class WindowSettings
         { "Corr" , (width: 800, height: 600) },
         { "Linreg", (width: 800, height: 600) },
         { "LogistReg", (width: 800, height: 600) },
+        { "BatchAnalyze", (width: 800, height: 600) },
+        { "Subsetting", (width: 800, height: 450) },
     };
 
     public static int WidthUnivar
@@ -166,6 +168,50 @@ public class WindowSettings
             var currentSettings = _settings["LogistReg"];
             currentSettings.height = value;
             _settings["LogistReg"] = currentSettings;
+        }
+    }
+
+    public static int WidthBatchAnalyze
+    {
+        get => _settings["BatchAnalyze"].width;
+        set
+        {
+            var currentSettings = _settings["BatchAnalyze"];
+            currentSettings.width = value;
+            _settings["BatchAnalyze"] = currentSettings;
+        }
+    }
+    
+    public static int HeightBatchAnalyze 
+    {
+        get => _settings["BatchAnalyze"].height;
+        set
+        {
+            var currentSettings = _settings["BatchAnalyze"];
+            currentSettings.height = value;
+            _settings["BatchAnalyze"] = currentSettings;
+        }
+    }
+    
+    public static int WidthSubsetting
+    {
+        get => _settings["Subsetting"].width;
+        set
+        {
+            var currentSettings = _settings["Subsetting"];
+            currentSettings.width = value;
+            _settings["Subsetting"] = currentSettings;
+        }
+    }
+    
+    public static int HeightSubsetting
+    {
+        get => _settings["Subsetting"].height;
+        set
+        {
+            var currentSettings = _settings["Subsetting"];
+            currentSettings.height = value;
+            _settings["Subsetting"] = currentSettings;
         }
     }
 }
