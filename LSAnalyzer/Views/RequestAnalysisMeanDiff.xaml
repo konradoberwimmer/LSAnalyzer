@@ -9,19 +9,27 @@
         xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
         x:Name="windowRequestAnalysisMeanDiff"
         mc:Ignorable="d"
-        Title="Mean differences" Height="450" MinHeight="450" Width="800" MinWidth="800" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight">
+        Title="Mean differences" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen">
     <Window.DataContext>
         <ViewModels:RequestAnalysis/>
     </Window.DataContext>
     <Window.Resources>
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisModeConverter"/>
         <converter:BooleanAnd x:Key="BooleanAndConverter"/>
+        <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
         <CollectionViewSource x:Key="AvailableVariablesCollectionView" Source="{Binding AvailableVariables}" Filter="AvailableVariablesCollectionView_FilterSystemVariables">
             <CollectionViewSource.SortDescriptions>
                 <componentmodel:SortDescription PropertyName="Position" Direction="Ascending"/>
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
+        <local:WindowSettings x:Key="WindowSettings"/>
     </Window.Resources>
+    <Window.Width>
+        <Binding Source="{StaticResource WindowSettings}" Path="WidthMeanDiff" Mode="TwoWay"/>
+    </Window.Width>
+    <Window.Height>
+        <Binding Source="{StaticResource WindowSettings}" Path="HeightMeanDiff" Mode="TwoWay"/>
+    </Window.Height>
     <Grid>
         <Grid.ContextMenu>
             <ContextMenu>
@@ -39,7 +47,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Content="File:" Margin="10,10,0,0"/>
-            <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.FileName, FallbackValue=FileName}" Margin="10,15,10,-5"/>
+            <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.FileName, FallbackValue=FileName, Converter={StaticResource LeftSideFileNameConverter}}" Margin="10,15,10,-5"/>
             <Label Grid.Column="0" Content="Dataset Type:" Margin="10,27,0,0"/>
             <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.DatasetType.Name, FallbackValue=DatasetTypeName}" Margin="10,32,10,-5"/>
             <Label Grid.Column="0" Content="Mode:" Margin="10,44,0,0"/>

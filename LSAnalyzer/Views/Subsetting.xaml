@@ -8,7 +8,7 @@
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
-        mc:Ignorable="d" x:Name="windowSubsetting" Title="Subsetting" Height="450" MinHeight="450" Width="800" MinWidth="800" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen">
+        mc:Ignorable="d" x:Name="windowSubsetting" Title="Subsetting" MinHeight="450" MinWidth="800" WindowStartupLocation="CenterScreen">
     <Window.DataContext>
         <ViewModels:Subsetting/>
     </Window.DataContext>
@@ -17,12 +17,20 @@
         <converter:BoolToRedGreen x:Key="BoolToRedGreenConverter"/>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
+        <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
         <CollectionViewSource x:Key="AvailableVariablesCollectionView" Source="{Binding AvailableVariables}" Filter="AvailableVariablesCollectionView_FilterSystemVariables">
             <CollectionViewSource.SortDescriptions>
                 <componentmodel:SortDescription PropertyName="Position" Direction="Ascending"/>
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
+        <local:WindowSettings x:Key="WindowSettings"/>
     </Window.Resources>
+    <Window.Width>
+        <Binding Source="{StaticResource WindowSettings}" Path="WidthSubsetting" Mode="TwoWay"/>
+    </Window.Width>
+    <Window.Height>
+        <Binding Source="{StaticResource WindowSettings}" Path="HeightSubsetting" Mode="TwoWay"/>
+    </Window.Height>
     <Window.IsEnabled>
         <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
     </Window.IsEnabled>
@@ -38,7 +46,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Content="File:" Margin="10,10,0,0"/>
-            <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.FileName, FallbackValue=FileName}" Margin="10,15,10,-5"/>
+            <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.FileName, FallbackValue=FileName, Converter={StaticResource LeftSideFileNameConverter}}" Margin="10,15,10,-5"/>
             <Label Grid.Column="0" Content="Dataset Type:" Margin="10,27,0,0"/>
             <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.DatasetType.Name, FallbackValue=DatasetTypeName}" Margin="10,32,10,-5"/>
             <Label Grid.Column="0" Content="Mode:" Margin="10,44,0,0"/>
