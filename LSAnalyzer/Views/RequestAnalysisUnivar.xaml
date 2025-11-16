@@ -9,7 +9,7 @@
         xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
         x:Name="windowRequestAnalysisUnivar"
         mc:Ignorable="d"
-        Title="Univariate statistics" Height="450" MinHeight="450" Width="800" MinWidth="800" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight">
+        Title="Univariate statistics" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen">
     <Window.DataContext>
         <ViewModels:RequestAnalysis/>
     </Window.DataContext>
@@ -20,7 +20,14 @@
                 <componentmodel:SortDescription PropertyName="Position" Direction="Ascending"/>
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
+        <local:WindowSettings x:Key="WindowSettings"/>
     </Window.Resources>
+    <Window.Width>
+        <Binding Source="{StaticResource WindowSettings}" Path="WidthUnivar" Mode="TwoWay"/>
+    </Window.Width>
+    <Window.Height>
+        <Binding Source="{StaticResource WindowSettings}" Path="HeightUnivar" Mode="TwoWay"/>
+    </Window.Height>
     <Grid>
         <Grid.ContextMenu>
             <ContextMenu>
@@ -56,8 +63,8 @@
             <CheckBox x:Name="checkBoxIncludeSystemVariables" Grid.Column="0" Margin="10,0,10,0" VerticalAlignment="Bottom" IsChecked="False" Content="Include system variables (weights, ...)" Checked="CheckBoxIncludeSystemVariables_Checked" Unchecked="CheckBoxIncludeSystemVariables_Checked"/>
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="66*"/>
-                    <RowDefinition Height="34*"/>
+                    <RowDefinition Height="50*"/>
+                    <RowDefinition Height="50*"/>
                 </Grid.RowDefinitions>
                 <Label Grid.Row="0" Content="Analyze:" Margin="10,0,10,0"/>
                 <Grid Grid.Row="0" Margin="0,27,0,0">
