@@ -15,6 +15,7 @@
     </Window.DataContext>
     <Window.Resources>
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisModeConverter"/>
+        <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
         <CollectionViewSource x:Key="AvailableVariablesCollectionView" Source="{Binding AvailableVariables}" Filter="AvailableVariablesCollectionView_FilterSystemVariables">
             <CollectionViewSource.SortDescriptions>
                 <componentmodel:SortDescription PropertyName="Position" Direction="Ascending"/>
@@ -45,7 +46,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Content="File:" Margin="10,10,0,0"/>
-            <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.FileName, FallbackValue=FileName}" Margin="10,15,10,-5"/>
+            <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.FileName, FallbackValue=FileName, Converter={StaticResource LeftSideFileNameConverter}}" Margin="10,15,10,-5"/>
             <Label Grid.Column="0" Content="Dataset Type:" Margin="10,27,0,0"/>
             <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.DatasetType.Name, FallbackValue=DatasetTypeName}" Margin="10,32,10,-5"/>
             <Label Grid.Column="0" Content="Mode:" Margin="10,44,0,0"/>
