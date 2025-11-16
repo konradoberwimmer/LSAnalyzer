@@ -9,7 +9,7 @@
         xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
         x:Name="windowRequestAnalysisLogistReg"
         mc:Ignorable="d"
-        Title="Logistic Regression" Height="550" MinHeight="550" Width="800" MinWidth="800" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight">
+        Title="Logistic Regression" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen">
     <Window.DataContext>
         <ViewModels:RequestAnalysis/>
     </Window.DataContext>
@@ -19,13 +19,21 @@
         <converter:EmptyVariableCollection x:Key="EmptyVariableCollectionConverter"/>
         <converter:EnumToBoolean x:Key="EnumToBooleanConverter"/>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
+        <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <CollectionViewSource x:Key="AvailableVariablesCollectionView" Source="{Binding AvailableVariables}" Filter="AvailableVariablesCollectionView_FilterSystemVariables">
             <CollectionViewSource.SortDescriptions>
                 <componentmodel:SortDescription PropertyName="Position" Direction="Ascending"/>
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
+        <local:WindowSettings x:Key="WindowSettings"/>
     </Window.Resources>
+    <Window.Width>
+        <Binding Source="{StaticResource WindowSettings}" Path="WidthLogistReg" Mode="TwoWay"/>
+    </Window.Width>
+    <Window.Height>
+        <Binding Source="{StaticResource WindowSettings}" Path="HeightLogistReg" Mode="TwoWay"/>
+    </Window.Height>
     <Grid>
         <Grid.ContextMenu>
             <ContextMenu>
@@ -44,7 +52,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Content="File:" Margin="10,10,0,0"/>
-            <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.FileName, FallbackValue=FileName}" Margin="10,15,10,-5"/>
+            <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.FileName, FallbackValue=FileName, Converter={StaticResource LeftSideFileNameConverter}}" Margin="10,15,10,-5"/>
             <Label Grid.Column="0" Content="Dataset Type:" Margin="10,27,0,0"/>
             <TextBlock Grid.Column="1" Text="{Binding AnalysisConfiguration.DatasetType.Name, FallbackValue=DatasetTypeName}" Margin="10,32,10,-5"/>
             <Label Grid.Column="0" Content="Mode:" Margin="10,44,0,0"/>
@@ -75,10 +83,10 @@
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
-                    <RowDefinition Height="66*"/>
-                    <RowDefinition Height="34*"/>
+                    <RowDefinition Height="50*"/>
+                    <RowDefinition Height="50*"/>
                 </Grid.RowDefinitions>
-                <StackPanel Grid.Row="0" Margin="10,0,10,0" Orientation="Horizontal">
+                <StackPanel Grid.Row="0" Margin="15,5,10,0" Orientation="Horizontal">
                     <TextBlock Text="Dependent variable:"/>
                     <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="Beware that BIFIEsurvey calculates meaningful coefficients only for dichotomous, 0/1-coded dependent variables." VerticalAlignment="Top"/>
                 </StackPanel>

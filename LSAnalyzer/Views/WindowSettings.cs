@@ -11,6 +11,8 @@ public class WindowSettings
         { "Percentiles", (width: 800, height: 600) },
         { "MeanDiff", (width: 800, height: 600) },
         { "Corr" , (width: 800, height: 600) },
+        { "Linreg", (width: 800, height: 600) },
+        { "LogistReg", (width: 800, height: 600) },
     };
 
     public static int WidthUnivar
@@ -120,6 +122,50 @@ public class WindowSettings
             var currentSettings = _settings["Corr"];
             currentSettings.height = value;
             _settings["Corr"] = currentSettings;
+        }
+    }
+
+    public static int WidthLinreg
+    {
+        get => _settings["Linreg"].width;
+        set
+        {
+            var currentSettings = _settings["Linreg"];
+            currentSettings.width = value;
+            _settings["Linreg"] = currentSettings;
+        }
+    }
+
+    public static int HeightLinreg
+    {
+        get => _settings["Linreg"].height;
+        set
+        {
+            var currentSettings = _settings["Linreg"];
+            currentSettings.height = value;
+            _settings["Linreg"] = currentSettings;
+        }
+    }
+    
+    public static int WidthLogistReg
+    {
+        get => _settings["LogistReg"].width;
+        set
+        {
+            var currentSettings = _settings["LogistReg"];
+            currentSettings.width = value;
+            _settings["LogistReg"] = currentSettings;
+        }
+    }
+    
+    public static int HeightLogistReg
+    {
+        get => _settings["LogistReg"].height;
+        set
+        {
+            var currentSettings = _settings["LogistReg"];
+            currentSettings.height = value;
+            _settings["LogistReg"] = currentSettings;
         }
     }
 }
