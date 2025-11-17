@@ -33,10 +33,5 @@ namespace LSAnalyzer.Views
         {
             return Type.GetType("LSAnalyzer.Models.AnalysisUnivar")!;
         }
-
-        private void listBoxVariablesDataset_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-
-        }
     }
 }

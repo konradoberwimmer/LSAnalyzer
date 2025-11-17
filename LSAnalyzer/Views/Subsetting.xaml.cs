@@ -69,5 +69,10 @@ namespace LSAnalyzer.Views
             
             comboBox.SelectedItem = null;
         }
+
+        private void ListBoxVariables_OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+        }
     }
 }
