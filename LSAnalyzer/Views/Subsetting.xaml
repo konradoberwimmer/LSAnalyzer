@@ -18,11 +18,7 @@
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
         <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
-        <CollectionViewSource x:Key="AvailableVariablesCollectionView" Source="{Binding AvailableVariables}" Filter="AvailableVariablesCollectionView_FilterSystemVariables">
-            <CollectionViewSource.SortDescriptions>
-                <componentmodel:SortDescription PropertyName="Position" Direction="Ascending"/>
-            </CollectionViewSource.SortDescriptions>
-        </CollectionViewSource>
+        <CollectionViewSource x:Key="AvailableVariablesCollectionView" Source="{Binding AvailableVariables}" Filter="AvailableVariablesCollectionView_FilterSystemVariables"/>
         <local:WindowSettings x:Key="WindowSettings"/>
     </Window.Resources>
     <Window.Width>
@@ -35,6 +31,11 @@
         <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
     </Window.IsEnabled>
     <Grid>
+        <Grid.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="Sort alphabetically" IsCheckable="True" IsChecked="{Binding SortAlphabetically}"/>
+            </ContextMenu>
+        </Grid.ContextMenu>
         <Grid.RowDefinitions>
             <RowDefinition Height="82"/>
             <RowDefinition/>
@@ -63,7 +64,7 @@
             </Grid.ColumnDefinitions>
             <Label Grid.Row="0" Grid.Column="0" Content="Variables in dataset:" Margin="10,0,0,0"/>
             <Border x:Name="HeightHelperPanelVariablesDataset" Grid.Row="0" Grid.Column="0" Margin="10,27,10,5">
-                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDataset}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Name" SelectionMode="Single" MouseDoubleClick="ListBoxVariablesDataset_MouseDoubleClick" ScrollViewer.CanContentScroll="False"/>
+                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDataset}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Name" SelectionMode="Single" MouseDoubleClick="ListBoxVariablesDataset_MouseDoubleClick" ScrollViewer.CanContentScroll="False" PreviewMouseRightButtonDown="ListBoxVariables_OnPreviewMouseRightButtonDown"/>
             </Border>
             <CheckBox Grid.Row="1" Grid.Column="0" Margin="10,0,10,0" VerticalAlignment="Bottom" IsChecked="False" Content="Include system variables (weights, ...)" Checked="CheckBoxIncludeSystemVariables_Checked" Unchecked="CheckBoxIncludeSystemVariables_Checked"/>
             <Grid Grid.Row="0" Grid.Column="1" Margin="0,0,10,0">

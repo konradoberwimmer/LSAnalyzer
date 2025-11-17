@@ -65,6 +65,24 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
             NotifyPropertyChanged(nameof(AvailableVariables));
         }
     }
+    
+    private bool _sortAlphabetically = false;
+    public bool SortAlphabetically
+    {
+        get => _sortAlphabetically;
+        set
+        {
+            if (value != _sortAlphabetically)
+            {
+                AvailableVariables = value ? 
+                    new ObservableCollection<Variable>(AvailableVariables.OrderBy(v => v.Name)) : 
+                    new ObservableCollection<Variable>(AvailableVariables.OrderBy(v => v.Position));
+            }
+            
+            _sortAlphabetically = value;
+            NotifyPropertyChanged();
+        }
+    }
 
     private bool _isCurrentlySubsetting = false;
     public bool IsCurrentlySubsetting
