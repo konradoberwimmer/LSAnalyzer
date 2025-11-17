@@ -149,5 +149,10 @@ namespace LSAnalyzer.Views
                 SelectedTo = listBoxVariablesDependent.SelectedItems.Cast<Variable>().ToList(),
             };
         }
+        
+        internal void ListBoxVariables_OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+        }
     }
 }
