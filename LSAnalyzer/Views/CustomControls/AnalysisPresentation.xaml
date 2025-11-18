@@ -29,7 +29,7 @@
                         <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="{Binding Analysis.ShortInfo}" FontWeight="Bold"/>
-                    <Button x:Name="buttonRemoveAnalysis" Grid.Column="1" HorizontalAlignment="Right" Height="22" ContentTemplate="{StaticResource Trash}" Command="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.RemoveAnalysisCommand}" CommandParameter="{Binding Mode=OneTime}"/>
+                    <Button x:Name="buttonRemoveAnalysis" Grid.Column="1" HorizontalAlignment="Right" Height="22" ContentTemplate="{StaticResource Trash}" Click="ButtonRemoveAnalysis_OnClick"/>
                 </Grid>
             </Expander.Header>
             <StackPanel Orientation="Vertical" Margin="10,10,10,10">

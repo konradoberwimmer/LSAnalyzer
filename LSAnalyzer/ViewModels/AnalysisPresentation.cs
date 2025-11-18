@@ -27,6 +27,7 @@ namespace LSAnalyzer.ViewModels
     public partial class AnalysisPresentation : INotifyPropertyChanged
     {
         protected MainWindow? _mainWindowViewModel = null;
+        public MainWindow MainWindowViewModel => _mainWindowViewModel!;
 
         private IResultService? _resultService;
         public IResultService ResultService
