@@ -15,6 +15,7 @@
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <converter:EmptyEnumerableToVisibilityCollapsed x:Key="EmptyEnumerableToVisibilityCollapsedConverter"/>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
+        <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
         <converter:NullToBool x:Key="NullToBoolConverter"/>
         <converter:NullToVisibilityCollapsed x:Key="NullToVisibilityCollapsedConverter"/>
         <converter:VariablesToString x:Key="VariablesToStringConverter"/>
@@ -46,7 +47,7 @@
                         <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="File:"/>
-                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Analysis.AnalysisConfiguration.FileName}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Analysis.AnalysisConfiguration.FileName, Converter={StaticResource LeftSideFileNameConverter}}"/>
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Subset:" Visibility="{Binding Analysis.SubsettingExpression, Converter={StaticResource NullToVisibilityCollapsedConverter}}"/>
                     <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Analysis.SubsettingExpression}" Visibility="{Binding Analysis.SubsettingExpression, Converter={StaticResource NullToVisibilityCollapsedConverter}}"/>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Dataset Type:"/>

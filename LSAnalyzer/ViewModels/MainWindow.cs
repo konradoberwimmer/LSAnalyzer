@@ -343,6 +343,21 @@ namespace LSAnalyzer.ViewModels
 
             File.WriteAllText(fileName, JsonSerializer.Serialize(Analyses.Select(analysisPresentation => analysisPresentation.Analysis).ToArray()));
         }
+        
+        private RelayCommand<object?> _removeAllAnalysesCommand;
+        public ICommand RemoveAllAnalysesCommand
+        {
+            get
+            {
+                _removeAllAnalysesCommand ??= new RelayCommand<object?>(RemoveAllAnalysis);
+                return _removeAllAnalysesCommand;
+            }
+        }
+
+        private void RemoveAllAnalysis(object? dummy)
+        {
+            Analyses.Clear();
+        }
     }
 
     internal class FailureWithAnalysisCalculationMessage : ValueChangedMessage<Analysis>

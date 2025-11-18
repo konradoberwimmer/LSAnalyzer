@@ -62,8 +62,8 @@
             <Rectangle Width="16 " Height="16">
                 <Rectangle.Resources>
                     <SolidColorBrush x:Key="canvas" Opacity="0" />
-                    <SolidColorBrush x:Key="light-defaultgrey-10" Color="#212121" Opacity="0.1" />
-                    <SolidColorBrush x:Key="light-defaultgrey" Color="#212121" Opacity="1" />
+                    <SolidColorBrush x:Key="light-defaultgrey-10" Color="#AA0000" Opacity="0.1" />
+                    <SolidColorBrush x:Key="light-defaultgrey" Color="#AA0000" Opacity="1" />
                     <System:Double x:Key="cls-1">0.75</System:Double>
                 </Rectangle.Resources>
                 <Rectangle.Fill>
