@@ -115,5 +115,28 @@ namespace LSAnalyzer.Views.CustomControls
                 parent = VisualTreeHelper.GetParent(parent);
             } while (parent != null);
         }
+
+        private void ButtonRemoveAnalysis_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.AnalysisPresentation analysisPresentationViewModel)
+            {
+                return;
+            }
+
+            if (Properties.Settings.Default.confirmRemovingAnalysis)
+            {
+                var confirmation = MessageBox.Show(
+                    $"""Do you want to remove analysis "{analysisPresentationViewModel.Analysis.ShortInfo}"?""",
+                    "Confirm removal",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                if (confirmation == MessageBoxResult.No)
+                {
+                    return;
+                }
+            }
+
+            analysisPresentationViewModel.MainWindowViewModel.RemoveAnalysisCommand.Execute(analysisPresentationViewModel);
+        }
     }
 }

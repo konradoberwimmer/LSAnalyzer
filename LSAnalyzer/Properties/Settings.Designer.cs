@@ -105,5 +105,17 @@ namespace LSAnalyzer.Properties {
                 this["showLabelsDefault"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool confirmRemovingAnalysis {
+            get {
+                return ((bool)(this["confirmRemovingAnalysis"]));
+            }
+            set {
+                this["confirmRemovingAnalysis"] = value;
+            }
+        }
     }
 }

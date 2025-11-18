@@ -32,6 +32,14 @@ namespace LSAnalyzer.ViewModels
             OnPropertyChanged(nameof(IsChanged));
         }
         private bool _storedShowLabelsDefault = Properties.Settings.Default.showLabelsDefault;
+
+        [ObservableProperty]
+        private bool _confirmRemovingAnalysis = Properties.Settings.Default.confirmRemovingAnalysis;
+        partial void OnConfirmRemovingAnalysisChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
+        private bool _storedConfirmRemovingAnalysis = Properties.Settings.Default.confirmRemovingAnalysis;
         
         [Range(0, int.MaxValue)]
         [ObservableProperty]
@@ -116,6 +124,7 @@ namespace LSAnalyzer.ViewModels
             }
 
             Properties.Settings.Default.showLabelsDefault = ShowLabelsDefault;
+            Properties.Settings.Default.confirmRemovingAnalysis = ConfirmRemovingAnalysis;
             Properties.Settings.Default.numberRecentFiles = NumberRecentFiles;
             Properties.Settings.Default.numberRecentSubsettingExpressions = NumberRecentSubsettingExpressions;
             Properties.Settings.Default.Save();
@@ -174,6 +183,7 @@ namespace LSAnalyzer.ViewModels
         public void AcceptChanges()
         {
             _storedShowLabelsDefault = ShowLabelsDefault;
+            _storedConfirmRemovingAnalysis = ConfirmRemovingAnalysis;
             _storedNumberRecentFiles = NumberRecentFiles;
             _storedNumberRecentSubsettingExpressions = NumberRecentSubsettingExpressions;
             OnPropertyChanged(nameof(IsChanged));
@@ -181,6 +191,7 @@ namespace LSAnalyzer.ViewModels
 
         public bool IsChanged => 
             ShowLabelsDefault != _storedShowLabelsDefault ||
+            ConfirmRemovingAnalysis != _storedConfirmRemovingAnalysis ||
             NumberRecentSubsettingExpressions != _storedNumberRecentSubsettingExpressions ||
             NumberRecentFiles != _storedNumberRecentFiles;
     }
