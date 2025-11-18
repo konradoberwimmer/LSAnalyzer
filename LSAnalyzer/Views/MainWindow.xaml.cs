@@ -296,5 +296,21 @@ namespace LSAnalyzer.Views
             DataProviders dataProvidersView = _serviceProvider.GetService<DataProviders>()!;
             dataProvidersView.ShowDialog();
         }
+
+        private void RemoveAllAnalyses_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.MainWindow mainWindowViewModel)
+            {
+                return;
+            }
+
+            var confirmation = MessageBox.Show("Do you want to remove all analyses from view?", "Confirm removal",
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (confirmation == MessageBoxResult.Yes)
+            {
+                mainWindowViewModel.RemoveAllAnalysesCommand.Execute(null);
+            }
+        }
     }
 }

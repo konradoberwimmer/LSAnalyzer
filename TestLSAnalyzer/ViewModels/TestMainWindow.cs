@@ -339,6 +339,20 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(File.Exists(tmpFile));
         }
 
+        [Fact]
+        public void TestRemoveAllAnalysesCommand()
+        {
+            Rservice rservice = new(new());
+            MainWindow mainWindowViewModel = new(rservice);
+            
+            mainWindowViewModel.Analyses.Add(new AnalysisPresentation());
+            mainWindowViewModel.Analyses.Add(new AnalysisPresentation());
+            
+            mainWindowViewModel.RemoveAllAnalysesCommand.Execute(null);
+            
+            Assert.Empty(mainWindowViewModel.Analyses);
+        }
+
         public static string AssemblyDirectory
         {
             get
