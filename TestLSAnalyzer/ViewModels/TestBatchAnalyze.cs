@@ -126,15 +126,19 @@ namespace TestLSAnalyzer.ViewModels
             batchAnalyzeViewModel.CurrentConfiguration =analysisConfiguration;
             
             var lastSuccessMessageSent = false;
+            List<BatchAnalyzeMessage> batchAnalyzeMessages = [];
             WeakReferenceMessenger.Default.Register<BatchAnalyzeMessage>(this, (_, m) =>
             {
-                if (m.Id == 4) lastSuccessMessageSent = true;
+                batchAnalyzeMessages.Add(m);
+                if (m.Id == 4 && m.Success) lastSuccessMessageSent = true;
             });
             
             batchAnalyzeViewModel.RunBatchCommand.Execute(null);
          
             Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
                 .Execute(() => Assert.True(lastSuccessMessageSent));
+            
+            Assert.Equal(4, batchAnalyzeMessages.Count(m => m.Success));
 
             int analysisReadyMessagesSent = 0;
             WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (r, m) =>
@@ -144,8 +148,7 @@ namespace TestLSAnalyzer.ViewModels
 
             batchAnalyzeViewModel.TransferResultsCommand.Execute(null);
 
-            Policy.Handle<EqualException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
-                .Execute(() => Assert.Equal(4, analysisReadyMessagesSent));
+            Assert.Equal(4, analysisReadyMessagesSent);
         }
 
         [Fact]
