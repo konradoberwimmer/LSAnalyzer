@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Media;
+using LSAnalyzer.ViewModels;
 
 namespace LSAnalyzer.Views.CustomControls
 {
@@ -18,6 +19,9 @@ namespace LSAnalyzer.Views.CustomControls
     /// </summary>
     public partial class AnalysisPresentation : UserControl
     {
+        public static ExportType? LastExportType { get; set; } = 
+            ViewModels.AnalysisPresentation.ExportTypes.First(t => t.Name == Properties.Settings.Default.defaultExportType);
+        
         public AnalysisPresentation()
         {
             InitializeComponent();
@@ -32,14 +36,19 @@ namespace LSAnalyzer.Views.CustomControls
             }
 
             SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "Excel File (*.xlsx)|*.xlsx";
+            saveFileDialog.Filter = string.Join("|", ViewModels.AnalysisPresentation.ExportTypes.Select(t => t.Filter));
+            saveFileDialog.FilterIndex = ViewModels.AnalysisPresentation.ExportTypes.FindIndex(t => t.Equals(LastExportType)) + 1;
             saveFileDialog.InitialDirectory = Properties.Settings.Default.lastResultOutFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            
             var wantsSave = saveFileDialog.ShowDialog(this.Parent as Window);
 
             if (wantsSave == true)
             {
+                LastExportType = ViewModels.AnalysisPresentation.ExportTypes[saveFileDialog.FilterIndex - 1];
+                
                 Properties.Settings.Default.lastResultOutFileLocation = Path.GetDirectoryName(saveFileDialog.FileName);
                 Properties.Settings.Default.Save();
+                
                 analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(saveFileDialog.FileName);
             }
         }
