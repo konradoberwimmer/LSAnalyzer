@@ -26,6 +26,14 @@ namespace LSAnalyzer.ViewModels
 {
     public partial class AnalysisPresentation : INotifyPropertyChanged
     {
+        public static List<ExportType> ExportTypes =>
+        [
+            new() { Name = "excelWithStyles", Filter = "Excel with styles (*.xlsx)|*.xlsx" },
+            new() { Name = "excelWithoutStyles", Filter = "Excel without styles (*.xlsx)|*.xlsx" },
+            new() { Name = "csvMultiple", Filter = "CSV: Multiple files (*.csv)|*.csv" },
+            new() { Name = "csvMainTable", Filter = "CSV: Main table only (*.csv)|*.csv" },
+        ];
+        
         protected MainWindow? _mainWindowViewModel = null;
         public MainWindow MainWindowViewModel => _mainWindowViewModel!;
 
@@ -1847,5 +1855,14 @@ namespace LSAnalyzer.ViewModels
         {
             public required string FileName { get; init; }
         }
+    }
+
+    public struct ExportType
+    {
+        public string Name { init; get; }
+        
+        public string Filter { init; get; }
+        
+        public string DisplayName => Filter[..Filter.IndexOf('|')];
     }
 }
