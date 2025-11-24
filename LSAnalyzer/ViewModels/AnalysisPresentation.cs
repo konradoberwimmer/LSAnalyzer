@@ -44,6 +44,13 @@ namespace LSAnalyzer.ViewModels
             set => _resultService ??= value;
         }
 
+        private IExportService? _exportService;
+        public IExportService ExportService
+        {
+            get => _exportService ??= (App.Current as App)?.ServiceProvider.GetService<IExportService>() ?? new ExportService();
+            set => _exportService ??= value;
+        }
+
         private Analysis _analysis;
         public Analysis Analysis
         {
@@ -1821,18 +1828,22 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            if (File.Exists(exportOptions.FileName))
+            var allFileNames = ExportService.AllFileNames(exportOptions, Analysis!);
+            foreach (var fileName in allFileNames)
             {
+                if (!File.Exists(fileName)) continue;
+                
                 try
                 {
-                    File.Delete(exportOptions.FileName);
+                    File.Delete(fileName);
                 }
                 catch (IOException)
                 {
-                    WeakReferenceMessenger.Default.Send(new FileInUseMessage { FileName = exportOptions.FileName });
+                    WeakReferenceMessenger.Default.Send(new FileInUseMessage { FileName = fileName });
                     return;
                 }
             }
+
             wb.SaveAs(exportOptions.FileName);
         }
 

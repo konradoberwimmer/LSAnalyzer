@@ -64,6 +64,7 @@ namespace LSAnalyzer
                 var userDatasetTypesConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");
                 return new Configuration(userDatasetTypesConfigFile, configurationBuilder); 
             });
+            services.AddSingleton<IExportService>(provider => new ExportService());
             services.AddTransient<IResultService>(provider => new ResultService());
             services.AddTransient<ConfigDatasetTypes>();
             services.AddTransient<DataProviders>();
