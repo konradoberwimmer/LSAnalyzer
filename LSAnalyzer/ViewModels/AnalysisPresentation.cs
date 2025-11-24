@@ -1691,20 +1691,20 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private RelayCommand<string?> _saveDataTableXlsxCommand;
+        private RelayCommand<ExportOptions> _saveDataTableXlsxCommand;
         public ICommand SaveDataTableXlsxCommand
         {
             get
             {
                 if (_saveDataTableXlsxCommand == null)
-                    _saveDataTableXlsxCommand = new RelayCommand<string?>(this.SaveDataTableXlsx);
+                    _saveDataTableXlsxCommand = new RelayCommand<ExportOptions>(this.SaveDataTableXlsx);
                 return _saveDataTableXlsxCommand;
             }
         }
 
-        private void SaveDataTableXlsx(string? filename)
+        private void SaveDataTableXlsx(ExportOptions exportOptions)
         {
-            if (filename == null || DataTable == null)
+            if (string.IsNullOrWhiteSpace(exportOptions.FileName) || DataTable == null)
             {
                 return;
             }
@@ -1821,19 +1821,19 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            if (File.Exists(filename))
+            if (File.Exists(exportOptions.FileName))
             {
                 try
                 {
-                    File.Delete(filename);
+                    File.Delete(exportOptions.FileName);
                 }
                 catch (IOException)
                 {
-                    WeakReferenceMessenger.Default.Send(new FileInUseMessage { FileName = filename });
+                    WeakReferenceMessenger.Default.Send(new FileInUseMessage { FileName = exportOptions.FileName });
                     return;
                 }
             }
-            wb.SaveAs(filename);
+            wb.SaveAs(exportOptions.FileName);
         }
 
         [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\sstandard\\serror)?$")]
@@ -1864,5 +1864,12 @@ namespace LSAnalyzer.ViewModels
         public string Filter { init; get; }
         
         public string DisplayName => Filter[..Filter.IndexOf('|')];
+    }
+
+    public struct ExportOptions
+    {
+        public string FileName { init; get; }
+        
+        public ExportType ExportType { init; get; }
     }
 }

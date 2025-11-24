@@ -19,7 +19,7 @@ namespace LSAnalyzer.Views.CustomControls
     /// </summary>
     public partial class AnalysisPresentation : UserControl
     {
-        public static ExportType? LastExportType { get; set; } = 
+        public static ExportType LastExportType { get; set; } = 
             ViewModels.AnalysisPresentation.ExportTypes.First(t => t.Name == Properties.Settings.Default.defaultExportType);
         
         public AnalysisPresentation()
@@ -49,7 +49,7 @@ namespace LSAnalyzer.Views.CustomControls
                 Properties.Settings.Default.lastResultOutFileLocation = Path.GetDirectoryName(saveFileDialog.FileName);
                 Properties.Settings.Default.Save();
                 
-                analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(saveFileDialog.FileName);
+                analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(new ExportOptions { FileName = saveFileDialog.FileName, ExportType = LastExportType });
             }
         }
         private void DataGrid_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
