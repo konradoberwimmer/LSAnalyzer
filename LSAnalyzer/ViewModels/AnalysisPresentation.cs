@@ -1721,58 +1721,9 @@ namespace LSAnalyzer.ViewModels
 
             wb.AddWorksheetDataTable(DataView.ToTable(DataView.Table?.TableName ?? Analysis.AnalysisName));
             
-            if (Analysis is AnalysisFreq analysisFreq)
+            if (Analysis is AnalysisFreq)
             {
-                var worksheetPrimary = wb.Worksheet(DataView.Table!.TableName);
-
-                for (int columnIndex = 1; columnIndex <= DataView.Table!.Columns.Count; columnIndex++)
-                {
-                    if (RegexCategoryPercentageHeader().IsMatch(DataView.Table.Columns[columnIndex - 1].ColumnName))
-                    {
-                        worksheetPrimary.Columns(columnIndex, columnIndex).Style.NumberFormat.Format = "0.0%";
-                    }
-                }
-
-                worksheetPrimary.FirstRow().InsertRowsAbove(1);
-                for (int columnIndex = 1; columnIndex <= DataView.Table!.Columns.Count; columnIndex++)
-                {
-                    var columnName = DataView.Table.Columns[columnIndex - 1].ColumnName;
-                    if (RegexCategoryHeader().IsMatch(columnName))
-                    {
-                        var categoryHeader = ColumnTooltips.ContainsKey(columnName) ? RegexCategoryHeaderStart().Replace(ColumnTooltips[columnName], String.Empty) : columnName;
-                        categoryHeader = RegexCategoryHeaderEnd().Replace(categoryHeader, String.Empty);
-                        worksheetPrimary.Cell(1, columnIndex).Value = categoryHeader;
-
-                        var coefficientHeader = RegexCategoryHeaderStart().Replace(columnName, String.Empty);
-                        if (RegexJustCategoryValue().IsMatch(coefficientHeader))
-                        {
-                            coefficientHeader += " - %";
-                        }
-                        worksheetPrimary.Cell(2, columnIndex).Value = coefficientHeader;
-                    }
-                }
-
-                worksheetPrimary.Range(1, 1, 1, DataView.Table!.Columns.Count).Style.Alignment.WrapText = true;
-                worksheetPrimary.Range(1, 1, 1, DataView.Table!.Columns.Count).Style.Fill.BackgroundColor = XLColor.LightBlue;
-
-                Dictionary<string, List<int>> superHeaderPositions = new();
-                for (int columnIndex = 1; columnIndex <= DataView.Table!.Columns.Count; columnIndex++)
-                {
-                    var superHeaderValue = worksheetPrimary.Cell(1, columnIndex).Value;
-                    if (superHeaderValue.IsText && (string)superHeaderValue != String.Empty)
-                    {
-                        if (!superHeaderPositions.ContainsKey((string)superHeaderValue))
-                        {
-                            superHeaderPositions.Add((string)superHeaderValue, new());
-                        }
-                        superHeaderPositions[(string)superHeaderValue].Add(columnIndex);
-                    }
-                }
-                foreach (var superHeaderPosition in superHeaderPositions)
-                {
-                    worksheetPrimary.Range(1, superHeaderPosition.Value.Min(), 1, superHeaderPosition.Value.Max()).Merge();
-                    worksheetPrimary.Cell(1, superHeaderPosition.Value.Min()).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
-                }
+                ExportService.CreateFrequenciesTableSuperHeader(wb.Worksheet(DataView.Table!.TableName), DataView.Table!, ColumnTooltips);
             }
 
             if (SecondaryDataView != null)
@@ -1846,21 +1797,6 @@ namespace LSAnalyzer.ViewModels
 
             wb.SaveAs(exportOptions.FileName);
         }
-
-        [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\sstandard\\serror)?$")]
-        public static partial Regex RegexCategoryPercentageHeader();
-
-        [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\s.*)?$")]
-        public static partial Regex RegexCategoryHeader();
-
-        [GeneratedRegex("^Cat\\s")]
-        private static partial Regex RegexCategoryHeaderStart();
-
-        [GeneratedRegex("\\s-\\s(standard\\serror|weighted|cases|FMI)$")]
-        private static partial Regex RegexCategoryHeaderEnd();
-
-        [GeneratedRegex("^[0-9\\.]+$")]
-        private static partial Regex RegexJustCategoryValue();
 
         public class FileInUseMessage
         {

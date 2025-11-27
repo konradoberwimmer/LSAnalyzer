@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Media;
+using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 
 namespace LSAnalyzer.Views.CustomControls
@@ -79,7 +80,7 @@ namespace LSAnalyzer.Views.CustomControls
 
             if (e.PropertyType == typeof(double) && e.Column is DataGridTextColumn dataGridTextColumn)
             {
-                if (dataGrid.DataContext is ViewModels.AnalysisPresentation analysisPresentation && analysisPresentation.Analysis is AnalysisFreq && e.Column.Header is string headerText && ViewModels.AnalysisPresentation.RegexCategoryPercentageHeader().IsMatch(headerText))
+                if (dataGrid.DataContext is ViewModels.AnalysisPresentation analysisPresentation && analysisPresentation.Analysis is AnalysisFreq && e.Column.Header is string headerText && IExportService.RegexCategoryPercentageHeader().IsMatch(headerText))
                 {
                     dataGridTextColumn.Binding.StringFormat = "{0:0.0%}";
                     e.Column.CellStyle = (Style)Resources["ColumnRight"];

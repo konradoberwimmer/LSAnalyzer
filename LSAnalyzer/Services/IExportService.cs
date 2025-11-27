@@ -1,10 +1,18 @@
 using System.Collections.Generic;
+using System.Data;
+using System.Text.RegularExpressions;
+using ClosedXML.Excel;
 using LSAnalyzer.Models;
 using LSAnalyzer.ViewModels;
 
 namespace LSAnalyzer.Services;
 
-public interface IExportService
+public partial interface IExportService
 {
     public List<string> AllFileNames(ExportOptions options, Analysis analysis);
+    
+    public void CreateFrequenciesTableSuperHeader(IXLWorksheet worksheet, DataTable table, Dictionary<string, string> columnTooltips);
+    
+    [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\sstandard\\serror)?$")]
+    public static partial Regex RegexCategoryPercentageHeader();
 }
