@@ -17,6 +17,8 @@ public partial interface IExportService
 
     public IXLWorkbook CreateXlsxExport(Analysis analysis, DataView dataView, DataView? secondaryDataView, Dictionary<string, string> columnTooltips, bool useStyles = true);
     
+    public List<string> CreateCsvExport(Analysis analysis, DataView dataView, DataView? secondaryDataView, bool metaTable = true);
+    
     [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\sstandard\\serror)?$")]
     public static partial Regex RegexCategoryPercentageHeader();
 }

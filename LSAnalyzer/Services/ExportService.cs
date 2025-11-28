@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -177,6 +178,52 @@ public partial class ExportService : IExportService
         AddWorksheetMetadata(wb, analysis, useStyles);
 
         return wb;
+    }
+
+    public List<string> CreateCsvExport(Analysis analysis, DataView dataView, DataView? secondaryDataView, bool metaTable = true)
+    {
+        List<string> csvStrings = [ dataView.ToTable().ToCsvString(CultureInfo.CurrentCulture) ];
+
+        if (secondaryDataView != null)
+        {
+            csvStrings.Add(secondaryDataView.ToTable().ToCsvString(CultureInfo.CurrentCulture));
+        }
+
+        if (metaTable)
+        {
+            DataTable metaDataTable = new();
+            metaDataTable.Columns.Add("key", typeof(string));
+            metaDataTable.Columns.Add("value", typeof(object));
+            
+            var metaInformation = analysis.MetaInformation;
+            
+            foreach (var entry in metaInformation)
+            {
+                if (entry.Value == null) continue;
+
+                metaDataTable.Rows.Add([
+                    entry.Key,
+                    entry.Value switch
+                    {
+                        string aString => aString,
+                        int aInt => aInt,
+                        double aDouble => aDouble,
+                        _ => entry.Value.ToString()
+                    }
+                ]);
+            }
+        
+            var variableLabels = analysis.VariableLabels;
+
+            foreach (var variableLabel in variableLabels)
+            {
+                metaDataTable.Rows.Add([variableLabel.Key, variableLabel.Value]);
+            }
+            
+            csvStrings.Add(metaDataTable.ToCsvString(CultureInfo.CurrentCulture, false));
+        }
+        
+        return csvStrings;
     }
 
     [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\s.*)?$")]

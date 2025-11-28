@@ -1735,6 +1735,16 @@ namespace LSAnalyzer.ViewModels
                     workbook.SaveAs(exportOptions.FileName);
                     workbook.Dispose();
                     break;
+                case "csvMultiple":
+                    var csvStrings = ExportService.CreateCsvExport(Analysis, DataView, SecondaryDataView);
+                    foreach (var (fileName, csvString) in allFileNames.Zip(csvStrings))
+                    {
+                        File.WriteAllText(fileName, csvString);
+                    }
+                    break;
+                case "csvMainTable":
+                    File.WriteAllText(exportOptions.FileName, ExportService.CreateCsvExport(Analysis, DataView, null, false)[0]);
+                    break;
                 default:
                     throw new NotImplementedException();
             }
