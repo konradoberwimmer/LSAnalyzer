@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -40,6 +41,16 @@ namespace LSAnalyzer.ViewModels
             OnPropertyChanged(nameof(IsChanged));
         }
         private bool _storedConfirmRemovingAnalysis = Properties.Settings.Default.confirmRemovingAnalysis;
+        
+        [ObservableProperty]
+        private ExportType _defaultExportType = 
+            AnalysisPresentation.ExportTypes.First(e => e.Name == Properties.Settings.Default.defaultExportType);
+        partial void OnDefaultExportTypeChanged(ExportType value)
+        {
+            OnPropertyChanged(nameof(IsChanged));
+        }
+        private ExportType _storedDefaultExportType = 
+            AnalysisPresentation.ExportTypes.First(e => e.Name == Properties.Settings.Default.defaultExportType);
         
         [Range(0, int.MaxValue)]
         [ObservableProperty]
@@ -125,6 +136,7 @@ namespace LSAnalyzer.ViewModels
 
             Properties.Settings.Default.showLabelsDefault = ShowLabelsDefault;
             Properties.Settings.Default.confirmRemovingAnalysis = ConfirmRemovingAnalysis;
+            Properties.Settings.Default.defaultExportType = DefaultExportType.Name;
             Properties.Settings.Default.numberRecentFiles = NumberRecentFiles;
             Properties.Settings.Default.numberRecentSubsettingExpressions = NumberRecentSubsettingExpressions;
             Properties.Settings.Default.Save();
@@ -184,6 +196,7 @@ namespace LSAnalyzer.ViewModels
         {
             _storedShowLabelsDefault = ShowLabelsDefault;
             _storedConfirmRemovingAnalysis = ConfirmRemovingAnalysis;
+            _storedDefaultExportType = DefaultExportType;
             _storedNumberRecentFiles = NumberRecentFiles;
             _storedNumberRecentSubsettingExpressions = NumberRecentSubsettingExpressions;
             OnPropertyChanged(nameof(IsChanged));
@@ -192,6 +205,7 @@ namespace LSAnalyzer.ViewModels
         public bool IsChanged => 
             ShowLabelsDefault != _storedShowLabelsDefault ||
             ConfirmRemovingAnalysis != _storedConfirmRemovingAnalysis ||
+            !DefaultExportType.Equals(_storedDefaultExportType) ||
             NumberRecentSubsettingExpressions != _storedNumberRecentSubsettingExpressions ||
             NumberRecentFiles != _storedNumberRecentFiles;
     }

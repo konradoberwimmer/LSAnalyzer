@@ -117,5 +117,17 @@ namespace LSAnalyzer.Properties {
                 this["confirmRemovingAnalysis"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("excelWithStyles")]
+        public string defaultExportType {
+            get {
+                return ((string)(this["defaultExportType"]));
+            }
+            set {
+                this["defaultExportType"] = value;
+            }
+        }
     }
 }

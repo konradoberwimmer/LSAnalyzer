@@ -699,7 +699,11 @@ namespace TestLSAnalyzer.ViewModels
                 File.Delete(filename);
             }
 
-            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(filename);
+            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(new ExportOptions
+            {
+                ExportType = AnalysisPresentation.ExportTypes.Find(t => t.Name == "excelWithStyles"),
+                FileName = filename,
+            });
 
             Assert.True(File.Exists(filename));
         }
@@ -753,7 +757,11 @@ namespace TestLSAnalyzer.ViewModels
                 File.Delete(filename);
             }
 
-            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(filename);
+            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(new ExportOptions
+            {
+                ExportType = AnalysisPresentation.ExportTypes.Find(t => t.Name == "excelWithStyles"),
+                FileName = filename,
+            });
 
             Assert.True(File.Exists(filename));
 
@@ -803,7 +811,11 @@ namespace TestLSAnalyzer.ViewModels
                 File.Delete(filename);
             }
 
-            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(filename);
+            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(new ExportOptions
+            {
+                ExportType = AnalysisPresentation.ExportTypes.Find(t => t.Name == "excelWithStyles"),
+                FileName = filename,
+            });
 
             Assert.True(File.Exists(filename));
 
@@ -848,7 +860,11 @@ namespace TestLSAnalyzer.ViewModels
                 sentFileInUseMessage = true;
             });
             
-            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(filename);
+            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(new ExportOptions
+            {
+                ExportType = AnalysisPresentation.ExportTypes.Find(t => t.Name == "excelWithStyles"),
+                FileName = filename,
+            });
 
             Assert.True(sentFileInUseMessage);
             
@@ -856,7 +872,11 @@ namespace TestLSAnalyzer.ViewModels
             
             sentFileInUseMessage = false;
             
-            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(filename);
+            analysisPresentationViewModel.SaveDataTableXlsxCommand.Execute(new ExportOptions
+            {
+                ExportType = AnalysisPresentation.ExportTypes.Find(t => t.Name == "excelWithStyles"),
+                FileName = filename,
+            });
 
             Assert.False(sentFileInUseMessage);
         }

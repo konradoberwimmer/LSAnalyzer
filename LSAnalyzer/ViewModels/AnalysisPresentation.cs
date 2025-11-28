@@ -26,6 +26,14 @@ namespace LSAnalyzer.ViewModels
 {
     public partial class AnalysisPresentation : INotifyPropertyChanged
     {
+        public static List<ExportType> ExportTypes =>
+        [
+            new() { Name = "excelWithStyles", Filter = "Excel with styles (*.xlsx)|*.xlsx" },
+            new() { Name = "excelWithoutStyles", Filter = "Excel without styles (*.xlsx)|*.xlsx" },
+            new() { Name = "csvMultiple", Filter = "CSV: Multiple files (*.csv)|*.csv" },
+            new() { Name = "csvMainTable", Filter = "CSV: Main table only (*.csv)|*.csv" },
+        ];
+        
         protected MainWindow? _mainWindowViewModel = null;
         public MainWindow MainWindowViewModel => _mainWindowViewModel!;
 
@@ -34,6 +42,13 @@ namespace LSAnalyzer.ViewModels
         {
             get => _resultService ??= (App.Current as App)?.ServiceProvider.GetService<IResultService>() ?? new ResultService();
             set => _resultService ??= value;
+        }
+
+        private IExportService? _exportService;
+        public IExportService ExportService
+        {
+            get => _exportService ??= (App.Current as App)?.ServiceProvider.GetService<IExportService>() ?? new ExportService();
+            set => _exportService ??= value;
         }
 
         private Analysis _analysis;
@@ -1683,169 +1698,77 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private RelayCommand<string?> _saveDataTableXlsxCommand;
+        private RelayCommand<ExportOptions> _saveDataTableXlsxCommand;
         public ICommand SaveDataTableXlsxCommand
         {
             get
             {
                 if (_saveDataTableXlsxCommand == null)
-                    _saveDataTableXlsxCommand = new RelayCommand<string?>(this.SaveDataTableXlsx);
+                    _saveDataTableXlsxCommand = new RelayCommand<ExportOptions>(this.SaveDataTableXlsx);
                 return _saveDataTableXlsxCommand;
             }
         }
 
-        private void SaveDataTableXlsx(string? filename)
+        private void SaveDataTableXlsx(ExportOptions exportOptions)
         {
-            if (filename == null || DataTable == null)
-            {
-                return;
-            }
-
-            using XLWorkbook wb = new();
-            wb.ColumnWidth = 22.14;
-
-            wb.AddWorksheetDataTable(DataView.ToTable(DataView.Table?.TableName ?? Analysis.AnalysisName));
+            if (string.IsNullOrWhiteSpace(exportOptions.FileName)) return;
             
-            if (Analysis is AnalysisFreq analysisFreq)
-            {
-                var worksheetPrimary = wb.Worksheet(DataView.Table!.TableName);
-
-                for (int columnIndex = 1; columnIndex <= DataView.Table!.Columns.Count; columnIndex++)
-                {
-                    if (RegexCategoryPercentageHeader().IsMatch(DataView.Table.Columns[columnIndex - 1].ColumnName))
-                    {
-                        worksheetPrimary.Columns(columnIndex, columnIndex).Style.NumberFormat.Format = "0.0%";
-                    }
-                }
-
-                worksheetPrimary.FirstRow().InsertRowsAbove(1);
-                for (int columnIndex = 1; columnIndex <= DataView.Table!.Columns.Count; columnIndex++)
-                {
-                    var columnName = DataView.Table.Columns[columnIndex - 1].ColumnName;
-                    if (RegexCategoryHeader().IsMatch(columnName))
-                    {
-                        var categoryHeader = ColumnTooltips.ContainsKey(columnName) ? RegexCategoryHeaderStart().Replace(ColumnTooltips[columnName], String.Empty) : columnName;
-                        categoryHeader = RegexCategoryHeaderEnd().Replace(categoryHeader, String.Empty);
-                        worksheetPrimary.Cell(1, columnIndex).Value = categoryHeader;
-
-                        var coefficientHeader = RegexCategoryHeaderStart().Replace(columnName, String.Empty);
-                        if (RegexJustCategoryValue().IsMatch(coefficientHeader))
-                        {
-                            coefficientHeader += " - %";
-                        }
-                        worksheetPrimary.Cell(2, columnIndex).Value = coefficientHeader;
-                    }
-                }
-
-                worksheetPrimary.Range(1, 1, 1, DataView.Table!.Columns.Count).Style.Alignment.WrapText = true;
-                worksheetPrimary.Range(1, 1, 1, DataView.Table!.Columns.Count).Style.Fill.BackgroundColor = XLColor.LightBlue;
-
-                Dictionary<string, List<int>> superHeaderPositions = new();
-                for (int columnIndex = 1; columnIndex <= DataView.Table!.Columns.Count; columnIndex++)
-                {
-                    var superHeaderValue = worksheetPrimary.Cell(1, columnIndex).Value;
-                    if (superHeaderValue.IsText && (string)superHeaderValue != String.Empty)
-                    {
-                        if (!superHeaderPositions.ContainsKey((string)superHeaderValue))
-                        {
-                            superHeaderPositions.Add((string)superHeaderValue, new());
-                        }
-                        superHeaderPositions[(string)superHeaderValue].Add(columnIndex);
-                    }
-                }
-                foreach (var superHeaderPosition in superHeaderPositions)
-                {
-                    worksheetPrimary.Range(1, superHeaderPosition.Value.Min(), 1, superHeaderPosition.Value.Max()).Merge();
-                    worksheetPrimary.Cell(1, superHeaderPosition.Value.Min()).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
-                }
-            }
-
-            if (SecondaryDataView != null)
-            {
-                wb.AddWorksheetDataTable(SecondaryDataView.ToTable(SecondaryDataView.Table?.TableName ?? Analysis.AnalysisName + " (secondary)"));
-            }
-
-            var metaInformation = Analysis?.MetaInformation;
-            int rowCount = 1;
-            var wsMeta = wb.AddWorksheet("Meta");
-
-            if (metaInformation != null)
-            {
-                foreach (var key in metaInformation.Keys)
-                {
-                    if (metaInformation[key] != null)
-                    {
-                        wsMeta.Cell(rowCount, 1).Value = key;
-                        switch (metaInformation[key])
-                        {
-                            case string aString:
-                                wsMeta.Cell(rowCount, 2).Value = aString;
-                                break;
-                            case int aInt:
-                                wsMeta.Cell(rowCount, 2).Value = aInt;
-                                break;
-                            case double aDouble:
-                                wsMeta.Cell(rowCount, 2).Value = aDouble;
-                                break;
-                            default:
-                                wsMeta.Cell(rowCount, 2).Value = metaInformation[key]!.ToString();
-                                break;
-                        }
-                        rowCount++;
-                    }
-                }
-                wsMeta.Column("A").Width = 25;
-            }
-
-            var variableLabels = Analysis?.VariableLabels;
-
-            if (variableLabels != null && variableLabels.Count > 0)
-            {
-                rowCount++;
-                wsMeta.Cell(rowCount, 1).Value = "Variables with labels:";
-                rowCount++;
-
-                foreach (var variableLabel in variableLabels)
-                {
-                    wsMeta.Cell(rowCount, 1).Value = variableLabel.Key;
-                    wsMeta.Cell(rowCount, 2).Value = variableLabel.Value;
-                    rowCount++;
-                }
-            }
-
-            if (File.Exists(filename))
+            var allFileNames = ExportService.AllFileNames(exportOptions, Analysis!);
+            foreach (var fileName in allFileNames.Where(File.Exists))
             {
                 try
                 {
-                    File.Delete(filename);
+                    File.Delete(fileName);
                 }
                 catch (IOException)
                 {
-                    WeakReferenceMessenger.Default.Send(new FileInUseMessage { FileName = filename });
+                    WeakReferenceMessenger.Default.Send(new FileInUseMessage { FileName = fileName });
                     return;
                 }
             }
-            wb.SaveAs(filename);
+
+            switch (exportOptions.ExportType.Name)
+            {
+                case "excelWithStyles":
+                case "excelWithoutStyles":
+                    var workbook = ExportService.CreateXlsxExport(Analysis, DataView, SecondaryDataView, ColumnTooltips, exportOptions.ExportType.Name != "excelWithoutStyles");
+                    workbook.SaveAs(exportOptions.FileName);
+                    workbook.Dispose();
+                    break;
+                case "csvMultiple":
+                    var csvStrings = ExportService.CreateCsvExport(Analysis, DataView, SecondaryDataView);
+                    foreach (var (fileName, csvString) in allFileNames.Zip(csvStrings))
+                    {
+                        File.WriteAllText(fileName, csvString);
+                    }
+                    break;
+                case "csvMainTable":
+                    File.WriteAllText(exportOptions.FileName, ExportService.CreateCsvExport(Analysis, DataView, null, false)[0]);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
         }
-
-        [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\sstandard\\serror)?$")]
-        public static partial Regex RegexCategoryPercentageHeader();
-
-        [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\s.*)?$")]
-        public static partial Regex RegexCategoryHeader();
-
-        [GeneratedRegex("^Cat\\s")]
-        private static partial Regex RegexCategoryHeaderStart();
-
-        [GeneratedRegex("\\s-\\s(standard\\serror|weighted|cases|FMI)$")]
-        private static partial Regex RegexCategoryHeaderEnd();
-
-        [GeneratedRegex("^[0-9\\.]+$")]
-        private static partial Regex RegexJustCategoryValue();
 
         public class FileInUseMessage
         {
             public required string FileName { get; init; }
         }
+    }
+
+    public struct ExportType
+    {
+        public string Name { init; get; }
+        
+        public string Filter { init; get; }
+        
+        public string DisplayName => Filter[..Filter.IndexOf('|')];
+    }
+
+    public struct ExportOptions
+    {
+        public string FileName { init; get; }
+        
+        public ExportType ExportType { init; get; }
     }
 }

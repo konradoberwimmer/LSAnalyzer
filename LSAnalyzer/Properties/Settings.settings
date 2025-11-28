@@ -26,6 +26,9 @@
     <Setting Name="confirmRemovingAnalysis" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="defaultExportType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">excelWithStyles</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
 
