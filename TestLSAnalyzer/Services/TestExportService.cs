@@ -157,4 +157,88 @@ public class TestExportService
         Assert.True(worksheet.Cell("E1").IsMerged());
         Assert.Equal("0.0%", worksheet.Column("E").Style.NumberFormat.Format);
     }
+
+    [Fact]
+    public void TestAddWorksheetMetadataWithoutVariableLabels()
+    {
+        XLWorkbook wb = new();
+
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            DatasetType = DatasetType.CreateDefaultDatasetTypes().First(),
+            FileName = @"C:\myProject\myData\myFile.sav",
+            FileType = "spss",
+            ModeKeep = true,
+        };
+        
+        Analysis analysis = new AnalysisCorr(analysisConfiguration)
+        {
+            Vars = [
+                new Variable(1, "item1", false),
+                new Variable(2, "item2", false),
+                new Variable(3, "item3", false),
+            ],
+            CalculateOverall = true,
+            ResultAt = DateTime.Now,
+            ResultDuration = 0.13,
+        };
+        
+        ExportService exportService = new();
+        exportService.AddWorksheetMetadata(wb, analysis);
+        
+        Assert.Equal(1, wb.Worksheets.Count);
+        Assert.Equal("Meta", wb.Worksheets.First().Name);
+        
+        var worksheet = wb.Worksheets.First();
+        
+        Assert.Equal(7, worksheet.RowsUsed().Count());
+        Assert.Empty(worksheet.Column("A").Cells().Where(cell => cell.Value.ToString() == "Subset:"));
+
+        analysis.SubsettingExpression = "cat == 4";
+        
+        wb.Worksheets.First().Delete();
+        
+        exportService.AddWorksheetMetadata(wb, analysis);
+        
+        worksheet = wb.Worksheets.First();
+        
+        Assert.Equal(8, worksheet.RowsUsed().Count());
+        Assert.Single(worksheet.Column("A").Cells().Where(cell => cell.Value.ToString() == "Subset:"));
+    }
+    
+    [Fact]
+    public void TestAddWorksheetMetadataWithVariableLabels()
+    {
+        XLWorkbook wb = new();
+
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            DatasetType = DatasetType.CreateDefaultDatasetTypes().First(),
+            FileName = @"C:\myProject\myData\myFile.sav",
+            FileType = "spss",
+            ModeKeep = true,
+        };
+        
+        Analysis analysis = new AnalysisCorr(analysisConfiguration)
+        {
+            Vars = [
+                new Variable(1, "item1", false) { Label = "Item 1" },
+                new Variable(2, "item2", false) { Label = "Item 2" },
+                new Variable(3, "item3", false),
+            ],
+            CalculateOverall = true,
+            ResultAt = DateTime.Now,
+            ResultDuration = 0.13,
+        };
+        
+        ExportService exportService = new();
+        exportService.AddWorksheetMetadata(wb, analysis);
+        
+        var worksheet = wb.Worksheets.First();
+        
+        Assert.Equal(10, worksheet.RowsUsed().Count());
+        Assert.Equal(XLCellValue.FromObject(null), worksheet.Cell("A8").Value);
+        Assert.Single(worksheet.Column("A").Cells().Where(cell => cell.Value.ToString() == "item2"));
+        Assert.Empty(worksheet.Column("A").Cells().Where(cell => cell.Value.ToString() == "item3"));
+    }
 }

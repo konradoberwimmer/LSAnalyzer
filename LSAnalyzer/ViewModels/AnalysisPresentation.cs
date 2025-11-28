@@ -1730,54 +1730,8 @@ namespace LSAnalyzer.ViewModels
             {
                 wb.AddWorksheetDataTable(SecondaryDataView.ToTable(SecondaryDataView.Table?.TableName ?? Analysis.AnalysisName + " (secondary)"));
             }
-
-            var metaInformation = Analysis?.MetaInformation;
-            int rowCount = 1;
-            var wsMeta = wb.AddWorksheet("Meta");
-
-            if (metaInformation != null)
-            {
-                foreach (var key in metaInformation.Keys)
-                {
-                    if (metaInformation[key] != null)
-                    {
-                        wsMeta.Cell(rowCount, 1).Value = key;
-                        switch (metaInformation[key])
-                        {
-                            case string aString:
-                                wsMeta.Cell(rowCount, 2).Value = aString;
-                                break;
-                            case int aInt:
-                                wsMeta.Cell(rowCount, 2).Value = aInt;
-                                break;
-                            case double aDouble:
-                                wsMeta.Cell(rowCount, 2).Value = aDouble;
-                                break;
-                            default:
-                                wsMeta.Cell(rowCount, 2).Value = metaInformation[key]!.ToString();
-                                break;
-                        }
-                        rowCount++;
-                    }
-                }
-                wsMeta.Column("A").Width = 25;
-            }
-
-            var variableLabels = Analysis?.VariableLabels;
-
-            if (variableLabels != null && variableLabels.Count > 0)
-            {
-                rowCount++;
-                wsMeta.Cell(rowCount, 1).Value = "Variables with labels:";
-                rowCount++;
-
-                foreach (var variableLabel in variableLabels)
-                {
-                    wsMeta.Cell(rowCount, 1).Value = variableLabel.Key;
-                    wsMeta.Cell(rowCount, 2).Value = variableLabel.Value;
-                    rowCount++;
-                }
-            }
+            
+            ExportService.AddWorksheetMetadata(wb, Analysis);
 
             var allFileNames = ExportService.AllFileNames(exportOptions, Analysis!);
             foreach (var fileName in allFileNames)

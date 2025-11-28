@@ -104,7 +104,47 @@ public partial class ExportService : IExportService
                 .SetHorizontal(XLAlignmentHorizontalValues.Center);
         }
     }
-    
+
+    public void AddWorksheetMetadata(IXLWorkbook workbook, Analysis analysis)
+    {
+        var wsMeta = workbook.AddWorksheet("Meta");
+        wsMeta.Column("A").Width = 25;
+        
+        var metaInformation = analysis.MetaInformation;
+        var rowCount = 1;
+
+        foreach (var key in metaInformation.Keys)
+        {
+            if (metaInformation[key] == null) continue;
+            
+            wsMeta.Cell(rowCount, 1).Value = key;
+            wsMeta.Cell(rowCount, 2).Value = metaInformation[key] switch
+            {
+                string aString => aString,
+                int aInt => aInt,
+                double aDouble => aDouble,
+                _ => metaInformation[key]!.ToString()
+            };
+            
+            rowCount++;
+        }
+        
+        var variableLabels = analysis.VariableLabels;
+
+        if (variableLabels.Count == 0) return;
+        
+        rowCount++;
+        wsMeta.Cell(rowCount, 1).Value = "Variables with labels:";
+        rowCount++;
+
+        foreach (var variableLabel in variableLabels)
+        {
+            wsMeta.Cell(rowCount, 1).Value = variableLabel.Key;
+            wsMeta.Cell(rowCount, 2).Value = variableLabel.Value;
+            rowCount++;
+        }
+    }
+
     [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\s.*)?$")]
     private static partial Regex RegexCategoryHeader();
     

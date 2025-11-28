@@ -12,6 +12,8 @@ public partial interface IExportService
     public List<string> AllFileNames(ExportOptions options, Analysis analysis);
     
     public void CreateFrequenciesTableSuperHeader(IXLWorksheet worksheet, DataTable table, Dictionary<string, string> columnTooltips);
+
+    public void AddWorksheetMetadata(IXLWorkbook workbook, Analysis analysis);
     
     [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\sstandard\\serror)?$")]
     public static partial Regex RegexCategoryPercentageHeader();
