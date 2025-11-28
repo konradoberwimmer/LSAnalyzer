@@ -1711,33 +1711,11 @@ namespace LSAnalyzer.ViewModels
 
         private void SaveDataTableXlsx(ExportOptions exportOptions)
         {
-            if (string.IsNullOrWhiteSpace(exportOptions.FileName) || DataTable == null)
-            {
-                return;
-            }
-
-            using XLWorkbook wb = new();
-            wb.ColumnWidth = 22.14;
-
-            wb.AddWorksheetDataTable(DataView.ToTable(DataView.Table?.TableName ?? Analysis.AnalysisName));
+            if (string.IsNullOrWhiteSpace(exportOptions.FileName)) return;
             
-            if (Analysis is AnalysisFreq)
-            {
-                ExportService.CreateFrequenciesTableSuperHeader(wb.Worksheet(DataView.Table!.TableName), DataView.Table!, ColumnTooltips);
-            }
-
-            if (SecondaryDataView != null)
-            {
-                wb.AddWorksheetDataTable(SecondaryDataView.ToTable(SecondaryDataView.Table?.TableName ?? Analysis.AnalysisName + " (secondary)"));
-            }
-            
-            ExportService.AddWorksheetMetadata(wb, Analysis);
-
             var allFileNames = ExportService.AllFileNames(exportOptions, Analysis!);
-            foreach (var fileName in allFileNames)
+            foreach (var fileName in allFileNames.Where(File.Exists))
             {
-                if (!File.Exists(fileName)) continue;
-                
                 try
                 {
                     File.Delete(fileName);
@@ -1749,7 +1727,17 @@ namespace LSAnalyzer.ViewModels
                 }
             }
 
-            wb.SaveAs(exportOptions.FileName);
+            switch (exportOptions.ExportType.Name)
+            {
+                case "excelWithStyles":
+                case "excelWithoutStyles":
+                    var workbook = ExportService.CreateXlsxExport(Analysis, DataView, SecondaryDataView, ColumnTooltips);
+                    workbook.SaveAs(exportOptions.FileName);
+                    workbook.Dispose();
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         public class FileInUseMessage

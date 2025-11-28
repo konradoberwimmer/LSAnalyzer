@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using ClosedXML.Excel;
+using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.ViewModels;
 
@@ -143,6 +144,28 @@ public partial class ExportService : IExportService
             wsMeta.Cell(rowCount, 2).Value = variableLabel.Value;
             rowCount++;
         }
+    }
+
+    public IXLWorkbook CreateXlsxExport(Analysis analysis, DataView dataView, DataView? secondaryDataView, Dictionary<string, string> columnTooltips)
+    {
+        XLWorkbook wb = new();
+        wb.ColumnWidth = 22.14;
+
+        wb.AddWorksheetDataTable(dataView.ToTable(dataView.Table?.TableName ?? analysis.AnalysisName));
+            
+        if (analysis is AnalysisFreq)
+        {
+            CreateFrequenciesTableSuperHeader(wb.Worksheet(dataView.Table!.TableName), dataView.Table!, columnTooltips);
+        }
+
+        if (secondaryDataView != null)
+        {
+            wb.AddWorksheetDataTable(secondaryDataView.ToTable(secondaryDataView.Table?.TableName ?? analysis.AnalysisName + " (secondary)"));
+        }
+            
+        AddWorksheetMetadata(wb, analysis);
+
+        return wb;
     }
 
     [GeneratedRegex("^Cat\\s[0-9\\.]+(\\s-\\s.*)?$")]

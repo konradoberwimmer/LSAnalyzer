@@ -241,4 +241,58 @@ public class TestExportService
         Assert.Single(worksheet.Column("A").Cells().Where(cell => cell.Value.ToString() == "item2"));
         Assert.Empty(worksheet.Column("A").Cells().Where(cell => cell.Value.ToString() == "item3"));
     }
+
+    [Fact]
+    public void TestCreateXlsxExport()
+    {
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            DatasetType = DatasetType.CreateDefaultDatasetTypes().First(),
+            FileName = @"C:\myProject\myData\myFile.sav",
+            FileType = "spss",
+            ModeKeep = true,
+        };
+        
+        Analysis analysis = new AnalysisFreq(analysisConfiguration)
+        {
+            Vars = [
+                new Variable(1, "myVar", false) { Label = "My Categorical Variable" },
+            ],
+            GroupBy = [
+                new Variable(2, "group", false) { Label = "My Grouping Variable" }
+            ],
+            CalculateOverall = false,
+            ResultAt = DateTime.Now,
+            ResultDuration = 0.13,
+        };
+        
+        DataTable table = new("Freq");
+        table.Columns.Add("var", typeof(string));
+        table.Columns.Add("group", typeof(string));
+        table.Columns.Add("Cat 1", typeof(double));
+        table.Columns.Add("Cat 1 - standard error", typeof(double));
+        table.Columns.Add("Cat 2", typeof(double));
+        table.Columns.Add("Cat 2 - standard error", typeof(double));
+
+        table.Rows.Add(["myVar", "A", 0.1, 0.01, 0.9, 0.01]);
+        table.Rows.Add(["myVar", "B", 0.2, 0.02, 0.8, 0.02]);
+        table.Rows.Add(["myVar", "C", 0.3, 0.03, 0.7, 0.03]);
+        
+        var dataView = table.AsDataView();
+        
+        DataTable secondaryTable = new("bivariate");
+        secondaryTable.Columns.Add("something", typeof(string));
+        secondaryTable.Rows.Add(["some bivariate information"]);
+        
+        var secondaryDataView = secondaryTable.AsDataView();
+        
+        ExportService exportService = new();
+        var workbook = exportService.CreateXlsxExport(analysis, dataView, secondaryDataView, []);
+        
+        Assert.Equal(3, workbook.Worksheets.Count);
+        Assert.Equal("Freq", workbook.Worksheets.First().Name);
+        Assert.Equal(5, workbook.Worksheets.First().RowsUsed().Count());
+        Assert.Equal("Meta", workbook.Worksheets.Last().Name);
+        Assert.Equal(10, workbook.Worksheets.Last().RowsUsed().Count());
+    }
 }
