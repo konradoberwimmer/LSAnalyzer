@@ -1731,7 +1731,7 @@ namespace LSAnalyzer.ViewModels
             {
                 case "excelWithStyles":
                 case "excelWithoutStyles":
-                    var workbook = ExportService.CreateXlsxExport(Analysis, DataView, SecondaryDataView, ColumnTooltips);
+                    var workbook = ExportService.CreateXlsxExport(Analysis, DataView, SecondaryDataView, ColumnTooltips, exportOptions.ExportType.Name != "excelWithoutStyles");
                     workbook.SaveAs(exportOptions.FileName);
                     workbook.Dispose();
                     break;

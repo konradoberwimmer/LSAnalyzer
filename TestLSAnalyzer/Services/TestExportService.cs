@@ -241,9 +241,43 @@ public class TestExportService
         Assert.Single(worksheet.Column("A").Cells().Where(cell => cell.Value.ToString() == "item2"));
         Assert.Empty(worksheet.Column("A").Cells().Where(cell => cell.Value.ToString() == "item3"));
     }
+    
+    [Fact]
+    public void TestAddWorksheetMetadataWithVariableLabelsButWithoutStyles()
+    {
+        XLWorkbook wb = new();
+
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            DatasetType = DatasetType.CreateDefaultDatasetTypes().First(),
+            FileName = @"C:\myProject\myData\myFile.sav",
+            FileType = "spss",
+            ModeKeep = true,
+        };
+        
+        Analysis analysis = new AnalysisCorr(analysisConfiguration)
+        {
+            Vars = [
+                new Variable(1, "item1", false) { Label = "Item 1" },
+                new Variable(2, "item2", false) { Label = "Item 2" },
+                new Variable(3, "item3", false),
+            ],
+            CalculateOverall = true,
+            ResultAt = DateTime.Now,
+            ResultDuration = 0.13,
+        };
+        
+        ExportService exportService = new();
+        exportService.AddWorksheetMetadata(wb, analysis, false);
+        
+        var worksheet = wb.Worksheets.First();
+        
+        Assert.Equal(9, worksheet.RowsUsed().Count());
+        Assert.Equal("item2", worksheet.Cell("A9").Value);
+    }
 
     [Fact]
-    public void TestCreateXlsxExport()
+    public void TestCreateXlsxExportWithStyles()
     {
         AnalysisConfiguration analysisConfiguration = new()
         {
@@ -294,5 +328,53 @@ public class TestExportService
         Assert.Equal(5, workbook.Worksheets.First().RowsUsed().Count());
         Assert.Equal("Meta", workbook.Worksheets.Last().Name);
         Assert.Equal(10, workbook.Worksheets.Last().RowsUsed().Count());
+    }
+    
+    [Fact]
+    public void TestCreateXlsxExportWithouStyles()
+    {
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            DatasetType = DatasetType.CreateDefaultDatasetTypes().First(),
+            FileName = @"C:\myProject\myData\myFile.sav",
+            FileType = "spss",
+            ModeKeep = true,
+        };
+        
+        Analysis analysis = new AnalysisFreq(analysisConfiguration)
+        {
+            Vars = [
+                new Variable(1, "myVar", false) { Label = "My Categorical Variable" },
+            ],
+            GroupBy = [
+                new Variable(2, "group", false) { Label = "My Grouping Variable" }
+            ],
+            CalculateOverall = false,
+            ResultAt = DateTime.Now,
+            ResultDuration = 0.13,
+        };
+        
+        DataTable table = new("Freq");
+        table.Columns.Add("var", typeof(string));
+        table.Columns.Add("group", typeof(string));
+        table.Columns.Add("Cat 1", typeof(double));
+        table.Columns.Add("Cat 1 - standard error", typeof(double));
+        table.Columns.Add("Cat 2", typeof(double));
+        table.Columns.Add("Cat 2 - standard error", typeof(double));
+
+        table.Rows.Add(["myVar", "A", 0.1, 0.01, 0.9, 0.01]);
+        table.Rows.Add(["myVar", "B", 0.2, 0.02, 0.8, 0.02]);
+        table.Rows.Add(["myVar", "C", 0.3, 0.03, 0.7, 0.03]);
+        
+        var dataView = table.AsDataView();
+        
+        ExportService exportService = new();
+        var workbook = exportService.CreateXlsxExport(analysis, dataView, null, [], false);
+        
+        Assert.Equal(2, workbook.Worksheets.Count);
+        Assert.Equal("Freq", workbook.Worksheets.First().Name);
+        Assert.Equal(4, workbook.Worksheets.First().RowsUsed().Count());
+        Assert.Equal("Meta", workbook.Worksheets.Last().Name);
+        Assert.Equal(9, workbook.Worksheets.Last().RowsUsed().Count());
     }
 }

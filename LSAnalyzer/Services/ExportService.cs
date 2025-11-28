@@ -106,11 +106,15 @@ public partial class ExportService : IExportService
         }
     }
 
-    public void AddWorksheetMetadata(IXLWorkbook workbook, Analysis analysis)
+    public void AddWorksheetMetadata(IXLWorkbook workbook, Analysis analysis, bool useStyles = true)
     {
         var wsMeta = workbook.AddWorksheet("Meta");
-        wsMeta.Column("A").Width = 25;
-        
+
+        if (useStyles)
+        {
+            wsMeta.Column("A").Width = 25;
+        }
+
         var metaInformation = analysis.MetaInformation;
         var rowCount = 1;
 
@@ -133,10 +137,13 @@ public partial class ExportService : IExportService
         var variableLabels = analysis.VariableLabels;
 
         if (variableLabels.Count == 0) return;
-        
-        rowCount++;
-        wsMeta.Cell(rowCount, 1).Value = "Variables with labels:";
-        rowCount++;
+
+        if (useStyles)
+        {
+            rowCount++;
+            wsMeta.Cell(rowCount, 1).Value = "Variables with labels:";
+            rowCount++;
+        }
 
         foreach (var variableLabel in variableLabels)
         {
@@ -146,24 +153,28 @@ public partial class ExportService : IExportService
         }
     }
 
-    public IXLWorkbook CreateXlsxExport(Analysis analysis, DataView dataView, DataView? secondaryDataView, Dictionary<string, string> columnTooltips)
+    public IXLWorkbook CreateXlsxExport(Analysis analysis, DataView dataView, DataView? secondaryDataView, Dictionary<string, string> columnTooltips, bool useStyles = true)
     {
         XLWorkbook wb = new();
-        wb.ColumnWidth = 22.14;
 
-        wb.AddWorksheetDataTable(dataView.ToTable(dataView.Table?.TableName ?? analysis.AnalysisName));
+        if (useStyles)
+        {
+            wb.ColumnWidth = 22.14;
+        }
+
+        wb.AddWorksheetDataTable(dataView.ToTable(dataView.Table?.TableName ?? analysis.AnalysisName), useStyles);
             
-        if (analysis is AnalysisFreq)
+        if (analysis is AnalysisFreq && useStyles)
         {
             CreateFrequenciesTableSuperHeader(wb.Worksheet(dataView.Table!.TableName), dataView.Table!, columnTooltips);
         }
 
         if (secondaryDataView != null)
         {
-            wb.AddWorksheetDataTable(secondaryDataView.ToTable(secondaryDataView.Table?.TableName ?? analysis.AnalysisName + " (secondary)"));
+            wb.AddWorksheetDataTable(secondaryDataView.ToTable(secondaryDataView.Table?.TableName ?? analysis.AnalysisName + " (secondary)"), useStyles);
         }
             
-        AddWorksheetMetadata(wb, analysis);
+        AddWorksheetMetadata(wb, analysis, useStyles);
 
         return wb;
     }
