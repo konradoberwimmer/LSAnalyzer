@@ -10,6 +10,8 @@ namespace LSAnalyzer.Services;
 public partial interface IExportService
 {
     public List<string> AllFileNames(ExportOptions options, Analysis analysis);
+
+    public List<string> AllMassExportFileNames(string folder, string prefix, ExportType exportType, bool singleFile, List<Analysis> analyses);
     
     public void CreateFrequenciesTableSuperHeader(IXLWorksheet worksheet, DataTable table, Dictionary<string, string> columnTooltips);
 

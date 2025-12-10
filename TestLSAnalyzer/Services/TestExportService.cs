@@ -75,6 +75,30 @@ public class TestExportService
         Assert.Equal([ baseFileNameCsv, metaFileNameCsv ], exportService.AllFileNames(exportOptionsCsvMultiple, new AnalysisUnivar(new AnalysisConfiguration())));
     }
 
+    [Theory, ClassData(typeof(TestAllMassExportFileNamesCases))]
+    public void TestAllMassExportFileNames(ExportType exportType, bool singleFile, List<Analysis> analyses, List<string> expected)
+    {
+        ExportService exportService = new();
+        
+        Assert.Equivalent(expected, exportService.AllMassExportFileNames(@"C:\myFiles", "myOutput", exportType, singleFile, analyses));
+    }
+
+    public class TestAllMassExportFileNamesCases : TheoryData<ExportType, bool, List<Analysis>, List<string>>
+    {
+        private static readonly AnalysisFreq AnalysisFreq = new(new AnalysisConfiguration());
+        
+        private static readonly AnalysisLinreg AnalysisLinreg = new(new AnalysisConfiguration());
+        
+        public TestAllMassExportFileNamesCases()
+        {
+            Add(AnalysisPresentation.ExportTypes.Find(t => t.Name == "excelWithStyles"), true, [ AnalysisFreq ], [ @"C:\myFiles\myOutput.xlsx" ]);
+            Add(AnalysisPresentation.ExportTypes.Find(t => t.Name == "excelWithStyles"), false, [ AnalysisFreq ], [ @"C:\myFiles\myOutput_frequencies_1.xlsx" ]);
+            Add(AnalysisPresentation.ExportTypes.Find(t => t.Name == "excelWithStyles"), false, [ AnalysisFreq, AnalysisLinreg, AnalysisFreq ], [ @"C:\myFiles\myOutput_frequencies_1.xlsx", @"C:\myFiles\myOutput_linearregression_1.xlsx", @"C:\myFiles\myOutput_frequencies_2.xlsx" ]);
+            Add(AnalysisPresentation.ExportTypes.Find(t => t.Name == "csvMultiple"), false, [ AnalysisFreq, AnalysisFreq ], [ @"C:\myFiles\myOutput_frequencies_1.csv", @"C:\myFiles\myOutput_frequencies_1_bivariate.csv", @"C:\myFiles\myOutput_frequencies_1_meta.csv", @"C:\myFiles\myOutput_frequencies_2.csv", @"C:\myFiles\myOutput_frequencies_2_bivariate.csv", @"C:\myFiles\myOutput_frequencies_2_meta.csv" ]);
+            Add(AnalysisPresentation.ExportTypes.Find(t => t.Name == "csvMainTable"), false, [ AnalysisFreq, AnalysisFreq ], [ @"C:\myFiles\myOutput_frequencies_1.csv", @"C:\myFiles\myOutput_frequencies_2.csv" ]);
+        }
+    }
+
     [Fact]
     public void TestCreateFrequenciesTableSuperHeaderWithoutLabels()
     {

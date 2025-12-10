@@ -51,6 +51,37 @@ public partial class ExportService : IExportService
         };
     }
 
+    public List<string> AllMassExportFileNames(string folder, string prefix, ExportType exportType, bool singleFile, List<Analysis> analyses)
+    {
+        var suffix = exportType.Filter[(exportType.Filter.LastIndexOf("|*", StringComparison.Ordinal) + 2)..];
+        
+        if (singleFile)
+        {
+            return [ Path.Combine(folder, prefix + suffix) ];
+        }
+
+        Dictionary<string, int> analysisTypeCount = new();
+
+        var fileNames = analyses.SelectMany(analysis =>
+        {
+            var analysisType = analysis.AnalysisName.Replace(" ", "").ToLowerInvariant();
+            if (!analysisTypeCount.TryAdd(analysisType, 1))
+            {
+                analysisTypeCount[analysisType]++;
+            }
+
+            ExportOptions exportOptions = new()
+            {
+                FileName = Path.Combine(folder, prefix + "_" + analysisType + "_" + analysisTypeCount[analysisType] + suffix),
+                ExportType = exportType,
+            };
+            
+            return AllFileNames(exportOptions, analysis);
+        }).ToList();
+
+        return fileNames;
+    }
+
     public void CreateFrequenciesTableSuperHeader(IXLWorksheet worksheet, DataTable table, Dictionary<string, string> columnTooltips)
     {
         for (var columnIndex = 1; columnIndex <= table.Columns.Count; columnIndex++)
