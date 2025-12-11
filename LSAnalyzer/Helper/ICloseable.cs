@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LSAnalyzer.Helper
 {
-    interface ICloseable
+    public interface ICloseable
     {
         void Close();
     }
