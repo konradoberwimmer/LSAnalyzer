@@ -138,9 +138,9 @@ public partial class ExportService : IExportService
         }
     }
 
-    public void AddWorksheetMetadata(IXLWorkbook workbook, Analysis analysis, bool useStyles = true)
+    public void AddWorksheetMetadata(IXLWorkbook workbook, Analysis analysis, bool useStyles = true, string sheetName = "Meta")
     {
-        var wsMeta = workbook.AddWorksheet("Meta");
+        var wsMeta = workbook.AddWorksheet(sheetName);
 
         if (useStyles)
         {
@@ -207,6 +207,43 @@ public partial class ExportService : IExportService
         }
             
         AddWorksheetMetadata(wb, analysis, useStyles);
+
+        return wb;
+    }
+
+    public IXLWorkbook CreateXlsxExport(List<AnalysisPresentation> analysisPresentations, bool useStyles = true)
+    {
+        Dictionary<string, int> analysisTypeCount = new();
+        
+        XLWorkbook wb = new();
+
+        if (useStyles)
+        {
+            wb.ColumnWidth = 22.14;
+        }
+
+        foreach (var analysisPresentation in analysisPresentations)
+        {
+            var analysisType = analysisPresentation.Analysis.AnalysisName.Replace(" ", "").ToLowerInvariant();
+            if (!analysisTypeCount.TryAdd(analysisType, 1))
+            {
+                analysisTypeCount[analysisType]++;
+            }
+            
+            wb.AddWorksheetDataTable(analysisPresentation.DataView.ToTable(analysisType + "_" + analysisTypeCount[analysisType]), useStyles);
+            
+            if (analysisPresentation.Analysis is AnalysisFreq && useStyles)
+            {
+                CreateFrequenciesTableSuperHeader(wb.Worksheet(analysisType + "_" + analysisTypeCount[analysisType]), analysisPresentation.DataView.Table!, analysisPresentation.ColumnTooltips);
+            }
+
+            if (analysisPresentation.SecondaryDataView != null)
+            {
+                wb.AddWorksheetDataTable(analysisPresentation.SecondaryDataView.ToTable(analysisType + "_" + analysisTypeCount[analysisType] + "_" + analysisPresentation.SecondaryDataView.Table?.TableName.ToLowerInvariant()), useStyles);
+            }
+            
+            AddWorksheetMetadata(wb, analysisPresentation.Analysis, useStyles, analysisType + "_" + analysisTypeCount[analysisType] + "_meta");
+        }
 
         return wb;
     }
