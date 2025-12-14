@@ -312,5 +312,16 @@ namespace LSAnalyzer.Views
                 mainWindowViewModel.RemoveAllAnalysesCommand.Execute(null);
             }
         }
+
+        private void ButtonMassExport_OnClick(object sender, RoutedEventArgs e)
+        {
+            var mainWindowViewModel = DataContext as ViewModels.MainWindow;
+
+            var massExportViewModel = _serviceProvider.GetRequiredService<ViewModels.MassExport>();
+            massExportViewModel.AnalysisPresentations = mainWindowViewModel?.Analyses.ToList() ?? [];
+
+            MassExport massExportView = new(massExportViewModel);
+            massExportView.ShowDialog();
+        }
     }
 }

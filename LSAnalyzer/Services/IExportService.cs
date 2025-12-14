@@ -10,12 +10,16 @@ namespace LSAnalyzer.Services;
 public partial interface IExportService
 {
     public List<string> AllFileNames(ExportOptions options, Analysis analysis);
+
+    public List<string> AllMassExportFileNames(string folder, string prefix, ExportType exportType, bool singleFile, List<Analysis> analyses);
     
     public void CreateFrequenciesTableSuperHeader(IXLWorksheet worksheet, DataTable table, Dictionary<string, string> columnTooltips);
 
-    public void AddWorksheetMetadata(IXLWorkbook workbook, Analysis analysis, bool useStyles = true);
+    public void AddWorksheetMetadata(IXLWorkbook workbook, Analysis analysis, bool useStyles = true, string sheetName = "Meta");
 
     public IXLWorkbook CreateXlsxExport(Analysis analysis, DataView dataView, DataView? secondaryDataView, Dictionary<string, string> columnTooltips, bool useStyles = true);
+    
+    public IXLWorkbook CreateXlsxExport(List<AnalysisPresentation> analysisPresentations, bool useStyles = true);
     
     public List<string> CreateCsvExport(Analysis analysis, DataView dataView, DataView? secondaryDataView, bool metaTable = true);
     

@@ -75,6 +75,30 @@ public class TestExportService
         Assert.Equal([ baseFileNameCsv, metaFileNameCsv ], exportService.AllFileNames(exportOptionsCsvMultiple, new AnalysisUnivar(new AnalysisConfiguration())));
     }
 
+    [Theory, ClassData(typeof(TestAllMassExportFileNamesCases))]
+    public void TestAllMassExportFileNames(ExportType exportType, bool singleFile, List<Analysis> analyses, List<string> expected)
+    {
+        ExportService exportService = new();
+        
+        Assert.Equivalent(expected, exportService.AllMassExportFileNames(@"C:\myFiles", "myOutput", exportType, singleFile, analyses));
+    }
+
+    public class TestAllMassExportFileNamesCases : TheoryData<ExportType, bool, List<Analysis>, List<string>>
+    {
+        private static readonly AnalysisFreq AnalysisFreq = new(new AnalysisConfiguration());
+        
+        private static readonly AnalysisLinreg AnalysisLinreg = new(new AnalysisConfiguration());
+        
+        public TestAllMassExportFileNamesCases()
+        {
+            Add(AnalysisPresentation.ExportTypes.Find(t => t.Name == "excelWithStyles"), true, [ AnalysisFreq ], [ @"C:\myFiles\myOutput.xlsx" ]);
+            Add(AnalysisPresentation.ExportTypes.Find(t => t.Name == "excelWithStyles"), false, [ AnalysisFreq ], [ @"C:\myFiles\myOutput_frequencies_1.xlsx" ]);
+            Add(AnalysisPresentation.ExportTypes.Find(t => t.Name == "excelWithStyles"), false, [ AnalysisFreq, AnalysisLinreg, AnalysisFreq ], [ @"C:\myFiles\myOutput_frequencies_1.xlsx", @"C:\myFiles\myOutput_linearregression_1.xlsx", @"C:\myFiles\myOutput_frequencies_2.xlsx" ]);
+            Add(AnalysisPresentation.ExportTypes.Find(t => t.Name == "csvMultiple"), false, [ AnalysisFreq, AnalysisFreq ], [ @"C:\myFiles\myOutput_frequencies_1.csv", @"C:\myFiles\myOutput_frequencies_1_bivariate.csv", @"C:\myFiles\myOutput_frequencies_1_meta.csv", @"C:\myFiles\myOutput_frequencies_2.csv", @"C:\myFiles\myOutput_frequencies_2_bivariate.csv", @"C:\myFiles\myOutput_frequencies_2_meta.csv" ]);
+            Add(AnalysisPresentation.ExportTypes.Find(t => t.Name == "csvMainTable"), false, [ AnalysisFreq, AnalysisFreq ], [ @"C:\myFiles\myOutput_frequencies_1.csv", @"C:\myFiles\myOutput_frequencies_2.csv" ]);
+        }
+    }
+
     [Fact]
     public void TestCreateFrequenciesTableSuperHeaderWithoutLabels()
     {
@@ -331,7 +355,7 @@ public class TestExportService
     }
     
     [Fact]
-    public void TestCreateXlsxExportWithouStyles()
+    public void TestCreateXlsxExportWithoutStyles()
     {
         AnalysisConfiguration analysisConfiguration = new()
         {
@@ -378,6 +402,106 @@ public class TestExportService
         Assert.Equal(9, workbook.Worksheets.Last().RowsUsed().Count());
     }
 
+    [Fact]
+    public void TestCreateXlsxExportFromAnalysisPresentations()
+    {
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            DatasetType = DatasetType.CreateDefaultDatasetTypes().First(),
+            FileName = @"C:\myProject\myData\myFile.sav",
+            FileType = "spss",
+            ModeKeep = true,
+        };
+
+        List<Variable> variables =
+        [
+            new(1, "x1", false),
+            new(2, "x2", false),
+        ];
+
+        AnalysisCorr analysisCorr1 = new(analysisConfiguration)
+        {
+            Vars = variables,
+            GroupBy = [],
+            CalculateOverall = false,
+        };
+        
+        DataTable correlationTable = new("Correlations");
+        correlationTable.Columns.AddRange([ 
+            new DataColumn("var1", typeof(string)), 
+            new DataColumn("var2", typeof(string)), 
+            new DataColumn("est", typeof(double)), 
+            new DataColumn("SE", typeof(double)),
+        ]);
+        correlationTable.Rows.Add([ "x1", "x2", 0.5, 0.25 ]);
+        
+        DataTable covarianceTable = new("Covariances");
+        covarianceTable.Columns.AddRange([ 
+            new DataColumn("var1", typeof(string)), 
+            new DataColumn("var2", typeof(string)), 
+            new DataColumn("est", typeof(double)), 
+            new DataColumn("SE", typeof(double)),
+        ]);
+        covarianceTable.Rows.Add([ "x1", "x1", 1.0, 0.15 ]);
+        covarianceTable.Rows.Add([ "x1", "x2", 0.5, 0.25 ]);
+        covarianceTable.Rows.Add([ "x2", "x2", 1.0, 0.15 ]);
+
+        AnalysisCorr analysisCorr2 = new(analysisConfiguration)
+        {
+            Vars = variables,
+            GroupBy = [new Variable(3, "cat1", false)],
+            CalculateOverall = true,
+        };
+
+        AnalysisUnivar analysisUnivar = new(analysisConfiguration)
+        {
+            Vars = variables,
+            GroupBy = [],
+            CalculateOverall = false,
+        };
+
+        List<AnalysisPresentation> analysisPresentations =
+        [
+            new()
+            {
+                Analysis = analysisCorr1,
+                DataView = new DataView(correlationTable),
+                SecondaryDataView = new DataView(covarianceTable),
+            },
+            new()
+            {
+                Analysis = analysisUnivar,
+                DataView = new DataView(new DataTable("nonsense5")),
+                SecondaryDataView = null,
+            },
+            new()
+            {
+                Analysis = analysisCorr2,
+                DataView = new DataView(new DataTable("nonsense3")),
+                SecondaryDataView = new DataView(new DataTable("Covariances")),
+            },
+        ];
+        
+        ExportService exportService = new();
+        var wb = exportService.CreateXlsxExport(analysisPresentations);
+        
+        Assert.Equal(8, wb.Worksheets.Count);
+        Assert.Equal([
+            "correlations_1",
+            "correlations_1_covariances",
+            "correlations_1_meta",
+            "univariate_1",
+            "univariate_1_meta",
+            "correlations_2",
+            "correlations_2_covariances",
+            "correlations_2_meta",
+        ], wb.Worksheets.Select(w => w.Name).ToList());
+        
+        Assert.Equal(2, wb.Worksheet("correlations_1").RowsUsed().Count());
+        Assert.Equal(4, wb.Worksheet("correlations_1_covariances").RowsUsed().Count());
+        Assert.Equal(5, wb.Worksheet("correlations_2_meta").RowsUsed().Count());
+    }
+    
     [Fact]
     public void TestCreateCsvExport()
     {

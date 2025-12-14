@@ -51,6 +51,37 @@ public partial class ExportService : IExportService
         };
     }
 
+    public List<string> AllMassExportFileNames(string folder, string prefix, ExportType exportType, bool singleFile, List<Analysis> analyses)
+    {
+        var suffix = exportType.Filter[(exportType.Filter.LastIndexOf("|*", StringComparison.Ordinal) + 2)..];
+        
+        if (singleFile)
+        {
+            return [ Path.Combine(folder, prefix + suffix) ];
+        }
+
+        Dictionary<string, int> analysisTypeCount = new();
+
+        var fileNames = analyses.SelectMany(analysis =>
+        {
+            var analysisType = analysis.AnalysisName.Replace(" ", "").ToLowerInvariant();
+            if (!analysisTypeCount.TryAdd(analysisType, 1))
+            {
+                analysisTypeCount[analysisType]++;
+            }
+
+            ExportOptions exportOptions = new()
+            {
+                FileName = Path.Combine(folder, prefix + "_" + analysisType + "_" + analysisTypeCount[analysisType] + suffix),
+                ExportType = exportType,
+            };
+            
+            return AllFileNames(exportOptions, analysis);
+        }).ToList();
+
+        return fileNames;
+    }
+
     public void CreateFrequenciesTableSuperHeader(IXLWorksheet worksheet, DataTable table, Dictionary<string, string> columnTooltips)
     {
         for (var columnIndex = 1; columnIndex <= table.Columns.Count; columnIndex++)
@@ -107,9 +138,9 @@ public partial class ExportService : IExportService
         }
     }
 
-    public void AddWorksheetMetadata(IXLWorkbook workbook, Analysis analysis, bool useStyles = true)
+    public void AddWorksheetMetadata(IXLWorkbook workbook, Analysis analysis, bool useStyles = true, string sheetName = "Meta")
     {
-        var wsMeta = workbook.AddWorksheet("Meta");
+        var wsMeta = workbook.AddWorksheet(sheetName);
 
         if (useStyles)
         {
@@ -176,6 +207,47 @@ public partial class ExportService : IExportService
         }
             
         AddWorksheetMetadata(wb, analysis, useStyles);
+
+        return wb;
+    }
+
+    public IXLWorkbook CreateXlsxExport(List<AnalysisPresentation> analysisPresentations, bool useStyles = true)
+    {
+        Dictionary<string, int> analysisTypeCount = new();
+        
+        XLWorkbook wb = new();
+
+        if (useStyles)
+        {
+            wb.ColumnWidth = 22.14;
+        }
+
+        foreach (var analysisPresentation in analysisPresentations)
+        {
+            var analysisType = analysisPresentation.Analysis.AnalysisName.Replace(" ", "").ToLowerInvariant();
+            if (!analysisTypeCount.TryAdd(analysisType, 1))
+            {
+                analysisTypeCount[analysisType]++;
+            }
+            
+            wb.AddWorksheetDataTable(analysisPresentation.DataView.ToTable(analysisType + "_" + analysisTypeCount[analysisType]), useStyles);
+            
+            if (analysisPresentation.Analysis is AnalysisFreq && useStyles)
+            {
+                CreateFrequenciesTableSuperHeader(wb.Worksheet(analysisType + "_" + analysisTypeCount[analysisType]), analysisPresentation.DataView.Table!, analysisPresentation.ColumnTooltips);
+            }
+
+            if (analysisPresentation.SecondaryDataView != null)
+            {
+                var secondarySheetName = analysisType + "_" + analysisTypeCount[analysisType] + "_" +
+                                         analysisPresentation.SecondaryDataView.Table?.TableName.ToLowerInvariant();
+                if (secondarySheetName.Length > 31) secondarySheetName = secondarySheetName[..31];
+                
+                wb.AddWorksheetDataTable(analysisPresentation.SecondaryDataView.ToTable(secondarySheetName), useStyles);
+            }
+            
+            AddWorksheetMetadata(wb, analysisPresentation.Analysis, useStyles, analysisType + "_" + analysisTypeCount[analysisType] + "_meta");
+        }
 
         return wb;
     }

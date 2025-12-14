@@ -134,9 +134,11 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition/>
                             <ColumnDefinition/>
+                            <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" x:Name="buttonDownloadAnalysesDefinitions" HorizontalAlignment="Left" Height="33" Width="30" Margin="5" ContentTemplate="{StaticResource Download}" IsEnabled="{Binding Analyses.Count}" Click="ButtonDownloadAnalysesDefinitions_Click"/>
-                        <Button Grid.Column="1" x:Name="removeAllAnalyses" HorizontalAlignment="Right" Height="33" Width="30" Margin="5" ContentTemplate="{StaticResource Trash}" IsEnabled="{Binding Analyses.Count}" Click="RemoveAllAnalyses_OnClick"/>
+                        <Button Grid.Column="0" x:Name="buttonDownloadAnalysesDefinitions" HorizontalAlignment="Left" Height="33" Width="30" Margin="5" ContentTemplate="{StaticResource Download}" IsEnabled="{Binding Analyses.Count}" Click="ButtonDownloadAnalysesDefinitions_Click" ToolTip="Download for batch analyze ..."/>
+                        <Button Grid.Column="1" HorizontalAlignment="Center" Height="33" Width="30" Margin="5" ContentTemplate="{StaticResource ExcelWorksheet}" IsEnabled="{Binding Analyses.Count}" ToolTip="Mass export ..." Click="ButtonMassExport_OnClick"/>
+                        <Button Grid.Column="2" x:Name="removeAllAnalyses" HorizontalAlignment="Right" Height="33" Width="30" Margin="5" ContentTemplate="{StaticResource Trash}" IsEnabled="{Binding Analyses.Count}" Click="RemoveAllAnalyses_OnClick"/>
                     </Grid>
                 </Border>
                 <ScrollViewer x:Name="scrollViewerAnalysesOutline" Grid.Row="1" VerticalScrollBarVisibility="Auto">
