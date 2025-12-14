@@ -239,7 +239,11 @@ public partial class ExportService : IExportService
 
             if (analysisPresentation.SecondaryDataView != null)
             {
-                wb.AddWorksheetDataTable(analysisPresentation.SecondaryDataView.ToTable(analysisType + "_" + analysisTypeCount[analysisType] + "_" + analysisPresentation.SecondaryDataView.Table?.TableName.ToLowerInvariant()), useStyles);
+                var secondarySheetName = analysisType + "_" + analysisTypeCount[analysisType] + "_" +
+                                         analysisPresentation.SecondaryDataView.Table?.TableName.ToLowerInvariant();
+                if (secondarySheetName.Length > 31) secondarySheetName = secondarySheetName[..31];
+                
+                wb.AddWorksheetDataTable(analysisPresentation.SecondaryDataView.ToTable(secondarySheetName), useStyles);
             }
             
             AddWorksheetMetadata(wb, analysisPresentation.Analysis, useStyles, analysisType + "_" + analysisTypeCount[analysisType] + "_meta");

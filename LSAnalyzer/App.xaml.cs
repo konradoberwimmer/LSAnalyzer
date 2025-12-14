@@ -68,6 +68,7 @@ namespace LSAnalyzer
             services.AddTransient<IResultService>(provider => new ResultService());
             services.AddTransient<ConfigDatasetTypes>();
             services.AddTransient<DataProviders>();
+            services.AddSingleton<MassExport>();
             services.AddTransient<SystemSettings>();
             services.AddTransient<SelectAnalysisFile>();
             services.AddTransient<Subsetting>();
@@ -76,6 +77,7 @@ namespace LSAnalyzer
             services.AddSingleton<ViewModels.BatchAnalyze>();
             services.AddTransient<Views.ConfigDatasetTypes>();
             services.AddTransient<Views.DataProviders>();
+            services.AddTransient<Views.MassExport>();
             services.AddTransient<Views.SystemSettings>();
             services.AddTransient<Views.SelectAnalysisFile>();
             services.AddTransient<Views.BatchAnalyze>();

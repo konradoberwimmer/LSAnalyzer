@@ -79,6 +79,9 @@ public partial class MassExport : ObservableObject
         IsBusy = true;
         LastExportType = SelectedExportType;
         
+        Properties.Settings.Default.lastResultOutFileLocation = Folder;
+        Properties.Settings.Default.Save();
+        
         var allFileNames = _exportService.AllMassExportFileNames(Folder, Prefix, SelectedExportType, CanSingleExcelFile && SingleExcelFile, AnalysisPresentations.Select(analysisPresentation => analysisPresentation.Analysis).ToList());
         foreach (var fileName in allFileNames.Where(File.Exists))
         {
