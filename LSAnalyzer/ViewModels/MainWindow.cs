@@ -185,8 +185,8 @@ namespace LSAnalyzer.ViewModels
 
             WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (r, m) =>
             {
-                AnalysisPresentation analysisPresentation = new(m.Analysis);
-
+                AnalysisPresentation analysisPresentation = new(m.Analysis, this);
+                
                 Analyses.Add(analysisPresentation);
 
                 analysisPresentation.SetAnalysisResult(m.Analysis.Result);
