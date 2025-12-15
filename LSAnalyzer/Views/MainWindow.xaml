@@ -45,11 +45,11 @@
                 <MenuItem x:Name="menuItemAnalysisSubsetting" Header="Subsetting ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisSubsetting_Click"/>
             </MenuItem>
             <MenuItem Header="_Analysis" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
-                <MenuItem x:Name="menuItemAnalysisUnivar" Header="Univariate (means and SD) ..." Click="MenuItemAnalysisUnivar_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+                <MenuItem x:Name="menuItemAnalysisUnivar" Header="Univariate (means / standard deviations) ..." Click="MenuItemAnalysisUnivar_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisFrequencies" Header="Frequencies ..." Click="MenuItemAnalysisFreq_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisPercentiles" Header="Percentiles ..." Click="MenuItemAnalysisPercentiles_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <Separator/>
-                <MenuItem x:Name="menuItemAnalysisMeanDiff" Header="Difference in mean ..." Click="MenuItemAnalysisMeanDiff_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
+                <MenuItem x:Name="menuItemAnalysisMeanDiff" Header="Differences in mean ..." Click="MenuItemAnalysisMeanDiff_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisCorrelations" Header="Correlations ..." Click="MenuItemAnalysisCorrelations_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <Separator/>
                 <MenuItem x:Name="menuItemAnalysisRegression" Header="Linear Regression ..." Click="MenuItemAnalysisLinreg_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
