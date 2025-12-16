@@ -340,7 +340,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(File.Exists(tmpFile));
             
             var analysisSerializationHelpers =
-                JsonSerializer.Deserialize<MainWindow.AnalysisSerializationHelper[]>(File.ReadAllText(tmpFile))!;
+                JsonSerializer.Deserialize<AnalysisWithViewSettings[]>(File.ReadAllText(tmpFile))!;
             
             Assert.Equal(2, analysisSerializationHelpers.Length);
         }

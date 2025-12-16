@@ -6,8 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using LSAnalyzer.ViewModels;
 using Polly;
 using Xunit.Sdk;
+using BatchAnalyze = LSAnalyzer.Services.BatchAnalyze;
 
 namespace TestLSAnalyzer.Services
 {
@@ -37,10 +39,12 @@ namespace TestLSAnalyzer.Services
                 lastMessage = m;
             });
 
+            AnalysisPresentation dummyAnalysisPresentation = new();
+            
             batchAnalyze.RunBatch(new()
             {
-                { 1, new AnalysisUnivar(analysisConfiguration) }, 
-                { 2, new AnalysisFreq(analysisConfiguration) }, 
+                { 1, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfiguration), ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary} }, 
+                { 2, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfiguration), ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary} }, 
             }, true, analysisConfiguration);
 
             Policy.Handle<EqualException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
@@ -91,26 +95,28 @@ namespace TestLSAnalyzer.Services
                 messages.Add(m);
             });
 
-            Dictionary<int, Analysis> analyses = new()
+            AnalysisPresentation dummyAnalysisPresentation = new();
+
+            Dictionary<int, AnalysisWithViewSettings> analyses = new()
             {
-                { 1, new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
+                { 1, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
                         Vars = new() { new(1, "doesntExist", false) },
-                    } },
-                { 2, new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                { 2, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
                         Vars = new() { new(1, "x", false) },
                         GroupBy = new() { new(2, "cat", false) },
-                    }},
-                { 3, new AnalysisFreq(analysisConfigurationNmi10Multicat) {
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                { 3, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat) {
                         Vars = new() { new(1, "doesntExist", false) },
-                    } },
-                { 4, new AnalysisFreq(analysisConfigurationNmi10Multicat) {
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                { 4, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat) {
                         Vars = new() { new(1, "item1", false), new(2, "item2", false) },
                         GroupBy = new() { new(2, "cat", false) },
                         CalculateBivariate = true,
-                    } },
-                { 5, new AnalysisCorr(analysisConfigurationInvalid) {
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                { 5, new AnalysisWithViewSettings { Analysis = new AnalysisCorr(analysisConfigurationInvalid) {
                         Vars = new() { new(1, "dummy", false) },
-                    } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
             };
 
             batchAnalyze.RunBatch(analyses, false, null);
@@ -166,24 +172,26 @@ namespace TestLSAnalyzer.Services
             {
                 messages.Add(m);
             });
+            
+            AnalysisPresentation dummyAnalysisPresentation = new();
 
-            Dictionary<int, Analysis> analyses = new()
+            Dictionary<int, AnalysisWithViewSettings> analyses = new()
             {
-                { 1, new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
+                { 1, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
                         Vars = new() { new(1, "doesntExist", false) },
-                    } },
-                { 2, new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                { 2, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
                         Vars = new() { new(1, "x", false) },
                         GroupBy = new() { new(2, "cat", false) },
-                    }},
-                { 3, new AnalysisFreq(analysisConfigurationNmi10Multicat) {
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                { 3, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat) {
                         Vars = new() { new(1, "cat", false) },
-                    } },
-                { 4, new AnalysisFreq(analysisConfigurationNmi10Multicat) {
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                { 4, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat) {
                         Vars = new() { new(1, "item1", false), new(2, "item2", false) },
                         GroupBy = new() { new(2, "cat", false) },
                         CalculateBivariate = true,
-                    } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
             };
 
             batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5);
@@ -238,24 +246,26 @@ namespace TestLSAnalyzer.Services
             {
                 messages.Add(m);
             });
+            
+            AnalysisPresentation dummyAnalysisPresentation = new();
 
-            Dictionary<int, Analysis> analyses = new()
+            Dictionary<int, AnalysisWithViewSettings> analyses = new()
             {
-                { 1, new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
+                { 1, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
                         Vars = new() { new(1, "item1", false) },
-                    } },
-                { 2, new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                { 2, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
                         Vars = new() { new(1, "x", false) },
                         GroupBy = new() { new(2, "cat", false) },
-                    }},
-                { 3, new AnalysisFreq(analysisConfigurationNmi10Multicat) {
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                { 3, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat) {
                         Vars = new() { new(1, "cat", false) },
-                    } },
-                { 4, new AnalysisFreq(analysisConfigurationNmi10Multicat) {
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                { 4, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat) {
                         Vars = new() { new(1, "item1", false), new(2, "item2", false) },
                         GroupBy = new() { new(2, "cat", false) },
                         CalculateBivariate = true,
-                    } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
             };
 
             batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat);

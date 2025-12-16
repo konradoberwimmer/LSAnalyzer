@@ -341,7 +341,7 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
-            var contentToSerialize = Analyses.Select(analysisPresentation => new AnalysisSerializationHelper
+            var contentToSerialize = Analyses.Select(analysisPresentation => new AnalysisWithViewSettings
             {
                 Analysis = analysisPresentation.Analysis,
                 ViewSettings = analysisPresentation.ViewSettingsDictionary,
@@ -363,13 +363,6 @@ namespace LSAnalyzer.ViewModels
         private void RemoveAllAnalysis(object? dummy)
         {
             Analyses.Clear();
-        }
-    
-        public class AnalysisSerializationHelper
-        {
-            public required Analysis Analysis { init; get; }
-
-            public required Dictionary<string, object> ViewSettings { init; get; }
         }
     }
 
