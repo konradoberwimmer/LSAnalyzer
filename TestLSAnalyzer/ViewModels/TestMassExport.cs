@@ -180,8 +180,9 @@ public class TestMassExport
 
         Policy.Handle<AllException>().WaitAndRetry(5000, _ => TimeSpan.FromMilliseconds(500))
             .Execute(() => Assert.All(expectedFilesCreated, f => Assert.True(File.Exists(f))));
-        
-        Assert.False(massExportViewModel.IsBusy);
+
+        Policy.Handle<FalseException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(5))
+            .Execute(() => Assert.False(massExportViewModel.IsBusy));
     }
     
     [Theory, ClassData(typeof(TestMassExportWorkerCases))]

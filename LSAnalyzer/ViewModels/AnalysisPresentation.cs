@@ -1750,6 +1750,20 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        public Dictionary<string, object> ViewSettingsDictionary =>
+            new()
+            {
+                { "ShowFMI", ShowFMI },
+                { "ShowPValues", ShowPValues },
+                { "ShowRank", ShowRank },
+                { "ShowNCases", ShowNcases },
+                { "ShowNWeight", ShowNweight },
+                { "ShowVariableLabels", ShowVariableLabels },
+                { "UseTableAverage", UseTableAverage },
+                { "TableSorting", DataView.Sort },
+                { "SecondaryTableSorting", SecondaryDataView?.Sort ?? string.Empty }
+            };
+
         public class FileInUseMessage
         {
             public required string FileName { get; init; }

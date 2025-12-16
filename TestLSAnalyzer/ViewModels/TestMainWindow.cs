@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Polly;
 using Xunit.Sdk;
@@ -337,6 +338,11 @@ namespace TestLSAnalyzer.ViewModels
 
             mainWindowViewModel.SaveAnalysesDefintionsCommand.Execute(tmpFile);
             Assert.True(File.Exists(tmpFile));
+            
+            var analysisSerializationHelpers =
+                JsonSerializer.Deserialize<MainWindow.AnalysisSerializationHelper[]>(File.ReadAllText(tmpFile))!;
+            
+            Assert.Equal(2, analysisSerializationHelpers.Length);
         }
 
         [Fact]

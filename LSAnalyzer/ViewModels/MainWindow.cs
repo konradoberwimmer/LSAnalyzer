@@ -341,7 +341,13 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
-            File.WriteAllText(fileName, JsonSerializer.Serialize(Analyses.Select(analysisPresentation => analysisPresentation.Analysis).ToArray()));
+            var contentToSerialize = Analyses.Select(analysisPresentation => new AnalysisSerializationHelper
+            {
+                Analysis = analysisPresentation.Analysis,
+                ViewSettings = analysisPresentation.ViewSettingsDictionary,
+            }).ToArray();
+
+            File.WriteAllText(fileName, JsonSerializer.Serialize(contentToSerialize));
         }
         
         private RelayCommand<object?> _removeAllAnalysesCommand;
@@ -357,6 +363,13 @@ namespace LSAnalyzer.ViewModels
         private void RemoveAllAnalysis(object? dummy)
         {
             Analyses.Clear();
+        }
+    
+        public class AnalysisSerializationHelper
+        {
+            public required Analysis Analysis { init; get; }
+
+            public required Dictionary<string, object> ViewSettings { init; get; }
         }
     }
 

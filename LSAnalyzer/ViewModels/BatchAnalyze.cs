@@ -184,11 +184,26 @@ namespace LSAnalyzer.ViewModels
             AnalysesTable = null;
             FinishedAllCalculations = false;
 
-            Analysis[] analyses = Array.Empty<Analysis>();
+            Analysis[] analyses;
             try
             {
-                analyses = JsonSerializer.Deserialize<Analysis[]>(File.ReadAllText(FileName))!;
-            } catch (Exception)
+                var analysisSerializationHelpers =
+                    JsonSerializer.Deserialize<MainWindow.AnalysisSerializationHelper[]>(File.ReadAllText(FileName))!;
+                analyses = analysisSerializationHelpers
+                    .Select(analysisSerializationHelper => analysisSerializationHelper.Analysis).ToArray();
+            }
+            catch (JsonException)
+            {
+                try
+                {
+                    analyses = JsonSerializer.Deserialize<Analysis[]>(File.ReadAllText(FileName))!;
+                } catch (Exception)
+                {
+                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeFailureMessage() { Message = "File is not valid JSON or did not contain analysis requests!" });
+                    return;
+                }
+            }
+            catch (Exception)
             {
                 WeakReferenceMessenger.Default.Send(new BatchAnalyzeFailureMessage() { Message = "File is not valid JSON or did not contain analysis requests!" });
                 return;
