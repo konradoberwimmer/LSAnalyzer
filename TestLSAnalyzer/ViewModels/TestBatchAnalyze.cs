@@ -98,6 +98,50 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
+        public void TestRunBatchWorksWithViewSettings()
+        {
+            Rservice rservice = new(new());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                },
+                ModeKeep = true,
+            };
+
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
+
+            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice);
+            LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService);
+
+            batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat_v1_2.json");
+            batchAnalyzeViewModel.UseCurrentFile = true;
+            batchAnalyzeViewModel.CurrentConfiguration = analysisConfiguration;
+            batchAnalyzeViewModel.RunBatchCommand.Execute(null);
+
+            Policy.Handle<NotNullException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() => Assert.NotNull(batchAnalyzeViewModel.AnalysesTable));
+            Assert.Equal(4, batchAnalyzeViewModel.AnalysesTable!.Rows.Count);
+            
+            Policy.Handle<Exception>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+                .Execute(() =>
+                {
+                    foreach (var row in batchAnalyzeViewModel.AnalysesTable.Rows)
+                    {
+                        var dataRow = row as DataRow;
+                        Assert.True((bool)(dataRow!["Success"]));
+                    }
+                });
+        }
+        
+        [Fact]
         public void TransferResultsSendMessages()
         {
             Rservice rservice = new(new());
@@ -150,6 +194,7 @@ namespace TestLSAnalyzer.ViewModels
 
             Assert.Equal(4, analysisReadyMessagesSent);
         }
+        
 
         [Fact]
         public void TestClearAnalysisData()

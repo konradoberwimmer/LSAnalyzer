@@ -74,7 +74,7 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private Dictionary<int, Analysis>? _analysesDictionary = null;
+        private Dictionary<int, AnalysisWithViewSettings>? _analysesDictionary = null;
 
         private DataTable? _analysesTable = null;
         public DataTable? AnalysesTable
@@ -184,11 +184,31 @@ namespace LSAnalyzer.ViewModels
             AnalysesTable = null;
             FinishedAllCalculations = false;
 
-            Analysis[] analyses = Array.Empty<Analysis>();
+            AnalysisWithViewSettings[] analyses;
             try
             {
-                analyses = JsonSerializer.Deserialize<Analysis[]>(File.ReadAllText(FileName))!;
-            } catch (Exception)
+                analyses = JsonSerializer.Deserialize<AnalysisWithViewSettings[]>(File.ReadAllText(FileName))!;
+            }
+            catch (JsonException)
+            {
+                try
+                {
+                    var analysesWithoutViewSettings = JsonSerializer.Deserialize<Analysis[]>(File.ReadAllText(FileName))!;
+                    AnalysisPresentation dummyAnalysisPresentation = new();
+
+                    analyses = analysesWithoutViewSettings
+                        .Select(analysis => new AnalysisWithViewSettings
+                        {
+                            Analysis = analysis,
+                            ViewSettings = dummyAnalysisPresentation.ViewSettings
+                        }).ToArray();
+                } catch (Exception)
+                {
+                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeFailureMessage() { Message = "File is not valid JSON or did not contain analysis requests!" });
+                    return;
+                }
+            }
+            catch (Exception)
             {
                 WeakReferenceMessenger.Default.Send(new BatchAnalyzeFailureMessage() { Message = "File is not valid JSON or did not contain analysis requests!" });
                 return;
@@ -209,7 +229,7 @@ namespace LSAnalyzer.ViewModels
 
             foreach (var analysis in _analysesDictionary)
             {
-                analysesTable.Rows.Add(new object?[] { analysis.Key, analysis.Value.ShortInfo, DBNull.Value, string.Empty });
+                analysesTable.Rows.Add(new object?[] { analysis.Key, analysis.Value.Analysis.ShortInfo, DBNull.Value, string.Empty });
             }
 
             AnalysesTable = analysesTable;
@@ -255,13 +275,8 @@ namespace LSAnalyzer.ViewModels
         public string Message { get; set; } = String.Empty;
     }
 
-    public class BatchAnalyzeAnalysisReadyMessage
+    public class BatchAnalyzeAnalysisReadyMessage(AnalysisWithViewSettings analysisWithViewSettings)
     {
-        public readonly Analysis Analysis;
-
-        public BatchAnalyzeAnalysisReadyMessage(Analysis analysis)
-        {
-            Analysis = analysis;
-        }
+        public readonly AnalysisWithViewSettings AnalysisWithViewSettings = analysisWithViewSettings;
     }
 }

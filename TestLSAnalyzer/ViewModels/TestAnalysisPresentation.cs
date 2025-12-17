@@ -8,6 +8,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 
@@ -879,6 +880,43 @@ namespace TestLSAnalyzer.ViewModels
             });
 
             Assert.False(sentFileInUseMessage);
+        }
+
+        [Fact]
+        public void TestApplyViewSettings()
+        {
+            AnalysisPresentation analysisPresentation = new();
+
+            analysisPresentation.DataTable = new("results")
+            {
+                Columns = { { "var", typeof(string) }, { "mean", typeof(double) }, { "rank of mean (per variable)", typeof(double) }, { "mean__se", typeof(double) }, { "mean - p value", typeof(double) }, { "sd", typeof(double) }, { "sd__se", typeof(double) }, { "standard deviation - p value", typeof(double) } },
+                Rows =
+                {
+                    { "x1", 0.5, 0.01, 0.1, 0.001 },
+                    { "x2", 12.5, 0.12, 1.41, 0.023 },
+                    { "x3", -2.28, 0.23, 0.5, 0.012 },
+                }
+            };
+            analysisPresentation.DataView = new DataView(analysisPresentation.DataTable);
+            analysisPresentation.SecondaryDataView = null;
+            
+            Assert.True(analysisPresentation.HasFMI);
+            Assert.False(analysisPresentation.ShowFMI);
+            Assert.NotEqual("[mean] DESC", analysisPresentation.DataView.Sort);
+            Assert.False(analysisPresentation.HasNweightToggle);
+            
+            Dictionary<string, object> viewSettings = new()
+            {
+                { "ShowFMI", JsonSerializer.SerializeToElement(true) },
+                { "ShowNweight", JsonSerializer.SerializeToElement(true) },
+                { "TableSorting", JsonSerializer.SerializeToElement("[mean] DESC") },
+            };
+            
+            analysisPresentation.ApplyDeserializedViewSettings(viewSettings);
+            
+            Assert.True(analysisPresentation.ShowFMI);
+            Assert.False(analysisPresentation.ShowNweight);
+            Assert.Equal("[mean] DESC", analysisPresentation.DataView.Sort);
         }
 
         public static string AssemblyDirectory

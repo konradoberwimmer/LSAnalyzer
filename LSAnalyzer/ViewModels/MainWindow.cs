@@ -185,11 +185,13 @@ namespace LSAnalyzer.ViewModels
 
             WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (r, m) =>
             {
-                AnalysisPresentation analysisPresentation = new(m.Analysis, this);
+                AnalysisPresentation analysisPresentation = new(m.AnalysisWithViewSettings.Analysis, this);
                 
                 Analyses.Add(analysisPresentation);
 
-                analysisPresentation.SetAnalysisResult(m.Analysis.Result);
+                analysisPresentation.SetAnalysisResult(m.AnalysisWithViewSettings.Analysis.Result);
+                
+                analysisPresentation.ApplyDeserializedViewSettings(m.AnalysisWithViewSettings.ViewSettings);
             });
         }
 
@@ -341,7 +343,13 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
-            File.WriteAllText(fileName, JsonSerializer.Serialize(Analyses.Select(analysisPresentation => analysisPresentation.Analysis).ToArray()));
+            var contentToSerialize = Analyses.Select(analysisPresentation => new AnalysisWithViewSettings
+            {
+                Analysis = analysisPresentation.Analysis,
+                ViewSettings = analysisPresentation.ViewSettings,
+            }).ToArray();
+
+            File.WriteAllText(fileName, JsonSerializer.Serialize(contentToSerialize));
         }
         
         private RelayCommand<object?> _removeAllAnalysesCommand;

@@ -23,7 +23,7 @@ namespace LSAnalyzer.Services
             _rservice = rservice;
         }
 
-        public void RunBatch(Dictionary<int, Analysis> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration)
+        public void RunBatch(Dictionary<int, AnalysisWithViewSettings> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration)
         {
             _useCurrentFile = useCurrentFile;
             _currentConfiguration = currentConfiguration;
@@ -42,7 +42,7 @@ namespace LSAnalyzer.Services
 
         private void DoBatch(object? sender, DoWorkEventArgs e)
         {
-            if (e.Argument is not Dictionary<int, Analysis> analyses || (_useCurrentFile && _currentConfiguration == null))
+            if (e.Argument is not Dictionary<int, AnalysisWithViewSettings> analyses || (_useCurrentFile && _currentConfiguration == null))
             {
                 e.Cancel = true;
                 return;
@@ -51,78 +51,80 @@ namespace LSAnalyzer.Services
             AnalysisConfiguration? previousAnalysisConfiguration = null;
             string? previousSubsettingExpression = "$$$initialize$$$";
 
-            foreach (var analysis in analyses)
+            foreach (var (key, analysisWithViewSettings) in analyses)
             {
                 WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                 {
-                    Id = analysis.Key,
+                    Id = key,
                     Success = false,
                     Message = "Working ..."
                 });
 
+                var analysis = analysisWithViewSettings.Analysis;
+
                 if (!_useCurrentFile && (
                         previousAnalysisConfiguration == null || 
-                        !analysis.Value.AnalysisConfiguration.IsEqual(previousAnalysisConfiguration) || 
-                        analysis.Value.SubsettingExpression != previousSubsettingExpression))
+                        !analysis.AnalysisConfiguration.IsEqual(previousAnalysisConfiguration) || 
+                        analysis.SubsettingExpression != previousSubsettingExpression))
                 {
-                    if (analysis.Value.AnalysisConfiguration!.FileName?.StartsWith("[") ?? false)
+                    if (analysis.AnalysisConfiguration!.FileName?.StartsWith("[") ?? false)
                     {
                         WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                         {
-                            Id = analysis.Key,
+                            Id = key,
                             Success = false,
                             Message = "Reloading from data provider is not supported!"
                         });
                         continue;
                     }
 
-                    if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.Value.AnalysisConfiguration.FileName ?? string.Empty, analysis.Value.AnalysisConfiguration.FileType))
+                    if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.AnalysisConfiguration.FileName ?? string.Empty, analysis.AnalysisConfiguration.FileType))
                     {
                         WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                         {
-                            Id = analysis.Key,
+                            Id = key,
                             Success = false,
-                            Message = "Could not load file '" + analysis.Value.AnalysisConfiguration.FileName + "'!"
+                            Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!"
                         });
                         continue;
                     }
 
-                    if (!string.IsNullOrWhiteSpace(analysis.Value.AnalysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysis.Value.AnalysisConfiguration.DatasetType!.IDvar))
+                    if (!string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysis.AnalysisConfiguration.DatasetType!.IDvar))
                     {
                         WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                         {
-                            Id = analysis.Key,
+                            Id = key,
                             Success = false,
-                            Message = "Could not load file '" + analysis.Value.AnalysisConfiguration.FileName + "'!"
+                            Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!"
                         });
                         continue;
                     }
 
-                    if (!_rservice.TestAnalysisConfiguration(analysis.Value.AnalysisConfiguration, analysis.Value.SubsettingExpression))
+                    if (!_rservice.TestAnalysisConfiguration(analysis.AnalysisConfiguration, analysis.SubsettingExpression))
                     {
                         WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                         {
-                            Id = analysis.Key,
+                            Id = key,
                             Success = false,
-                            Message = "Could not use file for dataset type '" + analysis.Value.AnalysisConfiguration.DatasetType?.Name + "'!"
+                            Message = "Could not use file for dataset type '" + analysis.AnalysisConfiguration.DatasetType?.Name + "'!"
                         });
                         continue;
                     }
 
-                    if (analysis.Value.AnalysisConfiguration.ModeKeep == false)
+                    if (analysis.AnalysisConfiguration.ModeKeep == false)
                     {
                         List<string>? additionalVariables = null;
-                        if (analysis.Value is AnalysisRegression analysisRegression)
+                        if (analysis is AnalysisRegression analysisRegression)
                         {
                             additionalVariables = new() { analysisRegression.Dependent?.Name ?? "insufficient_analysis_definition_" };
                         }
-                        if (!_rservice.PrepareForAnalysis(analysis.Value, additionalVariables))
+                        if (!_rservice.PrepareForAnalysis(analysis, additionalVariables))
                         {
                             WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                             {
-                                Id = analysis.Key,
+                                Id = key,
                                 Success = false,
-                                Message = "Could not build file '" + analysis.Value.AnalysisConfiguration.FileName + "' for analysis!"
+                                Message = "Could not build file '" + analysis.AnalysisConfiguration.FileName + "' for analysis!"
                             });
                             continue;
                         }
@@ -131,36 +133,36 @@ namespace LSAnalyzer.Services
 
                 if (_useCurrentFile)
                 {
-                    if (analysis.Value.SubsettingExpression != previousSubsettingExpression)
+                    if (analysis.SubsettingExpression != previousSubsettingExpression)
                     {
-                        if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, analysis.Value.SubsettingExpression))
+                        if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, analysis.SubsettingExpression))
                         {
                             WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                             {
-                                Id = analysis.Key,
+                                Id = key,
                                 Success = false,
-                                Message = "Could not reapply subsetting '" + analysis.Value.SubsettingExpression + "'!"
+                                Message = "Could not reapply subsetting '" + analysis.SubsettingExpression + "'!"
                             });
                             continue;
                         }
 
-                        previousSubsettingExpression = analysis.Value.SubsettingExpression;
+                        previousSubsettingExpression = analysis.SubsettingExpression;
                     
-                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedSubsettingMessage() { SubsettingExpression = analysis.Value.SubsettingExpression ?? string.Empty });
+                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedSubsettingMessage() { SubsettingExpression = analysis.SubsettingExpression ?? string.Empty });
                     }
 
                     if (!(_currentConfiguration?.ModeKeep ?? true))
                     {
                         List<string>? additionalVariables = null;
-                        if (analysis.Value is AnalysisRegression analysisRegression)
+                        if (analysis is AnalysisRegression analysisRegression)
                         {
                             additionalVariables = new() { analysisRegression.Dependent?.Name ?? "insufficient_analysis_definition_" };
                         }
-                        if (!_rservice.PrepareForAnalysis(analysis.Value, additionalVariables))
+                        if (!_rservice.PrepareForAnalysis(analysis, additionalVariables))
                         {
                             WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                             {
-                                Id = analysis.Key,
+                                Id = key,
                                 Success = false,
                                 Message = "Could not build current file for analysis!"
                             });
@@ -168,15 +170,15 @@ namespace LSAnalyzer.Services
                         }
                     }
 
-                    analysis.Value.AnalysisConfiguration = _currentConfiguration!;
+                    analysis.AnalysisConfiguration = _currentConfiguration!;
                 }
 
-                previousSubsettingExpression = analysis.Value.SubsettingExpression;
-                previousAnalysisConfiguration = analysis.Value.AnalysisConfiguration;
+                previousSubsettingExpression = analysis.SubsettingExpression;
+                previousAnalysisConfiguration = analysis.AnalysisConfiguration;
 
                 DateTime beforeCalculation = DateTime.Now;
 
-                switch (analysis.Value)
+                switch (analysis)
                 {
                     case AnalysisUnivar analysisUnivar:
                         analysisUnivar.Result = _rservice.CalculateUnivar(analysisUnivar) ?? new();
@@ -207,30 +209,30 @@ namespace LSAnalyzer.Services
                         break;
                 }
 
-                if (analysis.Value.Result.Count == 0)
+                if (analysis.Result.Count == 0)
                 {
                     WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                     {
-                        Id = analysis.Key,
+                        Id = key,
                         Success = false,
                         Message = "Could not calculate a result!"
                     });
                     continue;
                 }
                     
-                foreach (var groupByVariable in analysis.Value.GroupBy)
+                foreach (var groupByVariable in analysis.GroupBy)
                 {
                     var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
                     if (valueLabels != null)
                     {
-                        analysis.Value.ValueLabels.Add(groupByVariable.Name, valueLabels);
+                        analysis.ValueLabels.Add(groupByVariable.Name, valueLabels);
                     }
                 }
 
-                analysis.Value.ResultAt = DateTime.Now;
-                analysis.Value.ResultDuration = (analysis.Value.ResultAt! - beforeCalculation).Value.TotalSeconds;
+                analysis.ResultAt = DateTime.Now;
+                analysis.ResultDuration = (analysis.ResultAt! - beforeCalculation).Value.TotalSeconds;
                     
-                WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage() { Id = analysis.Key, Success = true, Message = "Success!" });
+                WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage() { Id = key, Success = true, Message = "Success!" });
             }
 
             e.Result = analyses;
