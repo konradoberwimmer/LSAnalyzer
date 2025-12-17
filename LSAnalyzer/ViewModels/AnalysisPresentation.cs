@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -1750,20 +1751,97 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        public Dictionary<string, object> ViewSettingsDictionary =>
+        public Dictionary<string, object> ViewSettings =>
             new()
             {
                 { "ShowFMI", ShowFMI },
                 { "ShowPValues", ShowPValues },
                 { "ShowRank", ShowRank },
-                { "ShowNCases", ShowNcases },
-                { "ShowNWeight", ShowNweight },
+                { "ShowNcases", ShowNcases },
+                { "ShowNweight", ShowNweight },
                 { "ShowVariableLabels", ShowVariableLabels },
                 { "UseTableAverage", UseTableAverage },
                 { "TableSorting", DataView.Sort },
                 { "SecondaryTableSorting", SecondaryDataView?.Sort ?? string.Empty }
             };
 
+        public void ApplyDeserializedViewSettings(Dictionary<string, object> viewSettings)
+        {
+            object? value;
+            if (HasFMI && viewSettings.TryGetValue("ShowFMI", out value) && value is JsonElement showFMI && showFMI.ValueKind is JsonValueKind.True != ShowFMI)
+            {
+                
+                ShowFMI = !ShowFMI;
+            }
+            
+            if (HasPValues && viewSettings.TryGetValue("ShowPValues", out value) && value is JsonElement showPValues && showPValues.ValueKind is JsonValueKind.True != ShowPValues)
+            {
+                
+                ShowPValues = !ShowPValues;
+            }
+            
+            if (HasRank && viewSettings.TryGetValue("ShowRank", out value) && value is JsonElement showRank && showRank.ValueKind is JsonValueKind.True != ShowRank)
+            {
+                
+                ShowRank = !ShowRank;
+            }
+            
+            if (HasNcasesToggle && viewSettings.TryGetValue("ShowNcases", out value) && value is JsonElement showNcases && showNcases.ValueKind is JsonValueKind.True != ShowNcases)
+            {
+                
+                ShowNcases = !ShowNcases;
+            }
+            
+            if (HasNweightToggle && viewSettings.TryGetValue("ShowNweight", out value) && value is JsonElement showNweight && showNweight.ValueKind is JsonValueKind.True != ShowNweight)
+            {
+                
+                ShowNweight = !ShowNweight;
+            }
+            
+            if (HasVariableLabels && viewSettings.TryGetValue("ShowVariableLabels", out value) && value is JsonElement showVariableLabels && showVariableLabels.ValueKind is JsonValueKind.True != ShowVariableLabels)
+            {
+                
+                ShowVariableLabels = !ShowVariableLabels;
+            }
+            
+            if (HasTableAverage && viewSettings.TryGetValue("UseTableAverage", out value) && value is JsonElement useTableAverage && useTableAverage.ValueKind is JsonValueKind.True != UseTableAverage)
+            {
+                
+                UseTableAverage = !UseTableAverage;
+            }
+            
+            if (DataView.Table is null) return;
+            
+            if (viewSettings.TryGetValue("TableSorting", out var valueTableSorting) && valueTableSorting is JsonElement { ValueKind: JsonValueKind.String } tableSorting)
+            {
+                var sortings = tableSorting.ToString().Split(',');
+                var newColumnNames = DataView.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName)
+                    .ToArray();
+
+                if (sortings.All(sorting =>
+                        newColumnNames.Contains(Regex.Match(sorting, @"\[(.*?)\]").Groups[1].Value)))
+                {
+                    DataView.Sort = tableSorting.ToString();
+                }
+            }
+            
+            if (SecondaryDataView?.Table is null) return;
+
+            if (viewSettings.TryGetValue("SecondaryTableSorting", out var valueSecondaryTableSorting) &&
+                valueSecondaryTableSorting is JsonElement { ValueKind: JsonValueKind.String } secondaryTableSorting)
+            {
+                var sortings = secondaryTableSorting.ToString().Split(',');
+                var newColumnNames = SecondaryDataView.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName)
+                    .ToArray();
+
+                if (sortings.All(sorting =>
+                        newColumnNames.Contains(Regex.Match(sorting, @"\[(.*?)\]").Groups[1].Value)))
+                {
+                    SecondaryDataView.Sort = secondaryTableSorting.ToString();
+                }
+            }
+        }
+        
         public class FileInUseMessage
         {
             public required string FileName { get; init; }

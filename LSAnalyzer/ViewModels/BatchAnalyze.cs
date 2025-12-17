@@ -200,7 +200,7 @@ namespace LSAnalyzer.ViewModels
                         .Select(analysis => new AnalysisWithViewSettings
                         {
                             Analysis = analysis,
-                            ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary
+                            ViewSettings = dummyAnalysisPresentation.ViewSettings
                         }).ToArray();
                 } catch (Exception)
                 {
@@ -262,7 +262,7 @@ namespace LSAnalyzer.ViewModels
                 var dataRow = row as DataRow;
                 if ((bool)dataRow!["Success"] && _analysesDictionary.ContainsKey((int)dataRow["Number"]))
                 {
-                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeAnalysisReadyMessage(_analysesDictionary[(int)dataRow["Number"]].Analysis));
+                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeAnalysisReadyMessage(_analysesDictionary[(int)dataRow["Number"]]));
                 }
             }
 
@@ -275,13 +275,8 @@ namespace LSAnalyzer.ViewModels
         public string Message { get; set; } = String.Empty;
     }
 
-    public class BatchAnalyzeAnalysisReadyMessage
+    public class BatchAnalyzeAnalysisReadyMessage(AnalysisWithViewSettings analysisWithViewSettings)
     {
-        public readonly Analysis Analysis;
-
-        public BatchAnalyzeAnalysisReadyMessage(Analysis analysis)
-        {
-            Analysis = analysis;
-        }
+        public readonly AnalysisWithViewSettings AnalysisWithViewSettings = analysisWithViewSettings;
     }
 }

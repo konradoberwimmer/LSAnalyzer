@@ -43,8 +43,8 @@ namespace TestLSAnalyzer.Services
             
             batchAnalyze.RunBatch(new()
             {
-                { 1, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfiguration), ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary} }, 
-                { 2, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfiguration), ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary} }, 
+                { 1, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfiguration), ViewSettings = dummyAnalysisPresentation.ViewSettings} }, 
+                { 2, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfiguration), ViewSettings = dummyAnalysisPresentation.ViewSettings} }, 
             }, true, analysisConfiguration);
 
             Policy.Handle<EqualException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
@@ -101,22 +101,22 @@ namespace TestLSAnalyzer.Services
             {
                 { 1, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
                         Vars = new() { new(1, "doesntExist", false) },
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
                 { 2, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
                         Vars = new() { new(1, "x", false) },
                         GroupBy = new() { new(2, "cat", false) },
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
                 { 3, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat) {
                         Vars = new() { new(1, "doesntExist", false) },
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
                 { 4, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat) {
                         Vars = new() { new(1, "item1", false), new(2, "item2", false) },
                         GroupBy = new() { new(2, "cat", false) },
                         CalculateBivariate = true,
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
                 { 5, new AnalysisWithViewSettings { Analysis = new AnalysisCorr(analysisConfigurationInvalid) {
                         Vars = new() { new(1, "dummy", false) },
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
             };
 
             batchAnalyze.RunBatch(analyses, false, null);
@@ -179,19 +179,19 @@ namespace TestLSAnalyzer.Services
             {
                 { 1, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
                         Vars = new() { new(1, "doesntExist", false) },
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
                 { 2, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
                         Vars = new() { new(1, "x", false) },
                         GroupBy = new() { new(2, "cat", false) },
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
                 { 3, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat) {
                         Vars = new() { new(1, "cat", false) },
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
                 { 4, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat) {
                         Vars = new() { new(1, "item1", false), new(2, "item2", false) },
                         GroupBy = new() { new(2, "cat", false) },
                         CalculateBivariate = true,
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
             };
 
             batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5);
@@ -253,19 +253,19 @@ namespace TestLSAnalyzer.Services
             {
                 { 1, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
                         Vars = new() { new(1, "item1", false) },
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
                 { 2, new AnalysisWithViewSettings { Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5) {
                         Vars = new() { new(1, "x", false) },
                         GroupBy = new() { new(2, "cat", false) },
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
                 { 3, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat) {
                         Vars = new() { new(1, "cat", false) },
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
                 { 4, new AnalysisWithViewSettings { Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat) {
                         Vars = new() { new(1, "item1", false), new(2, "item2", false) },
                         GroupBy = new() { new(2, "cat", false) },
                         CalculateBivariate = true,
-                    }, ViewSettings = dummyAnalysisPresentation.ViewSettingsDictionary } },
+                    }, ViewSettings = dummyAnalysisPresentation.ViewSettings } },
             };
 
             batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat);
