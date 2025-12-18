@@ -20,5 +20,7 @@ namespace LSAnalyzer.Models
         IDataProvider CreateService(IServiceProvider serviceProvider);
 
         IDataProviderViewModel GetViewModel(IServiceProvider serviceProvider, Configuration configuration);
+
+        IDataProviderConfiguration SecureClone();
     }
 }

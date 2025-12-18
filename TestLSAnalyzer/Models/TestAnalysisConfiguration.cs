@@ -1,9 +1,27 @@
+using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 
 namespace TestLSAnalyzer.Models;
 
 public class TestAnalysisConfiguration
 {
+    [Fact]
+    public void TestConstructorClones()
+    {
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            FileName = "some",
+            FileRetrieval = "{ some information }",
+            DatasetType = new()
+                { Id = 1, PVvarsList = new() { new() { DisplayName = "PV", Regex = "PV*", Mandatory = true } } },
+            ModeKeep = false,
+        };
+        
+        AnalysisConfiguration clone = new(analysisConfiguration);
+
+        Assert.True(clone.IsEqual(analysisConfiguration));
+    }
+    
     [Theory, ClassData(typeof(IsEqualTestCases))]
     public void TestIsEqual(AnalysisConfiguration a, AnalysisConfiguration b, bool expected)
     {
@@ -24,6 +42,12 @@ public class TestAnalysisConfiguration
                 false);
             Add(new AnalysisConfiguration { DatasetType = new() { Id = 1, PVvarsList = new() { new() { DisplayName = "PV", Regex = "PV*", Mandatory = true } } } }, 
                 new AnalysisConfiguration { DatasetType = new() { Id = 1, PVvarsList = new() { new() { DisplayName = "PV", Regex = "PV*", Mandatory = true } } } }, 
+                true);
+            Add(new AnalysisConfiguration { FileRetrieval = "{ some information }", DatasetType = new() { Id = 1, PVvarsList = new() { new() { DisplayName = "PV", Regex = "PV*", Mandatory = true } } } }, 
+                new AnalysisConfiguration { FileRetrieval = "{ other information }", DatasetType = new() { Id = 1, PVvarsList = new() { new() { DisplayName = "PV", Regex = "PV*", Mandatory = true } } } }, 
+                false);
+            Add(new AnalysisConfiguration { FileRetrieval = "{ some information }", DatasetType = new() { Id = 1, PVvarsList = new() { new() { DisplayName = "PV", Regex = "PV*", Mandatory = true } } } }, 
+                new AnalysisConfiguration { FileRetrieval = "{ some information }", DatasetType = new() { Id = 1, PVvarsList = new() { new() { DisplayName = "PV", Regex = "PV*", Mandatory = true } } } }, 
                 true);
         }
     }

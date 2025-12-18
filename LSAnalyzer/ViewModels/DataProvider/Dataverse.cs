@@ -50,6 +50,16 @@ public partial class Dataverse : ObservableObject, IDataProviderViewModel
         return JsonSerializer.Serialize(new { File = File.Trim(), Dataset = Dataset.Trim() });
     }
 
+    public string SerializeFileRetrieval()
+    {
+        if (string.IsNullOrWhiteSpace(File) || string.IsNullOrWhiteSpace(Dataset))
+        {
+            return JsonSerializer.Serialize(new { });
+        }
+        
+        return JsonSerializer.Serialize(new { Provider = _dataverseService.Configuration.SecureClone(), File = new { File = File.Trim(), Dataset = Dataset.Trim() } });
+    }
+
     public Dictionary<string, object> GetUsageAttributes()
     {
         return new Dictionary<string, object> { { "FileFormat", SelectedFileFormat.Key } };

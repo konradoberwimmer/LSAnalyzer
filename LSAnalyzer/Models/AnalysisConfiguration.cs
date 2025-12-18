@@ -10,6 +10,7 @@ namespace LSAnalyzer.Models
     public class AnalysisConfiguration
     {
         public string? FileName { get; set; }
+        public string? FileRetrieval { get; set; }
         public string? FileType { get; set; }
         public DatasetType? DatasetType { get; set; }
         public bool? ModeKeep { get; set; }
@@ -19,6 +20,8 @@ namespace LSAnalyzer.Models
         public AnalysisConfiguration (AnalysisConfiguration analysisConfiguration)
         {
             FileName = analysisConfiguration.FileName;
+            FileRetrieval = analysisConfiguration.FileRetrieval;
+            FileType = analysisConfiguration.FileType;
             DatasetType = analysisConfiguration.DatasetType != null ? new(analysisConfiguration.DatasetType) : null;
             ModeKeep = analysisConfiguration.ModeKeep;
         }
