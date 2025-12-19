@@ -87,5 +87,13 @@ namespace LSAnalyzer.Models.DataProviderConfiguration
                 Url = Url,
             };
         }
+
+        public bool IsMatching(IDataProviderConfiguration dataProviderConfiguration)
+        {
+            if (dataProviderConfiguration is not DataverseConfiguration dataverseConfiguration)
+                return false;
+
+            return Url.Trim() == dataverseConfiguration.Url.Trim();
+        }
     }
 }

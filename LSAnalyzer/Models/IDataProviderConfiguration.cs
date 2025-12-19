@@ -22,5 +22,7 @@ namespace LSAnalyzer.Models
         IDataProviderViewModel GetViewModel(IServiceProvider serviceProvider, Configuration configuration);
 
         IDataProviderConfiguration SecureClone();
+        
+        bool IsMatching(IDataProviderConfiguration dataProviderConfiguration);
     }
 }

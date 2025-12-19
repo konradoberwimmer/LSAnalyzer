@@ -22,4 +22,32 @@ public class TestDataverseConfiguration
         
         Assert.True(string.IsNullOrWhiteSpace(secureClone.ApiToken));
     }
+
+    [Fact]
+    public void TestIsMatching()
+    {
+        DataverseConfiguration config = new()
+        {
+            Id = 17,
+            Url = "https://test.me",
+            ApiToken = "myToken123",
+            Name = "Test-DV"
+        };
+        
+        Assert.False(config.IsMatching(new DataverseConfiguration
+        {
+            Id = 17,
+            Url = "https://test.at",
+            ApiToken = "myToken123",
+            Name = "Test-DV"
+        }));
+        
+        Assert.True(config.IsMatching(new DataverseConfiguration
+        {
+            Id = 1,
+            Url = "https://test.me",
+            ApiToken = "",
+            Name = "Test2"
+        }));
+    }
 }

@@ -78,6 +78,7 @@ public class TestDataverse
     {
         var configurationMock = new Mock<Configuration>();
         configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
+        configurationMock.Setup(conf => conf.GetDataProviderConfigurations()).Returns([]);
         
         SelectAnalysisFile selectAnalysisFile = new(configurationMock.Object, Mock.Of<Rservice>(), Mock.Of<IServiceProvider>());
         Dataverse dataverse = new();

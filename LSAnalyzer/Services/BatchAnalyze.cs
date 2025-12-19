@@ -8,19 +8,27 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using LSAnalyzer.Services.DataProvider;
 
 namespace LSAnalyzer.Services
 {
     public class BatchAnalyze
     {
         private Rservice _rservice;
+        private Configuration _configuration;
+        private IServiceProvider _serviceProvider;
+        
         private bool _useCurrentFile = true;
         private AnalysisConfiguration? _currentConfiguration;
 
-        public BatchAnalyze(Rservice rservice)
+        public BatchAnalyze(Rservice rservice, Configuration configuration, IServiceProvider serviceProvider)
         {
             _rservice = rservice;
+            _configuration = configuration;
+            _serviceProvider = serviceProvider;
         }
 
         public void RunBatch(Dictionary<int, AnalysisWithViewSettings> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration)
@@ -67,18 +75,22 @@ namespace LSAnalyzer.Services
                         !analysis.AnalysisConfiguration.IsEqual(previousAnalysisConfiguration) || 
                         analysis.SubsettingExpression != previousSubsettingExpression))
                 {
-                    if (analysis.AnalysisConfiguration!.FileName?.StartsWith("[") ?? false)
+                    if (analysis.AnalysisConfiguration.FileName?.StartsWith("[") ?? false)
                     {
-                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                        if (string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.FileRetrieval))
                         {
-                            Id = key,
-                            Success = false,
-                            Message = "Reloading from data provider is not supported!"
-                        });
-                        continue;
-                    }
-
-                    if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.AnalysisConfiguration.FileName ?? string.Empty, analysis.AnalysisConfiguration.FileType))
+                            WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                            {
+                                Id = key,
+                                Success = false,
+                                Message = "Reloading from data provider was not supported for json files before v1.2!"
+                            });
+                            continue;
+                        }
+                        
+                        // TODO
+                        
+                    } else if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.AnalysisConfiguration.FileName ?? string.Empty, analysis.AnalysisConfiguration.FileType))
                     {
                         WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                         {
@@ -236,6 +248,45 @@ namespace LSAnalyzer.Services
             }
 
             e.Result = analyses;
+        }
+
+        public (bool success, string? errorMessage, IDataProvider? dataProvider) RetrieveDataProvider(string fileRetrieval)
+        {
+            JsonObject? fileRetrievalObject;
+            try
+            {
+                fileRetrievalObject = JsonSerializer.Deserialize<JsonObject>(fileRetrieval);
+            }
+            catch (Exception _)
+            {
+                return (false, "Could not read data provider configuration!", null);
+            }
+            
+            if (fileRetrievalObject is null || 
+                !fileRetrievalObject.ContainsKey("Provider"))
+                return (false, "Could not read data provider configuration!", null);
+
+            IDataProviderConfiguration? dataProviderConfiguration;
+            try
+            {
+                dataProviderConfiguration = JsonSerializer.Deserialize<IDataProviderConfiguration>(fileRetrievalObject["Provider"]!.ToJsonString());
+            }
+            catch (Exception _)
+            {
+                return (false, "Could not read data provider configuration!", null);
+            }
+            
+            if (dataProviderConfiguration is null)
+                return (false, "Could not read data provider configuration!", null);
+            
+            var matchingConfiguration = _configuration.GetMatchingDataProviderConfiguration(dataProviderConfiguration);
+            
+            if (matchingConfiguration is null)
+                return (false, "Data provider configuration is no longer available!", null);
+
+            var dataProvider = matchingConfiguration.CreateService(_serviceProvider);
+            
+            return (true, null, dataProvider);
         }
     }
 

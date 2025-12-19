@@ -45,7 +45,7 @@ public class Configuration
         _configurationBuilder = configurationBuilder;
     }
 
-    public List<IDataProviderConfiguration> GetDataProviderConfigurations()
+    public virtual List<IDataProviderConfiguration> GetDataProviderConfigurations()
     {
         if (_config == null || !_config.GetSection("DataProviders").Exists() || _configurationBuilder?.Sources.Where(source => source.GetType() == typeof(JsonConfigurationSource)).LastOrDefault() is not JsonConfigurationSource configurationSource)
         {
@@ -66,6 +66,13 @@ public class Configuration
         }
 
         return JsonSerializer.Deserialize<DataProviderConfigurationsList>(fileContent)?.DataProviders ?? new();
+    }
+
+    public virtual IDataProviderConfiguration? GetMatchingDataProviderConfiguration(IDataProviderConfiguration dataProviderConfiguration)
+    {
+        var dataProviderConfigurations = GetDataProviderConfigurations();
+
+        return dataProviderConfigurations.FirstOrDefault(dpc => dpc.IsMatching(dataProviderConfiguration));
     }
 
     public void StoreDataProviderConfiguration(IDataProviderConfiguration dataProviderConfiguration)

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Moq;
 using Polly;
 using Xunit.Sdk;
 using BatchAnalyzeViewModel = LSAnalyzer.ViewModels.BatchAnalyze;
@@ -24,7 +25,7 @@ namespace TestLSAnalyzer.ViewModels
             Rservice rservice = new(new());
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
-            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice);
+            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
             LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService);
 
             bool messageSent = false;
@@ -74,7 +75,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
-            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice);
+            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
             LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService);
 
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json");
@@ -118,7 +119,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
-            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice);
+            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
             LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService);
 
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat_v1_2.json");
@@ -162,7 +163,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
-            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice);
+            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
             LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService);
 
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json");
