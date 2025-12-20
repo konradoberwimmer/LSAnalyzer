@@ -60,7 +60,7 @@ public class TestDataverse
             Dataset = " doi:99.99999/ABCDEFGHI ",
         };
         
-        Assert.Equal("""{"Provider":{"$type":"dataverse","Id":21,"Name":"test provider","Url":"http://test.at","ApiToken":"","HasErrors":false},"File":{"File":"test.tab","Dataset":"doi:99.99999/ABCDEFGHI"}}""", dataverse.SerializeFileRetrieval());
+        Assert.Equal("""{"Provider":{"$type":"dataverse","Id":21,"Name":"test provider","Url":"http://test.at","ApiToken":"","HasErrors":false},"File":{"File":"test.tab","Dataset":"doi:99.99999/ABCDEFGHI","SelectedFileFormat":"tsv"}}""", dataverse.SerializeFileRetrieval());
     }
 
     [Fact]

@@ -57,7 +57,7 @@ public partial class Dataverse : ObservableObject, IDataProviderViewModel
             return JsonSerializer.Serialize(new { });
         }
         
-        return JsonSerializer.Serialize(new { Provider = _dataverseService.Configuration.SecureClone(), File = new { File = File.Trim(), Dataset = Dataset.Trim() } });
+        return JsonSerializer.Serialize(new { Provider = _dataverseService.Configuration.SecureClone(), File = new { File = File.Trim(), Dataset = Dataset.Trim(), SelectedFileFormat = SelectedFileFormat.Key } });
     }
 
     public Dictionary<string, object> GetUsageAttributes()

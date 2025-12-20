@@ -83,13 +83,49 @@ namespace LSAnalyzer.Services
                             {
                                 Id = key,
                                 Success = false,
-                                Message = "Reloading from data provider was not supported for json files before v1.2!"
+                                Message = "Reloading from data provider is not supported for json files created before v1.2!"
                             });
                             continue;
                         }
-                        
-                        // TODO
-                        
+
+                        var providerRetrieval = RetrieveDataProvider(analysis.AnalysisConfiguration.FileRetrieval);
+
+                        if (!providerRetrieval.success)
+                        {
+                            WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                            {
+                                Id = key,
+                                Success = false,
+                                Message = providerRetrieval.errorMessage ?? "Unknown error when retrieving data provider!",
+                            });
+                            continue;
+                        }
+
+                        var fileInformation = RetrieveFileInformation(providerRetrieval.dataProvider!,
+                            analysis.AnalysisConfiguration.FileRetrieval);
+
+                        if (!fileInformation.success)
+                        {
+                            WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                            {
+                                Id = key,
+                                Success = false,
+                                Message = fileInformation.errorMessage ?? "Unknown error when retrieving file information!",
+                            });
+                            continue;
+                        }
+
+                        if (!providerRetrieval.dataProvider!.LoadFileIntoGlobalEnvironment(fileInformation
+                                .fileInformation!))
+                        {
+                            WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                            {
+                                Id = key,
+                                Success = false,
+                                Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!"
+                            });
+                            continue;
+                        }
                     } else if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.AnalysisConfiguration.FileName ?? string.Empty, analysis.AnalysisConfiguration.FileType))
                     {
                         WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
@@ -287,6 +323,30 @@ namespace LSAnalyzer.Services
             var dataProvider = matchingConfiguration.CreateService(_serviceProvider);
             
             return (true, null, dataProvider);
+        }
+
+        public (bool success, string? errorMessage, dynamic? fileInformation) RetrieveFileInformation(IDataProvider dataProvider, string fileRetrieval)
+        {
+            JsonObject? fileRetrievalObject;
+            try
+            {
+                fileRetrievalObject = JsonSerializer.Deserialize<JsonObject>(fileRetrieval);
+            }
+            catch (Exception _)
+            {
+                return (false, "Could not read file information!", null);
+            }
+            
+            if (fileRetrievalObject is null || 
+                !fileRetrievalObject.ContainsKey("File"))
+                return (false, "Could not read file information!", null);
+
+            var fileInformation = dataProvider.DeserializeFileRetrieval(fileRetrievalObject["File"]!.ToJsonString());
+            
+            if (fileInformation is null)
+                return (false, "Could not read file information!", null);
+
+            return (true, null, fileInformation);
         }
     }
 

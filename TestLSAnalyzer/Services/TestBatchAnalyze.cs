@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using LSAnalyzer.Models.DataProviderConfiguration;
+using LSAnalyzer.Services.DataProvider;
 using LSAnalyzer.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -325,6 +326,36 @@ namespace TestLSAnalyzer.Services
             Assert.True(resultSuccess.success);
             Assert.Null(resultSuccess.errorMessage);
             Assert.NotNull(resultSuccess.dataProvider);
+        }
+
+        [Fact]
+        public void TestRetrieveFileInformation()
+        {
+            Rservice rservice = new(new());
+            
+            var configuration = new Mock<Configuration>();
+            
+            ServiceCollection serviceCollection = new();
+            serviceCollection.AddTransient<Rservice>(_ => rservice);
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+            
+            BatchAnalyze batchAnalyze = new(rservice, configuration.Object, serviceProvider);
+            Dataverse dataverse = new(rservice);
+            
+            Assert.False(batchAnalyze.RetrieveFileInformation(dataverse, string.Empty).success);
+            Assert.False(batchAnalyze.RetrieveFileInformation(dataverse, """{"Provider":{"$type":"dataverse","Id":33,"Name":"myProvider","Url":"https://test.service.at"}}""").success);
+            
+            var resultMissingFileInformation = batchAnalyze.RetrieveFileInformation(dataverse, 
+                """{"Provider":{"$type":"dataverse","Id":33,"Name":"myProvider","Url":"https://test.service.at"},"File":{"Filename":"myFile.txt","DOI":"myDoi"}}"""); 
+            Assert.False(resultMissingFileInformation.success);
+            Assert.Equal("Could not read file information!", resultMissingFileInformation.errorMessage);
+            Assert.Null(resultMissingFileInformation.fileInformation);
+
+            var resultSuccess = batchAnalyze.RetrieveFileInformation(dataverse, 
+                """{"Provider":{"$type":"dataverse","Id":33,"Name":"myProvider","Url":"https://test.service.at"},"File":{"File":"myFile.txt","Dataset":"myDoi","SelectedFileFormat":"spss"}}"""); 
+            Assert.True(resultSuccess.success);
+            Assert.Null(resultSuccess.errorMessage);
+            Assert.NotNull(resultSuccess.fileInformation);
         }
 
         public static string AssemblyDirectory
