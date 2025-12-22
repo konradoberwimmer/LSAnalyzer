@@ -559,7 +559,8 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
     {
         AnalysisConfiguration analysisConfiguration = new()
         {
-            FileName = string.IsNullOrWhiteSpace(FileName) ? "[" + DataProviderViewModel!.FileInformation + "]" : FileName,
+            FileName = TabControlValue == "Data provider" ? "[" + (DataProviderViewModel?.FileInformation ?? string.Empty) + "]" : FileName,
+            FileRetrieval = TabControlValue == "Data provider" ? (DataProviderViewModel?.SerializeFileRetrieval() ?? string.Empty) : null,
             FileType = IsCsv && UseCsv2 ? "csv2" : null,
             DatasetType = SelectedDatasetType != null ? new(SelectedDatasetType) : null,
             ModeKeep = (SelectedAnalysisMode == AnalysisModes.Keep),

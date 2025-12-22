@@ -8,19 +8,27 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using LSAnalyzer.Services.DataProvider;
 
 namespace LSAnalyzer.Services
 {
     public class BatchAnalyze
     {
         private Rservice _rservice;
+        private Configuration _configuration;
+        private IServiceProvider _serviceProvider;
+        
         private bool _useCurrentFile = true;
         private AnalysisConfiguration? _currentConfiguration;
 
-        public BatchAnalyze(Rservice rservice)
+        public BatchAnalyze(Rservice rservice, Configuration configuration, IServiceProvider serviceProvider)
         {
             _rservice = rservice;
+            _configuration = configuration;
+            _serviceProvider = serviceProvider;
         }
 
         public void RunBatch(Dictionary<int, AnalysisWithViewSettings> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration)
@@ -67,18 +75,58 @@ namespace LSAnalyzer.Services
                         !analysis.AnalysisConfiguration.IsEqual(previousAnalysisConfiguration) || 
                         analysis.SubsettingExpression != previousSubsettingExpression))
                 {
-                    if (analysis.AnalysisConfiguration!.FileName?.StartsWith("[") ?? false)
+                    if (analysis.AnalysisConfiguration.FileName?.StartsWith("[") ?? false)
                     {
-                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                        if (string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.FileRetrieval))
                         {
-                            Id = key,
-                            Success = false,
-                            Message = "Reloading from data provider is not supported!"
-                        });
-                        continue;
-                    }
+                            WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                            {
+                                Id = key,
+                                Success = false,
+                                Message = "Reloading from data provider is not supported for json files created before v1.2!"
+                            });
+                            continue;
+                        }
 
-                    if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.AnalysisConfiguration.FileName ?? string.Empty, analysis.AnalysisConfiguration.FileType))
+                        var providerRetrieval = RetrieveDataProvider(analysis.AnalysisConfiguration.FileRetrieval);
+
+                        if (!providerRetrieval.success)
+                        {
+                            WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                            {
+                                Id = key,
+                                Success = false,
+                                Message = providerRetrieval.errorMessage ?? "Unknown error when retrieving data provider!",
+                            });
+                            continue;
+                        }
+
+                        var fileInformation = RetrieveFileInformation(providerRetrieval.dataProvider!,
+                            analysis.AnalysisConfiguration.FileRetrieval);
+
+                        if (!fileInformation.success)
+                        {
+                            WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                            {
+                                Id = key,
+                                Success = false,
+                                Message = fileInformation.errorMessage ?? "Unknown error when retrieving file information!",
+                            });
+                            continue;
+                        }
+
+                        if (!providerRetrieval.dataProvider!.LoadFileIntoGlobalEnvironment(fileInformation
+                                .fileInformation!))
+                        {
+                            WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
+                            {
+                                Id = key,
+                                Success = false,
+                                Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!"
+                            });
+                            continue;
+                        }
+                    } else if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.AnalysisConfiguration.FileName ?? string.Empty, analysis.AnalysisConfiguration.FileType))
                     {
                         WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
                         {
@@ -236,6 +284,69 @@ namespace LSAnalyzer.Services
             }
 
             e.Result = analyses;
+        }
+
+        public (bool success, string? errorMessage, IDataProvider? dataProvider) RetrieveDataProvider(string fileRetrieval)
+        {
+            JsonObject? fileRetrievalObject;
+            try
+            {
+                fileRetrievalObject = JsonSerializer.Deserialize<JsonObject>(fileRetrieval);
+            }
+            catch (Exception _)
+            {
+                return (false, "Could not read data provider configuration!", null);
+            }
+            
+            if (fileRetrievalObject is null || 
+                !fileRetrievalObject.ContainsKey("Provider"))
+                return (false, "Could not read data provider configuration!", null);
+
+            IDataProviderConfiguration? dataProviderConfiguration;
+            try
+            {
+                dataProviderConfiguration = JsonSerializer.Deserialize<IDataProviderConfiguration>(fileRetrievalObject["Provider"]!.ToJsonString());
+            }
+            catch (Exception _)
+            {
+                return (false, "Could not read data provider configuration!", null);
+            }
+            
+            if (dataProviderConfiguration is null)
+                return (false, "Could not read data provider configuration!", null);
+            
+            var matchingConfiguration = _configuration.GetMatchingDataProviderConfiguration(dataProviderConfiguration);
+            
+            if (matchingConfiguration is null)
+                return (false, "Data provider configuration is no longer available!", null);
+
+            var dataProvider = matchingConfiguration.CreateService(_serviceProvider);
+            
+            return (true, null, dataProvider);
+        }
+
+        public (bool success, string? errorMessage, dynamic? fileInformation) RetrieveFileInformation(IDataProvider dataProvider, string fileRetrieval)
+        {
+            JsonObject? fileRetrievalObject;
+            try
+            {
+                fileRetrievalObject = JsonSerializer.Deserialize<JsonObject>(fileRetrieval);
+            }
+            catch (Exception _)
+            {
+                return (false, "Could not read file information!", null);
+            }
+            
+            if (fileRetrievalObject is null || 
+                !fileRetrievalObject.ContainsKey("File"))
+                return (false, "Could not read file information!", null);
+
+            var fileInformation = dataProvider.DeserializeFileRetrieval(fileRetrievalObject["File"]!.ToJsonString());
+            
+            if (fileInformation is null)
+                return (false, "Could not read file information!", null);
+
+            return (true, null, fileInformation);
         }
     }
 

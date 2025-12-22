@@ -171,7 +171,8 @@ public class TestSelectAnalysisFile
     {
         var datasetTypesConfiguration = new Mock<Configuration>();
         datasetTypesConfiguration.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
-
+        datasetTypesConfiguration.Setup(conf => conf.GetDataProviderConfigurations()).Returns([]);
+        
         Rservice rservice = new(new());
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
@@ -343,7 +344,8 @@ public class TestSelectAnalysisFile
     {
         var configurationMock = new Mock<Configuration>();
         configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
-
+        configurationMock.Setup(conf => conf.GetDataProviderConfigurations()).Returns([]);
+        
         SelectAnalysisFile selectAnalysisFile = new(configurationMock.Object, Mock.Of<Rservice>(), Mock.Of<IServiceProvider>());
 
         configurationMock.Verify(conf => conf.GetStoredRecentFiles(It.Is<int>(val => val == 0)), Times.Once);

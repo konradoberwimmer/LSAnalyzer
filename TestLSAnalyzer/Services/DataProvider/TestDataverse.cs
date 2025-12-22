@@ -64,6 +64,25 @@ namespace TestLSAnalyzer.Services.DataProvider
         }
 
         [Fact]
+        public void TestDeserializeFileRetrieval()
+        {
+            Dataverse dataverse = new(new Rservice());
+            
+            Assert.Null(dataverse.DeserializeFileRetrieval("//"));
+            Assert.Null(dataverse.DeserializeFileRetrieval("""{"File":"myFile.tab"}"""));
+            Assert.Null(dataverse.DeserializeFileRetrieval("""{"File":"myFile.tab","Dataset":"doi"}"""));
+            Assert.Null(dataverse.DeserializeFileRetrieval("""{"Dataset":"doi","SelectedFileFormat":"tsv"}"""));
+
+            var result =
+                dataverse.DeserializeFileRetrieval(
+                    """{"File":"myFile.tab","Dataset":"doi","SelectedFileFormat":"tsv"}""");
+            
+            Assert.Equal("myFile.tab", result?.File);
+            Assert.Equal("doi", result?.Dataset);
+            Assert.Equal("tsv", result?.FileFormat);
+        }
+
+        [Fact]
         public void TestTestFileAccess()
         {
             Rservice rservice = new(new());

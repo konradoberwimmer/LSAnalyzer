@@ -37,6 +37,33 @@ public class TestDataverse
     }
 
     [Fact]
+    public void TestSerializeFileRetrieval()
+    {
+        LSAnalyzer.Services.DataProvider.Dataverse dataverseService = new(Mock.Of<Rservice>())
+        {
+            Configuration = new DataverseConfiguration()
+            {
+                Id = 21,
+                Name = "test provider",
+                Url = "http://test.at",
+                ApiToken = "token",
+            }
+        };
+        
+        Mock<Configuration> configurationServiceMock = new();
+        configurationServiceMock.Setup(configuration => configuration.GetStoredRecentFiles(It.IsAny<int>()))
+            .Returns([]);
+            
+        Dataverse dataverse = new(dataverseService, configurationServiceMock.Object)
+        {
+            File = "test.tab ",
+            Dataset = " doi:99.99999/ABCDEFGHI ",
+        };
+        
+        Assert.Equal("""{"Provider":{"$type":"dataverse","Id":21,"Name":"test provider","Url":"http://test.at","ApiToken":"","HasErrors":false},"File":{"File":"test.tab","Dataset":"doi:99.99999/ABCDEFGHI","SelectedFileFormat":"tsv"}}""", dataverse.SerializeFileRetrieval());
+    }
+
+    [Fact]
     public void TestFormatRecentFileName()
     {
         Dataverse dataverse = new();
@@ -51,6 +78,7 @@ public class TestDataverse
     {
         var configurationMock = new Mock<Configuration>();
         configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
+        configurationMock.Setup(conf => conf.GetDataProviderConfigurations()).Returns([]);
         
         SelectAnalysisFile selectAnalysisFile = new(configurationMock.Object, Mock.Of<Rservice>(), Mock.Of<IServiceProvider>());
         Dataverse dataverse = new();

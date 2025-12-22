@@ -77,5 +77,23 @@ namespace LSAnalyzer.Models.DataProviderConfiguration
         {
             return _dataverseViewModel ??= new ViewModels.DataProvider.Dataverse((Dataverse)CreateService(serviceProvider), configuration);
         }
+
+        public IDataProviderConfiguration SecureClone()
+        {
+            return new DataverseConfiguration()
+            {
+                Id = Id,
+                Name = Name,
+                Url = Url,
+            };
+        }
+
+        public bool IsMatching(IDataProviderConfiguration dataProviderConfiguration)
+        {
+            if (dataProviderConfiguration is not DataverseConfiguration dataverseConfiguration)
+                return false;
+
+            return Url.Trim() == dataverseConfiguration.Url.Trim();
+        }
     }
 }

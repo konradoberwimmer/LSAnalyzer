@@ -15,6 +15,8 @@ namespace LSAnalyzer.ViewModels
         
         public string SerializeFileInformation();
 
+        public string SerializeFileRetrieval();
+
         public Dictionary<string, object> GetUsageAttributes();
 
         public SelectAnalysisFile ParentViewModel { get; set; }

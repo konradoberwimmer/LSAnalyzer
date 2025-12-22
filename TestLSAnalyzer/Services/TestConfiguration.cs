@@ -1,3 +1,5 @@
+using LSAnalyzer.Models;
+using LSAnalyzer.Models.DataProviderConfiguration;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using Moq;
@@ -268,5 +270,39 @@ public class TestConfiguration
         rf1.FormatFileName = f => "File: " + f;
         
         Assert.Equal("File: C:\\meine_Daten.csv (wgt)", rf1.DisplayString);
+    }
+
+    [Fact]
+    public void TestGetMatchingDataProviderConfiguration()
+    {
+        MockedConfiguration mockedConfiguration = new();
+        
+        Assert.Null(mockedConfiguration.GetMatchingDataProviderConfiguration(new DataverseConfiguration
+        {
+            Id = 12,
+            Name = "no match",
+            Url = "https://nomatch.com",
+            ApiToken = "token",
+        }));
+        
+        Assert.NotNull(mockedConfiguration.GetMatchingDataProviderConfiguration(new DataverseConfiguration
+        {
+            Id = 21,
+            Name = "match even though only url corresponds",
+            Url = "https://match.org",
+            ApiToken = "",
+        }));
+    }
+
+    class MockedConfiguration : Configuration
+    {
+        public override List<IDataProviderConfiguration> GetDataProviderConfigurations()
+        {
+            return
+            [
+                new DataverseConfiguration { Id = 12, Name = "no match", Url = "https://nomatch.org", ApiToken = "token" },
+                new DataverseConfiguration { Id = 13, Name = "match", Url = "https://match.org", ApiToken = "token" },
+            ];
+        }
     }
 }

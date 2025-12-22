@@ -21,5 +21,7 @@ namespace LSAnalyzer.Services
         bool LoadFileIntoGlobalEnvironment(dynamic values);
 
         List<Variable> GetDatasetVariables(dynamic values);
+        
+        dynamic? DeserializeFileRetrieval(string fileRetrieval);
     }
 }

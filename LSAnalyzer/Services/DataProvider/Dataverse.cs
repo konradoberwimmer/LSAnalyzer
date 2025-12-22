@@ -9,6 +9,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 namespace LSAnalyzer.Services.DataProvider
@@ -188,6 +190,32 @@ namespace LSAnalyzer.Services.DataProvider
             {
                 return new();
             }
+        }
+
+        public dynamic? DeserializeFileRetrieval(string fileRetrieval)
+        {
+            JsonObject? fileRetrievalObject;
+            try
+            {
+                fileRetrievalObject = JsonSerializer.Deserialize<JsonObject>(fileRetrieval);
+            }
+            catch (Exception _)
+            {
+                return null;
+            }
+
+            if (fileRetrievalObject is null ||
+                !fileRetrievalObject.TryGetPropertyValue("File", out var file) ||
+                file?.GetValueKind() != JsonValueKind.String ||
+                !fileRetrievalObject.TryGetPropertyValue("Dataset", out var dataset) ||
+                dataset?.GetValueKind() != JsonValueKind.String ||
+                !fileRetrievalObject.TryGetPropertyValue("SelectedFileFormat", out var fileFormat) ||
+                fileFormat?.GetValueKind() != JsonValueKind.String)
+            {
+                return null;
+            }
+
+            return new { File = file.ToString(), Dataset = dataset.ToString(), FileFormat = fileFormat.ToString() };
         }
 
         public bool LoadFileIntoGlobalEnvironment(dynamic values)
