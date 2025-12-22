@@ -790,6 +790,8 @@ namespace LSAnalyzer.Services
 
                     for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
                     {
+                        if (nGroups > 0 && nGroups < analysis.GroupBy.Count && !analysis.CalculateCrosswise) continue;
+                        
                         if (nGroups == 0)
                         {
                             groupByArg = "";
@@ -893,6 +895,8 @@ namespace LSAnalyzer.Services
 
                     for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
                     {
+                        if (nGroups > 0 && nGroups < analysis.GroupBy.Count && !analysis.CalculateCrosswise) continue;
+                        
                         if (nGroups == 0)
                         {
                             groupByArg = "";
@@ -1013,6 +1017,8 @@ namespace LSAnalyzer.Services
 
                     for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
                     {
+                        if (nGroups > 0 && nGroups < analysis.GroupBy.Count && !analysis.CalculateCrosswise) continue;
+                        
                         if (nGroups == 0)
                         {
                             groupByArg = "";
@@ -1071,6 +1077,8 @@ namespace LSAnalyzer.Services
 
                     for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
                     {
+                        if (nGroups > 0 && nGroups < analysis.GroupBy.Count && !analysis.CalculateCrosswise) continue;
+                        
                         if (nGroups == 0)
                         {
                             groupByArg = "";
@@ -1118,7 +1126,7 @@ namespace LSAnalyzer.Services
 
             if (analysis.Sequence == AnalysisRegression.RegressionSequence.AllIn || analysis.Vars.Count == 1)
             {
-                var result = CalculateRegressionSingle(method, analysis.Dependent, analysis.Vars, analysis.WithIntercept, analysis.GroupBy, analysis.CalculateOverall);
+                var result = CalculateRegressionSingle(method, analysis.Dependent, analysis.Vars, analysis.WithIntercept, analysis.GroupBy, analysis.CalculateOverall, analysis.CalculateCrosswise);
                 if (result == null)
                 {
                     return null;
@@ -1143,7 +1151,7 @@ namespace LSAnalyzer.Services
 
                     foreach (var predictor in availablePredictors)
                     {
-                        var result = CalculateRegressionSingle(method, analysis.Dependent, usedPredictors.Concat(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false);
+                        var result = CalculateRegressionSingle(method, analysis.Dependent, usedPredictors.Concat(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false, false);
                         if (result == null)
                         {
                             return null;
@@ -1170,7 +1178,7 @@ namespace LSAnalyzer.Services
 
             if (analysis.Sequence == AnalysisRegression.RegressionSequence.Backward)
             {
-                var result = CalculateRegressionSingle(method, analysis.Dependent, analysis.Vars, analysis.WithIntercept, new(), false);
+                var result = CalculateRegressionSingle(method, analysis.Dependent, analysis.Vars, analysis.WithIntercept, new(), false, false);
                 if (result == null)
                 {
                     return null;
@@ -1187,7 +1195,7 @@ namespace LSAnalyzer.Services
 
                     foreach (var predictor in usedPredictors)
                     {
-                        result = CalculateRegressionSingle(method, analysis.Dependent, usedPredictors.Except(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false);
+                        result = CalculateRegressionSingle(method, analysis.Dependent, usedPredictors.Except(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false, false);
                         if (result == null)
                         {
                             return null;
@@ -1214,7 +1222,7 @@ namespace LSAnalyzer.Services
             return null;
         }
 
-        private List<GenericVector>? CalculateRegressionSingle(string method, Variable dependent, List<Variable> predictors, bool withIntercept, List<Variable> groups, bool calcualteOverall)
+        private List<GenericVector>? CalculateRegressionSingle(string method, Variable dependent, List<Variable> predictors, bool withIntercept, List<Variable> groups, bool calcualteOverall, bool calculateCrosswise)
         {
             try
             {
@@ -1240,6 +1248,8 @@ namespace LSAnalyzer.Services
 
                     for (int nGroups = 0; nGroups <= groups.Count; nGroups++)
                     {
+                        if (nGroups > 0 && nGroups < groups.Count && !calculateCrosswise) continue;
+                        
                         if (nGroups == 0)
                         {
                             groupByArg = "";

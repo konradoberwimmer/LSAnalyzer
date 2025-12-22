@@ -16,6 +16,8 @@ namespace LSAnalyzer.Models
         public RegressionSequence Sequence { get; set; } = RegressionSequence.AllIn;
 
         public bool CalculateOverall { get; set; } = true;
+        
+        public bool CalculateCrosswise { get; set; } = true;
 
         protected AnalysisRegression(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
         {
