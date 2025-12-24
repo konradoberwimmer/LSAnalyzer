@@ -11,6 +11,8 @@ namespace LSAnalyzer.Models
     public class AnalysisCorr : Analysis
     {
         public bool CalculateOverall { get; set; } = true;
+        
+        public bool CalculateCrosswise { get; set; } = true;
 
         public AnalysisCorr(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
         {

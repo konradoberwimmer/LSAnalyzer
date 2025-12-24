@@ -12,6 +12,9 @@ namespace LSAnalyzer.Models
     public class AnalysisFreq : Analysis
     {
         public bool CalculateOverall { get; set; } = true;
+        
+        public bool CalculateCrosswise { get; set; } = true;
+        
         public bool CalculateBivariate { get; set; } = true;
 
         [JsonIgnore]

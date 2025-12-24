@@ -12,6 +12,7 @@ namespace LSAnalyzer.Models
     {
         public List<double> Percentiles { get; set; } = new();
         public bool CalculateOverall { get; set; } = true;
+        public bool CalculateCrosswise { get; set; } = true;
         public bool UseInterpolation { get; set; } = true;
         public bool CalculateSE { get; set; } = true;
         public bool MimicIdbAnalyzer { get; set; } = false;

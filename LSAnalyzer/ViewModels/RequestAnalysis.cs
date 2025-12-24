@@ -104,6 +104,17 @@ public class RequestAnalysis : INotifyPropertyChanged
             NotifyPropertyChanged(nameof(CalculateOverall));
         }
     }
+    
+    private bool _calculateCrosswise = true;
+    public bool CalculateCrosswise
+    {
+        get => _calculateCrosswise;
+        set
+        {
+            _calculateCrosswise = value;
+            NotifyPropertyChanged(nameof(CalculateCrosswise));
+        }
+    }
 
     private bool _calculateBivariate = true;
     public bool CalculateBivariate
@@ -266,12 +277,14 @@ public class RequestAnalysis : INotifyPropertyChanged
         {
             case AnalysisUnivar analysisUnivar:
                 CalculateOverall = analysisUnivar.CalculateOverall;
+                CalculateCrosswise = analysisUnivar.CalculateCrosswise;
                 break;
             case AnalysisMeanDiff analysisMeanDiff:
                 CalculateSeparately = analysisMeanDiff.CalculateSeparately;
                 break;
             case AnalysisFreq analysisFreq:
                 CalculateOverall = analysisFreq.CalculateOverall;
+                CalculateCrosswise = analysisFreq.CalculateCrosswise;
                 CalculateBivariate = analysisFreq.CalculateBivariate;
                 break;
             case AnalysisPercentiles analysisPercentiles:
@@ -281,12 +294,14 @@ public class RequestAnalysis : INotifyPropertyChanged
                     Percentiles.Add(new() { Value = percentile });
                 }
                 CalculateOverall = analysisPercentiles.CalculateOverall;
+                CalculateCrosswise = analysisPercentiles.CalculateCrosswise;
                 UseInterpolation = analysisPercentiles.UseInterpolation;
                 CalculateSE = analysisPercentiles.CalculateSE;
                 MimicIdbAnalyzer = analysisPercentiles.MimicIdbAnalyzer;
                 break;
             case AnalysisCorr analysisCorr:
                 CalculateOverall = analysisCorr.CalculateOverall;
+                CalculateCrosswise = analysisCorr.CalculateCrosswise;
                 break;
             case AnalysisLinreg analysisLinreg:
                 WithIntercept = analysisLinreg.WithIntercept;
@@ -299,6 +314,7 @@ public class RequestAnalysis : INotifyPropertyChanged
                     });
                 }
                 CalculateOverall = analysisLinreg.CalculateOverall;
+                CalculateCrosswise = analysisLinreg.CalculateCrosswise;
                 break;
             case AnalysisLogistReg analysisLogistReg:
                 WithIntercept = analysisLogistReg.WithIntercept;
@@ -311,6 +327,7 @@ public class RequestAnalysis : INotifyPropertyChanged
                     });
                 }
                 CalculateOverall = analysisLogistReg.CalculateOverall;
+                CalculateCrosswise = analysisLogistReg.CalculateCrosswise;
                 break;
             default:
                 break;
@@ -476,6 +493,7 @@ public class RequestAnalysis : INotifyPropertyChanged
                 analysisUnivar.Vars = new(AnalysisVariables);
                 analysisUnivar.GroupBy = new(GroupByVariables);
                 analysisUnivar.CalculateOverall = this.CalculateOverall;
+                analysisUnivar.CalculateCrosswise = this.CalculateCrosswise;
                 WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisUnivar));
                 break;
             case AnalysisMeanDiff analysisMeanDiff:
@@ -488,6 +506,7 @@ public class RequestAnalysis : INotifyPropertyChanged
                 analysisFreq.Vars = new(AnalysisVariables);
                 analysisFreq.GroupBy = new(GroupByVariables);
                 analysisFreq.CalculateOverall = this.CalculateOverall;
+                analysisFreq.CalculateCrosswise = this.CalculateCrosswise;
                 analysisFreq.CalculateBivariate = this.CalculateBivariate;
                 WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisFreq));
                 break;
@@ -499,12 +518,14 @@ public class RequestAnalysis : INotifyPropertyChanged
                 analysisPercentiles.Vars = new(AnalysisVariables);
                 analysisPercentiles.GroupBy = new(GroupByVariables);
                 analysisPercentiles.CalculateOverall = this.CalculateOverall;
+                analysisPercentiles.CalculateCrosswise = this.CalculateCrosswise;
                 WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisPercentiles));
                 break;
             case AnalysisCorr analysisCorr:
                 analysisCorr.Vars = new(AnalysisVariables);
                 analysisCorr.GroupBy = new(GroupByVariables);
                 analysisCorr.CalculateOverall = this.CalculateOverall;
+                analysisCorr.CalculateCrosswise = this.CalculateCrosswise;
                 WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisCorr));
                 break;
             case AnalysisLinreg analysisLinreg:
@@ -514,6 +535,7 @@ public class RequestAnalysis : INotifyPropertyChanged
                 analysisLinreg.Vars = new(AnalysisVariables);
                 analysisLinreg.GroupBy = new(GroupByVariables);
                 analysisLinreg.CalculateOverall = this.CalculateOverall;
+                analysisLinreg.CalculateCrosswise = this.CalculateCrosswise;
                 WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisLinreg));
                 break;
             case AnalysisLogistReg analysisLogistReg:
@@ -523,6 +545,7 @@ public class RequestAnalysis : INotifyPropertyChanged
                 analysisLogistReg.Vars = new(AnalysisVariables);
                 analysisLogistReg.GroupBy = new(GroupByVariables);
                 analysisLogistReg.CalculateOverall = this.CalculateOverall;
+                analysisLogistReg.CalculateCrosswise = this.CalculateCrosswise;
                 WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisLogistReg));
                 break;
         }
@@ -561,6 +584,7 @@ public class RequestAnalysis : INotifyPropertyChanged
             SelectedTo = DependentVariables.ToList(),
         });
         CalculateOverall = true;
+        CalculateCrosswise = true;
         CalculateBivariate = true;
         CalculateSeparately = false;
         Percentiles = new() { new() { Value = 0.25 }, new() { Value = 0.50 }, new() { Value = 0.75 } };

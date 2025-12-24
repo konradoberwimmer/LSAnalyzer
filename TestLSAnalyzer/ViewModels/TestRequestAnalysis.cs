@@ -131,6 +131,7 @@ namespace TestLSAnalyzer.ViewModels
                 Vars = new() { new(1, "cat", false) },
                 GroupBy = new() { },
                 CalculateOverall = true,
+                CalculateCrosswise = false
             };
 
             requestAnalysisViewModel.InitializeWithAnalysis(analysisFreq);
@@ -138,6 +139,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Single(requestAnalysisViewModel.AnalysisVariables);
             Assert.Empty(requestAnalysisViewModel.GroupByVariables);
             Assert.True(requestAnalysisViewModel.CalculateOverall);
+            Assert.False(requestAnalysisViewModel.CalculateCrosswise);
 
             AnalysisPercentiles analysisPercentiles = new(requestAnalysisViewModel.AnalysisConfiguration)
             {
@@ -175,6 +177,7 @@ namespace TestLSAnalyzer.ViewModels
                 Vars = new() { new(1, "x", false) },
                 GroupBy = new() { new(3, "cat", false) },
                 CalculateOverall = false,
+                CalculateCrosswise = false,
                 Sequence = AnalysisRegression.RegressionSequence.Forward,
             };
 
@@ -184,6 +187,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Single(requestAnalysisViewModel.AnalysisVariables);
             Assert.Equal("cat", requestAnalysisViewModel.GroupByVariables[0].Name);
             Assert.False(requestAnalysisViewModel.CalculateOverall);
+            Assert.False(requestAnalysisViewModel.CalculateCrosswise);
             Assert.Equal(AnalysisRegression.RegressionSequence.Forward, requestAnalysisViewModel.RegressionSequence);
 
             AnalysisLinreg analysisLogistReg = new(requestAnalysisViewModel.AnalysisConfiguration)
@@ -200,6 +204,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal(2, requestAnalysisViewModel.AnalysisVariables.Count);
             Assert.Empty(requestAnalysisViewModel.GroupByVariables);
             Assert.False(requestAnalysisViewModel.CalculateOverall);
+            Assert.True(requestAnalysisViewModel.CalculateCrosswise);
             Assert.Equal(AnalysisRegression.RegressionSequence.Backward, requestAnalysisViewModel.RegressionSequence);
         }
 
@@ -222,6 +227,7 @@ namespace TestLSAnalyzer.ViewModels
                 Vars = new() { new(1, "x", false), new(2, "y", false) },
                 GroupBy = new() { new(3, "cat", false) },
                 CalculateOverall = false,
+                CalculateCrosswise = false,
                 UseInterpolation = false,
             };
 
@@ -231,6 +237,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal(2, requestAnalysisViewModel.AnalysisVariables.Count);
             Assert.Equal("cat", requestAnalysisViewModel.GroupByVariables[0].Name);
             Assert.False(requestAnalysisViewModel.CalculateOverall);
+            Assert.False(requestAnalysisViewModel.CalculateCrosswise);
             Assert.False(requestAnalysisViewModel.UseInterpolation);
 
             requestAnalysisViewModel.ResetAnalysisRequestCommand.Execute(null);
@@ -239,6 +246,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Empty(requestAnalysisViewModel.AnalysisVariables);
             Assert.Empty(requestAnalysisViewModel.GroupByVariables);
             Assert.True(requestAnalysisViewModel.CalculateOverall);
+            Assert.True(requestAnalysisViewModel.CalculateCrosswise);
             Assert.True(requestAnalysisViewModel.UseInterpolation);
 
             requestAnalysisViewModel.RegressionSequence = AnalysisRegression.RegressionSequence.Forward;

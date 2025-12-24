@@ -510,6 +510,20 @@ namespace TestLSAnalyzer.Services
             Assert.Equal(2, result[1]["stat"].AsDataFrame().RowCount);
             Assert.Equal(10, result[2]["stat"].AsDataFrame().RowCount);
             Assert.Equal(20, result[3]["stat"].AsDataFrame().RowCount);
+            
+            analysisUnivar = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "x", false) },
+                GroupBy = new() { new(3, "cat", false), new(3, "mi", false) },
+                CalculateOverall = true,
+                CalculateCrosswise = false,
+            };
+
+            result = rservice.CalculateUnivar(analysisUnivar);
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count);
+            Assert.Equal(1, result[0]["stat"].AsDataFrame().RowCount);
+            Assert.Equal(20, result[1]["stat"].AsDataFrame().RowCount);
 
             analysisUnivar = new(analysisConfiguration)
             {
@@ -985,6 +999,12 @@ namespace TestLSAnalyzer.Services
             {
                 Assert.Equal((double)statsCorModeBuild["cor_SE"][i], (double)statsCor["cor_SE"][i]);
             }
+
+            analysisCorrModeBuild.CalculateCrosswise = false;
+            
+            resultModeBuild = rservice.CalculateCorr(analysisCorrModeBuild);
+            Assert.NotNull(resultModeBuild);
+            Assert.Equal(2, resultModeBuild.Count);
         }
 
         [Fact]
