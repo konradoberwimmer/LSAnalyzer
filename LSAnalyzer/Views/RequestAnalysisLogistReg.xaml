@@ -5,6 +5,7 @@
         xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:LSAnalyzer.Views"
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" 
         xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
@@ -15,6 +16,7 @@
         <ViewModels:RequestAnalysis/>
     </Window.DataContext>
     <Window.Resources>
+        <converter:AtLeast x:Key="AtLeastConverter"/>
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisModeConverter"/>
         <converter:BooleanAnd x:Key="BooleanAndConverter"/>
         <converter:EmptyVariableCollection x:Key="EmptyVariableCollectionConverter"/>
@@ -121,10 +123,24 @@
                     </Grid.ColumnDefinitions>
                     <Button Grid.Column="0" Content="&#x21D4;" Margin="10,-5,10,22" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Foreground="Gray"/>
                     <Button x:Name="buttonMoveToAndFromGroupByVariables" Grid.Column="0" Content="&#x21D4;" Margin="10,-5,10,22" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Command="{Binding MoveToAndFromGroupByVariablesCommand}" Click="ButtonMoveToAndFromGroupByVariables_Click" Visibility="{Binding RegressionSequenceIsAllIn, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                    <Border x:Name="HeightHelperPanelVariablesGroupBy" Grid.Column="1" Margin="0,0,10,22">
+                    <Border x:Name="HeightHelperPanelVariablesGroupBy" Grid.Column="1" Margin="0,0,10,40">
                         <ListBox x:Name="listBoxVariablesGroupBy" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesGroupBy}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesGroupBy}" ItemsSource="{Binding GroupByVariables}" DisplayMemberPath="Info" SelectionMode="Extended" MouseDoubleClick="ListBoxVariables_MouseDoubleClick" ScrollViewer.CanContentScroll="False" PreviewMouseRightButtonDown="ListBoxVariables_OnPreviewMouseRightButtonDown" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True"/>
                     </Border>
-                    <CheckBox x:Name="checkBoxCalculateOverall" Grid.Column="1" VerticalAlignment="Bottom" Content="Calculate overall coefficients" IsChecked="{Binding CalculateOverall}" IsEnabled="{Binding GroupByVariables.Count}"/>
+                    <StackPanel Orientation="Vertical" Grid.Column="1" VerticalAlignment="Bottom">
+                        <CheckBox x:Name="checkBoxCalculateOverall" Margin="0,0,0,5" VerticalAlignment="Bottom" Content="Calculate overall coefficients" IsChecked="{Binding CalculateOverall}" IsEnabled="{Binding GroupByVariables.Count}"/>
+                        <CheckBox Content="Calculate for all combinations of group variables" IsChecked="{Binding CalculateCrosswise}">
+                            <CheckBox.IsEnabled>
+                                <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                                    <Binding Path="CalculateOverall"/>
+                                    <Binding Path="GroupByVariables.Count" Converter="{StaticResource AtLeastConverter}">
+                                        <Binding.ConverterParameter>
+                                            <sys:Int32>2</sys:Int32>
+                                        </Binding.ConverterParameter>
+                                    </Binding>
+                                </MultiBinding>
+                            </CheckBox.IsEnabled>
+                        </CheckBox>
+                    </StackPanel>
                 </Grid>
             </Grid>
         </Grid>

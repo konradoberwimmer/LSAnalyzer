@@ -16,6 +16,7 @@
         <ViewModels:RequestAnalysis/>
     </Window.DataContext>
     <Window.Resources>
+        <converter:BooleanAnd x:Key="BooleanAndConverter"/>
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisModeConverter"/>
         <converter:AtLeast x:Key="AtLeastConverter"/>
         <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
@@ -86,11 +87,25 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Button x:Name="buttonMoveToAndFromGroupByVariables" Grid.Column="0" Content="&#x21D4;" Margin="10,0,10,22" Height="50" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Command="{Binding MoveToAndFromGroupByVariablesCommand}" Click="ButtonMoveToAndFromGroupByVariables_Click"/>
-                    <Border x:Name="HeightHelperPanelVariablesGroupBy" Grid.Column="1" Margin="0,0,10,22">
+                    <Border x:Name="HeightHelperPanelVariablesGroupBy" Grid.Column="1" Margin="0,0,10,40">
                         <ListBox x:Name="listBoxVariablesGroupBy" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesGroupBy}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesGroupBy}" ItemsSource="{Binding GroupByVariables}" DisplayMemberPath="Info" SelectionMode="Extended" MouseDoubleClick="ListBoxVariables_MouseDoubleClick" ScrollViewer.CanContentScroll="False" PreviewMouseRightButtonDown="ListBoxVariables_OnPreviewMouseRightButtonDown" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True"/>
                     </Border>
-                    <CheckBox x:Name="checkBoxCalculateOverall" Grid.Column="1" VerticalAlignment="Bottom" Content="Calculate overall coefficients" IsChecked="{Binding CalculateOverall}" IsEnabled="{Binding GroupByVariables.Count}"/>
-                </Grid>
+                    <StackPanel Orientation="Vertical" Grid.Column="1" VerticalAlignment="Bottom">
+                        <CheckBox x:Name="checkBoxCalculateOverall" Margin="0,0,0,5" Content="Calculate overall coefficients" IsChecked="{Binding CalculateOverall}" IsEnabled="{Binding GroupByVariables.Count}"/>
+                        <CheckBox Content="Calculate for all combinations of group variables" IsChecked="{Binding CalculateCrosswise}">
+                            <CheckBox.IsEnabled>
+                                <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                                    <Binding Path="CalculateOverall"/>
+                                    <Binding Path="GroupByVariables.Count" Converter="{StaticResource AtLeastConverter}">
+                                        <Binding.ConverterParameter>
+                                            <sys:Int32>2</sys:Int32>
+                                        </Binding.ConverterParameter>
+                                    </Binding>
+                                </MultiBinding>
+                            </CheckBox.IsEnabled>
+                        </CheckBox>
+                    </StackPanel>
+                    </Grid>
             </Grid>
         </Grid>
         <Button Grid.Row="2" Content="Reset" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,10" Width="80" Height="22" Command="{Binding ResetAnalysisRequestCommand}"/>
