@@ -53,12 +53,14 @@ namespace LSAnalyzer.Services
             {
                 _engine = REngine.GetInstance();
                 _engine.ClearGlobalEnvironment();
-                EvaluateAndLog("Sys.setenv(PATH = paste(\"" + _rPath + "/bin/x64\", Sys.getenv(\"PATH\"), sep=\";\"))"); //ugly workaround for now!
-                string[] a = EvaluateAndLog("paste0('Result: ', stats::sd(c(1,2,3)))").AsCharacter().ToArray();
+                
+                string[] a = _engine.Evaluate("paste0('Result: ', stats::sd(c(1,2,3)))").AsCharacter().ToArray();
                 if (a.Length == 0 || a[0] != "Result: 1")
                 {
                     return false;
                 }
+
+                EvaluateAndLog("options(BIFIEsurvey.quiet = TRUE)");
             } catch
             {
                 return false;
@@ -93,7 +95,7 @@ namespace LSAnalyzer.Services
             {
                 foreach (string rPackage in rPackagesToCheck)
                 {
-                    bool available = EvaluateAndLog("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
+                    bool available = _engine?.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First() ?? false;
                     if (!available)
                     {
                         return false;
