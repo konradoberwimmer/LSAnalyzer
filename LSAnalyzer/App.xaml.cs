@@ -53,19 +53,16 @@ namespace LSAnalyzer
             ConfigurationBuilder configurationBuilder = new();
             configurationBuilder.AddUserSecrets<Configuration>();
 
-            services.AddSingleton<IServiceProvider>(provider =>
-            {
-                return _serviceProvider;
-            });
+            services.AddSingleton<IServiceProvider>(_ => _serviceProvider);
             services.AddSingleton<Logging>();
-            services.AddSingleton<Rservice>();
             services.AddTransient<Services.BatchAnalyze>();
-            services.AddTransient<Configuration>(provider => { 
+            services.AddTransient<Configuration>(_ => { 
                 var userDatasetTypesConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");
                 return new Configuration(userDatasetTypesConfigFile, configurationBuilder); 
             });
-            services.AddSingleton<IExportService>(provider => new ExportService());
-            services.AddTransient<IResultService>(provider => new ResultService());
+            services.AddSingleton<IExportService, ExportService>();
+            services.AddTransient<IResultService, ResultService>();
+            services.AddSingleton<IRservice, Rservice>();
             services.AddTransient<ConfigDatasetTypes>();
             services.AddTransient<DataProviders>();
             services.AddSingleton<MassExport>();
@@ -81,23 +78,18 @@ namespace LSAnalyzer
             services.AddTransient<Views.SystemSettings>();
             services.AddTransient<Views.SelectAnalysisFile>();
             services.AddTransient<Views.BatchAnalyze>();
-            services.AddSingleton<Views.MainWindow>(provider =>
-            {
-                return new Views.MainWindow(_serviceProvider);
-            });
+            services.AddSingleton<Views.MainWindow>(_ => new Views.MainWindow(_serviceProvider));
         }
 
         private void OnStartup(object sender, StartupEventArgs e)
         {
-            var rService = _serviceProvider.GetService<Rservice>()!;
+            var rService = _serviceProvider.GetService<IRservice>()!;
             if (!rService.Connect())
             {
-                MessageBox.Show("An R installation was not found!\n\nPlease make sure that R (>=4.3.0) is installed, registered in Windows Registry and fully available to the current user", "R not found", MessageBoxButton.OK, MessageBoxImage.Error);
-                Shutdown(1);
-                return;
+                MessageBox.Show("An R installation was not found!\n\nPlease configure manually (Config -> System).", "R not found", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
-            if (!rService.CheckNecessaryRPackages())
+            if (rService.IsConnected && !rService.CheckNecessaryRPackages())
             {
                 var rVersion = rService.GetRVersion()!;
                 var rLibraryLocation = rService.GetRPath()!;
@@ -126,7 +118,7 @@ namespace LSAnalyzer
                 return;
             }
 
-            if (!rService.InjectAppFunctions())
+            if (rService.IsConnected && !rService.InjectAppFunctions())
             {
                 MessageBox.Show("There was a problem putting specific functions for LSAnalyzer into the global environment!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(1);

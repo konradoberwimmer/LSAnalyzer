@@ -301,7 +301,7 @@ namespace TestLSAnalyzer.Services
                 });
             
             ServiceCollection serviceCollection = new();
-            serviceCollection.AddTransient<Rservice>(_ => rservice);
+            serviceCollection.AddTransient<IRservice>(_ => rservice);
             var serviceProvider = serviceCollection.BuildServiceProvider();
             
             BatchAnalyze batchAnalyze = new(rservice, configuration.Object, serviceProvider);

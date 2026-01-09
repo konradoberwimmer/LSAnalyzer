@@ -13,12 +13,13 @@ using System.Linq;
 using System.Reflection;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
+using LSAnalyzer.Services.Stubs;
 
 namespace LSAnalyzer.ViewModels
 {
     public partial class SystemSettings : ObservableValidatorExtended, IChangeTracking
     {
-        private readonly Rservice _rservice;
+        private readonly IRservice _rservice;
         private readonly Logging _logger;
         private readonly Configuration _configuration;
 
@@ -85,10 +86,12 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        public bool ConnectedToR => _rservice.IsConnected;
+        
         [ExcludeFromCodeCoverage]
         public SystemSettings() 
         {
-            _rservice = new();
+            _rservice = new RserviceStub();
             _configuration = new("");
             // design-time only, parameterless constructor
             RVersion = "R version 4.3.1";
@@ -100,7 +103,7 @@ namespace LSAnalyzer.ViewModels
             _sessionLog = new(_logger.LogEntries);
         }
 
-        public SystemSettings(Rservice rservice, Configuration configuration, Logging logger)
+        public SystemSettings(IRservice rservice, Configuration configuration, Logging logger)
         {
             _rservice = rservice;
             RVersion = _rservice.GetRVersion();
@@ -155,13 +158,13 @@ namespace LSAnalyzer.ViewModels
 
             switch (result)
             {
-                case Rservice.UpdateResult.Unavailable:
+                case IRservice.UpdateResult.Unavailable:
                     MessageBox.Show("Already at latest version.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
                     break;
-                case Rservice.UpdateResult.Failure:
+                case IRservice.UpdateResult.Failure:
                     MessageBox.Show("Something went wrong trying to update BIFIEsurvey!", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                     break;
-                case Rservice.UpdateResult.Success:
+                case IRservice.UpdateResult.Success:
                     BifieSurveyVersion = _rservice.GetBifieSurveyVersion();
                     MessageBox.Show("Update successful, now at version '" + BifieSurveyVersion + "'.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
                     break;

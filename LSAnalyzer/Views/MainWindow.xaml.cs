@@ -40,7 +40,7 @@ namespace LSAnalyzer.Views
             
             InitializeComponent();
 
-            DataContext = new ViewModels.MainWindow(_serviceProvider.GetRequiredService<Rservice>());
+            DataContext = new ViewModels.MainWindow(_serviceProvider.GetRequiredService<IRservice>());
 
             Closed += WindowClosed;
 
@@ -287,7 +287,7 @@ namespace LSAnalyzer.Views
 
             if (wantsSave == true)
             {
-                mainWindowViewModel.SaveAnalysesDefintionsCommand.Execute(saveFileDialog.FileName);
+                mainWindowViewModel.SaveAnalysesDefinitionsCommand.Execute(saveFileDialog.FileName);
             }
         }
 

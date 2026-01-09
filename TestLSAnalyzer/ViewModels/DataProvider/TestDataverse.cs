@@ -131,7 +131,7 @@ public class TestDataverse
         configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
         
         var serviceProvider = new ServiceCollection()
-            .AddSingleton(rserviceMock.Object)
+            .AddSingleton<IRservice>(_ => rserviceMock.Object)
             .AddSingleton(configurationMock.Object)
             .BuildServiceProvider();
 
@@ -184,7 +184,7 @@ public class TestDataverse
         configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
         
         var serviceProvider = new ServiceCollection()
-            .AddSingleton(rserviceMock.Object)
+            .AddSingleton<IRservice>(_ => rserviceMock.Object)
             .AddSingleton(configurationMock.Object)
             .BuildServiceProvider();
 
@@ -221,7 +221,7 @@ public class TestDataverse
         configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
         
         var serviceProvider = new ServiceCollection()
-            .AddSingleton(rserviceMock.Object)
+            .AddSingleton<IRservice>(_ => rserviceMock.Object)
             .AddSingleton(configurationMock.Object)
             .BuildServiceProvider();
 

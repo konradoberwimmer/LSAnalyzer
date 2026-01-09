@@ -303,7 +303,7 @@ namespace TestLSAnalyzer.ViewModels
                 File.Delete(tmpFile);
             }
 
-            mainWindowViewModel.SaveAnalysesDefintionsCommand.Execute(tmpFile);
+            mainWindowViewModel.SaveAnalysesDefinitionsCommand.Execute(tmpFile);
             Assert.False(File.Exists(tmpFile));
 
             DatasetType dummyType = new()
@@ -337,7 +337,7 @@ namespace TestLSAnalyzer.ViewModels
                 CalculateBivariate = false,
             }));
 
-            mainWindowViewModel.SaveAnalysesDefintionsCommand.Execute(tmpFile);
+            mainWindowViewModel.SaveAnalysesDefinitionsCommand.Execute(tmpFile);
             Assert.True(File.Exists(tmpFile));
             
             var analysisSerializationHelpers =

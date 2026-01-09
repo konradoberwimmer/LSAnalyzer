@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 
 namespace LSAnalyzer.Services
 {
-    public class Rservice
+    public class Rservice : IRservice
     {
         private Logging _logger = null!;
         private string? _rPath;
@@ -68,6 +68,8 @@ namespace LSAnalyzer.Services
 
             return true;
         }
+
+        public bool IsConnected => _engine != null;
 
         [ExcludeFromCodeCoverage]
         public string? GetRVersion()
@@ -159,11 +161,8 @@ namespace LSAnalyzer.Services
             }
         }
 
-
-        public enum UpdateResult { Unavailable, Success, Failure }
-
         [ExcludeFromCodeCoverage]
-        public UpdateResult UpdateBifieSurvey()
+        public IRservice.UpdateResult UpdateBifieSurvey()
         {
             try
             {
@@ -171,15 +170,15 @@ namespace LSAnalyzer.Services
                 DataFrame? oldPackages = _engine.GetSymbol("lsanalyzer_old_packages").AsDataFrame();
                 if (oldPackages == null || !oldPackages["Package"].AsCharacter().Contains("BIFIEsurvey"))
                 {
-                    return UpdateResult.Unavailable;
+                    return IRservice.UpdateResult.Unavailable;
                 }
 
                 EvaluateAndLog("utils::update.packages(repos = 'https://cloud.r-project.org', ask = FALSE, oldPkgs = 'BIFIEsurvey')");
 
-                return UpdateResult.Success;
+                return IRservice.UpdateResult.Success;
             } catch
             {
-                return UpdateResult.Failure;
+                return IRservice.UpdateResult.Failure;
             }
         }
 

@@ -21,7 +21,7 @@ namespace LSAnalyzer.ViewModels;
 
 public partial class Subsetting : ObservableObject, INotifyPropertyChanged
 {
-    private readonly Rservice _rservice;
+    private readonly IRservice _rservice;
     
     private readonly Configuration _configuration;
 
@@ -156,7 +156,7 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
         RecentSubsettingExpressions = ["x == 1", "y == 2"];
     }
 
-    public Subsetting(Rservice rservice, Configuration configuration)
+    public Subsetting(IRservice rservice, Configuration configuration)
     {
         _rservice = rservice;
         _configuration = configuration;
