@@ -17,8 +17,9 @@ namespace TestLSAnalyzer.ViewModels
         public void TestSaveSessionRcodeCommand()
         {
             Logging logger = new();
-            Configuration configuration = new("", null, new SettingsServiceStub(), new RegistryServiceStub());
+            Configuration configuration = new("", null, new SettingsServiceStub(), new RegistryService());
             Rservice rservice = new(logger);
+            rservice.RLocation = configuration.GetRLocation() ?? (string.Empty, string.Empty);
 
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.InjectAppFunctions());
@@ -37,8 +38,9 @@ namespace TestLSAnalyzer.ViewModels
         public void TestSaveSessionLogCommand()
         {
             Logging logger = new();
-            Configuration configuration = new("", null, new SettingsServiceStub(), new RegistryServiceStub());
+            Configuration configuration = new("", null, new SettingsServiceStub(), new RegistryService());
             Rservice rservice = new(logger);
+            rservice.RLocation = configuration.GetRLocation() ?? (string.Empty, string.Empty);
 
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.InjectAppFunctions());
@@ -56,8 +58,9 @@ namespace TestLSAnalyzer.ViewModels
         public void TestLoadDefaultDatasetTypesCommand()
         {
             Logging logger = new();
-            Configuration configuration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
+            Configuration configuration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryService());
             Rservice rservice = new(logger);
+            rservice.RLocation = configuration.GetRLocation() ?? (string.Empty, string.Empty);
 
             configuration.StoreDatasetType(new() { Id = 33 });
 

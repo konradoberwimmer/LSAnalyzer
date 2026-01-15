@@ -6,6 +6,8 @@ namespace LSAnalyzer.Services.Stubs;
 
 public class RserviceStub : IRservice
 {
+    public (string rHome, string rPath) RLocation { get; set; } = (string.Empty, string.Empty);
+    
     public bool Connect()
     {
         return false;
@@ -17,12 +19,6 @@ public class RserviceStub : IRservice
     {
         return null;
     }
-
-    public string? GetRPath()
-    {
-        throw new System.NotImplementedException();
-    }
-
     public bool CheckNecessaryRPackages(string? packageName = null)
     {
         throw new System.NotImplementedException();

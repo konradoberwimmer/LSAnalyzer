@@ -6,13 +6,13 @@ namespace LSAnalyzer.Services;
 
 public interface IRservice
 {
+    public (string rHome, string rPath) RLocation { get; set; }
+    
     public bool Connect();
 
     public bool IsConnected { get; }
 
     public string? GetRVersion();
-
-    public string? GetRPath();
 
     public bool CheckNecessaryRPackages(string? packageName = null);
 

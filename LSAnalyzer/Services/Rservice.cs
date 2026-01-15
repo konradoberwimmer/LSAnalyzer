@@ -1,6 +1,5 @@
 ﻿using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
-using Microsoft.Win32;
 using RDotNet;
 using System;
 using System.Collections.Generic;
@@ -9,30 +8,29 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using LSAnalyzer.Services.Stubs;
 
 namespace LSAnalyzer.Services
 {
     public class Rservice : IRservice
     {
-        private Logging _logger = null!;
-        private string? _rPath;
+        private readonly ILogging _logger;
         private REngine? _engine;
-        private readonly string[] _rPackagesNecessary = new string[] { "BIFIEsurvey", "foreign" };
+        private readonly string[] _rPackagesNecessary = [ "BIFIEsurvey", "foreign" ];
 
+        public (string rHome, string rPath) RLocation { get; set; } = (string.Empty, string.Empty);
+        
         [ExcludeFromCodeCoverage]
         public Rservice()
         {
             // parameter-less constructor for mocking only
+            _logger = new LoggingStub();
+
+            RLocation = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryService()).GetRLocation() ?? (string.Empty, string.Empty);
         }
 
-        public Rservice(Logging logger) 
+        public Rservice(ILogging logger) 
         {
-            var rPathObject = Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\R-core\\R64", "InstallPath", null);
-            if (rPathObject != null)
-            {
-                _rPath = rPathObject.ToString()!.Replace("\\", "/");
-            }
-
             _logger = logger;
         }
 
@@ -44,13 +42,14 @@ namespace LSAnalyzer.Services
 
         public bool Connect()
         {
-            if (_rPath == null)
+            if (string.IsNullOrWhiteSpace(RLocation.rHome) || string.IsNullOrWhiteSpace(RLocation.rPath))
             {
                 return false;
             }
 
             try
             {
+                REngine.SetEnvironmentVariables(rPath: RLocation.rPath, rHome: RLocation.rHome);
                 _engine = REngine.GetInstance();
                 _engine.ClearGlobalEnvironment();
                 
@@ -82,11 +81,6 @@ namespace LSAnalyzer.Services
             {
                 return null;
             }
-        }
-
-        public string? GetRPath()
-        {
-            return _rPath;
         }
 
         public virtual bool CheckNecessaryRPackages(string? packageName = null)

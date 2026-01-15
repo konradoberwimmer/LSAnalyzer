@@ -36,7 +36,7 @@ namespace TestLSAnalyzer.ViewModels
                 ModeKeep = false,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             MainWindow mainWindowViewModel = new(rservice);
 
             mainWindowViewModel.AnalysisConfiguration = analysisConfigurationA;
@@ -63,7 +63,7 @@ namespace TestLSAnalyzer.ViewModels
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 0.5));
@@ -151,7 +151,7 @@ namespace TestLSAnalyzer.ViewModels
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 0.5));
@@ -230,7 +230,7 @@ namespace TestLSAnalyzer.ViewModels
                 FayFac = 1
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             MainWindow mainWindowViewModel = new(rservice);
@@ -292,7 +292,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestSaveAnalysesDefintionsCommand()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             MainWindow mainWindowViewModel = new(rservice);
@@ -349,7 +349,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestRemoveAllAnalysesCommand()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             MainWindow mainWindowViewModel = new(rservice);
             
             mainWindowViewModel.Analyses.Add(new AnalysisPresentation());

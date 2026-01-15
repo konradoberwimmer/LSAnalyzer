@@ -20,7 +20,7 @@ namespace LSAnalyzer.ViewModels
     public partial class SystemSettings : ObservableValidatorExtended, IChangeTracking
     {
         private readonly IRservice _rservice;
-        private readonly Logging _logger;
+        private readonly ILogging _logger;
         private readonly Configuration _configuration;
 
         [ObservableProperty] private string _version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
@@ -97,17 +97,17 @@ namespace LSAnalyzer.ViewModels
             RVersion = "R version 4.3.1";
             BifieSurveyVersion = "3.4-15";
             CountConfiguredDatasetTypes = 12;
-            _logger = new();
+            _logger = new LoggingStub();
             _logger.AddEntry(new LogEntry(DateTime.Now, "stats::sd(c(1,2,3))"));
             _logger.AddEntry(new LogEntry(DateTime.Now, "rm(dummy_result)"));
             _sessionLog = new(_logger.LogEntries);
         }
 
-        public SystemSettings(IRservice rservice, Configuration configuration, Logging logger)
+        public SystemSettings(IRservice rservice, Configuration configuration, ILogging logger)
         {
             _rservice = rservice;
-            RVersion = _rservice.GetRVersion();
-            BifieSurveyVersion = _rservice.GetBifieSurveyVersion();
+            RVersion = _rservice.IsConnected ? _rservice.GetRVersion() : "---";
+            BifieSurveyVersion = _rservice.IsConnected ?_rservice.GetBifieSurveyVersion() : "---";
             _configuration = configuration;
             CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
             _logger = logger;

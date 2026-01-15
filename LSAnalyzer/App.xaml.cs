@@ -5,8 +5,6 @@ using LSAnalyzer.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Win32;
-using RDotNet;
 using System;
 using System.IO;
 using System.Reflection;
@@ -54,7 +52,7 @@ namespace LSAnalyzer
             configurationBuilder.AddUserSecrets<Configuration>();
 
             services.AddSingleton<IServiceProvider>(_ => _serviceProvider);
-            services.AddSingleton<Logging>();
+            services.AddSingleton<ILogging, Logging>();
             services.AddTransient<Services.BatchAnalyze>();
             services.AddTransient<Configuration>(_ => { 
                 var userDatasetTypesConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");
@@ -83,16 +81,18 @@ namespace LSAnalyzer
 
         private void OnStartup(object sender, StartupEventArgs e)
         {
+            var configuration = _serviceProvider.GetService<Configuration>()!;
             var rService = _serviceProvider.GetService<IRservice>()!;
+
+            rService.RLocation = configuration.GetRLocation() ?? (string.Empty, string.Empty);
             if (!rService.Connect())
             {
-                MessageBox.Show("An R installation was not found!\n\nPlease configure manually (Config -> System).", "R not found", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("No R installation was found!\n\nPlease configure manually (Config -> System).", "R not found", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             if (rService.IsConnected && !rService.CheckNecessaryRPackages())
             {
                 var rVersion = rService.GetRVersion()!;
-                var rLibraryLocation = rService.GetRPath()!;
                 
                 var wantsInstall = MessageBox.Show($"""
                                                    It seems that not all necessary R packages (BIFIEsurvey, foreign) are available. 
@@ -100,7 +100,7 @@ namespace LSAnalyzer
                                                    Do you want to install them now? 
                                                    NOTE: This requires an active internet connection and may take a while!
                                                    
-                                                   [Found {rVersion} with library path {rLibraryLocation}]
+                                                   [Found {rVersion} in {rService.RLocation.rPath}]
                                                    """, "R packages not available", MessageBoxButton.YesNo, MessageBoxImage.Error);
                 if (wantsInstall == MessageBoxResult.Yes)
                 {

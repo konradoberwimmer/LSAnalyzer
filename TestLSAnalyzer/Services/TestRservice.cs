@@ -19,23 +19,15 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestConnect()
         {
-            Rservice rservice = new(new());
-            Assert.True(rservice.Connect(), "R must also be available for tests");
-        }
-
-        [Fact]
-        public void TestGetRPath()
-        {
-            Rservice rservice = new(new());
-            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Rservice rservice = new();
             
-            Assert.NotNull(rservice.GetRPath());
+            Assert.True(rservice.Connect(), "R must also be available for tests");
         }
 
         [Fact]
         public void TestExecute()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             Assert.True(rservice.Execute("x <- 2 * 2"));
@@ -45,7 +37,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestFetch()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.Execute("x <- 2 * 2"));
 
@@ -56,7 +48,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestInstallAndCheckNecessaryRPackages()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.InstallNecessaryRPackages());
             Assert.True(rservice.CheckNecessaryRPackages(), "R packages are also necessary for tests");
@@ -65,7 +57,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestInstallAndCheckOptionalRPackages()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.False(rservice.CheckNecessaryRPackages("sinnlos123"));
             Assert.True(rservice.InstallNecessaryRPackages("jsonlite"));
@@ -75,7 +67,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestInjectAppFunctions()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             Assert.True(rservice.InjectAppFunctions());
@@ -84,7 +76,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestLoadFileIntoGlobalEnvironment()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             Assert.False(rservice.LoadFileIntoGlobalEnvironment(Path.GetTempFileName()));
@@ -94,7 +86,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestReplaceCharacterVariables()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             Assert.False(rservice.ReplaceCharacterVariables());
@@ -111,7 +103,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestTestSubsetting()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav")));
 
@@ -153,7 +145,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestApplySubsetting()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav")));
 
@@ -164,7 +156,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestReduceToNecessaryVariables()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_create_repwgts.sav")));
 
@@ -194,7 +186,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestCreateReplicateWeights()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_create_repwgts.sav")));
@@ -211,7 +203,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestCreateReplicateWeightsAfterSubsetting()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_create_repwgts.sav")));
             Assert.True(rservice.ApplySubsetting("subset == 1"));
@@ -222,7 +214,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestCreateBIFIEdataObject()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav")));
@@ -248,7 +240,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 0.5));
@@ -329,7 +321,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             analysisConfiguration.FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
@@ -374,7 +366,7 @@ namespace TestLSAnalyzer.Services
                 GroupBy = new() { new(2, "cat", false) },
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
 
@@ -401,7 +393,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1));
@@ -478,7 +470,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1));
@@ -556,7 +548,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = false,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
 
@@ -605,7 +597,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = false,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
 
@@ -646,7 +638,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
@@ -716,7 +708,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
@@ -755,7 +747,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
@@ -794,7 +786,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1));
@@ -843,7 +835,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, 1));
@@ -884,7 +876,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.InjectAppFunctions());
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
@@ -945,7 +937,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
@@ -1022,7 +1014,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
@@ -1094,7 +1086,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
@@ -1140,7 +1132,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
@@ -1187,7 +1179,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
@@ -1257,7 +1249,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
@@ -1293,7 +1285,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestGetDatasetVariables()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             var filename = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
 
@@ -1306,7 +1298,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestGetValueLabels()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             var filename = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(filename));
@@ -1346,7 +1338,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, null, null));
@@ -1394,7 +1386,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = false,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
 
@@ -1483,7 +1475,7 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             var fileFullPVs = Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav");

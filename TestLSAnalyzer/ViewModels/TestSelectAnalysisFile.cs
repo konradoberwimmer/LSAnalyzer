@@ -29,7 +29,7 @@ public class TestSelectAnalysisFile
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
         }
-        Rservice rservice = new(new());
+        Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
@@ -126,7 +126,7 @@ public class TestSelectAnalysisFile
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
         }
-        Rservice rservice = new(new());
+        Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
@@ -174,7 +174,7 @@ public class TestSelectAnalysisFile
         datasetTypesConfiguration.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
         datasetTypesConfiguration.Setup(conf => conf.GetDataProviderConfigurations()).Returns([]);
         
-        Rservice rservice = new(new());
+        Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration.Object, rservice, new ServiceCollection().BuildServiceProvider());
@@ -204,7 +204,7 @@ public class TestSelectAnalysisFile
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
         }
-        Rservice rservice = new(new());
+        Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
@@ -257,7 +257,7 @@ public class TestSelectAnalysisFile
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
         }
-        Rservice rservice = new(new());
+        Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
@@ -292,7 +292,7 @@ public class TestSelectAnalysisFile
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
         }
-        Rservice rservice = new(new());
+        Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
