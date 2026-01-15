@@ -12,6 +12,7 @@ using TestLSAnalyzer.Services;
 using Moq;
 using Microsoft.Extensions.DependencyInjection;
 using LSAnalyzer.Helper;
+using LSAnalyzer.Services.Stubs;
 using Polly;
 using Xunit.Sdk;
 
@@ -23,7 +24,7 @@ public class TestSelectAnalysisFile
     [Fact]
     public void TestGuessDatasetType()
     {
-        Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+        Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
@@ -120,7 +121,7 @@ public class TestSelectAnalysisFile
     [Fact]
     public void TestGuessDatasetTypeAutoEncapsulateRegex()
     {
-        Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+        Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
@@ -198,7 +199,7 @@ public class TestSelectAnalysisFile
     {
         DispatcherHelper.Initialize();
 
-        Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+        Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
@@ -251,7 +252,7 @@ public class TestSelectAnalysisFile
     {
         DispatcherHelper.Initialize();
 
-        Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+        Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
@@ -286,7 +287,7 @@ public class TestSelectAnalysisFile
     [Fact]
     public void TestUseFileForAnalysisWithAutoEncapsulatedRegex()
     {
-        Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+        Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);

@@ -7,10 +7,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+using LSAnalyzer.Services.Stubs;
 using LSAnalyzer.ViewModels.ValueConverter;
 
 namespace LSAnalyzer.Services;
@@ -19,6 +18,8 @@ public class Configuration
 {
     private IConfigurationRoot? _config;
     private readonly IConfigurationBuilder? _configurationBuilder;
+    private readonly ISettingsService _settingsService;
+    private readonly IRegistryService _registryService;
 
     private string _datasetTypesConfigFile;
     public string DatasetTypesConfigFile
@@ -30,9 +31,12 @@ public class Configuration
     public Configuration()
     {
         // parameter-less constructor for testing only
+        _datasetTypesConfigFile = string.Empty;
+        _settingsService = new SettingsServiceStub();
+        _registryService = new RegistryServiceStub();
     }
 
-    public Configuration(string datasetTypesConfigFile, IConfigurationBuilder? configurationBuilder = null) 
+    public Configuration(string datasetTypesConfigFile, IConfigurationBuilder? configurationBuilder, ISettingsService settingsService, IRegistryService registryService) 
     { 
         _datasetTypesConfigFile = datasetTypesConfigFile;
         try
@@ -43,6 +47,22 @@ public class Configuration
             _config = new ConfigurationBuilder().Build();
         }
         _configurationBuilder = configurationBuilder;
+        _settingsService = settingsService;
+        _registryService = registryService;
+    }
+
+    public (string rHome, string rPath)? GetRLocation()
+    {
+        var storedRLocation = _settingsService.RLocation;
+        
+        if (!string.IsNullOrWhiteSpace(storedRLocation) && Directory.Exists(storedRLocation))
+        {
+            return (rHome: storedRLocation, rPath: Path.Combine(storedRLocation, "bin", "x64"));
+        }
+
+        var defaultRLocation = _registryService.GetDefaultRLocation();
+
+        return defaultRLocation is null ? null : (rHome: defaultRLocation, rPath: Path.Combine(defaultRLocation, "bin", "x64"));
     }
 
     public virtual List<IDataProviderConfiguration> GetDataProviderConfigurations()

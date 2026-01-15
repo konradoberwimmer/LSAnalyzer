@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using LSAnalyzer.Services.Stubs;
 
 namespace TestLSAnalyzer.ViewModels
 {
@@ -16,7 +17,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestConstructorAndSwitchingBetweenDatasetTypes()
         {
-            Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+            Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
             foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
             {
                 datasetTypesConfiguration.StoreDatasetType(datasetType);
@@ -33,7 +34,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestNewDatasetType()
         {
-            Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+            Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
 
             ConfigDatasetTypes datasetTypesViewModel = new(datasetTypesConfiguration);
 
@@ -55,7 +56,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestSaveSelectedDatasetType()
         {
-            Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+            Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
             foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
             {
                 datasetTypesConfiguration.StoreDatasetType(datasetType);
@@ -86,7 +87,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestRemoveDatasetType()
         {
-            Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+            Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
             foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
             {
                 datasetTypesConfiguration.StoreDatasetType(datasetType);
@@ -108,7 +109,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestImportDatasetType()
         {
-            Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+            Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
             foreach (var aDatasetType in DatasetType.CreateDefaultDatasetTypes())
             {
                 datasetTypesConfiguration.StoreDatasetType(aDatasetType);
@@ -159,7 +160,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestExportDatasetType()
         {
-            Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+            Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
             foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
             {
                 datasetTypesConfiguration.StoreDatasetType(datasetType);

@@ -12,6 +12,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using LSAnalyzer.Services.Stubs;
 
 namespace LSAnalyzer.ViewModels;
 
@@ -45,7 +46,7 @@ public partial class DataProviders : ObservableObject
     public DataProviders() 
     {
         //design-time only parameterless constructor
-        _configuration = new("");
+        _configuration = new("", null, new SettingsServiceStub(), new RegistryServiceStub());
     }
 
     public DataProviders(Configuration configuration, IServiceProvider? serviceProvider)

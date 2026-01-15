@@ -129,5 +129,29 @@ namespace LSAnalyzer.Properties {
                 this["defaultExportType"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string RLocation {
+            get {
+                return ((string)(this["RLocation"]));
+            }
+            set {
+                this["RLocation"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string RLibrary {
+            get {
+                return ((string)(this["RLibrary"]));
+            }
+            set {
+                this["RLibrary"] = value;
+            }
+        }
     }
 }

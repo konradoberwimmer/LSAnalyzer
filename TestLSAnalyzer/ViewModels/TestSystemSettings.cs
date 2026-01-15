@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LSAnalyzer.Services.Stubs;
 
 namespace TestLSAnalyzer.ViewModels
 {
@@ -16,7 +17,7 @@ namespace TestLSAnalyzer.ViewModels
         public void TestSaveSessionRcodeCommand()
         {
             Logging logger = new();
-            Configuration configuration = new("");
+            Configuration configuration = new("", null, new SettingsServiceStub(), new RegistryServiceStub());
             Rservice rservice = new(logger);
 
             Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -36,7 +37,7 @@ namespace TestLSAnalyzer.ViewModels
         public void TestSaveSessionLogCommand()
         {
             Logging logger = new();
-            Configuration configuration = new("");
+            Configuration configuration = new("", null, new SettingsServiceStub(), new RegistryServiceStub());
             Rservice rservice = new(logger);
 
             Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -55,7 +56,7 @@ namespace TestLSAnalyzer.ViewModels
         public void TestLoadDefaultDatasetTypesCommand()
         {
             Logging logger = new();
-            Configuration configuration = new(Path.GetTempFileName());
+            Configuration configuration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
             Rservice rservice = new(logger);
 
             configuration.StoreDatasetType(new() { Id = 33 });

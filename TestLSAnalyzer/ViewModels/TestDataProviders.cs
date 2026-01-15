@@ -14,6 +14,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using LSAnalyzer.Services.Stubs;
 
 namespace TestLSAnalyzer.ViewModels;
 
@@ -25,7 +26,7 @@ public class TestDataProviders
     {
         ConfigurationBuilder configurationBuilder = new();
         configurationBuilder.AddJsonFile(Path.GetTempFileName(), true);
-        Configuration configuration = new(string.Empty, configurationBuilder);
+        Configuration configuration = new(string.Empty, configurationBuilder, new SettingsServiceStub(), new RegistryServiceStub());
 
         DataProviders dataProviders = new(configuration, new Mock<IServiceProvider>().Object);
 
@@ -38,7 +39,7 @@ public class TestDataProviders
     {
         ConfigurationBuilder configurationBuilder = new();
         configurationBuilder.AddJsonFile(Path.Combine(AssemblyDirectory, "_testData", "dataProviders.json"));
-        Configuration configuration = new(string.Empty, configurationBuilder);
+        Configuration configuration = new(string.Empty, configurationBuilder, new SettingsServiceStub(), new RegistryServiceStub());
 
         DataProviders dataProviders = new(configuration, new Mock<IServiceProvider>().Object);
 
@@ -52,7 +53,7 @@ public class TestDataProviders
     {
         ConfigurationBuilder configurationBuilder = new();
         configurationBuilder.AddJsonFile(Path.Combine(AssemblyDirectory, "_testData", "dataProviders.json"));
-        Configuration configuration = new(string.Empty, configurationBuilder);
+        Configuration configuration = new(string.Empty, configurationBuilder, new SettingsServiceStub(), new RegistryServiceStub());
 
         DataProviders dataProviders = new(configuration, new Mock<IServiceProvider>().Object);
         dataProviders.NewDataProviderCommand.Execute(typeof(string));
@@ -66,7 +67,7 @@ public class TestDataProviders
     {
         ConfigurationBuilder configurationBuilder = new();
         configurationBuilder.AddJsonFile(Path.Combine(AssemblyDirectory, "_testData", "dataProviders.json"));
-        Configuration configuration = new(string.Empty, configurationBuilder);
+        Configuration configuration = new(string.Empty, configurationBuilder, new SettingsServiceStub(), new RegistryServiceStub());
 
         DataProviders dataProviders = new(configuration, new Mock<IServiceProvider>().Object);
         dataProviders.NewDataProviderCommand.Execute(dataProviders.Types.Where(t => t.Name == "DataverseConfiguration").First());
@@ -84,7 +85,7 @@ public class TestDataProviders
 
         ConfigurationBuilder configurationBuilder = new();
         configurationBuilder.AddJsonFile(tmpConfigFile);
-        Configuration configuration = new(string.Empty, configurationBuilder);
+        Configuration configuration = new(string.Empty, configurationBuilder, new SettingsServiceStub(), new RegistryServiceStub());
 
         DataProviders dataProviders = new(configuration, new Mock<IServiceProvider>().Object);
 
@@ -133,7 +134,7 @@ public class TestDataProviders
 
         ConfigurationBuilder configurationBuilder = new();
         configurationBuilder.AddJsonFile(tmpConfigFile);
-        Configuration configuration = new(string.Empty, configurationBuilder);
+        Configuration configuration = new(string.Empty, configurationBuilder, new SettingsServiceStub(), new RegistryServiceStub());
 
         DataProviders dataProviders = new(configuration, new Mock<IServiceProvider>().Object);
 
@@ -150,7 +151,7 @@ public class TestDataProviders
     {
         ConfigurationBuilder configurationBuilder = new();
         configurationBuilder.AddJsonFile(Path.Combine(AssemblyDirectory, "_testData", "dataProviders.json"));
-        Configuration configuration = new(string.Empty, configurationBuilder);
+        Configuration configuration = new(string.Empty, configurationBuilder, new SettingsServiceStub(), new RegistryServiceStub());
 
         var RServiceMock = new Mock<Rservice>();
         RServiceMock.Setup(rservice => rservice.CheckNecessaryRPackages(It.IsAny<string>())).Returns(false);
@@ -181,7 +182,7 @@ public class TestDataProviders
     {
         ConfigurationBuilder configurationBuilder = new();
         configurationBuilder.AddJsonFile(Path.Combine(AssemblyDirectory, "_testData", "dataProviders.json"));
-        Configuration configuration = new(string.Empty, configurationBuilder);
+        Configuration configuration = new(string.Empty, configurationBuilder, new SettingsServiceStub(), new RegistryServiceStub());
 
         var RServiceMock = new Mock<Rservice>();
         RServiceMock.Setup(rservice => rservice.CheckNecessaryRPackages(It.IsAny<string>())).Returns(true);

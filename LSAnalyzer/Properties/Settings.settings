@@ -29,6 +29,12 @@
     <Setting Name="defaultExportType" Type="System.String" Scope="User">
       <Value Profile="(Default)">excelWithStyles</Value>
     </Setting>
+    <Setting Name="RLocation" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="RLibrary" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>
 

@@ -91,9 +91,9 @@ namespace LSAnalyzer.ViewModels
         [ExcludeFromCodeCoverage]
         public SystemSettings() 
         {
-            _rservice = new RserviceStub();
-            _configuration = new("");
             // design-time only, parameterless constructor
+            _rservice = new RserviceStub();
+            _configuration = new("", null, new SettingsServiceStub(), new RegistryServiceStub());
             RVersion = "R version 4.3.1";
             BifieSurveyVersion = "3.4-15";
             CountConfiguredDatasetTypes = 12;

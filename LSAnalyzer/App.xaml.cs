@@ -58,7 +58,7 @@ namespace LSAnalyzer
             services.AddTransient<Services.BatchAnalyze>();
             services.AddTransient<Configuration>(_ => { 
                 var userDatasetTypesConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");
-                return new Configuration(userDatasetTypesConfigFile, configurationBuilder); 
+                return new Configuration(userDatasetTypesConfigFile, configurationBuilder, new SettingsService(), new RegistryService()); 
             });
             services.AddSingleton<IExportService, ExportService>();
             services.AddTransient<IResultService, ResultService>();
