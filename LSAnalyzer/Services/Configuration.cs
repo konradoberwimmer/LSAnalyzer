@@ -65,6 +65,16 @@ public class Configuration
         return defaultRLocation is null ? null : (rHome: defaultRLocation, rPath: Path.Combine(defaultRLocation, "bin", "x64"));
     }
 
+    public string? GetStoredRLocation()
+    {
+        return _settingsService.RLocation;
+    }
+
+    public void SetAlternativeRLocation(string alternativeRLocation)
+    {
+        _settingsService.SetAlternativeRLocation(alternativeRLocation);
+    }
+
     public virtual List<IDataProviderConfiguration> GetDataProviderConfigurations()
     {
         if (_config == null || !_config.GetSection("DataProviders").Exists() || _configurationBuilder?.Sources.Where(source => source.GetType() == typeof(JsonConfigurationSource)).LastOrDefault() is not JsonConfigurationSource configurationSource)

@@ -62,6 +62,7 @@ namespace LSAnalyzer.Services
                 EvaluateAndLog("options(BIFIEsurvey.quiet = TRUE)");
             } catch
             {
+                Dispose();
                 return false;
             }
 
@@ -1386,6 +1387,12 @@ namespace LSAnalyzer.Services
             {
                 return null;
             }
+        }
+
+        public void Dispose()
+        {
+            _engine?.Dispose();
+            _engine = null;
         }
     }
 

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Services.Stubs;
 
 namespace TestLSAnalyzer.ViewModels
@@ -94,6 +95,60 @@ namespace TestLSAnalyzer.ViewModels
             
             systemSettingsViewModel.NumberRecentSubsettingExpressions = oldValue;
             systemSettingsViewModel.SaveSettingsCommand.Execute(null);
+        }
+
+        [Fact]
+        public void TestSetAlternativeRLocation()
+        {
+            var impossibleRLocationMessage = false;
+            WeakReferenceMessenger.Default.Register<ImpossibleRLocationMessage>(this, (_, _) => impossibleRLocationMessage = true);
+            var requestRestartMessage = false;
+            WeakReferenceMessenger.Default.Register<RequestRestartMessage>(this, (_, _) => requestRestartMessage = true);
+
+            SystemSettings systemSettingsViewModel = new();
+            
+            Assert.True(string.IsNullOrWhiteSpace(systemSettingsViewModel.AlternativeRLocation));
+
+            systemSettingsViewModel.SetAlternativeRLocationCommand.Execute("""C:\somewhere_really_wrong""");
+            
+            Assert.True(impossibleRLocationMessage);
+            Assert.True(string.IsNullOrWhiteSpace(systemSettingsViewModel.AlternativeRLocation));
+
+            impossibleRLocationMessage = false;
+            var stillImpossibleRLocation = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Directory.CreateDirectory(stillImpossibleRLocation);
+            
+            systemSettingsViewModel.SetAlternativeRLocationCommand.Execute(stillImpossibleRLocation);
+            
+            Assert.True(impossibleRLocationMessage);
+            Assert.True(string.IsNullOrWhiteSpace(systemSettingsViewModel.AlternativeRLocation));
+            
+            impossibleRLocationMessage = false;
+            var possibleRLocation = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Directory.CreateDirectory(Path.Combine(possibleRLocation, "bin", "x64"));
+            var fileStream = File.Create(Path.Combine(possibleRLocation, "bin", "x64", "R.dll"));
+            fileStream.Close();
+            
+            systemSettingsViewModel.SetAlternativeRLocationCommand.Execute(possibleRLocation);
+            
+            Assert.False(impossibleRLocationMessage);
+            Assert.Equal(possibleRLocation, systemSettingsViewModel.AlternativeRLocation);
+            Assert.True(requestRestartMessage);
+        }
+        
+        [Fact]
+        public void TestClearAlternativeRLocation()
+        {
+            var requestRestartMessage = false;
+            WeakReferenceMessenger.Default.Register<RequestRestartMessage>(this, (_, _) => requestRestartMessage = true);
+
+            SystemSettings systemSettingsViewModel = new();
+            systemSettingsViewModel.AlternativeRLocation = """C:\somewhere_good""";
+            
+            systemSettingsViewModel.ClearAlternativeRLocationCommand.Execute(null);
+            
+            Assert.True(string.IsNullOrWhiteSpace(systemSettingsViewModel.AlternativeRLocation));
+            Assert.True(requestRestartMessage);
         }
     }
 }

@@ -36,6 +36,11 @@ namespace LSAnalyzer.Views
             });
             
             WeakReferenceMessenger.Default.Register<SavedSettingsMessage>(this, (_, _) => MessageBox.Show("Settings saved.", "Info", MessageBoxButton.OK, MessageBoxImage.Information));
+            
+            WeakReferenceMessenger.Default.Register<ImpossibleRLocationMessage>(this, (_, m) =>
+            {
+                MessageBox.Show($"""Ignoring, because "{Path.Combine(m.Path, "bin", "x64", "R.dll")}" does not exist!""", "Wrong directory", MessageBoxButton.OK, MessageBoxImage.Warning);
+            });
         }
 
         [ExcludeFromCodeCoverage]
@@ -108,6 +113,34 @@ namespace LSAnalyzer.Views
         private void SystemSettings_OnClosing(object? sender, CancelEventArgs e)
         {
             WeakReferenceMessenger.Default.UnregisterAll(this);
+        }
+
+        private void ButtonSelectRLocation_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button || DataContext is not ViewModels.SystemSettings systemSettingsViewModel)
+            {
+                return;
+            }
+
+            OpenFolderDialog dialog = new();
+            dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            
+            var wantsToSelect = dialog.ShowDialog(this);
+
+            if (wantsToSelect == true)
+            {
+                systemSettingsViewModel.SetAlternativeRLocationCommand.Execute(dialog.FolderName);
+            }
+        }
+
+        private void ButtonClearRLocation_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button || DataContext is not ViewModels.SystemSettings systemSettingsViewModel)
+            {
+                return;
+            }
+            
+            systemSettingsViewModel.ClearAlternativeRLocationCommand.Execute(null);
         }
     }
 }

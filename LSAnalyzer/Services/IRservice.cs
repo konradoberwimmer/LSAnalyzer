@@ -73,4 +73,6 @@ public interface IRservice
     public bool Execute(string rCode, bool oneLiner = false);
 
     public SymbolicExpression? Fetch(string objectName);
+
+    public void Dispose();
 }

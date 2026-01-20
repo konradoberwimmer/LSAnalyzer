@@ -1514,6 +1514,19 @@ namespace TestLSAnalyzer.Services
             Assert.DoesNotContain("(y)", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
         }
+        
+        [Fact]
+        public void TestDispose()
+        {
+            Rservice rservice = new();
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.IsConnected);
+            
+            rservice.Dispose();
+            
+            Assert.False(rservice.IsConnected);
+        }
 
         public static string AssemblyDirectory
         {

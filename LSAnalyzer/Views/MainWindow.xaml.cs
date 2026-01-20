@@ -53,6 +53,19 @@ namespace LSAnalyzer.Views
             {
                 MessageBox.Show("File '" + m.FileName + "' is currently in use by another process. Please close the file and start export again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             });
+            
+            WeakReferenceMessenger.Default.Register<RequestRestartMessage>(this, (_, _) =>
+            {
+                var wantsRestart = MessageBox.Show(
+                    "Do you want to restart LSAnalyzer for the new settings to take effect?",
+                    "Restart", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                if (wantsRestart != MessageBoxResult.Yes || Environment.ProcessPath is null) return;
+
+                _serviceProvider.GetRequiredService<IRservice>().Dispose();
+                System.Diagnostics.Process.Start(Environment.ProcessPath);
+                Application.Current.Shutdown();
+            });
         }
 
         private void WindowClosed(object? sender, EventArgs e)

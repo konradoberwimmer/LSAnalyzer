@@ -54,6 +54,7 @@ namespace LSAnalyzer
             services.AddSingleton<IServiceProvider>(_ => _serviceProvider);
             services.AddSingleton<ILogging, Logging>();
             services.AddTransient<Services.BatchAnalyze>();
+            services.AddSingleton<ISettingsService, SettingsService>();
             services.AddTransient<Configuration>(_ => { 
                 var userDatasetTypesConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");
                 return new Configuration(userDatasetTypesConfigFile, configurationBuilder, new SettingsService(), new RegistryService()); 
@@ -81,13 +82,24 @@ namespace LSAnalyzer
 
         private void OnStartup(object sender, StartupEventArgs e)
         {
+            LSAnalyzer.Properties.Settings.Default.Reload();
+            
             var configuration = _serviceProvider.GetService<Configuration>()!;
             var rService = _serviceProvider.GetService<IRservice>()!;
+            var settingsService = _serviceProvider.GetService<ISettingsService>()!;
 
             rService.RLocation = configuration.GetRLocation() ?? (string.Empty, string.Empty);
             if (!rService.Connect())
             {
-                MessageBox.Show("No R installation was found!\n\nPlease configure manually (Config -> System).", "R not found", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    string.IsNullOrWhiteSpace(settingsService.RLocation)
+                        ? "No R installation was found automatically!\n\nPlease configure manually (Config -> System)."
+                        : $"""
+                           No R installation was found at "{settingsService.RLocation}"!
+                           
+                           Please revise configuration (Config -> System).
+                           """,
+                    "R not found", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             if (rService.IsConnected && !rService.CheckNecessaryRPackages())
