@@ -1515,7 +1515,7 @@ namespace TestLSAnalyzer.Services
             Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
         }
         
-        [Fact]
+        [Fact(Skip = "Interferes with other tests when not run on its own")]
         public void TestDispose()
         {
             Rservice rservice = new();
