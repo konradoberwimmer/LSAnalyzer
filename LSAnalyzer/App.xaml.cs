@@ -112,29 +112,37 @@ namespace LSAnalyzer
                                                    Do you want to install them now? 
                                                    NOTE: This requires an active internet connection and may take a while!
                                                    
-                                                   [Found {rVersion} in {rService.RLocation.rPath}]
+                                                   Otherwise, you can do this manually (restart LSAnalyzer!) or via Config -> System.
+                                                   
+                                                   (Using {rVersion} with library "{rService.RLocation.rPath}".)
                                                    """, "R packages not available", MessageBoxButton.YesNo, MessageBoxImage.Error);
                 if (wantsInstall == MessageBoxResult.Yes)
                 {
                     var successfulInstall = rService.InstallNecessaryRPackages();
                     if (successfulInstall)
                     {
-                        MessageBox.Show("R package installation successful. Please restart LSAnalyzer!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show("R package installation successful. Restarting LSAnalyzer ...", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        if (Environment.ProcessPath is null)
+                        {
+                            Shutdown(0);
+                            return;
+                        }
+                        
+                        _serviceProvider.GetRequiredService<IRservice>().Dispose();
+                        System.Diagnostics.Process.Start(Environment.ProcessPath);
+                        Shutdown(0);
+                        return;
                     } else
                     {
                         MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart LSAnalyzer afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
-
-                Shutdown(1);
-                return;
             }
 
             if (rService.IsConnected && !rService.InjectAppFunctions())
             {
                 MessageBox.Show("There was a problem putting specific functions for LSAnalyzer into the global environment!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                Shutdown(1);
-                return;
             }
 
             var configurationService = _serviceProvider.GetRequiredService<Configuration>();

@@ -45,6 +45,7 @@
                 <MenuItem.IsEnabled>
                     <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                         <Binding Path="ConnectedToR"/>
+                        <Binding Path="HasNecessaryPackages"></Binding>
                         <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
                     </MultiBinding>
                 </MenuItem.IsEnabled>
@@ -55,6 +56,7 @@
                 <MenuItem.IsEnabled>
                     <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                         <Binding Path="ConnectedToR"/>
+                        <Binding Path="HasNecessaryPackages"></Binding>
                         <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
                     </MultiBinding>
                 </MenuItem.IsEnabled>
@@ -73,7 +75,15 @@
             <MenuItem Header="_Config">
                 <MenuItem x:Name="menuItemDatasetTypes" Header="Dataset types ..." Click="MenuItemDatasetTypes_Click" />
                 <Separator/>
-                <MenuItem x:Name="menuItemDataProviders" Header="Data providers ..." Click="MenuItemDataProviders_Click" IsEnabled="{Binding ConnectedToR}"/>
+                <MenuItem x:Name="menuItemDataProviders" Header="Data providers ..." Click="MenuItemDataProviders_Click">
+                    <MenuItem.IsEnabled>
+                        <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                            <Binding Path="ConnectedToR"/>
+                            <Binding Path="HasNecessaryPackages"></Binding>
+                            <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
+                        </MultiBinding>
+                    </MenuItem.IsEnabled>
+                </MenuItem>
                 <MenuItem x:Name="menuItemSystemSettings" Header="System ..." Click="MenuItemSystemSettings_Click"/>
             </MenuItem>
         </Menu>

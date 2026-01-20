@@ -89,6 +89,8 @@ namespace LSAnalyzer.ViewModels
         }
 
         public bool ConnectedToR => _rservice.IsConnected;
+
+        public string BIFIEsurveyButtonTitle => _rservice.NecessaryPackagesConfirmed ? "Update" : "Install";
         
         [ExcludeFromCodeCoverage]
         public SystemSettings() 
@@ -180,6 +182,16 @@ namespace LSAnalyzer.ViewModels
         [RelayCommand]
         private void UpdateBifieSurvey(object? dummy)
         {
+            if (!_rservice.NecessaryPackagesConfirmed)
+            {
+                if (_rservice.InstallNecessaryRPackages())
+                {
+                    WeakReferenceMessenger.Default.Send(new RequestRestartMessage());
+                }
+                
+                return;
+            }
+            
             var result = _rservice.UpdateBifieSurvey();
 
             switch (result)

@@ -14,7 +14,9 @@ public class RserviceStub : IRservice
     }
 
     public bool IsConnected => false;
-    
+
+    public bool NecessaryPackagesConfirmed => false;
+
     public string? GetRVersion()
     {
         return null;

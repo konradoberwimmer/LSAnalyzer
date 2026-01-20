@@ -71,6 +71,8 @@ namespace LSAnalyzer.Services
 
         public bool IsConnected => _engine != null;
 
+        public bool NecessaryPackagesConfirmed { get; private set; }
+
         [ExcludeFromCodeCoverage]
         public string? GetRVersion()
         {
@@ -99,6 +101,7 @@ namespace LSAnalyzer.Services
                     }
                 }
 
+                NecessaryPackagesConfirmed = true;
                 return true;
             } catch 
             {

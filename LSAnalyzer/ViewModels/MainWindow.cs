@@ -38,6 +38,8 @@ namespace LSAnalyzer.ViewModels
 
         public bool ConnectedToR => _rservice.IsConnected;
 
+        public bool HasNecessaryPackages => _rservice.NecessaryPackagesConfirmed;
+
         public bool IsBusy => Analyses.Any(analysis => analysis.IsBusy);
 
         public void NotifyIsBusy()

@@ -17,6 +17,8 @@ public interface IRservice
     public bool CheckNecessaryRPackages(string? packageName = null);
 
     public bool InstallNecessaryRPackages(string? packageName = null);
+    
+    public bool NecessaryPackagesConfirmed { get; }
 
     public string? GetBifieSurveyVersion();
 
