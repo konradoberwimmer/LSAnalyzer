@@ -108,7 +108,7 @@ namespace LSAnalyzer.ViewModels
                         }
                     },
                     HasTableAverage = true,
-                    TableSecondary = new("Explained variance")
+                    SecondaryTable = new("Explained variance")
                     {
                         Columns =
                         {
@@ -125,7 +125,7 @@ namespace LSAnalyzer.ViewModels
             ];
 
             Analyses.First().DataView = new(Analyses.First().DataTable);
-            Analyses.First().SecondaryDataView = new(Analyses.First().TableSecondary);
+            Analyses.First().SecondaryDataView = new(Analyses.First().SecondaryTable);
 
             AnalysisConfiguration = dummyConfiguration;
             SubsettingExpression = "cat == 1";
