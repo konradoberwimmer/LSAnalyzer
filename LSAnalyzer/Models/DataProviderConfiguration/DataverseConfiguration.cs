@@ -70,7 +70,7 @@ namespace LSAnalyzer.Models.DataProviderConfiguration
 
         public IDataProvider CreateService(IServiceProvider serviceProvider)
         {
-            return new Dataverse(serviceProvider.GetRequiredService<Rservice>()) { Configuration = this };
+            return new Dataverse(serviceProvider.GetRequiredService<IRservice>()) { Configuration = this };
         }
 
         public IDataProviderViewModel GetViewModel(IServiceProvider serviceProvider, Configuration configuration)

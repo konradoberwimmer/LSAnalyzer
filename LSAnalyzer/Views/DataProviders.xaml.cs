@@ -41,7 +41,7 @@ namespace LSAnalyzer.Views
                             var successfulInstall = m.DataProvider.InstallDependencies();
                             if (successfulInstall)
                             {
-                                MessageBox.Show("R package installation successful. Please restart LSAnalyzer!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                                MessageBox.Show("R package installation successful.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                             }
                             else
                             {

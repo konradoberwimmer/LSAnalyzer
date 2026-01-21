@@ -40,7 +40,7 @@ namespace LSAnalyzer.Views
             
             InitializeComponent();
 
-            DataContext = new ViewModels.MainWindow(_serviceProvider.GetRequiredService<Rservice>());
+            DataContext = new ViewModels.MainWindow(_serviceProvider.GetRequiredService<IRservice>());
 
             Closed += WindowClosed;
 
@@ -52,6 +52,19 @@ namespace LSAnalyzer.Views
             WeakReferenceMessenger.Default.Register<AnalysisPresentation.FileInUseMessage>(this, (r, m) =>
             {
                 MessageBox.Show("File '" + m.FileName + "' is currently in use by another process. Please close the file and start export again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
+            
+            WeakReferenceMessenger.Default.Register<RequestRestartMessage>(this, (_, _) =>
+            {
+                var wantsRestart = MessageBox.Show(
+                    "Do you want to restart LSAnalyzer for the new settings to take effect?",
+                    "Restart", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                if (wantsRestart != MessageBoxResult.Yes || Environment.ProcessPath is null) return;
+
+                _serviceProvider.GetRequiredService<IRservice>().Dispose();
+                System.Diagnostics.Process.Start(Environment.ProcessPath);
+                Application.Current.Shutdown();
             });
         }
 
@@ -287,7 +300,7 @@ namespace LSAnalyzer.Views
 
             if (wantsSave == true)
             {
-                mainWindowViewModel.SaveAnalysesDefintionsCommand.Execute(saveFileDialog.FileName);
+                mainWindowViewModel.SaveAnalysesDefinitionsCommand.Execute(saveFileDialog.FileName);
             }
         }
 

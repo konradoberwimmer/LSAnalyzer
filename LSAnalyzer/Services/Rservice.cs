@@ -1,6 +1,5 @@
 ﻿using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
-using Microsoft.Win32;
 using RDotNet;
 using System;
 using System.Collections.Generic;
@@ -9,30 +8,29 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using LSAnalyzer.Services.Stubs;
 
 namespace LSAnalyzer.Services
 {
-    public class Rservice
+    public class Rservice : IRservice
     {
-        private Logging _logger = null!;
-        private string? _rPath;
+        private readonly ILogging _logger;
         private REngine? _engine;
-        private readonly string[] _rPackagesNecessary = new string[] { "BIFIEsurvey", "foreign" };
+        private readonly string[] _rPackagesNecessary = [ "BIFIEsurvey", "foreign" ];
 
+        public (string rHome, string rPath) RLocation { get; set; } = (string.Empty, string.Empty);
+        
         [ExcludeFromCodeCoverage]
         public Rservice()
         {
             // parameter-less constructor for mocking only
+            _logger = new LoggingStub();
+
+            RLocation = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryService()).GetRLocation() ?? (string.Empty, string.Empty);
         }
 
-        public Rservice(Logging logger) 
+        public Rservice(ILogging logger) 
         {
-            var rPathObject = Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\R-core\\R64", "InstallPath", null);
-            if (rPathObject != null)
-            {
-                _rPath = rPathObject.ToString()!.Replace("\\", "/");
-            }
-
             _logger = logger;
         }
 
@@ -44,28 +42,36 @@ namespace LSAnalyzer.Services
 
         public bool Connect()
         {
-            if (_rPath == null)
+            if (string.IsNullOrWhiteSpace(RLocation.rHome) || string.IsNullOrWhiteSpace(RLocation.rPath))
             {
                 return false;
             }
 
             try
             {
+                REngine.SetEnvironmentVariables(rPath: RLocation.rPath, rHome: RLocation.rHome);
                 _engine = REngine.GetInstance();
                 _engine.ClearGlobalEnvironment();
-                EvaluateAndLog("Sys.setenv(PATH = paste(\"" + _rPath + "/bin/x64\", Sys.getenv(\"PATH\"), sep=\";\"))"); //ugly workaround for now!
-                string[] a = EvaluateAndLog("paste0('Result: ', stats::sd(c(1,2,3)))").AsCharacter().ToArray();
+                
+                string[] a = _engine.Evaluate("paste0('Result: ', stats::sd(c(1,2,3)))").AsCharacter().ToArray();
                 if (a.Length == 0 || a[0] != "Result: 1")
                 {
                     return false;
                 }
+
+                EvaluateAndLog("options(BIFIEsurvey.quiet = TRUE)");
             } catch
             {
+                Dispose();
                 return false;
             }
 
             return true;
         }
+
+        public bool IsConnected => _engine != null;
+
+        public bool NecessaryPackagesConfirmed { get; private set; }
 
         [ExcludeFromCodeCoverage]
         public string? GetRVersion()
@@ -80,11 +86,6 @@ namespace LSAnalyzer.Services
             }
         }
 
-        public string? GetRPath()
-        {
-            return _rPath;
-        }
-
         public virtual bool CheckNecessaryRPackages(string? packageName = null)
         {
             string[] rPackagesToCheck = (packageName == null ? _rPackagesNecessary : new string[] { packageName });
@@ -93,13 +94,14 @@ namespace LSAnalyzer.Services
             {
                 foreach (string rPackage in rPackagesToCheck)
                 {
-                    bool available = EvaluateAndLog("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
+                    bool available = _engine?.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First() ?? false;
                     if (!available)
                     {
                         return false;
                     }
                 }
 
+                NecessaryPackagesConfirmed = true;
                 return true;
             } catch 
             {
@@ -157,11 +159,8 @@ namespace LSAnalyzer.Services
             }
         }
 
-
-        public enum UpdateResult { Unavailable, Success, Failure }
-
         [ExcludeFromCodeCoverage]
-        public UpdateResult UpdateBifieSurvey()
+        public IRservice.UpdateResult UpdateBifieSurvey()
         {
             try
             {
@@ -169,15 +168,15 @@ namespace LSAnalyzer.Services
                 DataFrame? oldPackages = _engine.GetSymbol("lsanalyzer_old_packages").AsDataFrame();
                 if (oldPackages == null || !oldPackages["Package"].AsCharacter().Contains("BIFIEsurvey"))
                 {
-                    return UpdateResult.Unavailable;
+                    return IRservice.UpdateResult.Unavailable;
                 }
 
                 EvaluateAndLog("utils::update.packages(repos = 'https://cloud.r-project.org', ask = FALSE, oldPkgs = 'BIFIEsurvey')");
 
-                return UpdateResult.Success;
+                return IRservice.UpdateResult.Success;
             } catch
             {
-                return UpdateResult.Failure;
+                return IRservice.UpdateResult.Failure;
             }
         }
 
@@ -1391,6 +1390,12 @@ namespace LSAnalyzer.Services
             {
                 return null;
             }
+        }
+
+        public void Dispose()
+        {
+            _engine?.Dispose();
+            _engine = null;
         }
     }
 

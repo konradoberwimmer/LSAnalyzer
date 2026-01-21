@@ -10,6 +10,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LSAnalyzer.Services.Stubs;
 
 namespace TestLSAnalyzer.Services.DataProvider
 {
@@ -19,7 +20,7 @@ namespace TestLSAnalyzer.Services.DataProvider
         [Fact]
         public void TestTestProvider()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.CheckNecessaryRPackages("dataverse"), "Package dataverse must be installed for this test");
 
@@ -85,7 +86,7 @@ namespace TestLSAnalyzer.Services.DataProvider
         [Fact]
         public void TestTestFileAccess()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.CheckNecessaryRPackages("dataverse"), "Package dataverse must be installed for this test");
 
@@ -145,7 +146,7 @@ namespace TestLSAnalyzer.Services.DataProvider
         [Fact]
         public void TestGetDatasetVariables()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.CheckNecessaryRPackages("dataverse"), "Package dataverse must be installed for this test");
 
@@ -194,7 +195,7 @@ namespace TestLSAnalyzer.Services.DataProvider
         [Fact]
         public void TestLoadFileIntoGlobalEnvironment()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.CheckNecessaryRPackages("dataverse"), "Package dataverse must be installed for this test");
 

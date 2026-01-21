@@ -1,8 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
-using DocumentFormat.OpenXml.Spreadsheet;
-using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using RDotNet;
@@ -13,62 +11,40 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using LSAnalyzer.Services.Stubs;
 
 namespace LSAnalyzer.ViewModels
 {
-    public class MainWindow : INotifyPropertyChanged
+    public partial class MainWindow : ObservableObject
     {
 
-        private Rservice _rservice;
+        private readonly IRservice _rservice;
 
+        [ObservableProperty]
         private AnalysisConfiguration? _analysisConfiguration;
-        public AnalysisConfiguration? AnalysisConfiguration
+        partial void OnAnalysisConfigurationChanged(AnalysisConfiguration? value)
         {
-            get => _analysisConfiguration;
-            set
-            {
-                _analysisConfiguration = value;
-                NotifyPropertyChanged(nameof(AnalysisConfiguration));
-
-                SubsettingExpression = null;
-                RecentAnalyses.Clear();
-            }
+            SubsettingExpression = null;
+            RecentAnalyses.Clear();
         }
 
+        [ObservableProperty]
         private string? _subsettingExpression;
-        public string? SubsettingExpression
-        {
-            get => _subsettingExpression;
-            set
-            {
-                _subsettingExpression = value;
-                NotifyPropertyChanged(nameof(SubsettingExpression));
-            }
-        }
 
-        private ObservableCollection<AnalysisPresentation> _analyses = new();
-        public ObservableCollection<AnalysisPresentation> Analyses
-        {
-            get => _analyses;
-            set
-            {
-                _analyses = value;
-                NotifyPropertyChanged(nameof(Analyses));
-            }
-        }
+        [ObservableProperty]
+        private ObservableCollection<AnalysisPresentation> _analyses = [];
 
-        public bool IsBusy
-        {
-            get => Analyses.Any(analysis => analysis.IsBusy);
-        }
+        public bool ConnectedToR => _rservice.IsConnected;
+
+        public bool HasNecessaryPackages => _rservice.NecessaryPackagesConfirmed;
+
+        public bool IsBusy => Analyses.Any(analysis => analysis.IsBusy);
+
         public void NotifyIsBusy()
         {
-            NotifyPropertyChanged(nameof(IsBusy));
+            OnPropertyChanged(nameof(IsBusy));
         }
 
         public Dictionary<Type, Analysis> RecentAnalyses { get; } = new();
@@ -77,6 +53,8 @@ namespace LSAnalyzer.ViewModels
         public MainWindow()
         {
             // design-time only constructor
+            _rservice = new RserviceStub();
+            
             AnalysisConfiguration dummyConfiguration = new()
             {
                 FileName = "C:\\dummyDirectory\\dummyDataset.sav",
@@ -92,27 +70,31 @@ namespace LSAnalyzer.ViewModels
                 ModeKeep = true,
             };
 
-            Analyses = new()
-            {
+            Analyses =
+            [
                 new()
                 {
                     Analysis = new AnalysisUnivar(dummyConfiguration)
                     {
-                        Vars = new()
-                        {
+                        Vars =
+                        [
                             new(1, "x1", false),
                             new(2, "x2", false),
-                            new(3, "x3", false),
-                        },
-                        GroupBy = new()
-                        {
-                            new(4, "y1", false),
-                        },
+                            new(3, "x3", false)
+                        ],
+                        GroupBy =
+                        [
+                            new(4, "y1", false)
+                        ],
                         SubsettingExpression = "cat == 1 & val < 0.5",
                     },
                     DataTable = new()
                     {
-                        Columns = { { "var", typeof(string) }, { "y1" , typeof(int) }, { "mean", typeof(double) }, { "mean__se", typeof(double) }, { "sd", typeof(double) }, { "sd__se", typeof(double) } },
+                        Columns =
+                        {
+                            { "var", typeof(string) }, { "y1", typeof(int) }, { "mean", typeof(double) },
+                            { "mean__se", typeof(double) }, { "sd", typeof(double) }, { "sd__se", typeof(double) }
+                        },
                         Rows =
                         {
                             { "x1", 1, 0.5, 0.01, 0.1, 0.001 },
@@ -128,7 +110,11 @@ namespace LSAnalyzer.ViewModels
                     HasTableAverage = true,
                     TableSecondary = new("Explained variance")
                     {
-                        Columns = { { "var", typeof(string) }, { "eta2" , typeof(double) }, { "eta", typeof(double) }, { "eta__se", typeof(double) } },
+                        Columns =
+                        {
+                            { "var", typeof(string) }, { "eta2", typeof(double) }, { "eta", typeof(double) },
+                            { "eta__se", typeof(double) }
+                        },
                         Rows =
                         {
                             { "x", 0.25, 0.50, 0.02 },
@@ -136,7 +122,7 @@ namespace LSAnalyzer.ViewModels
                         },
                     },
                 }
-            };
+            ];
 
             Analyses.First().DataView = new(Analyses.First().DataTable);
             Analyses.First().SecondaryDataView = new(Analyses.First().TableSecondary);
@@ -145,21 +131,21 @@ namespace LSAnalyzer.ViewModels
             SubsettingExpression = "cat == 1";
         }
 
-        public MainWindow(Rservice rservice) 
+        public MainWindow(IRservice rservice) 
         {
             _rservice = rservice;
 
-            WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (_, m) =>
             {
                 AnalysisConfiguration = m.Value;
             });
 
-            WeakReferenceMessenger.Default.Register<SetSubsettingExpressionMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<SetSubsettingExpressionMessage>(this, (_, m) =>
             {
                 SubsettingExpression = string.IsNullOrWhiteSpace(m.Value) ? null : m.Value;
             });
 
-            WeakReferenceMessenger.Default.Register<RequestAnalysisMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<RequestAnalysisMessage>(this, (_, m) =>
             {
                 AnalysisPresentation analysisPresentation = new(m.Value, this);
 
@@ -173,17 +159,17 @@ namespace LSAnalyzer.ViewModels
                 StartAnalysisCommand.Execute(analysisPresentation);
             });
 
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeChangedStoredRawDataFileMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeChangedStoredRawDataFileMessage>(this, (_, _) =>
             {
                 AnalysisConfiguration = null;
             });
 
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeChangedSubsettingMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeChangedSubsettingMessage>(this, (_, m) =>
             {
                 SubsettingExpression = string.IsNullOrEmpty(m.SubsettingExpression) ? null : m.SubsettingExpression;
             });
 
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (_, m) =>
             {
                 AnalysisPresentation analysisPresentation = new(m.AnalysisWithViewSettings.Analysis, this);
                 
@@ -195,26 +181,7 @@ namespace LSAnalyzer.ViewModels
             });
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-
-        private RelayCommand<AnalysisPresentation?> _startAnalysisCommand;
-        public ICommand StartAnalysisCommand
-        {
-            get
-            {
-                if (_startAnalysisCommand == null)
-                    _startAnalysisCommand = new RelayCommand<AnalysisPresentation?>(this.StartAnalysis);
-                return _startAnalysisCommand;
-            }
-        }
-
+        [RelayCommand]
         private void StartAnalysis(AnalysisPresentation? analysisPresentation)
         {
             if (analysisPresentation == null)
@@ -235,18 +202,16 @@ namespace LSAnalyzer.ViewModels
 
         private void AnalysisWorker_DoWork (object? sender, DoWorkEventArgs e)
         {
-            if (e.Argument is not AnalysisPresentation)
+            if (e.Argument is not AnalysisPresentation analysisPresentation)
             {
                 e.Cancel = true;
                 return;
             }
 
             DateTime beforeCalculation = DateTime.Now;
-
-            var analysisPresentation = e.Argument as AnalysisPresentation;
-
             List<GenericVector>? result = null;
-            switch (analysisPresentation!.Analysis)
+            
+            switch (analysisPresentation.Analysis)
             {
                 case AnalysisUnivar analysisUnivar:
                     result = _rservice.CalculateUnivar(analysisUnivar);
@@ -269,8 +234,6 @@ namespace LSAnalyzer.ViewModels
                 case AnalysisLogistReg analysisLogistReg:
                     result = _rservice.CalculateLogistReg(analysisLogistReg);
                     break;
-                default:
-                    break;
             }
 
             if (result == null)
@@ -278,15 +241,15 @@ namespace LSAnalyzer.ViewModels
                 WeakReferenceMessenger.Default.Send(new FailureWithAnalysisCalculationMessage(analysisPresentation.Analysis));
             } else
             {
-                if (analysisPresentation.Analysis is AnalysisFreq analysisFreq && analysisFreq.CalculateBivariate)
+                if (analysisPresentation.Analysis is AnalysisFreq { CalculateBivariate: true } analysisFreq)
                 {
                     analysisFreq.BivariateResult = _rservice.CalculateBivariate(analysisFreq);
                 }
 
-                var variablesToConsiderForValueLabels = new List<Variable>(analysisPresentation!.Analysis.GroupBy);
+                var variablesToConsiderForValueLabels = new List<Variable>(analysisPresentation.Analysis.GroupBy);
                 if (analysisPresentation.Analysis is AnalysisFreq)
                 {
-                    variablesToConsiderForValueLabels.AddRange(analysisPresentation!.Analysis.Vars);
+                    variablesToConsiderForValueLabels.AddRange(analysisPresentation.Analysis.Vars);
                 }
 
                 foreach (var variable in variablesToConsiderForValueLabels)
@@ -294,7 +257,7 @@ namespace LSAnalyzer.ViewModels
                     var valueLabels = _rservice.GetValueLabels(variable.Name);
                     if (valueLabels != null)
                     {
-                        analysisPresentation!.Analysis.ValueLabels.Add(variable.Name, valueLabels);
+                        analysisPresentation.Analysis.ValueLabels.Add(variable.Name, valueLabels);
                     }
                 }
 
@@ -306,17 +269,7 @@ namespace LSAnalyzer.ViewModels
             e.Result = result;
         }
 
-        private RelayCommand<AnalysisPresentation?> _removeAnalysisCommand;
-        public ICommand RemoveAnalysisCommand
-        {
-            get
-            {
-                if (_removeAnalysisCommand == null)
-                    _removeAnalysisCommand = new RelayCommand<AnalysisPresentation?>(this.RemoveAnalysis);
-                return _removeAnalysisCommand;
-            }
-        }
-
+        [RelayCommand]
         private void RemoveAnalysis(AnalysisPresentation? analysisPresentation)
         {
             if (analysisPresentation != null && Analyses.Contains(analysisPresentation))
@@ -325,17 +278,7 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
-        private RelayCommand<string?> _saveAnalysesDefinitionsCommand;
-        public ICommand SaveAnalysesDefintionsCommand
-        {
-            get
-            {
-                if (_saveAnalysesDefinitionsCommand == null)
-                    _saveAnalysesDefinitionsCommand = new RelayCommand<string?>(this.SaveAnalysesDefinitions);
-                return _saveAnalysesDefinitionsCommand;
-            }
-        }
-
+        [RelayCommand]
         private void SaveAnalysesDefinitions(string? fileName)
         {
             if (fileName == null || Analyses.Count == 0)
@@ -352,27 +295,12 @@ namespace LSAnalyzer.ViewModels
             File.WriteAllText(fileName, JsonSerializer.Serialize(contentToSerialize));
         }
         
-        private RelayCommand<object?> _removeAllAnalysesCommand;
-        public ICommand RemoveAllAnalysesCommand
-        {
-            get
-            {
-                _removeAllAnalysesCommand ??= new RelayCommand<object?>(RemoveAllAnalysis);
-                return _removeAllAnalysesCommand;
-            }
-        }
-
-        private void RemoveAllAnalysis(object? dummy)
+        [RelayCommand]
+        private void RemoveAllAnalyses(object? dummy)
         {
             Analyses.Clear();
         }
     }
 
-    internal class FailureWithAnalysisCalculationMessage : ValueChangedMessage<Analysis>
-    {
-        public FailureWithAnalysisCalculationMessage(Analysis analysis) : base(analysis)
-        {
-
-        }
-    }
+    internal class FailureWithAnalysisCalculationMessage(Analysis analysis) : ValueChangedMessage<Analysis>(analysis);
 }

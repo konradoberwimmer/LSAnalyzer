@@ -13,13 +13,14 @@ using System.Linq;
 using System.Reflection;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
+using LSAnalyzer.Services.Stubs;
 
 namespace LSAnalyzer.ViewModels
 {
     public partial class SystemSettings : ObservableValidatorExtended, IChangeTracking
     {
-        private readonly Rservice _rservice;
-        private readonly Logging _logger;
+        private readonly IRservice _rservice;
+        private readonly ILogging _logger;
         private readonly Configuration _configuration;
 
         [ObservableProperty] private string _version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
@@ -70,6 +71,8 @@ namespace LSAnalyzer.ViewModels
         }
         private int _storedNumberRecentSubsettingExpressions = Properties.Settings.Default.numberRecentSubsettingExpressions;
 
+        [ObservableProperty] private string? _alternativeRLocation;
+        
         [ObservableProperty] private string? _rVersion;
 
         [ObservableProperty] private string? _bifieSurveyVersion;
@@ -85,27 +88,33 @@ namespace LSAnalyzer.ViewModels
             }
         }
 
+        public bool ConnectedToR => _rservice.IsConnected;
+
+        public string BIFIEsurveyButtonTitle => _rservice.NecessaryPackagesConfirmed ? "Update" : "Install";
+        
         [ExcludeFromCodeCoverage]
         public SystemSettings() 
         {
-            _rservice = new();
-            _configuration = new("");
             // design-time only, parameterless constructor
+            _rservice = new RserviceStub();
+            _configuration = new("", null, new SettingsServiceStub(), new RegistryServiceStub());
+            AlternativeRLocation = string.Empty;
             RVersion = "R version 4.3.1";
             BifieSurveyVersion = "3.4-15";
             CountConfiguredDatasetTypes = 12;
-            _logger = new();
+            _logger = new LoggingStub();
             _logger.AddEntry(new LogEntry(DateTime.Now, "stats::sd(c(1,2,3))"));
             _logger.AddEntry(new LogEntry(DateTime.Now, "rm(dummy_result)"));
             _sessionLog = new(_logger.LogEntries);
         }
 
-        public SystemSettings(Rservice rservice, Configuration configuration, Logging logger)
+        public SystemSettings(IRservice rservice, Configuration configuration, ILogging logger)
         {
             _rservice = rservice;
-            RVersion = _rservice.GetRVersion();
-            BifieSurveyVersion = _rservice.GetBifieSurveyVersion();
+            RVersion = _rservice.IsConnected ? _rservice.GetRVersion() : "---";
+            BifieSurveyVersion = _rservice.IsConnected ?_rservice.GetBifieSurveyVersion() : "---";
             _configuration = configuration;
+            AlternativeRLocation = _configuration.GetStoredRLocation();
             CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
             _logger = logger;
             _sessionLog = new(_logger.LogEntries);
@@ -149,19 +158,51 @@ namespace LSAnalyzer.ViewModels
         }
 
         [RelayCommand]
+        private void ClearAlternativeRLocation()
+        {
+            AlternativeRLocation = string.Empty;
+            _configuration.SetAlternativeRLocation(string.Empty);
+            WeakReferenceMessenger.Default.Send(new RequestRestartMessage());
+        }
+        
+        [RelayCommand]
+        private void SetAlternativeRLocation(string alternativeRLocation)
+        {
+            if (!Path.Exists(alternativeRLocation) || !File.Exists(Path.Combine(alternativeRLocation, "bin", "x64", "R.dll")))
+            {
+                WeakReferenceMessenger.Default.Send(new ImpossibleRLocationMessage { Path = alternativeRLocation });
+                return;
+            }
+            
+            AlternativeRLocation = alternativeRLocation;
+            _configuration.SetAlternativeRLocation(alternativeRLocation);
+            WeakReferenceMessenger.Default.Send(new RequestRestartMessage());
+        }
+        
+        [RelayCommand]
         private void UpdateBifieSurvey(object? dummy)
         {
+            if (!_rservice.NecessaryPackagesConfirmed)
+            {
+                if (_rservice.InstallNecessaryRPackages())
+                {
+                    WeakReferenceMessenger.Default.Send(new RequestRestartMessage());
+                }
+                
+                return;
+            }
+            
             var result = _rservice.UpdateBifieSurvey();
 
             switch (result)
             {
-                case Rservice.UpdateResult.Unavailable:
+                case IRservice.UpdateResult.Unavailable:
                     MessageBox.Show("Already at latest version.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
                     break;
-                case Rservice.UpdateResult.Failure:
+                case IRservice.UpdateResult.Failure:
                     MessageBox.Show("Something went wrong trying to update BIFIEsurvey!", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                     break;
-                case Rservice.UpdateResult.Success:
+                case IRservice.UpdateResult.Success:
                     BifieSurveyVersion = _rservice.GetBifieSurveyVersion();
                     MessageBox.Show("Update successful, now at version '" + BifieSurveyVersion + "'.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
                     break;
@@ -213,4 +254,8 @@ namespace LSAnalyzer.ViewModels
     internal class LoadedDefaultDatasetTypesMessage { }
     
     internal class SavedSettingsMessage { }
+
+    internal class ImpossibleRLocationMessage { public required string Path { init; get; } }
+    
+    internal class RequestRestartMessage { }
 }

@@ -17,7 +17,7 @@ namespace LSAnalyzer.ViewModels;
 
 public class RequestAnalysis : INotifyPropertyChanged
 {
-    private readonly Rservice _rservice;
+    private readonly IRservice _rservice;
 
     private AnalysisConfiguration? _analysisConfiguration;
     public AnalysisConfiguration? AnalysisConfiguration
@@ -233,7 +233,7 @@ public class RequestAnalysis : INotifyPropertyChanged
         // design-time-only constructor
     }
 
-    public RequestAnalysis(Rservice rservice)
+    public RequestAnalysis(IRservice rservice)
     {
         _rservice = rservice;
         AvailableVariables = new ObservableCollection<Variable>();

@@ -23,7 +23,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestRunBatchSendsMessage()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             AnalysisConfiguration analysisConfiguration = new()
@@ -61,7 +61,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestRunBatchWithReloadingFiles()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             AnalysisConfiguration analysisConfigurationInvalid = new()
@@ -138,7 +138,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestRunBatchOnCurrentFileModeKeep()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             AnalysisConfiguration analysisConfigurationNmi10Rep5 = new()
@@ -212,7 +212,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestRunBatchOnCurrentFileModeBuild()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             AnalysisConfiguration analysisConfigurationNmi10Rep5 = new()
@@ -286,7 +286,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestRetrieveDataProvider()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             
             var configuration = new Mock<Configuration>();
             configuration
@@ -301,7 +301,7 @@ namespace TestLSAnalyzer.Services
                 });
             
             ServiceCollection serviceCollection = new();
-            serviceCollection.AddTransient<Rservice>(_ => rservice);
+            serviceCollection.AddTransient<IRservice>(_ => rservice);
             var serviceProvider = serviceCollection.BuildServiceProvider();
             
             BatchAnalyze batchAnalyze = new(rservice, configuration.Object, serviceProvider);
@@ -331,7 +331,7 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestRetrieveFileInformation()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             
             var configuration = new Mock<Configuration>();
             

@@ -12,6 +12,7 @@ using TestLSAnalyzer.Services;
 using Moq;
 using Microsoft.Extensions.DependencyInjection;
 using LSAnalyzer.Helper;
+using LSAnalyzer.Services.Stubs;
 using Polly;
 using Xunit.Sdk;
 
@@ -23,12 +24,12 @@ public class TestSelectAnalysisFile
     [Fact]
     public void TestGuessDatasetType()
     {
-        Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+        Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
         }
-        Rservice rservice = new(new());
+        Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
@@ -120,12 +121,12 @@ public class TestSelectAnalysisFile
     [Fact]
     public void TestGuessDatasetTypeAutoEncapsulateRegex()
     {
-        Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+        Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
         }
-        Rservice rservice = new(new());
+        Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
@@ -173,7 +174,7 @@ public class TestSelectAnalysisFile
         datasetTypesConfiguration.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
         datasetTypesConfiguration.Setup(conf => conf.GetDataProviderConfigurations()).Returns([]);
         
-        Rservice rservice = new(new());
+        Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration.Object, rservice, new ServiceCollection().BuildServiceProvider());
@@ -198,12 +199,12 @@ public class TestSelectAnalysisFile
     {
         DispatcherHelper.Initialize();
 
-        Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+        Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
         }
-        Rservice rservice = new(new());
+        Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
@@ -251,12 +252,12 @@ public class TestSelectAnalysisFile
     {
         DispatcherHelper.Initialize();
 
-        Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+        Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
         }
-        Rservice rservice = new(new());
+        Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
@@ -286,12 +287,12 @@ public class TestSelectAnalysisFile
     [Fact]
     public void TestUseFileForAnalysisWithAutoEncapsulatedRegex()
     {
-        Configuration datasetTypesConfiguration = new(Path.GetTempFileName());
+        Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
             datasetTypesConfiguration.StoreDatasetType(datasetType);
         }
-        Rservice rservice = new(new());
+        Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());

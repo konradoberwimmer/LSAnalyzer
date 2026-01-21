@@ -17,11 +17,11 @@ namespace LSAnalyzer.Services.DataProvider
 {
     public class Dataverse : IDataProvider
     {
-        private readonly Rservice _rservice;
+        private readonly IRservice _rservice;
 
         public IDataProviderConfiguration Configuration { get; set; } = null!;
 
-        public Dataverse(Rservice rservice)
+        public Dataverse(IRservice rservice)
         {
             _rservice = rservice;
         }

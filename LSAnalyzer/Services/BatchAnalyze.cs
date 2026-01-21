@@ -17,14 +17,14 @@ namespace LSAnalyzer.Services
 {
     public class BatchAnalyze
     {
-        private Rservice _rservice;
+        private IRservice _rservice;
         private Configuration _configuration;
         private IServiceProvider _serviceProvider;
         
         private bool _useCurrentFile = true;
         private AnalysisConfiguration? _currentConfiguration;
 
-        public BatchAnalyze(Rservice rservice, Configuration configuration, IServiceProvider serviceProvider)
+        public BatchAnalyze(IRservice rservice, Configuration configuration, IServiceProvider serviceProvider)
         {
             _rservice = rservice;
             _configuration = configuration;

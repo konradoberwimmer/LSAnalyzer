@@ -9,6 +9,44 @@ namespace TestLSAnalyzer.Services;
 [Collection("Sequential")]
 public class TestConfiguration
 {
+    [Theory, ClassData(typeof(TestGetRLocationData))]
+    public void TestGetRLocation(string? storedLocation, bool createStoredLocation, string? defaultLocation, string? expected)
+    {
+        var mockedSettingsService = new Mock<ISettingsService>();
+        mockedSettingsService.Setup(s => s.RLocation).Returns(storedLocation);
+
+        if (createStoredLocation)
+        {
+            Directory.CreateDirectory(storedLocation!);
+        }
+        
+        var mockedRegistryService = new Mock<IRegistryService>();
+        mockedRegistryService.Setup(s => s.GetDefaultRLocation()).Returns(defaultLocation);
+        
+        Configuration configuration = new(string.Empty, null, mockedSettingsService.Object, mockedRegistryService.Object);
+        
+        var result = configuration.GetRLocation();
+        
+        Assert.Equal(expected, result?.rHome);
+        if (expected is not null)
+        {
+            Assert.Equal(Path.Combine(expected, "bin", "x64"), result?.rPath);
+        }
+    }
+
+    public class TestGetRLocationData : TheoryData<string?, bool, string?, string?>
+    {
+        public TestGetRLocationData()
+        {
+            Add(null, false, null, null);
+            var actualTempPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Add(actualTempPath, true, null, actualTempPath);
+            var nonExistingPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Add(nonExistingPath, false, null, null);
+            Add(nonExistingPath, false, @"C:\myRinstallation", "C:\\myRinstallation");
+        }
+    }
+    
     [Fact]
     public void TestGetStoredRecentSubsettingExpressions()
     {

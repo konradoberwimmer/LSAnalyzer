@@ -5,8 +5,6 @@ using LSAnalyzer.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Win32;
-using RDotNet;
 using System;
 using System.IO;
 using System.Reflection;
@@ -53,19 +51,17 @@ namespace LSAnalyzer
             ConfigurationBuilder configurationBuilder = new();
             configurationBuilder.AddUserSecrets<Configuration>();
 
-            services.AddSingleton<IServiceProvider>(provider =>
-            {
-                return _serviceProvider;
-            });
-            services.AddSingleton<Logging>();
-            services.AddSingleton<Rservice>();
+            services.AddSingleton<IServiceProvider>(_ => _serviceProvider);
+            services.AddSingleton<ILogging, Logging>();
             services.AddTransient<Services.BatchAnalyze>();
-            services.AddTransient<Configuration>(provider => { 
+            services.AddSingleton<ISettingsService, SettingsService>();
+            services.AddTransient<Configuration>(_ => { 
                 var userDatasetTypesConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LSAnalyzer", "datasetTypes.json");
-                return new Configuration(userDatasetTypesConfigFile, configurationBuilder); 
+                return new Configuration(userDatasetTypesConfigFile, configurationBuilder, new SettingsService(), new RegistryService()); 
             });
-            services.AddSingleton<IExportService>(provider => new ExportService());
-            services.AddTransient<IResultService>(provider => new ResultService());
+            services.AddSingleton<IExportService, ExportService>();
+            services.AddTransient<IResultService, ResultService>();
+            services.AddSingleton<IRservice, Rservice>();
             services.AddTransient<ConfigDatasetTypes>();
             services.AddTransient<DataProviders>();
             services.AddSingleton<MassExport>();
@@ -81,26 +77,34 @@ namespace LSAnalyzer
             services.AddTransient<Views.SystemSettings>();
             services.AddTransient<Views.SelectAnalysisFile>();
             services.AddTransient<Views.BatchAnalyze>();
-            services.AddSingleton<Views.MainWindow>(provider =>
-            {
-                return new Views.MainWindow(_serviceProvider);
-            });
+            services.AddSingleton<Views.MainWindow>(_ => new Views.MainWindow(_serviceProvider));
         }
 
         private void OnStartup(object sender, StartupEventArgs e)
         {
-            var rService = _serviceProvider.GetService<Rservice>()!;
+            LSAnalyzer.Properties.Settings.Default.Reload();
+            
+            var configuration = _serviceProvider.GetService<Configuration>()!;
+            var rService = _serviceProvider.GetService<IRservice>()!;
+            var settingsService = _serviceProvider.GetService<ISettingsService>()!;
+
+            rService.RLocation = configuration.GetRLocation() ?? (string.Empty, string.Empty);
             if (!rService.Connect())
             {
-                MessageBox.Show("An R installation was not found!\n\nPlease make sure that R (>=4.3.0) is installed, registered in Windows Registry and fully available to the current user", "R not found", MessageBoxButton.OK, MessageBoxImage.Error);
-                Shutdown(1);
-                return;
+                MessageBox.Show(
+                    string.IsNullOrWhiteSpace(settingsService.RLocation)
+                        ? "No R installation was found automatically!\n\nPlease configure manually (Config -> System)."
+                        : $"""
+                           No R installation was found at "{settingsService.RLocation}"!
+                           
+                           Please revise configuration (Config -> System).
+                           """,
+                    "R not found", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
-            if (!rService.CheckNecessaryRPackages())
+            if (rService.IsConnected && !rService.CheckNecessaryRPackages())
             {
                 var rVersion = rService.GetRVersion()!;
-                var rLibraryLocation = rService.GetRPath()!;
                 
                 var wantsInstall = MessageBox.Show($"""
                                                    It seems that not all necessary R packages (BIFIEsurvey, foreign) are available. 
@@ -108,29 +112,37 @@ namespace LSAnalyzer
                                                    Do you want to install them now? 
                                                    NOTE: This requires an active internet connection and may take a while!
                                                    
-                                                   [Found {rVersion} with library path {rLibraryLocation}]
+                                                   Otherwise, you can do this manually (restart LSAnalyzer!) or via Config -> System.
+                                                   
+                                                   (Using {rVersion} with library "{rService.RLocation.rPath}".)
                                                    """, "R packages not available", MessageBoxButton.YesNo, MessageBoxImage.Error);
                 if (wantsInstall == MessageBoxResult.Yes)
                 {
                     var successfulInstall = rService.InstallNecessaryRPackages();
                     if (successfulInstall)
                     {
-                        MessageBox.Show("R package installation successful. Please restart LSAnalyzer!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show("R package installation successful. Restarting LSAnalyzer ...", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        if (Environment.ProcessPath is null)
+                        {
+                            Shutdown(0);
+                            return;
+                        }
+                        
+                        _serviceProvider.GetRequiredService<IRservice>().Dispose();
+                        System.Diagnostics.Process.Start(Environment.ProcessPath);
+                        Shutdown(0);
+                        return;
                     } else
                     {
                         MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart LSAnalyzer afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
-
-                Shutdown(1);
-                return;
             }
 
-            if (!rService.InjectAppFunctions())
+            if (rService.IsConnected && !rService.InjectAppFunctions())
             {
                 MessageBox.Show("There was a problem putting specific functions for LSAnalyzer into the global environment!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                Shutdown(1);
-                return;
             }
 
             var configurationService = _serviceProvider.GetRequiredService<Configuration>();

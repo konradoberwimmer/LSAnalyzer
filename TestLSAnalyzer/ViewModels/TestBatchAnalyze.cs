@@ -22,7 +22,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestRunBatchSendsFailureMessageOnInvalidJSON()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
@@ -57,7 +57,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestRunBatchInvokesService()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             AnalysisConfiguration analysisConfiguration = new()
@@ -101,7 +101,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestRunBatchWorksWithViewSettings()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             AnalysisConfiguration analysisConfiguration = new()
@@ -145,7 +145,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TransferResultsSendMessages()
         {
-            Rservice rservice = new(new());
+            Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             AnalysisConfiguration analysisConfiguration = new()

@@ -30,7 +30,7 @@ namespace LSAnalyzer.ViewModels;
 public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChanged
 {
     private Configuration _configuration;
-    private Rservice _rservice;
+    private IRservice _rservice;
     private readonly IServiceProvider _serviceProvider;
 
     private string _tabControlValue = "File system";
@@ -316,7 +316,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         SelectedDataProviderConfiguration = DataProviderConfigurations.First();
     }
 
-    public SelectAnalysisFile(Configuration configuration, Rservice rservice, IServiceProvider serviceProvider)
+    public SelectAnalysisFile(Configuration configuration, IRservice rservice, IServiceProvider serviceProvider)
     {
         _configuration = configuration;
         RecentFilesForAnalyses = new(_configuration.GetStoredRecentFiles(0));
