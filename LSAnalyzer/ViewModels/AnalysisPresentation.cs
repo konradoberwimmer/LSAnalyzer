@@ -1231,25 +1231,27 @@ public partial class AnalysisPresentation : ObservableObject
 
     private DataRow? GetExistingDataRowByGroups(DataTable table, DataFrameRow dataFrameRow, Dictionary<string, string> groupColumns)
     {
-        foreach (DataRow row in table.Rows)
+        for (var rowIndex = table.Rows.Count - 1; rowIndex >= 0; rowIndex--)
         {
-            if ((string)row["variable"] == (string)dataFrameRow["var"])
+            var row = table.Rows[rowIndex];
+
+            if ((string)row["variable"] != (string)dataFrameRow["var"]) continue;
+            
+            var match = true;
+
+            foreach (var groupVar in Analysis.GroupBy)
             {
-                bool match = true;
-
-                foreach (var groupVar in Analysis.GroupBy)
+                if ((groupColumns.ContainsKey(groupVar.Name) && (row[groupVar.Name] == DBNull.Value || (double)row[groupVar.Name] != (double)dataFrameRow[groupColumns[groupVar.Name]])) ||
+                    (!groupColumns.ContainsKey(groupVar.Name) && row[groupVar.Name] != DBNull.Value))
                 {
-                    if ((groupColumns.ContainsKey(groupVar.Name) && (row[groupVar.Name] == DBNull.Value || (double)row[groupVar.Name] != (double)dataFrameRow[groupColumns[groupVar.Name]])) ||
-                        (!groupColumns.ContainsKey(groupVar.Name) && row[groupVar.Name] != DBNull.Value))
-                    {
-                        match = false;
-                    }
+                    match = false;
+                    break;
                 }
+            }
 
-                if (match)
-                {
-                    return row;
-                }
+            if (match)
+            {
+                return row;
             }
         }
 
@@ -1258,8 +1260,10 @@ public partial class AnalysisPresentation : ObservableObject
 
     private DataRow? GetExistingDataRowByCoefficient(DataTable table, DataFrameRow dataFrameRow)
     {
-        foreach (DataRow row in table.Rows)
+        for (var rowIndex = table.Rows.Count - 1; rowIndex >= 0; rowIndex--)
         {
+            var row = table.Rows[rowIndex];
+            
             if ((string)row["variable"] == (string)dataFrameRow["var"] && (string)row["coefficient"] == (string)dataFrameRow["parameter"])
             {
                 return row;
