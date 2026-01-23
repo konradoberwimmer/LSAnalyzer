@@ -86,8 +86,8 @@
                             <DataGrid Grid.Row="0" x:Name="dataGridResults" IsReadOnly="True" ItemsSource="{Binding DataView}" AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" VerticalAlignment="Top" MinColumnWidth="100" ColumnWidth="SizeToCells" PreviewMouseWheel="DataGrid_MouseWheel"/>
                         </StackPanel>
                         <fa:IconImage Grid.Row="0" Icon="Sun" fa:Awesome.Spin="True" VerticalAlignment="Top" Height="20" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                        <StackPanel Grid.Row="1" Margin="0,10,0,0"  Orientation="Vertical" VerticalAlignment="Top" Visibility="{Binding TableSecondary, Converter={StaticResource NullToVisibilityCollapsedConverter}}">
-                            <TextBlock Text="{Binding TableSecondary.TableName}"/>
+                        <StackPanel Grid.Row="1" Margin="0,10,0,0"  Orientation="Vertical" VerticalAlignment="Top" Visibility="{Binding SecondaryTable, Converter={StaticResource NullToVisibilityCollapsedConverter}}">
+                            <TextBlock Text="{Binding SecondaryTable.TableName}"/>
                             <DataGrid x:Name="dataGridCov" IsReadOnly="True" ItemsSource="{Binding SecondaryDataView}" AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" MinHeight="22" MaxHeight="450" MinColumnWidth="100" ColumnWidth="SizeToCells" PreviewMouseWheel="DataGrid_MouseWheel">
 
                             </DataGrid>
@@ -132,7 +132,7 @@
                         </CheckBox>
                         <CheckBox Content="Show N cases (unweighted)" IsChecked="{Binding ShowNcases}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
                             <CheckBox.Visibility>
-                                <Binding Path="HasNcasesToggle" Converter="{StaticResource BoolToVisibilityConverter}">
+                                <Binding Path="HasNcases" Converter="{StaticResource BoolToVisibilityConverter}">
                                     <Binding.ConverterParameter>
                                         <sys:Boolean>true</sys:Boolean>
                                     </Binding.ConverterParameter>
@@ -141,7 +141,7 @@
                         </CheckBox>
                         <CheckBox Content="Show N weighted" IsChecked="{Binding ShowNweight}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
                             <CheckBox.Visibility>
-                                <Binding Path="HasNweightToggle" Converter="{StaticResource BoolToVisibilityConverter}">
+                                <Binding Path="HasNweight" Converter="{StaticResource BoolToVisibilityConverter}">
                                     <Binding.ConverterParameter>
                                         <sys:Boolean>true</sys:Boolean>
                                     </Binding.ConverterParameter>

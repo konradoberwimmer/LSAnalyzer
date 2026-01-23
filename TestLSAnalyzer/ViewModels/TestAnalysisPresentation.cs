@@ -234,10 +234,10 @@ namespace TestLSAnalyzer.ViewModels
             Assert.NotEqual(analysisPresentationViewModel.DataTable.AsEnumerable().Select(row => row.Field<double>("mean - group A - standard error")).First(), analysisPresentationViewModel.DataTable.AsEnumerable().Select(row => row.Field<double>("mean - group A - standard error")).Last());
             Assert.True(Math.Abs(analysisPresentationViewModel.DataTable.AsEnumerable().Select(row => row.Field<double>("mean - group A - standard error")).Last() - 4.610640711248724) < 0.0001);
 
-            Assert.NotNull(analysisPresentationViewModel.TableSecondary);
-            Assert.Equal(2, analysisPresentationViewModel.TableSecondary.Rows.Count);
-            Assert.False(analysisPresentationViewModel.TableSecondary.Columns.Contains("groups by"));
-            Assert.True(Math.Abs(analysisPresentationViewModel.TableSecondary.AsEnumerable().Where(row => row.Field<string>("variable") == "ASRREA").Select(row => row.Field<double>("eta")).First() - 0.1770158) < 0.0001);
+            Assert.NotNull(analysisPresentationViewModel.SecondaryTable);
+            Assert.Equal(2, analysisPresentationViewModel.SecondaryTable.Rows.Count);
+            Assert.False(analysisPresentationViewModel.SecondaryTable.Columns.Contains("groups by"));
+            Assert.True(Math.Abs(analysisPresentationViewModel.SecondaryTable.AsEnumerable().Where(row => row.Field<string>("variable") == "ASRREA").Select(row => row.Field<double>("eta")).First() - 0.1770158) < 0.0001);
         }
 
         [Fact]
@@ -286,11 +286,11 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal(4, analysisPresentationViewModel.DataTable.Select("[group B - value] = 2").Length);
 
 
-            Assert.NotNull(analysisPresentationViewModel.TableSecondary);
-            Assert.Equal(4, analysisPresentationViewModel.TableSecondary.Rows.Count);
-            Assert.True(analysisPresentationViewModel.TableSecondary.Columns.Contains("groups by"));
-            Assert.Equal(2, analysisPresentationViewModel.TableSecondary.Select("[groups by] = 'ITSEX'").Length);
-            Assert.True(Math.Abs(analysisPresentationViewModel.TableSecondary.AsEnumerable().Where(row => row.Field<string>("variable") == "ASRLIT" && row.Field<string>("groups by") == "ITSEX").Select(row => row.Field<double>("eta - standard error")).First() - 0.01758326) < 0.0001);
+            Assert.NotNull(analysisPresentationViewModel.SecondaryTable);
+            Assert.Equal(4, analysisPresentationViewModel.SecondaryTable.Rows.Count);
+            Assert.True(analysisPresentationViewModel.SecondaryTable.Columns.Contains("groups by"));
+            Assert.Equal(2, analysisPresentationViewModel.SecondaryTable.Select("[groups by] = 'ITSEX'").Length);
+            Assert.True(Math.Abs(analysisPresentationViewModel.SecondaryTable.AsEnumerable().Where(row => row.Field<string>("variable") == "ASRLIT" && row.Field<string>("groups by") == "ITSEX").Select(row => row.Field<double>("eta - standard error")).First() - 0.01758326) < 0.0001);
         }
 
         [Fact]
@@ -344,10 +344,10 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal(2, analysisPresentationViewModel.DataTable.Select("[instable (label)] = 'Kategorie B'").Length);
             Assert.True(Math.Abs((double)analysisPresentationViewModel.DataTable.Select("instable = 1")[0]["Cat 1"] - 0.2971394) < 0.0001);
 
-            Assert.NotNull(analysisPresentationViewModel.TableSecondary);
-            Assert.Equal(2 * 9, analysisPresentationViewModel.TableSecondary.Rows.Count);
-            Assert.Equal(6, analysisPresentationViewModel.TableSecondary.Columns.Count);
-            Assert.True(Math.Abs((double)analysisPresentationViewModel.TableSecondary.Select("Y = 'item1' and coefficient = 'w'")[0]["estimate"] - 0.395625) < 0.0001);
+            Assert.NotNull(analysisPresentationViewModel.SecondaryTable);
+            Assert.Equal(2 * 9, analysisPresentationViewModel.SecondaryTable.Rows.Count);
+            Assert.Equal(6, analysisPresentationViewModel.SecondaryTable.Columns.Count);
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.SecondaryTable.Select("Y = 'item1' and coefficient = 'w'")[0]["estimate"] - 0.395625) < 0.0001);
 
             analysisFreq.ValueLabels.Remove("item1");
             AnalysisPresentation analysisPresentationViewModelNoValueLabels = new(analysisFreq);
@@ -530,14 +530,14 @@ namespace TestLSAnalyzer.ViewModels
             analysisPresentationViewModel.SetAnalysisResult(result!);
 
             Assert.NotNull(analysisPresentationViewModel.DataTable);
-            Assert.NotNull(analysisPresentationViewModel.TableSecondary);
+            Assert.NotNull(analysisPresentationViewModel.SecondaryTable);
             Assert.Equal(9, analysisPresentationViewModel.DataTable.Rows.Count);
-            Assert.Equal(18, analysisPresentationViewModel.TableSecondary.Rows.Count);
+            Assert.Equal(18, analysisPresentationViewModel.SecondaryTable.Rows.Count);
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable A"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat"));
             Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("cat (label)"));
             Assert.Equal(3, analysisPresentationViewModel.DataTable.Select("[cat (label)] = 'Kategorie B'").Length);
-            Assert.True(Math.Abs((double)analysisPresentationViewModel.TableSecondary.Select("[cat (label)] = 'Kategorie B'")[0]["covariance"] - 1.441647597) < 0.0001);
+            Assert.True(Math.Abs((double)analysisPresentationViewModel.SecondaryTable.Select("[cat (label)] = 'Kategorie B'")[0]["covariance"] - 1.441647597) < 0.0001);
         }
 
         [Fact]
@@ -903,7 +903,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(analysisPresentation.HasFMI);
             Assert.False(analysisPresentation.ShowFMI);
             Assert.NotEqual("[mean] DESC", analysisPresentation.DataView.Sort);
-            Assert.False(analysisPresentation.HasNweightToggle);
+            Assert.False(analysisPresentation.HasNweight);
             
             Dictionary<string, object> viewSettings = new()
             {
