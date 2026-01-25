@@ -1,16 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Models;
 using LSAnalyzer.ViewModels;
-using RDotNet;
 
 namespace LSAnalyzer.Services;
 
 public class AnalysisQueue : IAnalysisQueue
 {
     private readonly IRservice _rservice;
+    
+    private Queue<AnalysisPresentation> _analysisQueue = new();
 
     public AnalysisQueue(IRservice rservice)
     {
@@ -19,10 +21,31 @@ public class AnalysisQueue : IAnalysisQueue
     
     public void Add(AnalysisPresentation analysisPresentation)
     {
+        _analysisQueue.Enqueue(analysisPresentation);
+
+        if (_analysisQueue.Count == 1)
+        {
+            StartNextAnalysis();
+        }
+    }
+
+    public int Count => _analysisQueue.Count;
+
+    private void StartNextAnalysis()
+    {
+        if (_analysisQueue.Count == 0) return;
+        
+        var analysisPresentation = _analysisQueue.First();
+        
         BackgroundWorker analysisWorker = new();
         analysisWorker.WorkerReportsProgress = false;
         analysisWorker.WorkerSupportsCancellation = false;
         analysisWorker.DoWork += AnalysisWorker_DoWork;
+        analysisWorker.RunWorkerCompleted += (_, _) =>
+        {
+            _analysisQueue.Dequeue();
+            StartNextAnalysis();
+        }; 
         analysisWorker.RunWorkerAsync(analysisPresentation);
     }
 

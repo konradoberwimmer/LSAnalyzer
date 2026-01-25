@@ -8,4 +8,6 @@ public class AnalysisQueueStub : IAnalysisQueue
     {
         throw new System.NotImplementedException();
     }
+
+    public int Count => 0;
 }
