@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using LSAnalyzer.Services.Stubs;
 using Polly;
 using Xunit.Sdk;
 
@@ -37,7 +38,7 @@ namespace TestLSAnalyzer.ViewModels
             };
 
             Rservice rservice = new();
-            MainWindow mainWindowViewModel = new(rservice);
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueueStub());
 
             mainWindowViewModel.AnalysisConfiguration = analysisConfigurationA;
             mainWindowViewModel.SubsettingExpression = "x == 2";
@@ -68,7 +69,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 0.5));
 
-            MainWindow mainWindowViewModel = new(rservice);
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueue(rservice));
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
@@ -164,10 +165,10 @@ namespace TestLSAnalyzer.ViewModels
             };
             AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
 
-            MainWindow mainWindowViewModel = new(rservice);
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueue(rservice));
 
             bool messageSent = false;
-            WeakReferenceMessenger.Default.Register<FailureWithAnalysisCalculationMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<MainWindow.FailureWithAnalysisCalculationMessage>(this, (r, m) =>
             {
                 messageSent = true;
             });
@@ -233,7 +234,7 @@ namespace TestLSAnalyzer.ViewModels
             Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
-            MainWindow mainWindowViewModel = new(rservice);
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueue(rservice));
 
             var configurationMock = new Mock<Configuration>();
             configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
@@ -295,7 +296,7 @@ namespace TestLSAnalyzer.ViewModels
             Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
-            MainWindow mainWindowViewModel = new(rservice);
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueueStub());
             
             var tmpFile = Path.Combine(Path.GetTempPath(), "TestSaveAnalysesDefintionsCommand.json");
             if (File.Exists(tmpFile))
@@ -350,7 +351,7 @@ namespace TestLSAnalyzer.ViewModels
         public void TestRemoveAllAnalysesCommand()
         {
             Rservice rservice = new();
-            MainWindow mainWindowViewModel = new(rservice);
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueueStub());
             
             mainWindowViewModel.Analyses.Add(new AnalysisPresentation());
             mainWindowViewModel.Analyses.Add(new AnalysisPresentation());
