@@ -7,15 +7,13 @@ using LSAnalyzer.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace LSAnalyzer.ViewModels;
 
-public class RequestAnalysis : INotifyPropertyChanged
+public partial class RequestAnalysis : ObservableObject
 {
     private readonly IRservice _rservice;
 
@@ -26,33 +24,24 @@ public class RequestAnalysis : INotifyPropertyChanged
         set
         {
             _analysisConfiguration = value;
-            NotifyPropertyChanged(nameof(AnalysisConfiguration));
+            OnPropertyChanged();
+
+            if (AnalysisConfiguration == null) return;
             
-            if (AnalysisConfiguration != null) {
-                var currentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration);
-                if (currentDatasetVariables != null)
-                {
-                    ObservableCollection<Variable> newAvailableVariables = new();
-                    foreach (var variable in currentDatasetVariables)
-                    {
-                        newAvailableVariables.Add(variable);
-                    }
-                    AvailableVariables = newAvailableVariables;
-                }
+            var currentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration);
+            if (currentDatasetVariables == null) return;
+            
+            ObservableCollection<Variable> newAvailableVariables = [];
+            foreach (var variable in currentDatasetVariables)
+            {
+                newAvailableVariables.Add(variable);
             }
+            AvailableVariables = newAvailableVariables;
         }
     }
 
-    private ObservableCollection<Variable> _availableVariables;
-    public ObservableCollection<Variable> AvailableVariables
-    {
-        get => _availableVariables;
-        set
-        {
-            _availableVariables = value;
-            NotifyPropertyChanged(nameof(AvailableVariables));
-        }
-    }
+    [ObservableProperty]
+    private ObservableCollection<Variable> _availableVariables = [];
 
     private bool _sortAlphabetically = false;
     public bool SortAlphabetically
@@ -68,164 +57,56 @@ public class RequestAnalysis : INotifyPropertyChanged
             }
             
             _sortAlphabetically = value;
-            NotifyPropertyChanged();
+            OnPropertyChanged();
         }
     }
 
-    private ObservableCollection<Variable> _analysisVariables = new();
-    public ObservableCollection<Variable> AnalysisVariables
-    {
-        get => _analysisVariables;
-        set
-        {
-            _analysisVariables = value;
-            NotifyPropertyChanged(nameof(AnalysisVariables));
-        }
-    }
+    [ObservableProperty]
+    private ObservableCollection<Variable> _analysisVariables = [];
 
-    private ObservableCollection<Variable> _groupByVariables = new();
-    public ObservableCollection<Variable> GroupByVariables
-    {
-        get => _groupByVariables;
-        set
-        {
-            _groupByVariables = value;
-            NotifyPropertyChanged(nameof(GroupByVariables));
-        }
-    }
+    [ObservableProperty]
+    private ObservableCollection<Variable> _groupByVariables = [];
 
+    [ObservableProperty]
     private bool _calculateOverall = true;
-    public bool CalculateOverall
-    {
-        get => _calculateOverall;
-        set
-        {
-            _calculateOverall = value;
-            NotifyPropertyChanged(nameof(CalculateOverall));
-        }
-    }
     
+    [ObservableProperty]
     private bool _calculateCrosswise = true;
-    public bool CalculateCrosswise
-    {
-        get => _calculateCrosswise;
-        set
-        {
-            _calculateCrosswise = value;
-            NotifyPropertyChanged(nameof(CalculateCrosswise));
-        }
-    }
 
+    [ObservableProperty]
     private bool _calculateBivariate = true;
-    public bool CalculateBivariate
-    {
-        get => _calculateBivariate;
-        set
-        {
-            _calculateBivariate = value;
-            NotifyPropertyChanged(nameof(CalculateBivariate));
-        }
-    }
-
+    
+    [ObservableProperty]
     private bool _calculateSeparately = false;
-    public bool CalculateSeparately
-    {
-        get => _calculateSeparately;
-        set
-        {
-            _calculateSeparately = value;
-            NotifyPropertyChanged(nameof(CalculateSeparately));
-        }
-    }
 
-    private ObservableCollection<PercentileWrapper> _percentiles = new() { new() { Value = 0.25 }, new() { Value = 0.50 }, new() { Value = 0.75 } };
-    public ObservableCollection<PercentileWrapper> Percentiles
-    {
-        get => _percentiles;
-        set
-        {
-            _percentiles = value;
-            NotifyPropertyChanged(nameof(Percentiles));
-        }
-    }
+    [ObservableProperty]
+    private ObservableCollection<PercentileWrapper> _percentiles = [ new() { Value = 0.25 }, new() { Value = 0.50 }, new() { Value = 0.75 } ];
 
+    [ObservableProperty]
     private bool _calculateSE = true;
-    public bool CalculateSE
-    {
-        get => _calculateSE;
-        set
-        {
-            _calculateSE = value;
-            NotifyPropertyChanged(nameof(CalculateSE));
-        }
-    }
 
+    [ObservableProperty]
     private bool _useInterpolation = true;
-    public bool UseInterpolation
-    {
-        get => _useInterpolation;
-        set
-        {
-            _useInterpolation = value;
-            NotifyPropertyChanged(nameof(UseInterpolation));
-        }
-    }
 
+    [ObservableProperty]
     private bool _mimicIdbAnalyzer = false;
-    public bool MimicIdbAnalyzer
-    {
-        get => _mimicIdbAnalyzer;
-        set
-        {
-            _mimicIdbAnalyzer = value;
-            NotifyPropertyChanged(nameof(MimicIdbAnalyzer));
-        }
-    }
 
+    [ObservableProperty]
     private bool _withIntercept = true;
-    public bool WithIntercept
-    {
-        get => _withIntercept;
-        set
-        {
-            _withIntercept = value;
-            NotifyPropertyChanged(nameof(WithIntercept));
-        }
-    }
-
+    
+    [ObservableProperty]
     private AnalysisRegression.RegressionSequence _regressionSequence = AnalysisRegression.RegressionSequence.AllIn;
-    public AnalysisRegression.RegressionSequence RegressionSequence
+    partial void OnRegressionSequenceChanged(AnalysisRegression.RegressionSequence value)
     {
-        get => _regressionSequence;
-        set
-        {
-            _regressionSequence = value;
-            NotifyPropertyChanged(nameof(RegressionSequence));
-            NotifyPropertyChanged(nameof(RegressionSequenceIsAllIn));
-        }
+        OnPropertyChanged(nameof(RegressionSequenceIsAllIn));
     }
 
-    public bool RegressionSequenceIsAllIn
-    {
-        get => RegressionSequence == AnalysisRegression.RegressionSequence.AllIn;
-    }
+    public bool RegressionSequenceIsAllIn => RegressionSequence == AnalysisRegression.RegressionSequence.AllIn;
 
-    private ObservableCollection<Variable> _dependentVariables = new();
-    public ObservableCollection<Variable> DependentVariables
-    {
-        get => _dependentVariables;
-        set
-        {
-            _dependentVariables = value;
-            NotifyPropertyChanged(nameof(DependentVariables));
-        }
-    }
+    [ObservableProperty]
+    private ObservableCollection<Variable> _dependentVariables = [];
 
-    private bool _bifiesurveyVersionWarning = false;
-    public bool BIFIEsurveyVersionWarning
-    {
-        get => _bifiesurveyVersionWarning;
-    }
+    public bool BIFIEsurveyVersionWarning { get; } = false;
 
     [ExcludeFromCodeCoverage]
     public RequestAnalysis()
@@ -239,7 +120,7 @@ public class RequestAnalysis : INotifyPropertyChanged
         AvailableVariables = new ObservableCollection<Variable>();
 
         Version BIFIEsurveyVersion = new(rservice.GetBifieSurveyVersion() ?? "1.0.0");
-        _bifiesurveyVersionWarning = BIFIEsurveyVersion.CompareTo(new Version(3, 6)) < 0;
+        BIFIEsurveyVersionWarning = BIFIEsurveyVersion.CompareTo(new Version(3, 6)) < 0;
     }
 
     public void InitializeWithAnalysis(Analysis analysis)
@@ -329,31 +210,10 @@ public class RequestAnalysis : INotifyPropertyChanged
                 CalculateOverall = analysisLogistReg.CalculateOverall;
                 CalculateCrosswise = analysisLogistReg.CalculateCrosswise;
                 break;
-            default:
-                break;
         }
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-    private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
-    {
-        if (PropertyChanged != null)
-        {
-            PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        }
-    }
-
-    private RelayCommand<MoveToAndFromVariablesCommandParameters?> _moveToAndFromAnalysisVariablesCommand;
-    public ICommand MoveToAndFromAnalysisVariablesCommand
-    {
-        get
-        {
-            if (_moveToAndFromAnalysisVariablesCommand == null)
-                _moveToAndFromAnalysisVariablesCommand = new(this.MoveToAndFromAnalysisVariables);
-            return _moveToAndFromAnalysisVariablesCommand;
-        }
-    }
-
+    [RelayCommand]
     private void MoveToAndFromAnalysisVariables(MoveToAndFromVariablesCommandParameters? commandParams)
     {
         if (commandParams == null)
@@ -382,17 +242,7 @@ public class RequestAnalysis : INotifyPropertyChanged
         }
     }
 
-    private RelayCommand<MoveToAndFromVariablesCommandParameters?> _moveToAndFromGroupByVariablesCommand;
-    public ICommand MoveToAndFromGroupByVariablesCommand
-    {
-        get
-        {
-            if (_moveToAndFromGroupByVariablesCommand == null)
-                _moveToAndFromGroupByVariablesCommand = new(this.MoveToAndFromGroupByVariables);
-            return _moveToAndFromGroupByVariablesCommand;
-        }
-    }
-
+    [RelayCommand]
     private void MoveToAndFromGroupByVariables(MoveToAndFromVariablesCommandParameters? commandParams)
     {
         if (commandParams == null)
@@ -420,20 +270,10 @@ public class RequestAnalysis : INotifyPropertyChanged
             }
         }
 
-        NotifyPropertyChanged(nameof(GroupByVariables));
+        OnPropertyChanged(nameof(GroupByVariables));
     }
 
-    private RelayCommand<MoveToAndFromVariablesCommandParameters?> _moveToAndFromDependentVariablesCommand;
-    public ICommand MoveToAndFromDependentVariablesCommand
-    {
-        get
-        {
-            if (_moveToAndFromDependentVariablesCommand == null)
-                _moveToAndFromDependentVariablesCommand = new(this.MoveToAndFromDependentVariables);
-            return _moveToAndFromDependentVariablesCommand;
-        }
-    }
-
+    [RelayCommand]
     private void MoveToAndFromDependentVariables(MoveToAndFromVariablesCommandParameters? commandParams)
     {
         if (commandParams == null)
@@ -462,17 +302,7 @@ public class RequestAnalysis : INotifyPropertyChanged
         }
     }
 
-    private RelayCommand<IRequestingAnalysis?> _sendAnalysisRequestCommand;
-    public ICommand SendAnalysisRequestCommand
-    {
-        get
-        {
-            if (_sendAnalysisRequestCommand == null)
-                _sendAnalysisRequestCommand = new(this.SendAnalysisRequest);
-            return _sendAnalysisRequestCommand;
-        }
-    }
-
+    [RelayCommand]
     private void SendAnalysisRequest(IRequestingAnalysis? window)
     {
         if (AnalysisConfiguration == null || AnalysisVariables.Count == 0 || window == null)
@@ -549,26 +379,11 @@ public class RequestAnalysis : INotifyPropertyChanged
                 WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisLogistReg));
                 break;
         }
-        
-        if (analysis == null)
-        {
-            return;
-        }
 
         window.Close();
     }
 
-    private RelayCommand<object?> _resetAnalysisRequestCommand;
-    public ICommand ResetAnalysisRequestCommand
-    {
-        get
-        {
-            if (_resetAnalysisRequestCommand == null)
-                _resetAnalysisRequestCommand = new(this.ResetAnalysisRequest);
-            return _resetAnalysisRequestCommand;
-        }
-    }
-
+    [RelayCommand]
     private void ResetAnalysisRequest(object? dummy)
     {
         MoveToAndFromAnalysisVariables(new()

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LSAnalyzer.Helper
 {
-    internal interface IRequestingAnalysis
+    public interface IRequestingAnalysis
     {
         Type GetAnalysisType();
         void Close();
