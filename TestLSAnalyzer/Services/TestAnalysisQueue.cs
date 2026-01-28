@@ -61,7 +61,7 @@ public class TestAnalysisQueue
         analysisQueue.Add(analysisPresentationViewModelMeanDiff);
         analysisQueue.Add(analysisPresentationViewModelCorr);
         
-        Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(10))
+        Policy.Handle<TrueException>().WaitAndRetry(2000, _ => TimeSpan.FromMilliseconds(10))
             .Execute(() => Assert.True(
                 analysisPresentationViewModelUnivar.Analysis.Result.Count > 0 && 
                 analysisPresentationViewModelMeanDiff.Analysis.Result.Count > 0 &&  

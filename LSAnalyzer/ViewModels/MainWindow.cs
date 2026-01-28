@@ -31,6 +31,10 @@ public partial class MainWindow : ObservableObject
         RecentAnalyses.Clear();
     }
 
+    public List<Variable> CurrentDatasetVariables { get; set; } = [];
+
+    public string BifieSurveyVersion { get; set; } = string.Empty; 
+    
     [ObservableProperty]
     private string? _subsettingExpression;
 
@@ -41,7 +45,7 @@ public partial class MainWindow : ObservableObject
 
     public bool HasNecessaryPackages => _rservice.NecessaryPackagesConfirmed;
 
-    public bool IsBusy => Analyses.Any(analysis => analysis.IsBusy);
+    public bool IsBusy => Analyses.Any(analysis => analysis.IsBusy) || _analysisQueue.Count > 0;
 
     public void NotifyIsBusy()
     {
@@ -137,10 +141,12 @@ public partial class MainWindow : ObservableObject
     {
         _rservice = rservice;
         _analysisQueue = analysisQueue;
+        BifieSurveyVersion = rservice.GetBifieSurveyVersion() ?? string.Empty;
 
         WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (_, m) =>
         {
             AnalysisConfiguration = m.Value;
+            CurrentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration) ?? [];
         });
 
         WeakReferenceMessenger.Default.Register<SetSubsettingExpressionMessage>(this, (_, m) =>

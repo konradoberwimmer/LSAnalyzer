@@ -15,30 +15,7 @@ namespace LSAnalyzer.ViewModels;
 
 public partial class RequestAnalysis : ObservableObject
 {
-    private readonly IRservice _rservice;
-
-    private AnalysisConfiguration? _analysisConfiguration;
-    public AnalysisConfiguration? AnalysisConfiguration
-    {
-        get => _analysisConfiguration;
-        set
-        {
-            _analysisConfiguration = value;
-            OnPropertyChanged();
-
-            if (AnalysisConfiguration == null) return;
-            
-            var currentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration);
-            if (currentDatasetVariables == null) return;
-            
-            ObservableCollection<Variable> newAvailableVariables = [];
-            foreach (var variable in currentDatasetVariables)
-            {
-                newAvailableVariables.Add(variable);
-            }
-            AvailableVariables = newAvailableVariables;
-        }
-    }
+    public required AnalysisConfiguration AnalysisConfiguration { set; get; }
 
     [ObservableProperty]
     private ObservableCollection<Variable> _availableVariables = [];
@@ -106,22 +83,9 @@ public partial class RequestAnalysis : ObservableObject
     [ObservableProperty]
     private ObservableCollection<Variable> _dependentVariables = [];
 
-    public bool BIFIEsurveyVersionWarning { get; } = false;
-
-    [ExcludeFromCodeCoverage]
-    public RequestAnalysis()
-    {
-        // design-time-only constructor
-    }
-
-    public RequestAnalysis(IRservice rservice)
-    {
-        _rservice = rservice;
-        AvailableVariables = new ObservableCollection<Variable>();
-
-        Version BIFIEsurveyVersion = new(rservice.GetBifieSurveyVersion() ?? "1.0.0");
-        BIFIEsurveyVersionWarning = BIFIEsurveyVersion.CompareTo(new Version(3, 6)) < 0;
-    }
+    public string BifieSurveyVersion { get; set; } = string.Empty; 
+    
+    public bool BIFIEsurveyVersionWarning => new Version(BifieSurveyVersion).CompareTo(new Version(3, 6)) < 0;
 
     public void InitializeWithAnalysis(Analysis analysis)
     {

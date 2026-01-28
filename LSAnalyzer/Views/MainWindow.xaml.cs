@@ -5,10 +5,12 @@ using LSAnalyzer.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 
 namespace LSAnalyzer.Views
 {
@@ -113,8 +115,8 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
-            requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            var requestAnalysisViewModel = CreateRequestAnalysisViewModel();
+            
             if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisUnivar))) 
             {
                 requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisUnivar)]);
@@ -133,8 +135,8 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
-            requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            var requestAnalysisViewModel = CreateRequestAnalysisViewModel();
+            
             if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisMeanDiff)))
             {
                 requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisMeanDiff)]);
@@ -153,8 +155,8 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
-            requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            var requestAnalysisViewModel = CreateRequestAnalysisViewModel();
+            
             if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisFreq)))
             {
                 requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisFreq)]);
@@ -173,8 +175,8 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
-            requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            var requestAnalysisViewModel = CreateRequestAnalysisViewModel();
+            
             if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisPercentiles)))
             {
                 requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisPercentiles)]);
@@ -193,8 +195,8 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
-            requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            var requestAnalysisViewModel = CreateRequestAnalysisViewModel();
+            
             if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisCorr)))
             {
                 requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisCorr)]);
@@ -213,8 +215,8 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
-            requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            var requestAnalysisViewModel = CreateRequestAnalysisViewModel();
+            
             if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisLinreg)))
             {
                 requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisLinreg)]);
@@ -233,8 +235,8 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            RequestAnalysis requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
-            requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration;
+            var requestAnalysisViewModel = CreateRequestAnalysisViewModel();
+            
             if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisLogistReg)))
             {
                 requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisLogistReg)]);
@@ -320,6 +322,18 @@ namespace LSAnalyzer.Views
 
             MassExport massExportView = new(massExportViewModel);
             massExportView.ShowDialog();
+        }
+
+        private RequestAnalysis CreateRequestAnalysisViewModel()
+        {
+            var mainWindowViewModel = DataContext as ViewModels.MainWindow;
+            
+            var requestAnalysisViewModel = _serviceProvider.GetRequiredService<RequestAnalysis>();
+            requestAnalysisViewModel.AnalysisConfiguration = mainWindowViewModel!.AnalysisConfiguration!;
+            requestAnalysisViewModel.AvailableVariables = new ObservableCollection<Variable>(mainWindowViewModel.CurrentDatasetVariables);
+            requestAnalysisViewModel.BifieSurveyVersion = mainWindowViewModel.BifieSurveyVersion;
+            
+            return requestAnalysisViewModel;
         }
     }
 }
