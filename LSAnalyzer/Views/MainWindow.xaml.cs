@@ -33,6 +33,8 @@ namespace LSAnalyzer.Views
 
             WeakReferenceMessenger.Default.Register<ViewModels.MainWindow.FailureWithAnalysisCalculationMessage>(this, (r, m) =>
             {
+                if (DataContext is not ViewModels.MainWindow mainWindowViewModel || mainWindowViewModel.Analyses.All(presentation => presentation.Analysis != m.Value)) return;
+                
                 MessageBox.Show("Something went wrong with analysis '" + m.Value.AnalysisName + "'!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             });
             

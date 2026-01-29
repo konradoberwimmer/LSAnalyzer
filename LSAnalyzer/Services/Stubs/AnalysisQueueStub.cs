@@ -10,4 +10,9 @@ public class AnalysisQueueStub : IAnalysisQueue
     }
 
     public int Count => 0;
+    
+    public void InterruptAnalysis(AnalysisPresentation analysisPresentation)
+    {
+        
+    }
 }

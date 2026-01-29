@@ -3,11 +3,9 @@ using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
-using RDotNet;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -168,6 +166,16 @@ public partial class MainWindow : ObservableObject
             StartAnalysisCommand.Execute(analysisPresentation);
         });
 
+        WeakReferenceMessenger.Default.Register<FailureWithAnalysisCalculationMessage>(this, (_, m) =>
+        {
+            foreach (var analysisPresentation in Analyses.Where(presentation => presentation.Analysis == m.Value))
+            {
+                analysisPresentation.IsBusy = false;
+            }
+            
+            NotifyIsBusy();
+        });
+        
         WeakReferenceMessenger.Default.Register<BatchAnalyzeChangedStoredRawDataFileMessage>(this, (_, _) =>
         {
             AnalysisConfiguration = null;
@@ -207,10 +215,10 @@ public partial class MainWindow : ObservableObject
     [RelayCommand]
     private void RemoveAnalysis(AnalysisPresentation? analysisPresentation)
     {
-        if (analysisPresentation != null && Analyses.Contains(analysisPresentation))
-        {
-            Analyses.Remove(analysisPresentation);
-        }
+        if (analysisPresentation == null || !Analyses.Contains(analysisPresentation)) return;
+        
+        _analysisQueue.InterruptAnalysis(analysisPresentation);
+        Analyses.Remove(analysisPresentation);
     }
 
     [RelayCommand]

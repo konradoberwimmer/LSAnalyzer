@@ -4,13 +4,8 @@ using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using LSAnalyzer.Services.Stubs;
 using Polly;
 using Xunit.Sdk;
@@ -63,6 +58,34 @@ namespace TestLSAnalyzer.ViewModels
             
             Assert.NotNull(mainWindowViewModel.AnalysisConfiguration);
             Assert.NotEmpty(mainWindowViewModel.CurrentDatasetVariables);
+        }
+
+        [Fact]
+        public void TestHandleFailureWithAnalysisCalculationMessage()
+        {
+            AnalysisCorr analysisCorr = new(new AnalysisConfiguration());
+            
+            MainWindow mainWindowViewModel = new(new RserviceStub(), new AnalysisQueueStub())
+            {
+                Analyses = [
+                    new AnalysisPresentation
+                    {
+                        Analysis = analysisCorr,
+                        IsBusy = true
+                    }
+                ]
+            };
+
+            var sentNotifyIsBusyChanged = false;
+            mainWindowViewModel.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName == "IsBusy") sentNotifyIsBusyChanged = true;
+            };
+
+            WeakReferenceMessenger.Default.Send(new MainWindow.FailureWithAnalysisCalculationMessage(analysisCorr));
+            
+            Assert.False(mainWindowViewModel.Analyses.First().IsBusy);
+            Assert.True(sentNotifyIsBusyChanged);
         }
         
         [Fact]
@@ -129,7 +152,7 @@ namespace TestLSAnalyzer.ViewModels
 
             mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelUnivar);
             
-            Policy.Handle<NotEmptyException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            Policy.Handle<NotEmptyException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(10))
                 .Execute(() => Assert.NotEmpty(mainWindowViewModel.Analyses.Last().DataTable.Rows));
 
             AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)

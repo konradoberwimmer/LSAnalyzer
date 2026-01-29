@@ -2,6 +2,7 @@ using System.Reflection;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
+using Moq;
 using Polly;
 using Xunit.Sdk;
 
@@ -69,6 +70,66 @@ public class TestAnalysisQueue
             );
         
         Assert.Equal(0, analysisQueue.Count);
+    }
+
+    [Fact]
+    public void TestInterruptAnalysis()
+    {
+        var rservice = new Mock<IRservice>();
+        rservice
+            .Setup(rs => rs.CalculateCorr(It.IsAny<AnalysisCorr>()))
+            .Callback((AnalysisCorr _) => Thread.Sleep(100));
+        
+        AnalysisQueue analysisQueue = new(rservice.Object);
+
+        AnalysisPresentation analysisPresentationNotInQueue = new()
+        {
+            Analysis = new AnalysisCorr(new AnalysisConfiguration())
+        };
+        
+        analysisQueue.InterruptAnalysis(analysisPresentationNotInQueue);
+        
+        rservice.Verify(rs => rs.SendUserInterrupt(), Times.Never);
+        
+        AnalysisPresentation analysisPresentationFirstInQueue = new()
+        {
+            Analysis = new AnalysisCorr(new AnalysisConfiguration())
+        };
+        
+        AnalysisPresentation analysisPresentationSecondInQueue = new()
+        {
+            Analysis = new AnalysisCorr(new AnalysisConfiguration())
+        };
+        
+        analysisQueue.Add(analysisPresentationFirstInQueue);
+        analysisQueue.Add(analysisPresentationSecondInQueue);
+        
+        // 100ms timeframe until first in queue is finished
+        
+        analysisQueue.InterruptAnalysis(analysisPresentationSecondInQueue);
+        
+        rservice.Verify(rs => rs.SendUserInterrupt(), Times.Never);
+        
+        analysisQueue.InterruptAnalysis(analysisPresentationFirstInQueue);
+        
+        rservice.Verify(rs => rs.SendUserInterrupt(), Times.Once);
+    }
+
+    [Fact]
+    public void TestAnalysisWillNotStartWhenNotRequestedByMainWindow()
+    {
+        var rservice = new Mock<IRservice>();
+        
+        AnalysisQueue analysisQueue = new(rservice.Object);
+
+        AnalysisPresentation analysisPresentation = new(new AnalysisCorr(new AnalysisConfiguration()), new MainWindow());
+        
+        analysisQueue.Add(analysisPresentation);
+        
+        Policy.Handle<TrueException>().WaitAndRetry(2000, _ => TimeSpan.FromMilliseconds(10))
+            .Execute(() => Assert.Equal(0, analysisQueue.Count));
+        
+        rservice.Verify(rs => rs.CalculateCorr(It.IsAny<AnalysisCorr>()), Times.Never);
     }
     
     public static string AssemblyDirectory

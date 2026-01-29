@@ -30,6 +30,13 @@ public class AnalysisQueue : IAnalysisQueue
     }
 
     public int Count => _analysisQueue.Count;
+    
+    public void InterruptAnalysis(AnalysisPresentation analysisPresentation)
+    {
+        if (analysisPresentation != _analysisQueue.FirstOrDefault()) return;
+
+        _rservice.SendUserInterrupt();
+    }
 
     private void StartNextAnalysis()
     {
@@ -54,6 +61,12 @@ public class AnalysisQueue : IAnalysisQueue
         if (e.Argument is not AnalysisPresentation analysisPresentation)
         {
             e.Cancel = true;
+            return;
+        }
+
+        if (!(analysisPresentation.MainWindowViewModel?.Analyses.Contains(analysisPresentation) ?? true))
+        {
+            e.Result = null;
             return;
         }
 

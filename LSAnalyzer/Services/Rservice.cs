@@ -1392,6 +1392,11 @@ namespace LSAnalyzer.Services
             }
         }
 
+        public void SendUserInterrupt()
+        {
+            _engine?.UserInterrupt();
+        }
+
         public void Dispose()
         {
             _engine?.Dispose();
