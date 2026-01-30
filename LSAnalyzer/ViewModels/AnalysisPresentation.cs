@@ -28,7 +28,7 @@ public partial class AnalysisPresentation : ObservableObject
     ];
     
     protected MainWindow? _mainWindowViewModel = null;
-    public MainWindow MainWindowViewModel => _mainWindowViewModel!;
+    public MainWindow? MainWindowViewModel => _mainWindowViewModel;
 
     private IResultService? _resultService;
     public IResultService ResultService
@@ -140,10 +140,6 @@ public partial class AnalysisPresentation : ObservableObject
     
     [ObservableProperty]
     private bool _isBusy = false;
-    partial void OnIsBusyChanged(bool value)
-    {
-        _mainWindowViewModel?.NotifyIsBusy();
-    }
 
     [ExcludeFromCodeCoverage]
     public AnalysisPresentation()

@@ -46,7 +46,7 @@
                     <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                         <Binding Path="ConnectedToR"/>
                         <Binding Path="HasNecessaryPackages"></Binding>
-                        <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
+                        <Binding Path="RIsBusy" Converter="{StaticResource InverseBoolConverter}"/>
                     </MultiBinding>
                 </MenuItem.IsEnabled>
                 <MenuItem x:Name="menuItemAnalysisSelectFile" Header="Select File ..." Click="MenuItemAnalysisSelectFile_Click"/>
@@ -57,7 +57,6 @@
                     <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                         <Binding Path="ConnectedToR"/>
                         <Binding Path="HasNecessaryPackages"></Binding>
-                        <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
                     </MultiBinding>
                 </MenuItem.IsEnabled>
                 <MenuItem x:Name="menuItemAnalysisUnivar" Header="Univariate (means / standard deviations) ..." Click="MenuItemAnalysisUnivar_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
@@ -70,7 +69,7 @@
                 <MenuItem x:Name="menuItemAnalysisRegression" Header="Linear Regression ..." Click="MenuItemAnalysisLinreg_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <MenuItem x:Name="menuItemAnalysisLogistReg" Header="Logistic Regression ..." Click="MenuItemAnalysisLogistReg_Click" IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}"/>
                 <Separator/>
-                <MenuItem x:Name="menuItemBatchAnalyze" Header="Batch analyze ..." Click="MenuItemBatchAnalyze_Click"/>
+                <MenuItem x:Name="menuItemBatchAnalyze" Header="Batch analyze ..." Click="MenuItemBatchAnalyze_Click" IsEnabled="{Binding RIsBusy, Converter={StaticResource InverseBoolConverter}}"/>
             </MenuItem>
             <MenuItem Header="_Config">
                 <MenuItem x:Name="menuItemDatasetTypes" Header="Dataset types ..." Click="MenuItemDatasetTypes_Click" />
@@ -80,7 +79,7 @@
                         <MultiBinding Converter="{StaticResource BooleanAndConverter}">
                             <Binding Path="ConnectedToR"/>
                             <Binding Path="HasNecessaryPackages"></Binding>
-                            <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
+                            <Binding Path="RIsBusy" Converter="{StaticResource InverseBoolConverter}"/>
                         </MultiBinding>
                     </MenuItem.IsEnabled>
                 </MenuItem>

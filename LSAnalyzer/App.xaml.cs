@@ -62,6 +62,7 @@ namespace LSAnalyzer
             services.AddSingleton<IExportService, ExportService>();
             services.AddTransient<IResultService, ResultService>();
             services.AddSingleton<IRservice, Rservice>();
+            services.AddSingleton<IAnalysisQueue, AnalysisQueue>();
             services.AddTransient<ConfigDatasetTypes>();
             services.AddTransient<DataProviders>();
             services.AddSingleton<MassExport>();

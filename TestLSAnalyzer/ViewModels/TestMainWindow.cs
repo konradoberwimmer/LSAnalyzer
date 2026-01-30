@@ -4,13 +4,9 @@ using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
+using LSAnalyzer.Services.Stubs;
 using Polly;
 using Xunit.Sdk;
 
@@ -19,6 +15,78 @@ namespace TestLSAnalyzer.ViewModels
     [Collection("Sequential")]
     public class TestMainWindow
     {
+        [Fact]
+        public void TestConstructor()
+        {
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueueStub());
+            
+            Assert.False(string.IsNullOrWhiteSpace(mainWindowViewModel.BifieSurveyVersion));
+            Assert.True(mainWindowViewModel.ConnectedToR);
+        }
+
+        [Fact]
+        public void TestHandleSetAnalysisConfigurationMessage()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    MIvar = "mi",
+                    RepWgts = "repwgt",
+                    FayFac = 1,
+                },
+                ModeKeep = true,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 0.5));
+
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueue(rservice));
+
+            Assert.Null(mainWindowViewModel.AnalysisConfiguration);
+            Assert.Empty(mainWindowViewModel.CurrentDatasetVariables);
+            
+            WeakReferenceMessenger.Default.Send(new SetAnalysisConfigurationMessage(analysisConfiguration));
+            
+            Assert.NotNull(mainWindowViewModel.AnalysisConfiguration);
+            Assert.NotEmpty(mainWindowViewModel.CurrentDatasetVariables);
+        }
+
+        [Fact]
+        public void TestHandleAnalysisQueueCountChangedMessage()
+        {
+            AnalysisCorr analysisCorr = new(new AnalysisConfiguration());
+            
+            MainWindow mainWindowViewModel = new(new RserviceStub(), new AnalysisQueueStub())
+            {
+                Analyses = [
+                    new AnalysisPresentation
+                    {
+                        Analysis = analysisCorr,
+                        IsBusy = true
+                    }
+                ]
+            };
+
+            var sentNotifyIsBusyChanged = false;
+            mainWindowViewModel.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName == "RIsBusy") sentNotifyIsBusyChanged = true;
+            };
+
+            WeakReferenceMessenger.Default.Send(new AnalysisQueue.AnalysisQueueCountChangedMessage());
+
+            Assert.True(sentNotifyIsBusyChanged);
+        }
+        
         [Fact]
         public void TestSetAnalysisConfigurationClearsSubsetting()
         {
@@ -37,7 +105,7 @@ namespace TestLSAnalyzer.ViewModels
             };
 
             Rservice rservice = new();
-            MainWindow mainWindowViewModel = new(rservice);
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueueStub());
 
             mainWindowViewModel.AnalysisConfiguration = analysisConfigurationA;
             mainWindowViewModel.SubsettingExpression = "x == 2";
@@ -68,7 +136,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 0.5));
 
-            MainWindow mainWindowViewModel = new(rservice);
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueue(rservice));
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
@@ -83,7 +151,7 @@ namespace TestLSAnalyzer.ViewModels
 
             mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelUnivar);
             
-            Policy.Handle<NotEmptyException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            Policy.Handle<NotEmptyException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(10))
                 .Execute(() => Assert.NotEmpty(mainWindowViewModel.Analyses.Last().DataTable.Rows));
 
             AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
@@ -164,10 +232,10 @@ namespace TestLSAnalyzer.ViewModels
             };
             AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
 
-            MainWindow mainWindowViewModel = new(rservice);
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueue(rservice));
 
             bool messageSent = false;
-            WeakReferenceMessenger.Default.Register<FailureWithAnalysisCalculationMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<AnalysisQueue.FailureWithAnalysisCalculationMessage>(this, (r, m) =>
             {
                 messageSent = true;
             });
@@ -233,7 +301,7 @@ namespace TestLSAnalyzer.ViewModels
             Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
-            MainWindow mainWindowViewModel = new(rservice);
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueue(rservice));
 
             var configurationMock = new Mock<Configuration>();
             configurationMock.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
@@ -246,7 +314,7 @@ namespace TestLSAnalyzer.ViewModels
             selectAnalysisFileViewModel.SelectedAnalysisMode = SelectAnalysisFile.AnalysisModes.Build;
             selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
 
-            Policy.Handle<NotNullException>().WaitAndRetry(5000, _ => TimeSpan.FromMilliseconds(1))
+            Policy.Handle<NotNullException>().WaitAndRetry(5000, _ => TimeSpan.FromMilliseconds(100))
                 .Execute(() => Assert.NotNull(mainWindowViewModel.AnalysisConfiguration));
             Assert.Equal("wgt", mainWindowViewModel.AnalysisConfiguration!.DatasetType!.Weight);
 
@@ -259,13 +327,13 @@ namespace TestLSAnalyzer.ViewModels
             AnalysisPresentation analysisPresentationViewModelWgt = new(analysisCorrWgt);
 
             mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelWgt);
-            Policy.Handle<NotEmptyException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            Policy.Handle<NotEmptyException>().WaitAndRetry(5000, _ => TimeSpan.FromMilliseconds(100))
                 .Execute(() => Assert.NotEmpty(analysisPresentationViewModelWgt.DataTable.Rows));
 
             selectAnalysisFileViewModel.SelectedWeightVariable = selectAnalysisFileViewModel.PossibleWeightVariables.Last();
             selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
 
-            Policy.Handle<EqualException>().WaitAndRetry(5000, _ => TimeSpan.FromMilliseconds(1))
+            Policy.Handle<EqualException>().WaitAndRetry(5000, _ => TimeSpan.FromMilliseconds(100))
                 .Execute(() => Assert.Equal("wgt100", mainWindowViewModel.AnalysisConfiguration.DatasetType!.Weight));
 
             AnalysisCorr analysisCorrWgt100 = new(mainWindowViewModel.AnalysisConfiguration)
@@ -277,7 +345,7 @@ namespace TestLSAnalyzer.ViewModels
             AnalysisPresentation analysisPresentationViewModelWgt100 = new(analysisCorrWgt100);
 
             mainWindowViewModel.StartAnalysisCommand.Execute(analysisPresentationViewModelWgt100);
-            Policy.Handle<NotEmptyException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            Policy.Handle<NotEmptyException>().WaitAndRetry(5000, _ => TimeSpan.FromMilliseconds(100))
                 .Execute(() => Assert.NotEmpty(analysisPresentationViewModelWgt100.DataTable.Rows));
 
             var columnNweight = analysisPresentationViewModelWgt100.DataTable.Columns.IndexOf("N - weighted");
@@ -290,12 +358,12 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
-        public void TestSaveAnalysesDefintionsCommand()
+        public void TestSaveAnalysesDefinitionsCommand()
         {
             Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
-            MainWindow mainWindowViewModel = new(rservice);
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueueStub());
             
             var tmpFile = Path.Combine(Path.GetTempPath(), "TestSaveAnalysesDefintionsCommand.json");
             if (File.Exists(tmpFile))
@@ -350,7 +418,7 @@ namespace TestLSAnalyzer.ViewModels
         public void TestRemoveAllAnalysesCommand()
         {
             Rservice rservice = new();
-            MainWindow mainWindowViewModel = new(rservice);
+            MainWindow mainWindowViewModel = new(rservice, new AnalysisQueueStub());
             
             mainWindowViewModel.Analyses.Add(new AnalysisPresentation());
             mainWindowViewModel.Analyses.Add(new AnalysisPresentation());

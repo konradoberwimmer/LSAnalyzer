@@ -310,6 +310,11 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
+        public void SendUserInterrupt()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Dispose()
         {
             throw new NotImplementedException();
