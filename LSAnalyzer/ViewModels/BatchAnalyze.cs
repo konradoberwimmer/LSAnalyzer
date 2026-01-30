@@ -5,22 +5,62 @@ using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace LSAnalyzer.ViewModels
 {
     public class BatchAnalyze : INotifyPropertyChanged
     {
-        private Services.BatchAnalyze _batchAnalyzeService;
+        private readonly Services.BatchAnalyze _batchAnalyzeService;
+        
+        private readonly Configuration _configuration;
+        
+        private ObservableCollection<string> _recentBatchAnalyzeFiles = [];
+        public ObservableCollection<string> RecentBatchAnalyzeFiles
+        {
+            get => _recentBatchAnalyzeFiles;
+            set
+            {
+                _recentBatchAnalyzeFiles = value;
+                NotifyPropertyChanged(nameof(RecentBatchAnalyzeFiles));
+            }
+        }
+
+        private string? _selectedRecentBatchAnalyzeFile;
+        public string? SelectedRecentBatchAnalyzeFile
+        {
+            get => _selectedRecentBatchAnalyzeFile;
+            set
+            {
+                _selectedRecentBatchAnalyzeFile = value;
+                NotifyPropertyChanged(nameof(SelectedRecentBatchAnalyzeFile));
+
+                if (value == null) return;
+                
+                if (!File.Exists(value))
+                {
+                    _selectedRecentBatchAnalyzeFile = null;
+                    _configuration.RemoveRecentBatchAnalyzeFile(value);
+                    RecentBatchAnalyzeFiles = new ObservableCollection<string>(_configuration.GetStoredRecentBatchAnalyzeFiles());
+                    
+                    WeakReferenceMessenger.Default.Send(new RecentFileInvalidMessage(value));
+
+                    NotifyPropertyChanged();
+                    
+                    return;
+                }
+
+                FileName = value;
+            }
+        }
 
         private string? _fileName;
         public string? FileName
@@ -117,10 +157,13 @@ namespace LSAnalyzer.ViewModels
             UseCurrentFile = false;
         }
 
-        public BatchAnalyze(Services.BatchAnalyze batchAnalyzeService)
+        public BatchAnalyze(Services.BatchAnalyze batchAnalyzeService, Configuration configuration)
         {
             _batchAnalyzeService = batchAnalyzeService;
+            _configuration = configuration;
 
+            RecentBatchAnalyzeFiles = new ObservableCollection<string>(_configuration.GetStoredRecentBatchAnalyzeFiles());
+            
             WeakReferenceMessenger.Default.Register<BatchAnalyzeMessage>(this, (r, m) =>
             {
                 if (AnalysesTable != null)
@@ -214,6 +257,10 @@ namespace LSAnalyzer.ViewModels
                 return;
             }
 
+            _configuration.StoreRecentBatchAnalyzeFile(FileName);
+            SelectedRecentBatchAnalyzeFile = null;
+            RecentBatchAnalyzeFiles = new ObservableCollection<string>(_configuration.GetStoredRecentBatchAnalyzeFiles());
+            
             _analysesDictionary = new();
             for (int i = 0; i < analyses.Length; i++)
             {
