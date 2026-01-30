@@ -75,8 +75,10 @@ public class TestAnalysisQueue
                 analysisPresentationViewModelMeanDiff.Analysis.Result.Count > 0 &&  
                 analysisPresentationViewModelCorr.Analysis.Result.Count > 0)
             );
+
+        Policy.Handle<EqualException>().WaitAndRetry(200, _ => TimeSpan.FromMilliseconds(10))
+            .Execute(() => Assert.Equal(6, countAnalysisQueueCountChangedMessages));
         
-        Assert.Equal(6, countAnalysisQueueCountChangedMessages);
         Assert.Equal(0, analysisQueue.Count);
     }
 
