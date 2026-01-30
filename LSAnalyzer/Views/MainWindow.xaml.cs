@@ -10,7 +10,6 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 
 namespace LSAnalyzer.Views
 {
@@ -31,7 +30,7 @@ namespace LSAnalyzer.Views
 
             Closed += WindowClosed;
 
-            WeakReferenceMessenger.Default.Register<ViewModels.MainWindow.FailureWithAnalysisCalculationMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<AnalysisQueue.FailureWithAnalysisCalculationMessage>(this, (r, m) =>
             {
                 if (DataContext is not ViewModels.MainWindow mainWindowViewModel || mainWindowViewModel.Analyses.All(presentation => presentation.Analysis != m.Value)) return;
                 

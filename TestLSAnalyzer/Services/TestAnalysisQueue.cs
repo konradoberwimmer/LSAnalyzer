@@ -1,4 +1,5 @@
 using System.Reflection;
+using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
@@ -57,6 +58,12 @@ public class TestAnalysisQueue
         AnalysisPresentation analysisPresentationViewModelCorr = new(analysisCorr);
 
         AnalysisQueue analysisQueue = new(rservice);
+
+        var countAnalysisQueueCountChangedMessages = 0;
+        WeakReferenceMessenger.Default.Register<AnalysisQueue.AnalysisQueueCountChangedMessage>(this, (_, _) =>
+        {
+            countAnalysisQueueCountChangedMessages++;
+        });
         
         analysisQueue.Add(analysisPresentationViewModelUnivar);
         analysisQueue.Add(analysisPresentationViewModelMeanDiff);
@@ -69,6 +76,7 @@ public class TestAnalysisQueue
                 analysisPresentationViewModelCorr.Analysis.Result.Count > 0)
             );
         
+        Assert.Equal(6, countAnalysisQueueCountChangedMessages);
         Assert.Equal(0, analysisQueue.Count);
     }
 
@@ -124,12 +132,20 @@ public class TestAnalysisQueue
 
         AnalysisPresentation analysisPresentation = new(new AnalysisCorr(new AnalysisConfiguration()), new MainWindow());
         
+        var countAnalysisQueueCountChangedMessages = 0;
+        WeakReferenceMessenger.Default.Register<AnalysisQueue.AnalysisQueueCountChangedMessage>(this, (_, _) =>
+        {
+            countAnalysisQueueCountChangedMessages++;
+        });
+        
         analysisQueue.Add(analysisPresentation);
         
         Policy.Handle<TrueException>().WaitAndRetry(2000, _ => TimeSpan.FromMilliseconds(10))
             .Execute(() => Assert.Equal(0, analysisQueue.Count));
         
         rservice.Verify(rs => rs.CalculateCorr(It.IsAny<AnalysisCorr>()), Times.Never);
+        
+        Assert.Equal(2, countAnalysisQueueCountChangedMessages);
     }
     
     public static string AssemblyDirectory

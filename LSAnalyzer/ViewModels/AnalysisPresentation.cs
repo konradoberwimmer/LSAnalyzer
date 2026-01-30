@@ -140,10 +140,6 @@ public partial class AnalysisPresentation : ObservableObject
     
     [ObservableProperty]
     private bool _isBusy = false;
-    partial void OnIsBusyChanged(bool value)
-    {
-        _mainWindowViewModel?.NotifyIsBusy();
-    }
 
     [ExcludeFromCodeCoverage]
     public AnalysisPresentation()

@@ -43,12 +43,7 @@ public partial class MainWindow : ObservableObject
 
     public bool HasNecessaryPackages => _rservice.NecessaryPackagesConfirmed;
 
-    public bool IsBusy => Analyses.Any(analysis => analysis.IsBusy) || _analysisQueue.Count > 0;
-
-    public void NotifyIsBusy()
-    {
-        OnPropertyChanged(nameof(IsBusy));
-    }
+    public bool RIsBusy => _analysisQueue.Count > 0;
 
     public Dictionary<Type, Analysis> RecentAnalyses { get; } = new();
 
@@ -165,16 +160,8 @@ public partial class MainWindow : ObservableObject
 
             StartAnalysisCommand.Execute(analysisPresentation);
         });
-
-        WeakReferenceMessenger.Default.Register<FailureWithAnalysisCalculationMessage>(this, (_, m) =>
-        {
-            foreach (var analysisPresentation in Analyses.Where(presentation => presentation.Analysis == m.Value))
-            {
-                analysisPresentation.IsBusy = false;
-            }
-            
-            NotifyIsBusy();
-        });
+        
+        WeakReferenceMessenger.Default.Register<AnalysisQueue.AnalysisQueueCountChangedMessage>(this, (_,_) => OnPropertyChanged(nameof(RIsBusy)));
         
         WeakReferenceMessenger.Default.Register<BatchAnalyzeChangedStoredRawDataFileMessage>(this, (_, _) =>
         {
@@ -243,6 +230,4 @@ public partial class MainWindow : ObservableObject
     {
         Analyses.Clear();
     }
-    
-    internal class FailureWithAnalysisCalculationMessage(Analysis analysis) : ValueChangedMessage<Analysis>(analysis);
 }

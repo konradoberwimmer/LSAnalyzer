@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using LSAnalyzer.Models;
 using LSAnalyzer.ViewModels;
 
@@ -12,7 +13,7 @@ public class AnalysisQueue : IAnalysisQueue
 {
     private readonly IRservice _rservice;
     
-    private Queue<AnalysisPresentation> _analysisQueue = new();
+    private readonly Queue<AnalysisPresentation> _analysisQueue = new();
 
     public AnalysisQueue(IRservice rservice)
     {
@@ -22,6 +23,7 @@ public class AnalysisQueue : IAnalysisQueue
     public void Add(AnalysisPresentation analysisPresentation)
     {
         _analysisQueue.Enqueue(analysisPresentation);
+        WeakReferenceMessenger.Default.Send<AnalysisQueueCountChangedMessage>();
 
         if (_analysisQueue.Count == 1)
         {
@@ -51,6 +53,8 @@ public class AnalysisQueue : IAnalysisQueue
         analysisWorker.RunWorkerCompleted += (_, _) =>
         {
             _analysisQueue.Dequeue();
+            WeakReferenceMessenger.Default.Send<AnalysisQueueCountChangedMessage>();
+            
             StartNextAnalysis();
         }; 
         analysisWorker.RunWorkerAsync(analysisPresentation);
@@ -58,15 +62,9 @@ public class AnalysisQueue : IAnalysisQueue
 
     private void AnalysisWorker_DoWork (object? sender, DoWorkEventArgs e)
     {
-        if (e.Argument is not AnalysisPresentation analysisPresentation)
+        if (e.Argument is not AnalysisPresentation analysisPresentation || !(analysisPresentation.MainWindowViewModel?.Analyses.Contains(analysisPresentation) ?? true))
         {
             e.Cancel = true;
-            return;
-        }
-
-        if (!(analysisPresentation.MainWindowViewModel?.Analyses.Contains(analysisPresentation) ?? true))
-        {
-            e.Result = null;
             return;
         }
 
@@ -86,14 +84,27 @@ public class AnalysisQueue : IAnalysisQueue
 
         if (result == null)
         {
-            WeakReferenceMessenger.Default.Send(new MainWindow.FailureWithAnalysisCalculationMessage(analysisPresentation.Analysis));
+            WeakReferenceMessenger.Default.Send(new FailureWithAnalysisCalculationMessage(analysisPresentation.Analysis));
+            analysisPresentation.IsBusy = false;
+            
             e.Result = null;
             return;
         }
         
         if (analysisPresentation.Analysis is AnalysisFreq { CalculateBivariate: true } analysisFreqWithBivariate)
         {
-            analysisFreqWithBivariate.BivariateResult = _rservice.CalculateBivariate(analysisFreqWithBivariate);
+            var bivariateResult = _rservice.CalculateBivariate(analysisFreqWithBivariate);
+            
+            if (bivariateResult == null)
+            {
+                WeakReferenceMessenger.Default.Send(new FailureWithAnalysisCalculationMessage(analysisPresentation.Analysis));
+                analysisPresentation.IsBusy = false;
+            
+                e.Result = null;
+                return;
+            }
+
+            analysisFreqWithBivariate.BivariateResult = bivariateResult;
         }
 
         var variablesToConsiderForValueLabels = new List<Variable>(analysisPresentation.Analysis.GroupBy);
@@ -117,4 +128,8 @@ public class AnalysisQueue : IAnalysisQueue
 
         e.Result = result;
     }
+
+    public class AnalysisQueueCountChangedMessage;
+    
+    internal class FailureWithAnalysisCalculationMessage(Analysis analysis) : ValueChangedMessage<Analysis>(analysis);
 }

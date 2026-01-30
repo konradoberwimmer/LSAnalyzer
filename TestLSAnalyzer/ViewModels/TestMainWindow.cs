@@ -61,7 +61,7 @@ namespace TestLSAnalyzer.ViewModels
         }
 
         [Fact]
-        public void TestHandleFailureWithAnalysisCalculationMessage()
+        public void TestHandleAnalysisQueueCountChangedMessage()
         {
             AnalysisCorr analysisCorr = new(new AnalysisConfiguration());
             
@@ -79,12 +79,11 @@ namespace TestLSAnalyzer.ViewModels
             var sentNotifyIsBusyChanged = false;
             mainWindowViewModel.PropertyChanged += (_, args) =>
             {
-                if (args.PropertyName == "IsBusy") sentNotifyIsBusyChanged = true;
+                if (args.PropertyName == "RIsBusy") sentNotifyIsBusyChanged = true;
             };
 
-            WeakReferenceMessenger.Default.Send(new MainWindow.FailureWithAnalysisCalculationMessage(analysisCorr));
-            
-            Assert.False(mainWindowViewModel.Analyses.First().IsBusy);
+            WeakReferenceMessenger.Default.Send(new AnalysisQueue.AnalysisQueueCountChangedMessage());
+
             Assert.True(sentNotifyIsBusyChanged);
         }
         
@@ -236,7 +235,7 @@ namespace TestLSAnalyzer.ViewModels
             MainWindow mainWindowViewModel = new(rservice, new AnalysisQueue(rservice));
 
             bool messageSent = false;
-            WeakReferenceMessenger.Default.Register<MainWindow.FailureWithAnalysisCalculationMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<AnalysisQueue.FailureWithAnalysisCalculationMessage>(this, (r, m) =>
             {
                 messageSent = true;
             });
