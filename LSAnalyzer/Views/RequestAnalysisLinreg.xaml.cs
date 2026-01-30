@@ -33,5 +33,21 @@ namespace LSAnalyzer.Views
         {
             return Type.GetType("LSAnalyzer.Models.AnalysisLinreg")!;
         }
+
+        private void ListBoxVariablesGroupBy_OnDrop(object sender, DragEventArgs e)
+        {
+            if (DataContext is RequestAnalysis { RegressionSequenceIsAllIn: false })
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void ListBoxVariablesDependent_OnDrop(object sender, DragEventArgs e)
+        {
+            if (DataContext is RequestAnalysis { DependentVariables.Count: > 0 })
+            {
+                e.Handled = true;
+            }
+        }
     }
 }

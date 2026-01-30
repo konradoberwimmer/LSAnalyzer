@@ -19,9 +19,8 @@
         <converter:AtLeast x:Key="AtLeastConverter"/>
         <converter:BoolToAnalysisMode x:Key="BoolToAnalysisModeConverter"/>
         <converter:BooleanAnd x:Key="BooleanAndConverter"/>
-        <converter:EmptyVariableCollection x:Key="EmptyVariableCollectionConverter"/>
+        <converter:IsZero x:Key="IsZeroConverter"/>
         <converter:EnumToBoolean x:Key="EnumToBooleanConverter"/>
-        <converter:InverseBool x:Key="InverseBoolConverter"/>
         <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <CollectionViewSource x:Key="AvailableVariablesCollectionView" Source="{Binding AvailableVariables}" Filter="AvailableVariablesCollectionView_FilterSystemVariables"/>
@@ -67,8 +66,8 @@
             <CheckBox Grid.Column="0" Content="With intercept" IsChecked="{Binding WithIntercept}"/>
             <StackPanel Grid.Column="1" Orientation="Vertical" Margin="15,0,0,0">
                 <RadioButton x:Name="radioButtonSequenceAllIn" Content="Use all predictors at once" GroupName="Sequence" IsChecked="{Binding RegressionSequence, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=AllIn}"/>
-                <RadioButton x:Name="radioButtonSequenceForward" Content="Forward iteration" GroupName="Sequence" IsChecked="{Binding RegressionSequence, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Forward}" IsEnabled="{Binding GroupByVariables, Converter={StaticResource EmptyVariableCollectionConverter}}"/>
-                <RadioButton x:Name="radioButtonSequenceBackward" Content="Backward iteration" GroupName="Sequence" IsChecked="{Binding RegressionSequence, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Backward}" IsEnabled="{Binding GroupByVariables, Converter={StaticResource EmptyVariableCollectionConverter}}"/>
+                <RadioButton x:Name="radioButtonSequenceForward" Content="Forward iteration" GroupName="Sequence" IsChecked="{Binding RegressionSequence, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Forward}" IsEnabled="{Binding GroupByVariables.Count, Converter={StaticResource IsZeroConverter}}"/>
+                <RadioButton x:Name="radioButtonSequenceBackward" Content="Backward iteration" GroupName="Sequence" IsChecked="{Binding RegressionSequence, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Backward}" IsEnabled="{Binding GroupByVariables.Count, Converter={StaticResource IsZeroConverter}}"/>
             </StackPanel>
         </Grid>
         <Grid Grid.Row="2">
@@ -98,7 +97,7 @@
                     </Grid.ColumnDefinitions>
                     <Button x:Name="buttonMoveToAndFromDependentVariable" Grid.Column="0" Content="&#x21D4;" Margin="10,-5,10,0" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Command="{Binding MoveToAndFromDependentVariablesCommand}" Click="ButtonMoveToAndFromDependentVariable_Click"/>
                     <Border x:Name="HeightHelperPanelVariablesDependent" Grid.Column="1" Margin="0,0,10,0" Height="25">
-                        <ListBox x:Name="listBoxVariablesDependent" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDependent}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesDependent}" ItemsSource="{Binding DependentVariables}" DisplayMemberPath="Info" SelectionMode="Single" MouseDoubleClick="ListBoxVariables_MouseDoubleClick" PreviewMouseRightButtonDown="ListBoxVariables_OnPreviewMouseRightButtonDown"/>
+                        <ListBox x:Name="listBoxVariablesDependent" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDependent}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesDependent}" ItemsSource="{Binding DependentVariables}" DisplayMemberPath="Info" SelectionMode="Single" MouseDoubleClick="ListBoxVariables_MouseDoubleClick" PreviewMouseRightButtonDown="ListBoxVariables_OnPreviewMouseRightButtonDown" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True" Drop="ListBoxVariablesDependent_OnDrop"/>
                     </Border>
                 </Grid>
                 <Label Grid.Row="1" Content="Predictors:" Margin="10,0,10,0"/>
@@ -124,7 +123,7 @@
                     <Button Grid.Column="0" Content="&#x21D4;" Margin="10,-5,10,22" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Foreground="Gray"/>
                     <Button x:Name="buttonMoveToAndFromGroupByVariables" Grid.Column="0" Content="&#x21D4;" Margin="10,-5,10,22" VerticalAlignment="Center" FontSize="26" FontWeight="Bold" Background="Transparent" BorderBrush="Transparent" Command="{Binding MoveToAndFromGroupByVariablesCommand}" Click="ButtonMoveToAndFromGroupByVariables_Click" Visibility="{Binding RegressionSequenceIsAllIn, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     <Border x:Name="HeightHelperPanelVariablesGroupBy" Grid.Column="1" Margin="0,0,10,40">
-                        <ListBox x:Name="listBoxVariablesGroupBy" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesGroupBy}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesGroupBy}" ItemsSource="{Binding GroupByVariables}" DisplayMemberPath="Info" SelectionMode="Extended" MouseDoubleClick="ListBoxVariables_MouseDoubleClick" ScrollViewer.CanContentScroll="False" PreviewMouseRightButtonDown="ListBoxVariables_OnPreviewMouseRightButtonDown" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True"/>
+                        <ListBox x:Name="listBoxVariablesGroupBy" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesGroupBy}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesGroupBy}" ItemsSource="{Binding GroupByVariables}" DisplayMemberPath="Info" SelectionMode="Extended" MouseDoubleClick="ListBoxVariables_MouseDoubleClick" ScrollViewer.CanContentScroll="False" PreviewMouseRightButtonDown="ListBoxVariables_OnPreviewMouseRightButtonDown" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True" Drop="ListBoxVariablesGroupBy_OnDrop"/>
                     </Border>
                     <StackPanel Orientation="Vertical" Grid.Column="1" VerticalAlignment="Bottom">
                         <CheckBox x:Name="checkBoxCalculateOverall" Margin="0,0,0,5" VerticalAlignment="Bottom" Content="Calculate overall coefficients" IsChecked="{Binding CalculateOverall}" IsEnabled="{Binding GroupByVariables.Count}"/>
