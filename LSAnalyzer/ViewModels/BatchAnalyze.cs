@@ -96,14 +96,11 @@ public partial class BatchAnalyze : ObservableObject
         
         WeakReferenceMessenger.Default.Register<BatchAnalyzeService.BatchAnalyzeMessage>(this, (_, m) =>
         {
-            if (AnalysesTable != null)
+            var row = AnalysesTable?.Select("Number = " + m.Id).FirstOrDefault();
+            if (row != null)
             {
-                var row = AnalysesTable.Select("Number = " + m.Id).FirstOrDefault();
-                if (row != null)
-                {
-                    row["Success"] = m.Success;
-                    row["Message"] = m.Message;
-                }
+                row["Success"] = m.Success;
+                row["Message"] = m.Message;
             }
 
             if ((m.Success || m.Message != "Working ...") && m.Id == _analysesDictionary?.Keys.Last())
@@ -125,7 +122,7 @@ public partial class BatchAnalyze : ObservableObject
     }
 
     [RelayCommand]
-    private void RunBatch(object? dummy)
+    private void LoadBatchFile()
     {
         if (FileName == null || !File.Exists(FileName))
         {
@@ -155,13 +152,13 @@ public partial class BatchAnalyze : ObservableObject
                     }).ToArray();
             } catch (Exception)
             {
-                WeakReferenceMessenger.Default.Send(new BatchAnalyzeFailureMessage() { Message = "File is not valid JSON or did not contain analysis requests!" });
+                WeakReferenceMessenger.Default.Send(new BatchAnalyzeFailureMessage { Message = "File is not valid JSON or did not contain analysis requests!" });
                 return;
             }
         }
         catch (Exception)
         {
-            WeakReferenceMessenger.Default.Send(new BatchAnalyzeFailureMessage() { Message = "File is not valid JSON or did not contain analysis requests!" });
+            WeakReferenceMessenger.Default.Send(new BatchAnalyzeFailureMessage { Message = "File is not valid JSON or did not contain analysis requests!" });
             return;
         }
 
@@ -188,6 +185,12 @@ public partial class BatchAnalyze : ObservableObject
         }
 
         AnalysesTable = analysesTable;
+    }
+
+    [RelayCommand]
+    private void RunBatch()
+    {
+        if (_analysesDictionary == null || _analysesDictionary.Count == 0) return;
 
         IsBusy = true;
 

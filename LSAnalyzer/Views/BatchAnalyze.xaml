@@ -14,6 +14,7 @@
     <Window.Resources>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
         <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
+        <converter:NullToBool x:Key="NullToBoolConverter"/>
         <Style x:Key="wordWrapStyle" TargetType="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
@@ -57,12 +58,13 @@
             <TextBox x:Name="textBoxFileName" HorizontalAlignment="Stretch" TextWrapping="NoWrap" Text="{Binding FileName, Converter={StaticResource LeftSideFileNameConverter}}" IsEnabled="False" Height="22" MaxWidth="{Binding ElementName=borderTextBoxFileName, Path=ActualWidth}"/>
         </Border>
         <Button Grid.Row="1" x:Name="buttonSelectFile" Grid.Column="2" Content="Select ..." HorizontalAlignment="Left" Margin="10,10,0,0" Width="80" Height="22" Click="ButtonSelectFile_Click"/>
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="Target:" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top"/>
-        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Vertical" Margin="10,10,0,0">
+        <Button Grid.Row="2" Grid.Column="2" Content="Load" HorizontalAlignment="Left" Margin="10,10,0,0" Width="80" Height="22" Command="{Binding LoadBatchFileCommand}" IsEnabled="{Binding ElementName=textBoxFileName, Path=Text.Length}"/>
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Target:" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top"/>
+        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Vertical" Margin="10,10,0,0">
             <RadioButton x:Name="radioButtonTargetReload" Content="Reload files specified in file" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="Target" IsChecked="{Binding UseCurrentFile, Converter={StaticResource InverseBoolConverter}}"/>
             <RadioButton x:Name="radioButtonTargetCurrent" Content="Current file for analyses" HorizontalAlignment="Left" Height="15" GroupName="Target" IsChecked="{Binding UseCurrentFile}" IsEnabled="{Binding HasCurrentFile}"/>
         </StackPanel>
-        <Button Grid.Row="3" Grid.Column="2" Content="Analyze" HorizontalAlignment="Left" Margin="10,10,0,0" Height="22" Width="80" Command="{Binding RunBatchCommand}" IsEnabled="{Binding ElementName=textBoxFileName, Path=Text.Length}"/>
+        <Button Grid.Row="3" Grid.Column="2" Content="Analyze" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Height="22" Width="80" Command="{Binding RunBatchCommand}" IsEnabled="{Binding AnalysesTable, Converter={StaticResource NullToBoolConverter}}"/>
         <Border x:Name="dataGridWidthHelper" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,10,0,0" >
             <DataGrid x:Name="dataGridBatchResults" Width="{Binding Path=ActualWidth, ElementName=dataGridWidthHelper}" ItemsSource="{Binding AnalysesTable}" AutoGenerateColumns="True" IsReadOnly="True" AutoGeneratingColumn="DataGridBatchResults_AutoGeneratingColumn">
 
