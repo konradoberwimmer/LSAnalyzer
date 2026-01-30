@@ -23,7 +23,7 @@ namespace TestLSAnalyzer.ViewModels
         [Fact]
         public void TestSelectedRecentBatchAnalyzeFile()
         {
-            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(new RserviceStub(), Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+            LSAnalyzer.Services.BatchAnalyzeService batchAnalyzeService = new(new RserviceStub(), Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
             LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>());
 
             batchAnalyzeViewModel.FileName = @"C:\anywhere.json";
@@ -53,11 +53,11 @@ namespace TestLSAnalyzer.ViewModels
             Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
-            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+            LSAnalyzer.Services.BatchAnalyzeService batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
             LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>());
 
             bool messageSent = false;
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeFailureMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<BatchAnalyze.BatchAnalyzeFailureMessage>(this, (r, m) =>
             {
                 messageSent = true; 
             });
@@ -105,7 +105,7 @@ namespace TestLSAnalyzer.ViewModels
 
             var configuration = new Mock<Configuration>();
             
-            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+            LSAnalyzer.Services.BatchAnalyzeService batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
             LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, configuration.Object);
 
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json");
@@ -151,7 +151,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
-            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+            LSAnalyzer.Services.BatchAnalyzeService batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
             LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>());
 
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat_v1_2.json");
@@ -195,7 +195,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
-            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+            LSAnalyzer.Services.BatchAnalyzeService batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
             LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>());
 
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json");
@@ -203,8 +203,8 @@ namespace TestLSAnalyzer.ViewModels
             batchAnalyzeViewModel.CurrentConfiguration =analysisConfiguration;
             
             var lastSuccessMessageSent = false;
-            List<BatchAnalyzeMessage> batchAnalyzeMessages = [];
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeMessage>(this, (_, m) =>
+            List<BatchAnalyzeService.BatchAnalyzeMessage> batchAnalyzeMessages = [];
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeService.BatchAnalyzeMessage>(this, (_, m) =>
             {
                 batchAnalyzeMessages.Add(m);
                 if (m.Id == 4 && m.Success) lastSuccessMessageSent = true;
@@ -218,7 +218,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.Equal(4, batchAnalyzeMessages.Count(m => m.Success));
 
             int analysisReadyMessagesSent = 0;
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<BatchAnalyze.BatchAnalyzeAnalysisReadyMessage>(this, (r, m) =>
             {
                 analysisReadyMessagesSent++;
             });

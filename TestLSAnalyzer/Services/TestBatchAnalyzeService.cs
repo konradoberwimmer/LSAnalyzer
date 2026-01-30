@@ -1,11 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using LSAnalyzer.Models.DataProviderConfiguration;
 using LSAnalyzer.Services.DataProvider;
 using LSAnalyzer.ViewModels;
@@ -13,12 +9,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Polly;
 using Xunit.Sdk;
-using BatchAnalyze = LSAnalyzer.Services.BatchAnalyze;
 
 namespace TestLSAnalyzer.Services
 {
     [Collection("Sequential")]
-    public class TestBatchAnalyze
+    public class TestBatchAnalyzeService
     {
         [Fact]
         public void TestRunBatchSendsMessage()
@@ -33,11 +28,11 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = true,
             };
 
-            BatchAnalyze batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+            BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
 
             int messageCounter = 0;
-            BatchAnalyzeMessage? lastMessage = null;
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeMessage>(this, (r, m) =>
+            BatchAnalyzeService.BatchAnalyzeMessage? lastMessage = null;
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeService.BatchAnalyzeMessage>(this, (r, m) =>
             {
                 messageCounter++;
                 lastMessage = m;
@@ -91,10 +86,10 @@ namespace TestLSAnalyzer.Services
                 ModeKeep = false,
             };
 
-            BatchAnalyze batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+            BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
 
-            List<BatchAnalyzeMessage> messages = new();
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeMessage>(this, (r, m) =>
+            List<BatchAnalyzeService.BatchAnalyzeMessage> messages = new();
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeService.BatchAnalyzeMessage>(this, (r, m) =>
             {
                 messages.Add(m);
             });
@@ -169,10 +164,10 @@ namespace TestLSAnalyzer.Services
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Rep5.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5));
 
-            BatchAnalyze batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+            BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
 
-            List<BatchAnalyzeMessage> messages = new();
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeMessage>(this, (r, m) =>
+            List<BatchAnalyzeService.BatchAnalyzeMessage> messages = new();
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeService.BatchAnalyzeMessage>(this, (r, m) =>
             {
                 messages.Add(m);
             });
@@ -243,10 +238,10 @@ namespace TestLSAnalyzer.Services
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Multicat.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Multicat));
 
-            BatchAnalyze batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+            BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
 
-            List<BatchAnalyzeMessage> messages = new();
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeMessage>(this, (r, m) =>
+            List<BatchAnalyzeService.BatchAnalyzeMessage> messages = new();
+            WeakReferenceMessenger.Default.Register<BatchAnalyzeService.BatchAnalyzeMessage>(this, (r, m) =>
             {
                 messages.Add(m);
             });
@@ -304,7 +299,7 @@ namespace TestLSAnalyzer.Services
             serviceCollection.AddTransient<IRservice>(_ => rservice);
             var serviceProvider = serviceCollection.BuildServiceProvider();
             
-            BatchAnalyze batchAnalyze = new(rservice, configuration.Object, serviceProvider);
+            BatchAnalyzeService batchAnalyze = new(rservice, configuration.Object, serviceProvider);
             
             Assert.False(batchAnalyze.RetrieveDataProvider(string.Empty).success);
             Assert.False(batchAnalyze.RetrieveDataProvider("""{"File":{"Filename":"myFile.txt","DOI":"myDoi"}}""").success);
@@ -339,7 +334,7 @@ namespace TestLSAnalyzer.Services
             serviceCollection.AddTransient<Rservice>(_ => rservice);
             var serviceProvider = serviceCollection.BuildServiceProvider();
             
-            BatchAnalyze batchAnalyze = new(rservice, configuration.Object, serviceProvider);
+            BatchAnalyzeService batchAnalyze = new(rservice, configuration.Object, serviceProvider);
             Dataverse dataverse = new(rservice);
             
             Assert.False(batchAnalyze.RetrieveFileInformation(dataverse, string.Empty).success);

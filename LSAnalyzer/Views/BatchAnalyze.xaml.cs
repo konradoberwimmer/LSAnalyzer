@@ -33,7 +33,7 @@ namespace LSAnalyzer.Views
             WeakReferenceMessenger.Default.Register<RecentFileInvalidMessage>(this, (_, m) => 
                 MessageBox.Show($"File '{ m.FileName }' is no longer available.", "Error", MessageBoxButton.OK, MessageBoxImage.Error));
             
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeFailureMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.BatchAnalyze.BatchAnalyzeFailureMessage>(this, (r, m) =>
             {
                 MessageBox.Show(m.Message, "Error running analysis requests", MessageBoxButton.OK, MessageBoxImage.Warning);
             });

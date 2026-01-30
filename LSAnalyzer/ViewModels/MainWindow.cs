@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using CommunityToolkit.Mvvm.Messaging.Messages;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using System;
@@ -163,17 +162,17 @@ public partial class MainWindow : ObservableObject
         
         WeakReferenceMessenger.Default.Register<AnalysisQueue.AnalysisQueueCountChangedMessage>(this, (_,_) => OnPropertyChanged(nameof(RIsBusy)));
         
-        WeakReferenceMessenger.Default.Register<BatchAnalyzeChangedStoredRawDataFileMessage>(this, (_, _) =>
+        WeakReferenceMessenger.Default.Register<BatchAnalyzeService.BatchAnalyzeChangedStoredRawDataFileMessage>(this, (_, _) =>
         {
             AnalysisConfiguration = null;
         });
 
-        WeakReferenceMessenger.Default.Register<BatchAnalyzeChangedSubsettingMessage>(this, (_, m) =>
+        WeakReferenceMessenger.Default.Register<BatchAnalyzeService.BatchAnalyzeChangedSubsettingMessage>(this, (_, m) =>
         {
             SubsettingExpression = string.IsNullOrEmpty(m.SubsettingExpression) ? null : m.SubsettingExpression;
         });
 
-        WeakReferenceMessenger.Default.Register<BatchAnalyzeAnalysisReadyMessage>(this, (_, m) =>
+        WeakReferenceMessenger.Default.Register<BatchAnalyze.BatchAnalyzeAnalysisReadyMessage>(this, (_, m) =>
         {
             AnalysisPresentation analysisPresentation = new(m.AnalysisWithViewSettings.Analysis, this);
             
