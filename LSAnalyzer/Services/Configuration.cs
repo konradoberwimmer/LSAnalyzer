@@ -277,7 +277,7 @@ public class Configuration
         } catch { }
     }
 
-    public void TrimRecentSubsettingExpressions(int numberOfRecentSubsettingExpressions)
+    public virtual void TrimRecentSubsettingExpressions(int numberOfRecentSubsettingExpressions)
     {
         if (numberOfRecentSubsettingExpressions < 1)
         {
@@ -430,7 +430,7 @@ public class Configuration
         } catch { }
     }
 
-    public void TrimRecentFiles(int numberOfRecentFiles)
+    public virtual void TrimRecentFiles(int numberOfRecentFiles)
     {
         if (numberOfRecentFiles < 1)
         {
@@ -461,6 +461,86 @@ public class Configuration
         } catch { }
     }
 
+    public List<string> GetStoredRecentBatchAnalyzeFiles()
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(Properties.Settings.Default.recentBatchAnalyzeFiles) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    public virtual void StoreRecentBatchAnalyzeFile(string fileName)
+    {
+        if (Properties.Settings.Default.numberRecentFiles < 1) return;
+        
+        var recentBatchAnalyzeFiles = GetStoredRecentBatchAnalyzeFiles();
+
+        recentBatchAnalyzeFiles = recentBatchAnalyzeFiles.Where(file => file != fileName).ToList();
+        recentBatchAnalyzeFiles = recentBatchAnalyzeFiles.Prepend(fileName).ToList();
+
+        try
+        {
+            Properties.Settings.Default.recentBatchAnalyzeFiles =
+                JsonSerializer.Serialize(recentBatchAnalyzeFiles);
+            Properties.Settings.Default.Save();
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    public void RemoveRecentBatchAnalyzeFile(string fileName)
+    {
+        var recentBatchAnalyzeFiles = GetStoredRecentBatchAnalyzeFiles();
+        
+        recentBatchAnalyzeFiles = recentBatchAnalyzeFiles.Where(file => file != fileName).ToList();
+
+        try
+        {
+            Properties.Settings.Default.recentBatchAnalyzeFiles =
+                JsonSerializer.Serialize(recentBatchAnalyzeFiles);
+            Properties.Settings.Default.Save();
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    public virtual void TrimRecentBatchAnalyzeFiles(int numberOfRecentFiles)
+    {
+        if (numberOfRecentFiles < 1)
+        {
+            Properties.Settings.Default.recentBatchAnalyzeFiles =
+                JsonSerializer.Serialize(new List<string>());
+            Properties.Settings.Default.Save();
+            return;
+        }
+        
+        var recentBatchAnalyzeFiles = GetStoredRecentBatchAnalyzeFiles();
+
+        while (recentBatchAnalyzeFiles.Count > numberOfRecentFiles)
+        {
+            recentBatchAnalyzeFiles.RemoveAt(recentBatchAnalyzeFiles.Count - 1);
+        }
+        
+        try
+        {
+            Properties.Settings.Default.recentBatchAnalyzeFiles =
+                JsonSerializer.Serialize(recentBatchAnalyzeFiles);
+            Properties.Settings.Default.Save();
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+    
     public class RecentFileForAnalysis
     {
         protected static LeftSideFileName _leftSideFileNameConverter = new();

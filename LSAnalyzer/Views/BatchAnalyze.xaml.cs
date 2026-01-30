@@ -30,6 +30,9 @@ namespace LSAnalyzer.Views
 
             DataContext = batchAnalyzeViewModel;
 
+            WeakReferenceMessenger.Default.Register<RecentFileInvalidMessage>(this, (_, m) => 
+                MessageBox.Show($"File '{ m.FileName }' is no longer available.", "Error", MessageBoxButton.OK, MessageBoxImage.Error));
+            
             WeakReferenceMessenger.Default.Register<BatchAnalyzeFailureMessage>(this, (r, m) =>
             {
                 MessageBox.Show(m.Message, "Error running analysis requests", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -59,7 +62,10 @@ namespace LSAnalyzer.Views
             if (batchAnalyzeViewModel?.IsBusy == true)
             {
                 e.Cancel = true;
+                return;
             }
+            
+            WeakReferenceMessenger.Default.UnregisterAll(this);
         }
 
         private void DataGridBatchResults_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)

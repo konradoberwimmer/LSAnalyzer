@@ -153,5 +153,17 @@ namespace LSAnalyzer.Properties {
                 this["RLibrary"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string recentBatchAnalyzeFiles {
+            get {
+                return ((string)(this["recentBatchAnalyzeFiles"]));
+            }
+            set {
+                this["recentBatchAnalyzeFiles"] = value;
+            }
+        }
     }
 }

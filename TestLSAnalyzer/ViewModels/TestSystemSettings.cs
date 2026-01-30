@@ -83,6 +83,20 @@ public class TestSystemSettings
         systemSettingsViewModel.NumberRecentSubsettingExpressions = oldValue;
         systemSettingsViewModel.SaveSettingsCommand.Execute(null);
     }
+    
+    [Fact]
+    public void TestSaveSettingsCommandInvokesConfiguration()
+    {
+        var configuration = new Mock<Configuration>();
+        
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub());
+
+        systemSettingsViewModel.SaveSettingsCommand.Execute(null);
+        
+        configuration.Verify(conf => conf.TrimRecentFiles(It.IsAny<int>()), Times.Once);
+        configuration.Verify(conf => conf.TrimRecentBatchAnalyzeFiles(It.IsAny<int>()), Times.Once);
+        configuration.Verify(conf => conf.TrimRecentSubsettingExpressions(It.IsAny<int>()), Times.Once);
+    }
 
     [Fact]
     public void TestSetAlternativeRLocation()

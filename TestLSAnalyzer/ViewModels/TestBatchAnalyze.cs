@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using LSAnalyzer.Services.Stubs;
 using Moq;
 using Polly;
 using Xunit.Sdk;
@@ -20,13 +21,40 @@ namespace TestLSAnalyzer.ViewModels
     public class TestBatchAnalyze
     {
         [Fact]
+        public void TestSelectedRecentBatchAnalyzeFile()
+        {
+            LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(new RserviceStub(), Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+            LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>());
+
+            batchAnalyzeViewModel.FileName = @"C:\anywhere.json";
+
+            batchAnalyzeViewModel.SelectedRecentBatchAnalyzeFile = null;
+            
+            Assert.Equal(@"C:\anywhere.json", batchAnalyzeViewModel.FileName);
+
+            var sentMessage = false;
+            WeakReferenceMessenger.Default.Register<RecentFileInvalidMessage>(this, (_,_) => sentMessage = true);
+
+            batchAnalyzeViewModel.SelectedRecentBatchAnalyzeFile = @"F:\surely_not_here.json";
+            
+            Assert.Equal(@"C:\anywhere.json", batchAnalyzeViewModel.FileName);
+            Assert.True(sentMessage);
+            
+            var tempFile = Path.GetTempFileName();
+            
+            batchAnalyzeViewModel.SelectedRecentBatchAnalyzeFile = tempFile;
+            
+            Assert.Equal(tempFile, batchAnalyzeViewModel.FileName);
+        }
+        
+        [Fact]
         public void TestRunBatchSendsFailureMessageOnInvalidJSON()
         {
             Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
-            LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService);
+            LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>());
 
             bool messageSent = false;
             WeakReferenceMessenger.Default.Register<BatchAnalyzeFailureMessage>(this, (r, m) =>
@@ -75,8 +103,10 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
+            var configuration = new Mock<Configuration>();
+            
             LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
-            LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService);
+            LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, configuration.Object);
 
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json");
             batchAnalyzeViewModel.UseCurrentFile = true;
@@ -86,6 +116,8 @@ namespace TestLSAnalyzer.ViewModels
             Policy.Handle<NotNullException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
                 .Execute(() => Assert.NotNull(batchAnalyzeViewModel.AnalysesTable));
             Assert.Equal(4, batchAnalyzeViewModel.AnalysesTable!.Rows.Count);
+            
+            configuration.Verify(conf => conf.StoreRecentBatchAnalyzeFile(It.IsAny<string>()), Times.Once);
             
             Policy.Handle<Exception>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
                 .Execute(() =>
@@ -120,7 +152,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
             LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
-            LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService);
+            LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>());
 
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat_v1_2.json");
             batchAnalyzeViewModel.UseCurrentFile = true;
@@ -164,7 +196,7 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
 
             LSAnalyzer.Services.BatchAnalyze batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
-            LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService);
+            LSAnalyzer.ViewModels.BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>());
 
             batchAnalyzeViewModel.FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json");
             batchAnalyzeViewModel.UseCurrentFile = true;

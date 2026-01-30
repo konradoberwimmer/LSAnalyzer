@@ -331,6 +331,48 @@ public class TestConfiguration
             ApiToken = "",
         }));
     }
+    
+    [Fact]
+    public void TestEverythingWithRecentBatchAnalyzeFiles()
+    {
+        Configuration configuration = new();
+        
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object);
+        systemSettings.NumberRecentFiles = 20;
+        systemSettings.SaveSettingsCommand.Execute(null);
+        
+        configuration.TrimRecentBatchAnalyzeFiles(0);
+        
+        Assert.Empty(configuration.GetStoredRecentBatchAnalyzeFiles());
+        
+        configuration.StoreRecentBatchAnalyzeFile(@"C:\somewhere\file.json");
+        
+        Assert.Single(configuration.GetStoredRecentBatchAnalyzeFiles());
+        
+        configuration.StoreRecentBatchAnalyzeFile(@"C:\somewhere\newest_file.json");
+        
+        Assert.Equal(2, configuration.GetStoredRecentBatchAnalyzeFiles().Count);
+        Assert.Equal(@"C:\somewhere\newest_file.json", configuration.GetStoredRecentBatchAnalyzeFiles().First());
+        Assert.Equal(@"C:\somewhere\file.json", configuration.GetStoredRecentBatchAnalyzeFiles().Last());
+        
+        configuration.StoreRecentBatchAnalyzeFile(@"C:\somewhere\not_existing_file.json");
+        
+        Assert.Equal(3, configuration.GetStoredRecentBatchAnalyzeFiles().Count);
+        
+        configuration.RemoveRecentBatchAnalyzeFile(@"C:\somewhere\not_existing_file.json");
+        
+        Assert.Equal(2, configuration.GetStoredRecentBatchAnalyzeFiles().Count);
+        Assert.Equal(@"C:\somewhere\newest_file.json", configuration.GetStoredRecentBatchAnalyzeFiles().First());
+        Assert.Equal(@"C:\somewhere\file.json", configuration.GetStoredRecentBatchAnalyzeFiles().Last());
+        
+        configuration.TrimRecentBatchAnalyzeFiles(2);
+        
+        Assert.Equal(2, configuration.GetStoredRecentBatchAnalyzeFiles().Count);
+        
+        configuration.TrimRecentBatchAnalyzeFiles(0);
+        
+        Assert.Empty(configuration.GetStoredRecentBatchAnalyzeFiles());
+    }
 
     class MockedConfiguration : Configuration
     {

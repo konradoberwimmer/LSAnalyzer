@@ -152,6 +152,7 @@ namespace LSAnalyzer.ViewModels
             
             AcceptChanges();
             _configuration.TrimRecentFiles(NumberRecentFiles);
+            _configuration.TrimRecentBatchAnalyzeFiles(NumberRecentFiles);
             _configuration.TrimRecentSubsettingExpressions(NumberRecentSubsettingExpressions);
             
             WeakReferenceMessenger.Default.Send<SavedSettingsMessage>();
