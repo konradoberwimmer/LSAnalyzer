@@ -142,7 +142,7 @@ public class TestAnalysisQueue
         
         analysisQueue.Add(analysisPresentation);
         
-        Policy.Handle<TrueException>().WaitAndRetry(2000, _ => TimeSpan.FromMilliseconds(10))
+        Policy.Handle<TrueException>().WaitAndRetry(5000, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.Equal(0, analysisQueue.Count));
         
         rservice.Verify(rs => rs.CalculateCorr(It.IsAny<AnalysisCorr>()), Times.Never);

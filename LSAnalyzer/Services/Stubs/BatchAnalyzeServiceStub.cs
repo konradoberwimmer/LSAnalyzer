@@ -6,7 +6,7 @@ namespace LSAnalyzer.Services.Stubs;
 
 public class BatchAnalyzeServiceStub : IBatchAnalyzeService
 {
-    public void RunBatch(Dictionary<int, AnalysisWithViewSettings> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration)
+    public void RunBatch(IEnumerable<BatchAnalyze.BatchEntry> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration)
     {
         throw new System.NotImplementedException();
     }

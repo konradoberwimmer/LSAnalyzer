@@ -4,9 +4,7 @@ using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -65,10 +63,8 @@ public partial class BatchAnalyze : ObservableObject
     [ObservableProperty]
     private AnalysisConfiguration? _currentConfiguration;
 
-    private Dictionary<int, AnalysisWithViewSettings>? _analysesDictionary = null;
-
     [ObservableProperty]
-    private DataTable? _analysesTable = null;
+    private ObservableCollection<BatchEntry> _analysesTable = [];
 
     [ObservableProperty]
     private bool _isBusy = false;
@@ -94,20 +90,14 @@ public partial class BatchAnalyze : ObservableObject
 
         RecentBatchAnalyzeFiles = new ObservableCollection<string>(_configuration.GetStoredRecentBatchAnalyzeFiles());
         
-        WeakReferenceMessenger.Default.Register<BatchAnalyzeService.BatchAnalyzeMessage>(this, (_, m) =>
+        WeakReferenceMessenger.Default.Register<BatchAnalyzeService.BatchAnalyzeProgression>(this, (_, _) =>
         {
-            var row = AnalysesTable?.Select("Number = " + m.Id).FirstOrDefault();
-            if (row != null)
-            {
-                row["Success"] = m.Success;
-                row["Message"] = m.Message;
-            }
+            OnPropertyChanged(nameof(AnalysesTable));
 
-            if ((m.Success || m.Message != "Working ...") && m.Id == _analysesDictionary?.Keys.Last())
-            {
-                IsBusy = false;
-                FinishedAllCalculations = true;
-            }
+            if (!AnalysesTable.All(entry => entry.Success is not null)) return;
+            
+            IsBusy = false;
+            FinishedAllCalculations = true;
         });
         
         WeakReferenceMessenger.Default.Register<BatchAnalyzeService.BatchAnalyzeChangedStoredRawDataFileMessage>(this, (_, _) => HasCurrentFile = false);
@@ -115,8 +105,7 @@ public partial class BatchAnalyze : ObservableObject
 
     public void ClearAnalysisData()
     { 
-        _analysesDictionary = null;
-        AnalysesTable = null;
+        AnalysesTable = [];
         IsBusy = false;
         FinishedAllCalculations = false;
     }
@@ -129,7 +118,7 @@ public partial class BatchAnalyze : ObservableObject
             return;
         }
 
-        AnalysesTable = null;
+        AnalysesTable = [];
         FinishedAllCalculations = false;
 
         AnalysisWithViewSettings[] analyses;
@@ -166,55 +155,50 @@ public partial class BatchAnalyze : ObservableObject
         SelectedRecentBatchAnalyzeFile = null;
         RecentBatchAnalyzeFiles = new ObservableCollection<string>(_configuration.GetStoredRecentBatchAnalyzeFiles());
         
-        _analysesDictionary = new();
-        for (int i = 0; i < analyses.Length; i++)
+        for (var i = 0; i < analyses.Length; i++)
         {
-            _analysesDictionary.Add(i+1, analyses[i]);
+            AnalysesTable.Add(new BatchEntry
+            {
+                Id = i + 1,
+                Selected = true,
+                Analysis = analyses[i],
+                Message = string.Empty,
+            });
         }
-
-        DataTable analysesTable = new();
-        analysesTable.Columns.Add("Number", typeof(int));
-        analysesTable.Columns.Add("Info", typeof(string));
-        var successColumn = analysesTable.Columns.Add("Success", typeof(bool));
-        successColumn.AllowDBNull = true;
-        analysesTable.Columns.Add("Message", typeof(string));
-
-        foreach (var analysis in _analysesDictionary)
-        {
-            analysesTable.Rows.Add(new object?[] { analysis.Key, analysis.Value.Analysis.ShortInfo, DBNull.Value, string.Empty });
-        }
-
-        AnalysesTable = analysesTable;
     }
 
     [RelayCommand]
     private void RunBatch()
     {
-        if (_analysesDictionary == null || _analysesDictionary.Count == 0) return;
+        if (AnalysesTable.Count == 0) return;
 
         IsBusy = true;
 
-        _batchAnalyzeService.RunBatch(_analysesDictionary, UseCurrentFile, CurrentConfiguration);
+        _batchAnalyzeService.RunBatch(AnalysesTable, UseCurrentFile, CurrentConfiguration);
     }
 
     [RelayCommand]
     private void TransferResults(ICloseable? window)
     {
-        if (AnalysesTable == null || _analysesDictionary == null)
-        {
-            return;
-        }
-
-        foreach (var row in AnalysesTable.Rows)
-        {
-            var dataRow = row as DataRow;
-            if ((bool)dataRow!["Success"] && _analysesDictionary.ContainsKey((int)dataRow["Number"]))
-            {
-                WeakReferenceMessenger.Default.Send(new BatchAnalyzeAnalysisReadyMessage(_analysesDictionary[(int)dataRow["Number"]]));
-            }
+        foreach (var entry in AnalysesTable.Where(entry => entry.Success is true))
+        { 
+            WeakReferenceMessenger.Default.Send(new BatchAnalyzeAnalysisReadyMessage(entry.Analysis));
         }
 
         window?.Close();
+    }
+
+    public partial class BatchEntry : ObservableValidatorExtended
+    {
+        [ObservableProperty] private int _id;
+
+        [ObservableProperty] private bool _selected;
+
+        [ObservableProperty] private AnalysisWithViewSettings _analysis = null!;
+
+        [ObservableProperty] private bool? _success = null;
+
+        [ObservableProperty] private string _message = string.Empty;
     }
     
     public class BatchAnalyzeFailureMessage

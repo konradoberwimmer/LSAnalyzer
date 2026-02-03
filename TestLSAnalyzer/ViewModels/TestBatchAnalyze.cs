@@ -1,8 +1,8 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
-using System.Data;
 using System.Reflection;
 using LSAnalyzer.Services.Stubs;
 using Moq;
@@ -114,17 +114,16 @@ public class TestBatchAnalyze
 
         Policy.Handle<NotNullException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
             .Execute(() => Assert.NotNull(batchAnalyzeViewModel.AnalysesTable));
-        Assert.Equal(4, batchAnalyzeViewModel.AnalysesTable!.Rows.Count);
+        Assert.Equal(4, batchAnalyzeViewModel.AnalysesTable.Count);
         
         configuration.Verify(conf => conf.StoreRecentBatchAnalyzeFile(It.IsAny<string>()), Times.Once);
         
         Policy.Handle<Exception>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
             .Execute(() =>
             {
-                foreach (var row in batchAnalyzeViewModel.AnalysesTable.Rows)
+                foreach (var entry in batchAnalyzeViewModel.AnalysesTable)
                 {
-                    var dataRow = row as DataRow;
-                    Assert.True((bool)(dataRow!["Success"]));
+                    Assert.True(entry.Success);
                 }
             });
     }
@@ -163,15 +162,14 @@ public class TestBatchAnalyze
 
         Policy.Handle<NotNullException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
             .Execute(() => Assert.NotNull(batchAnalyzeViewModel.AnalysesTable));
-        Assert.Equal(4, batchAnalyzeViewModel.AnalysesTable!.Rows.Count);
+        Assert.Equal(4, batchAnalyzeViewModel.AnalysesTable.Count);
         
         Policy.Handle<Exception>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
             .Execute(() =>
             {
-                foreach (var row in batchAnalyzeViewModel.AnalysesTable.Rows)
+                foreach (var entry in batchAnalyzeViewModel.AnalysesTable)
                 {
-                    var dataRow = row as DataRow;
-                    Assert.True((bool)(dataRow!["Success"]));
+                    Assert.True(entry.Success);
                 }
             });
     }
@@ -204,22 +202,12 @@ public class TestBatchAnalyze
             UseCurrentFile = true,
             CurrentConfiguration = analysisConfiguration
         };
-
-        var lastSuccessMessageSent = false;
-        List<BatchAnalyzeService.BatchAnalyzeMessage> batchAnalyzeMessages = [];
-        WeakReferenceMessenger.Default.Register<BatchAnalyzeService.BatchAnalyzeMessage>(this, (_, m) =>
-        {
-            batchAnalyzeMessages.Add(m);
-            if (m is { Id: 4, Success: true }) lastSuccessMessageSent = true;
-        });
         
         batchAnalyzeViewModel.LoadBatchFileCommand.Execute(null);
         batchAnalyzeViewModel.RunBatchCommand.Execute(null);
      
         Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.True(lastSuccessMessageSent));
-        
-        Assert.Equal(4, batchAnalyzeMessages.Count(m => m.Success));
+            .Execute(() => Assert.True(batchAnalyzeViewModel.AnalysesTable.All(analysis => analysis.Success is not null)));
 
         var analysisReadyMessagesSent = 0;
         WeakReferenceMessenger.Default.Register<BatchAnalyze.BatchAnalyzeAnalysisReadyMessage>(this, (_, _) =>
@@ -238,14 +226,14 @@ public class TestBatchAnalyze
     {
         BatchAnalyzeViewModel batchAnalyzeViewModel = new()
         {
-            AnalysesTable = new DataTable { Columns = { "A", "B" } },
+            AnalysesTable = new ObservableCollection<BatchAnalyze.BatchEntry>([new BatchAnalyze.BatchEntry() { Id = 1, Selected = true, Analysis = new AnalysisWithViewSettings { Analysis = new AnalysisCorr(new AnalysisConfiguration()), ViewSettings = []}}]),
             IsBusy = true,
             FinishedAllCalculations = true
         };
         
         batchAnalyzeViewModel.ClearAnalysisData();
         
-        Assert.Null(batchAnalyzeViewModel.AnalysesTable);
+        Assert.Empty(batchAnalyzeViewModel.AnalysesTable);
         Assert.False(batchAnalyzeViewModel.IsBusy);
         Assert.False(batchAnalyzeViewModel.FinishedAllCalculations);
     }

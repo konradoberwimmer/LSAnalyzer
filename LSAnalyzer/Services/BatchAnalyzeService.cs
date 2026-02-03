@@ -4,6 +4,7 @@ using LSAnalyzer.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -25,12 +26,12 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         _serviceProvider = serviceProvider;
     }
 
-    public void RunBatch(Dictionary<int, AnalysisWithViewSettings> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration)
+    public void RunBatch(IEnumerable<BatchAnalyze.BatchEntry> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration)
     {
         _useCurrentFile = useCurrentFile;
         _currentConfiguration = currentConfiguration;
 
-        if (analyses.Count > 0 && !_useCurrentFile)
+        if (analyses.Any() && !_useCurrentFile)
         {
             WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedStoredRawDataFileMessage());
         }
@@ -44,7 +45,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
 
     private void DoBatch(object? sender, DoWorkEventArgs e)
     {
-        if (e.Argument is not Dictionary<int, AnalysisWithViewSettings> analyses || (_useCurrentFile && _currentConfiguration == null))
+        if (e.Argument is not IEnumerable<BatchAnalyze.BatchEntry> analyses || (_useCurrentFile && _currentConfiguration == null))
         {
             e.Cancel = true;
             return;
@@ -53,16 +54,12 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         AnalysisConfiguration? previousAnalysisConfiguration = null;
         string? previousSubsettingExpression = "$$$initialize$$$";
 
-        foreach (var (key, analysisWithViewSettings) in analyses)
+        foreach (var entry in analyses)
         {
-            WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
-            {
-                Id = key,
-                Success = false,
-                Message = "Working ..."
-            });
-
-            var analysis = analysisWithViewSettings.Analysis;
+            entry.Message = "Working ...";
+            WeakReferenceMessenger.Default.Send<BatchAnalyzeProgression>();
+            
+            var analysis = entry.Analysis.Analysis;
 
             if (!_useCurrentFile && (
                     previousAnalysisConfiguration == null || 
@@ -73,12 +70,8 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                 {
                     if (string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.FileRetrieval))
                     {
-                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
-                        {
-                            Id = key,
-                            Success = false,
-                            Message = "Reloading from data provider is not supported for json files created before v1.2!"
-                        });
+                        entry.Success = false;
+                        entry.Message = "Reloading from data provider is not supported for json files created before v1.2!";
                         continue;
                     }
 
@@ -86,12 +79,9 @@ public class BatchAnalyzeService : IBatchAnalyzeService
 
                     if (!providerRetrieval.success)
                     {
-                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
-                        {
-                            Id = key,
-                            Success = false,
-                            Message = providerRetrieval.errorMessage ?? "Unknown error when retrieving data provider!",
-                        });
+                        entry.Success = false;
+                        entry.Message = providerRetrieval.errorMessage ??
+                                        "Unknown error when retrieving data provider!";
                         continue;
                     }
 
@@ -100,56 +90,38 @@ public class BatchAnalyzeService : IBatchAnalyzeService
 
                     if (!fileInformation.success)
                     {
-                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
-                        {
-                            Id = key,
-                            Success = false,
-                            Message = fileInformation.errorMessage ?? "Unknown error when retrieving file information!",
-                        });
+                        entry.Success = false;
+                        entry.Message = fileInformation.errorMessage ??
+                                        "Unknown error when retrieving file information!";
                         continue;
                     }
 
                     if (!providerRetrieval.dataProvider!.LoadFileIntoGlobalEnvironment(fileInformation
                             .fileInformation!))
                     {
-                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
-                        {
-                            Id = key,
-                            Success = false,
-                            Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!"
-                        });
+                        entry.Success = false;
+                        entry.Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!";
                         continue;
                     }
                 } else if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.AnalysisConfiguration.FileName ?? string.Empty, analysis.AnalysisConfiguration.FileType))
                 {
-                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
-                    {
-                        Id = key,
-                        Success = false,
-                        Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!"
-                    });
+                    entry.Success = false;
+                    entry.Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!";
                     continue;
                 }
 
                 if (!string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysis.AnalysisConfiguration.DatasetType!.IDvar))
                 {
-                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
-                    {
-                        Id = key,
-                        Success = false,
-                        Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!"
-                    });
+                    entry.Success = false;
+                    entry.Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!";
                     continue;
                 }
 
                 if (!_rservice.TestAnalysisConfiguration(analysis.AnalysisConfiguration, analysis.SubsettingExpression))
                 {
-                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
-                    {
-                        Id = key,
-                        Success = false,
-                        Message = "Could not use file for dataset type '" + analysis.AnalysisConfiguration.DatasetType?.Name + "'!"
-                    });
+                    entry.Success = false;
+                    entry.Message = "Could not use file for dataset type '" +
+                                    analysis.AnalysisConfiguration.DatasetType?.Name + "'!";
                     continue;
                 }
 
@@ -162,12 +134,9 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                     }
                     if (!_rservice.PrepareForAnalysis(analysis, additionalVariables))
                     {
-                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
-                        {
-                            Id = key,
-                            Success = false,
-                            Message = "Could not build file '" + analysis.AnalysisConfiguration.FileName + "' for analysis!"
-                        });
+                        entry.Success = false;
+                        entry.Message = "Could not build file '" + analysis.AnalysisConfiguration.FileName +
+                                        "' for analysis!";
                         continue;
                     }
                 }
@@ -179,12 +148,8 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                 {
                     if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, analysis.SubsettingExpression))
                     {
-                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
-                        {
-                            Id = key,
-                            Success = false,
-                            Message = "Could not reapply subsetting '" + analysis.SubsettingExpression + "'!"
-                        });
+                        entry.Success = false;
+                        entry.Message = "Could not reapply subsetting '" + analysis.SubsettingExpression + "'!";
                         continue;
                     }
 
@@ -202,12 +167,8 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                     }
                     if (!_rservice.PrepareForAnalysis(analysis, additionalVariables))
                     {
-                        WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
-                        {
-                            Id = key,
-                            Success = false,
-                            Message = "Could not build current file for analysis!"
-                        });
+                        entry.Success = false;
+                        entry.Message = "Could not build current file for analysis!";
                         continue;
                     }
                 }
@@ -251,12 +212,8 @@ public class BatchAnalyzeService : IBatchAnalyzeService
 
             if (analysis.Result.Count == 0)
             {
-                WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage()
-                {
-                    Id = key,
-                    Success = false,
-                    Message = "Could not calculate a result!"
-                });
+                entry.Success = false;
+                entry.Message = "Could not calculate a result!";
                 continue;
             }
                 
@@ -271,9 +228,12 @@ public class BatchAnalyzeService : IBatchAnalyzeService
 
             analysis.ResultAt = DateTime.Now;
             analysis.ResultDuration = (analysis.ResultAt! - beforeCalculation).Value.TotalSeconds;
-                
-            WeakReferenceMessenger.Default.Send(new BatchAnalyzeMessage() { Id = key, Success = true, Message = "Success!" });
+
+            entry.Success = true;
+            entry.Message = "Success!";
         }
+        
+        WeakReferenceMessenger.Default.Send<BatchAnalyzeProgression>();
 
         e.Result = analyses;
     }
@@ -340,13 +300,8 @@ public class BatchAnalyzeService : IBatchAnalyzeService
 
         return (true, null, fileInformation);
     }
-    
-    public class BatchAnalyzeMessage
-    {
-        public int Id { get; init; }
-        public bool Success { get; init; }
-        public string Message { get; init; } = string.Empty;
-    }
+
+    public class BatchAnalyzeProgression;
 
     public class BatchAnalyzeChangedStoredRawDataFileMessage;
 
