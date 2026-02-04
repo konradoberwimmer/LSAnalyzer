@@ -217,6 +217,12 @@ public partial class BatchAnalyze : ObservableObject
     }
 
     [RelayCommand]
+    private void AbortBatch()
+    {
+        _batchAnalyzeService.AbortBatch();
+    }
+
+    [RelayCommand]
     private void TransferResults(ICloseable? window)
     {
         foreach (var entry in AnalysesTable.Where(entry => entry is { Success: true, Selected: true }))

@@ -11,6 +11,11 @@ public class BatchAnalyzeServiceStub : IBatchAnalyzeService
         throw new System.NotImplementedException();
     }
 
+    public void AbortBatch()
+    {
+        throw new System.NotImplementedException();
+    }
+
     public (bool success, string? errorMessage, IDataProvider? dataProvider) RetrieveDataProvider(string fileRetrieval)
     {
         throw new System.NotImplementedException();

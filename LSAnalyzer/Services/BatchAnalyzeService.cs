@@ -18,6 +18,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
     
     private bool _useCurrentFile = true;
     private AnalysisConfiguration? _currentConfiguration;
+    private BackgroundWorker? _worker;
 
     public BatchAnalyzeService(IRservice rservice, Configuration configuration, IServiceProvider serviceProvider)
     {
@@ -28,6 +29,8 @@ public class BatchAnalyzeService : IBatchAnalyzeService
 
     public void RunBatch(IEnumerable<BatchAnalyze.BatchEntry> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration)
     {
+        if (_worker?.IsBusy is true) return;
+        
         _useCurrentFile = useCurrentFile;
         _currentConfiguration = currentConfiguration;
 
@@ -36,11 +39,17 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedStoredRawDataFileMessage());
         }
 
-        BackgroundWorker worker = new();
-        worker.WorkerReportsProgress = false;
-        worker.WorkerSupportsCancellation = true;
-        worker.DoWork += DoBatch;
-        worker.RunWorkerAsync(analyses);
+        _worker = new BackgroundWorker();
+        _worker.WorkerReportsProgress = false;
+        _worker.WorkerSupportsCancellation = true;
+        _worker.DoWork += DoBatch;
+        _worker.RunWorkerAsync(analyses);
+    }
+
+    public void AbortBatch()
+    {
+        _worker?.CancelAsync();
+        _rservice.SendUserInterrupt();
     }
 
     private void DoBatch(object? sender, DoWorkEventArgs e)
@@ -63,6 +72,12 @@ public class BatchAnalyzeService : IBatchAnalyzeService
 
         foreach (var entry in analyses)
         {
+            if (_worker!.CancellationPending)
+            {
+                entry.WasIgnored = true;
+                continue;
+            }
+            
             if (!entry.Selected)
             {
                 entry.WasIgnored = true;
@@ -85,7 +100,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                     if (string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.FileRetrieval))
                     {
                         entry.Success = false;
-                        entry.Message = "Reloading from data provider is not supported for json files created before v1.2!";
+                        entry.Message = AbortedOr("Reloading from data provider is not supported for json files created before v1.2!");
                         continue;
                     }
 
@@ -94,8 +109,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                     if (!providerRetrieval.success)
                     {
                         entry.Success = false;
-                        entry.Message = providerRetrieval.errorMessage ??
-                                        "Unknown error when retrieving data provider!";
+                        entry.Message = AbortedOr(providerRetrieval.errorMessage ?? "Unknown error when retrieving data provider!");
                         continue;
                     }
 
@@ -105,8 +119,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                     if (!fileInformation.success)
                     {
                         entry.Success = false;
-                        entry.Message = fileInformation.errorMessage ??
-                                        "Unknown error when retrieving file information!";
+                        entry.Message = AbortedOr(fileInformation.errorMessage ?? "Unknown error when retrieving file information!");
                         continue;
                     }
 
@@ -114,28 +127,27 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                             .fileInformation!))
                     {
                         entry.Success = false;
-                        entry.Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!";
+                        entry.Message = AbortedOr("Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!");
                         continue;
                     }
                 } else if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.AnalysisConfiguration.FileName ?? string.Empty, analysis.AnalysisConfiguration.FileType))
                 {
                     entry.Success = false;
-                    entry.Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!";
+                    entry.Message = AbortedOr("Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!");
                     continue;
                 }
 
                 if (!string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysis.AnalysisConfiguration.DatasetType!.IDvar))
                 {
                     entry.Success = false;
-                    entry.Message = "Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!";
+                    entry.Message = AbortedOr("Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!");
                     continue;
                 }
 
                 if (!_rservice.TestAnalysisConfiguration(analysis.AnalysisConfiguration, analysis.SubsettingExpression))
                 {
                     entry.Success = false;
-                    entry.Message = "Could not use file for dataset type '" +
-                                    analysis.AnalysisConfiguration.DatasetType?.Name + "'!";
+                    entry.Message = AbortedOr("Could not use file for dataset type '" + analysis.AnalysisConfiguration.DatasetType?.Name + "'!");
                     continue;
                 }
 
@@ -149,8 +161,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                     if (!_rservice.PrepareForAnalysis(analysis, additionalVariables))
                     {
                         entry.Success = false;
-                        entry.Message = "Could not build file '" + analysis.AnalysisConfiguration.FileName +
-                                        "' for analysis!";
+                        entry.Message = AbortedOr("Could not build file '" + analysis.AnalysisConfiguration.FileName + "' for analysis!");
                         continue;
                     }
                 }
@@ -163,13 +174,13 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                     if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, analysis.SubsettingExpression))
                     {
                         entry.Success = false;
-                        entry.Message = "Could not reapply subsetting '" + analysis.SubsettingExpression + "'!";
+                        entry.Message = AbortedOr("Could not reapply subsetting '" + analysis.SubsettingExpression + "'!");
                         continue;
                     }
 
                     previousSubsettingExpression = analysis.SubsettingExpression;
                 
-                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedSubsettingMessage() { SubsettingExpression = analysis.SubsettingExpression ?? string.Empty });
+                    WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedSubsettingMessage { SubsettingExpression = analysis.SubsettingExpression ?? string.Empty });
                 }
 
                 if (!(_currentConfiguration?.ModeKeep ?? true))
@@ -182,7 +193,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                     if (!_rservice.PrepareForAnalysis(analysis, additionalVariables))
                     {
                         entry.Success = false;
-                        entry.Message = "Could not build current file for analysis!";
+                        entry.Message = AbortedOr("Could not build current file for analysis!");
                         continue;
                     }
                 }
@@ -193,41 +204,41 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             previousSubsettingExpression = analysis.SubsettingExpression;
             previousAnalysisConfiguration = analysis.AnalysisConfiguration;
 
-            DateTime beforeCalculation = DateTime.Now;
+            var beforeCalculation = DateTime.Now;
 
             switch (analysis)
             {
                 case AnalysisUnivar analysisUnivar:
-                    analysisUnivar.Result = _rservice.CalculateUnivar(analysisUnivar) ?? new();
+                    analysisUnivar.Result = _rservice.CalculateUnivar(analysisUnivar) ?? [];
                     break;
                 case AnalysisMeanDiff analysisMeanDiff:
-                    analysisMeanDiff.Result = _rservice.CalculateMeanDiff(analysisMeanDiff) ?? new();
+                    analysisMeanDiff.Result = _rservice.CalculateMeanDiff(analysisMeanDiff) ?? [];
                     break;
                 case AnalysisFreq analysisFreq:
-                    analysisFreq.Result = _rservice.CalculateFreq(analysisFreq) ?? new();
+                    analysisFreq.Result = _rservice.CalculateFreq(analysisFreq) ?? [];
                     if (analysisFreq.CalculateBivariate)
                     {
                         analysisFreq.BivariateResult = _rservice.CalculateBivariate(analysisFreq);
                     }
                     break;
                 case AnalysisPercentiles analysisPercentiles:
-                    analysisPercentiles.Result = _rservice.CalculatePercentiles(analysisPercentiles) ?? new();
+                    analysisPercentiles.Result = _rservice.CalculatePercentiles(analysisPercentiles) ?? [];
                     break;
                 case AnalysisCorr analysisCorr:
-                    analysisCorr.Result = _rservice.CalculateCorr(analysisCorr) ?? new();
+                    analysisCorr.Result = _rservice.CalculateCorr(analysisCorr) ?? [];
                     break;
                 case AnalysisLinreg analysisLinreg:
-                    analysisLinreg.Result = _rservice.CalculateLinreg(analysisLinreg) ?? new();
+                    analysisLinreg.Result = _rservice.CalculateLinreg(analysisLinreg) ?? [];
                     break;
                 case AnalysisLogistReg analysisLogistReg:
-                    analysisLogistReg.Result = _rservice.CalculateLogistReg(analysisLogistReg) ?? new();
+                    analysisLogistReg.Result = _rservice.CalculateLogistReg(analysisLogistReg) ?? [];
                     break;
             }
 
-            if (analysis.Result.Count == 0)
+            if (analysis.Result.Count == 0 || analysis is AnalysisFreq { CalculateBivariate: true, BivariateResult.Count: 0 })
             {
                 entry.Success = false;
-                entry.Message = "Could not calculate a result!";
+                entry.Message = AbortedOr("Could not calculate a result!");
                 continue;
             }
                 
@@ -252,6 +263,11 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         e.Result = analyses;
     }
 
+    private string AbortedOr(string message)
+    {
+        return _worker?.CancellationPending is true ? "Aborted!" : message;
+    }
+    
     public (bool success, string? errorMessage, IDataProvider? dataProvider) RetrieveDataProvider(string fileRetrieval)
     {
         JsonObject? fileRetrievalObject;

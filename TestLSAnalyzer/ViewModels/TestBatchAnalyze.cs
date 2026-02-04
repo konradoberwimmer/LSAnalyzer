@@ -175,7 +175,7 @@ public class TestBatchAnalyze
     }
     
     [Fact]
-    public void TransferResultsSendMessages()
+    public void TestTransferResultsSendMessages()
     {
         Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -221,7 +221,7 @@ public class TestBatchAnalyze
     }
     
     [Fact]
-    public void TransferResultsIgnoresUnselected()
+    public void TestTransferResultsIgnoresUnselected()
     {
         Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -268,6 +268,50 @@ public class TestBatchAnalyze
         Assert.Equal(3, analysisReadyMessagesSent);
     }
 
+    [Fact]
+    public void TestAbortBatch()
+    {
+        Rservice rservice = new();
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
+            DatasetType = new()
+            {
+                Weight = "wgt",
+                NMI = 10,
+                MIvar = "mi",
+            },
+            ModeKeep = true,
+        };
+
+        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
+
+        BatchAnalyzeService batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+        BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>())
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json"),
+            UseCurrentFile = true,
+            CurrentConfiguration = analysisConfiguration
+        };
+        
+        batchAnalyzeViewModel.LoadBatchFileCommand.Execute(null);
+        batchAnalyzeViewModel.RunBatchCommand.Execute(null);
+
+        Policy.Handle<EqualException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.Equal("Working ...", batchAnalyzeViewModel.AnalysesTable.First().Message));
+        
+        batchAnalyzeViewModel.AbortBatchCommand.Execute(null);
+     
+        Policy.Handle<ContainsException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
+            .Execute(() => Assert.Contains(batchAnalyzeViewModel.AnalysesTable, analysis => analysis is { Success: false, Message: "Aborted!" }));
+        
+        Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.True(batchAnalyzeViewModel.AnalysesTable.All(analysis => analysis.Success is not null || analysis.WasIgnored)));
+    }
+    
     [Fact]
     public void TestClearAnalysisData()
     {

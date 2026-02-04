@@ -464,6 +464,66 @@ public class TestBatchAnalyzeService
         Assert.True(analyses[2].Success);
         Assert.True(analyses[3].Success);
     }
+    
+    [Fact]
+    public void TestAbortBatch()
+    {
+        Rservice rservice = new();
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+
+        AnalysisConfiguration analysisConfigurationNmi10Rep5 = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+            DatasetType = new()
+            {
+                Weight = "wgt",
+                NMI = 10,
+                MIvar = "mi",
+                RepWgts = "repwgt",
+                FayFac = 0.5,
+            },
+            ModeKeep = true,
+        };
+
+        BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+
+        List<BatchAnalyze.BatchEntry> analyses =
+        [
+            new()
+            {
+                Id = 1, Selected = true, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
+                    {
+                        Vars = new() { new(1, "item1", false) },
+                    },
+                    ViewSettings = []
+                }
+            },
+            new()
+            {
+                Id = 2, Selected = true, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
+                    {
+                        Vars = new() { new(1, "x", false) },
+                        GroupBy = new() { new(2, "cat", false) },
+                    },
+                    ViewSettings = []
+                }
+            },
+        ];
+
+        batchAnalyze.RunBatch(analyses, false, null);
+        
+        Policy.Handle<EqualException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.Equal("Working ...", analyses.First().Message));
+        
+        batchAnalyze.AbortBatch();
+
+        Policy.Handle<ContainsException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
+            .Execute(() => Assert.Contains(analyses, analysis => analysis is { Success: false, Message: "Aborted!" }));
+    }
 
     [Fact]
     public void TestRetrieveDataProvider()
