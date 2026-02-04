@@ -46,6 +46,10 @@ public partial class BatchAnalyze : ObservableObject
 
     [ObservableProperty]
     private string? _fileName;
+    partial void OnFileNameChanged(string? value)
+    {
+        ClearAnalysisData();
+    }
 
     [ObservableProperty]
     private bool _hasCurrentFile = false;
@@ -79,6 +83,41 @@ public partial class BatchAnalyze : ObservableObject
         HasCurrentFile = false;
         UseCurrentFile = false;
 
+        AnalysesTable =
+        [
+            new BatchEntry
+            {
+                Id = 1, Selected = true,
+                Analysis = new AnalysisWithViewSettings
+                    { Analysis = new AnalysisCorr(new AnalysisConfiguration()), ViewSettings = [] },
+                Success = null, Message = string.Empty
+            },
+            new BatchEntry
+            {
+                Id = 2, Selected = true,
+                Analysis = new AnalysisWithViewSettings
+                    { Analysis = new AnalysisCorr(new AnalysisConfiguration()), ViewSettings = [] },
+                Success = false, Message = "Could not calculate!"
+            },
+            new BatchEntry
+            {
+                Id = 3, Selected = false,
+                Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisCorr(new AnalysisConfiguration())
+                    {
+                        Vars =
+                        [
+                            new Variable(1, "item1", false), new Variable(2, "item2", false),
+                            new Variable(3, "item3", false), new Variable(4, "item4", false)
+                        ]
+                    },
+                    ViewSettings = []
+                },
+                Success = true, Message = "Success!"
+            },
+        ];
+        
         _batchAnalyzeService = new BatchAnalyzeServiceStub();
         _configuration = new Configuration();
     }
@@ -197,8 +236,17 @@ public partial class BatchAnalyze : ObservableObject
         [ObservableProperty] private AnalysisWithViewSettings _analysis = null!;
 
         [ObservableProperty] private bool? _success = null;
+        partial void OnSuccessChanged(bool? value)
+        {
+            OnPropertyChanged(nameof(IsSuccess));
+            OnPropertyChanged(nameof(IsFail));
+        }
 
         [ObservableProperty] private string _message = string.Empty;
+
+        public bool IsSuccess => Success is true;
+        
+        public bool IsFail => Success is false;
     }
     
     public class BatchAnalyzeFailureMessage

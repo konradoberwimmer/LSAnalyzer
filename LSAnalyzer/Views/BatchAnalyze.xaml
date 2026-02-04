@@ -2,23 +2,29 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LSAnalyzer.Views"
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels"
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=ViewModels:BatchAnalyze, IsDesignTimeCreatable=True}"
         x:Name="windowBatchAnalyze"
         Closing="Window_Closing"
         Title="Batch analyze" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen">
     <Window.Resources>
+        <sys:Boolean x:Key="BooleanTrue">True</sys:Boolean>
+        <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
         <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
-        <converter:NullToBool x:Key="NullToBoolConverter"/>
-        <Style x:Key="wordWrapStyle" TargetType="TextBlock">
-            <Setter Property="TextWrapping" Value="Wrap"/>
-        </Style>
         <local:WindowSettings x:Key="WindowSettings"/>
+        <DataTemplate x:Key="SuccessTemplate" DataType="{x:Type ViewModels:BatchAnalyze+BatchEntry}">
+            <StackPanel VerticalAlignment="Center">
+                <fa:IconImage Icon="Check" Foreground="Green" Width="18" Visibility="{Binding IsSuccess, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
+                <fa:IconImage Icon="Xmark" Foreground="Red" Width="16" Visibility="{Binding IsFail, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
+            </StackPanel>
+        </DataTemplate>
     </Window.Resources>
     <Window.Width>
         <Binding Source="{StaticResource WindowSettings}" Path="WidthBatchAnalyze" Mode="TwoWay"/>
@@ -64,10 +70,38 @@
             <RadioButton x:Name="radioButtonTargetReload" Content="Reload files specified in file" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="Target" IsChecked="{Binding UseCurrentFile, Converter={StaticResource InverseBoolConverter}}"/>
             <RadioButton x:Name="radioButtonTargetCurrent" Content="Current file for analyses" HorizontalAlignment="Left" Height="15" GroupName="Target" IsChecked="{Binding UseCurrentFile}" IsEnabled="{Binding HasCurrentFile}"/>
         </StackPanel>
-        <Button Grid.Row="3" Grid.Column="2" Content="Analyze" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Height="22" Width="80" Command="{Binding RunBatchCommand}" IsEnabled="{Binding AnalysesTable, Converter={StaticResource NullToBoolConverter}}"/>
+        <Button Grid.Row="3" Grid.Column="2" Content="Analyze" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Height="22" Width="80" Command="{Binding RunBatchCommand}" IsEnabled="{Binding AnalysesTable.Count}"/>
         <Border x:Name="dataGridWidthHelper" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,10,0,0" >
-            <DataGrid x:Name="dataGridBatchResults" Width="{Binding Path=ActualWidth, ElementName=dataGridWidthHelper}" ItemsSource="{Binding AnalysesTable}" AutoGenerateColumns="True" IsReadOnly="True" AutoGeneratingColumn="DataGridBatchResults_AutoGeneratingColumn">
-
+            <DataGrid x:Name="dataGridBatchResults" Width="{Binding Path=ActualWidth, ElementName=dataGridWidthHelper}" ItemsSource="{Binding AnalysesTable}" IsReadOnly="True" AutoGenerateColumns="False">
+                <DataGrid.Resources>
+                    <Style x:Key="DataGridCenteredText" TargetType="TextBlock">
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                        <Setter Property="HorizontalAlignment" Value="Center" />
+                    </Style>
+                    <Style x:Key="DataGridCenteredCheckBox" TargetType="CheckBox">
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                        <Setter Property="HorizontalAlignment" Value="Center" />
+                    </Style>
+                </DataGrid.Resources>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Nr." Binding="{Binding Id}" ElementStyle="{StaticResource DataGridCenteredText}"/>
+                    <DataGridCheckBoxColumn Header="Select" Binding="{Binding Selected}" ElementStyle="{StaticResource DataGridCenteredCheckBox}"/>
+                    <DataGridTextColumn Header="Analysis" Binding="{Binding Analysis.Analysis.ShortInfo}" Width="300">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style>
+                                <Setter Property="TextBlock.TextWrapping" Value="Wrap" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTemplateColumn Header="Success" CellTemplate="{StaticResource SuccessTemplate}"/>
+                    <DataGridTextColumn Header="Info" Binding="{Binding Message}" Width="300">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style>
+                                <Setter Property="TextBlock.TextWrapping" Value="Wrap" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
             </DataGrid>
         </Border>
         <Button Grid.Row="5" Grid.Column="2" Content="OK" HorizontalAlignment="Left" Margin="10,10,0,0" Height="22" Width="80" Command="{Binding TransferResultsCommand}" CommandParameter="{Binding ElementName=windowBatchAnalyze}" IsEnabled="{Binding FinishedAllCalculations}"/>
