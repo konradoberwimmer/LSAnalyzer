@@ -133,7 +133,7 @@ public partial class BatchAnalyze : ObservableObject
         {
             OnPropertyChanged(nameof(AnalysesTable));
 
-            if (!AnalysesTable.All(entry => entry.Success is not null)) return;
+            if (!AnalysesTable.All(entry => entry.Success is not null || entry.WasIgnored)) return;
             
             IsBusy = false;
             FinishedAllCalculations = true;
@@ -219,7 +219,7 @@ public partial class BatchAnalyze : ObservableObject
     [RelayCommand]
     private void TransferResults(ICloseable? window)
     {
-        foreach (var entry in AnalysesTable.Where(entry => entry.Success is true))
+        foreach (var entry in AnalysesTable.Where(entry => entry is { Success: true, Selected: true }))
         { 
             WeakReferenceMessenger.Default.Send(new BatchAnalyzeAnalysisReadyMessage(entry.Analysis));
         }
@@ -242,6 +242,8 @@ public partial class BatchAnalyze : ObservableObject
             OnPropertyChanged(nameof(IsFail));
         }
 
+        [ObservableProperty] private bool _wasIgnored = false;
+        
         [ObservableProperty] private string _message = string.Empty;
 
         public bool IsSuccess => Success is true;

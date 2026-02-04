@@ -181,6 +181,87 @@ public class TestBatchAnalyzeService
     }
 
     [Fact]
+    public void TestRunBatchIgnoresUnselected()
+    {
+        Rservice rservice = new();
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+
+        AnalysisConfiguration analysisConfigurationNmi10Rep5 = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+            DatasetType = new()
+            {
+                Weight = "wgt",
+                NMI = 10, MIvar = "mi",
+                RepWgts = "repwgt", FayFac = 0.5,
+            },
+            ModeKeep = true,
+        };
+        AnalysisConfiguration analysisConfigurationNmi10Multicat = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
+            DatasetType = new()
+            {
+                Weight = "wgt",
+                NMI = 10, MIvar = "mi",
+            },
+            ModeKeep = false,
+        };
+
+        BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+
+        AnalysisPresentation dummyAnalysisPresentation = new();
+
+        List<BatchAnalyze.BatchEntry> analyses =
+        [
+            new()
+            {
+                Id = 1, Selected = true, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
+                    {
+                        Vars = [new Variable(1, "doesntExist", false)],
+                    },
+                    ViewSettings = dummyAnalysisPresentation.ViewSettings
+                }
+            },
+            new()
+            {
+                Id = 2, Selected = false, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
+                    {
+                        Vars = [new Variable(1, "x", false)],
+                        GroupBy = [new Variable(2, "cat", false)],
+                    },
+                    ViewSettings = dummyAnalysisPresentation.ViewSettings
+                }
+            },
+            new()
+            {
+                Id = 3, Selected = true, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
+                    {
+                        Vars = [new Variable(1, "doesntExist", false)],
+                    },
+                    ViewSettings = dummyAnalysisPresentation.ViewSettings
+                }
+            },
+        ];
+
+        batchAnalyze.RunBatch(analyses, false, null);
+
+        Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
+            .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null || analysis.WasIgnored)));
+        
+        Assert.False(analyses[0].Success);
+        Assert.Null(analyses[1].Success);
+        Assert.True(analyses[1].WasIgnored);
+        Assert.False(analyses[2].Success);
+    }
+    
+    [Fact]
     public void TestRunBatchOnCurrentFileModeKeep()
     {
         Rservice rservice = new();
@@ -427,6 +508,61 @@ public class TestBatchAnalyzeService
         Assert.True(resultSuccess.success);
         Assert.Null(resultSuccess.errorMessage);
         Assert.NotNull(resultSuccess.dataProvider);
+    }
+    
+    [Fact]
+    public void TestRunBatchWorksRepeatedly()
+    {
+        Rservice rservice = new();
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+
+        AnalysisConfiguration analysisConfigurationNmi10Rep5 = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+            DatasetType = new()
+            {
+                Weight = "wgt",
+                NMI = 10, MIvar = "mi",
+                RepWgts = "repwgt", FayFac = 0.5,
+            },
+            ModeKeep = true,
+        };
+
+        BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+
+        AnalysisPresentation dummyAnalysisPresentation = new();
+
+        List<BatchAnalyze.BatchEntry> analyses =
+        [
+            new()
+            {
+                Id = 1, Selected = true, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
+                    {
+                        Vars = [new Variable(1, "x", false)],
+                        GroupBy = [new Variable(2, "cat", false)],
+                    },
+                    ViewSettings = dummyAnalysisPresentation.ViewSettings
+                }
+            },
+        ];
+
+        batchAnalyze.RunBatch(analyses, false, null);
+
+        Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
+            .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
+        
+        Assert.True(analyses[0].Success);
+
+        analyses[0].Success = null;
+        
+        batchAnalyze.RunBatch(analyses, false, null);
+
+        Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
+            .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
+        
+        Assert.True(analyses[0].Success);
     }
 
     [Fact]

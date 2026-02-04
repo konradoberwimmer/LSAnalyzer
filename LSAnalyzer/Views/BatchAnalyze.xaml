@@ -21,6 +21,7 @@
         <local:WindowSettings x:Key="WindowSettings"/>
         <DataTemplate x:Key="SuccessTemplate" DataType="{x:Type ViewModels:BatchAnalyze+BatchEntry}">
             <StackPanel VerticalAlignment="Center">
+                <fa:IconImage Icon="Slash" Foreground="Gray" Width="16" Visibility="{Binding WasIgnored, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
                 <fa:IconImage Icon="Check" Foreground="Green" Width="18" Visibility="{Binding IsSuccess, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
                 <fa:IconImage Icon="Xmark" Foreground="Red" Width="16" Visibility="{Binding IsFail, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
             </StackPanel>
@@ -72,7 +73,7 @@
         </StackPanel>
         <Button Grid.Row="3" Grid.Column="2" Content="Analyze" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Height="22" Width="80" Command="{Binding RunBatchCommand}" IsEnabled="{Binding AnalysesTable.Count}"/>
         <Border x:Name="dataGridWidthHelper" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,10,0,0" >
-            <DataGrid x:Name="dataGridBatchResults" Width="{Binding Path=ActualWidth, ElementName=dataGridWidthHelper}" ItemsSource="{Binding AnalysesTable}" IsReadOnly="True" AutoGenerateColumns="False">
+            <DataGrid x:Name="dataGridBatchResults" Width="{Binding Path=ActualWidth, ElementName=dataGridWidthHelper}" ItemsSource="{Binding AnalysesTable}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False">
                 <DataGrid.Resources>
                     <Style x:Key="DataGridCenteredText" TargetType="TextBlock">
                         <Setter Property="VerticalAlignment" Value="Center" />
@@ -84,17 +85,17 @@
                     </Style>
                 </DataGrid.Resources>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Nr." Binding="{Binding Id}" ElementStyle="{StaticResource DataGridCenteredText}"/>
-                    <DataGridCheckBoxColumn Header="Select" Binding="{Binding Selected}" ElementStyle="{StaticResource DataGridCenteredCheckBox}"/>
-                    <DataGridTextColumn Header="Analysis" Binding="{Binding Analysis.Analysis.ShortInfo}" Width="300">
+                    <DataGridTextColumn Header="Nr." Binding="{Binding Id}" ElementStyle="{StaticResource DataGridCenteredText}" IsReadOnly="True"/>
+                    <DataGridCheckBoxColumn Header="Select" Binding="{Binding Selected, UpdateSourceTrigger=PropertyChanged}" ElementStyle="{StaticResource DataGridCenteredCheckBox}"/>
+                    <DataGridTextColumn Header="Analysis" Binding="{Binding Analysis.Analysis.ShortInfo}" Width="300" IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
                             <Style>
                                 <Setter Property="TextBlock.TextWrapping" Value="Wrap" />
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
-                    <DataGridTemplateColumn Header="Success" CellTemplate="{StaticResource SuccessTemplate}"/>
-                    <DataGridTextColumn Header="Info" Binding="{Binding Message}" Width="300">
+                    <DataGridTemplateColumn Header="Success" CellTemplate="{StaticResource SuccessTemplate}" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Info" Binding="{Binding Message}" Width="300" IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
                             <Style>
                                 <Setter Property="TextBlock.TextWrapping" Value="Wrap" />

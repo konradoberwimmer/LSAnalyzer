@@ -220,6 +220,53 @@ public class TestBatchAnalyze
         Assert.Equal(4, analysisReadyMessagesSent);
     }
     
+    [Fact]
+    public void TransferResultsIgnoresUnselected()
+    {
+        Rservice rservice = new();
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
+            DatasetType = new()
+            {
+                Weight = "wgt",
+                NMI = 10,
+                MIvar = "mi",
+            },
+            ModeKeep = true,
+        };
+
+        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
+
+        BatchAnalyzeService batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+        BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>())
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json"),
+            UseCurrentFile = true,
+            CurrentConfiguration = analysisConfiguration
+        };
+        
+        batchAnalyzeViewModel.LoadBatchFileCommand.Execute(null);
+        batchAnalyzeViewModel.RunBatchCommand.Execute(null);
+     
+        Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.True(batchAnalyzeViewModel.AnalysesTable.All(analysis => analysis.Success is not null)));
+
+        batchAnalyzeViewModel.AnalysesTable.First().Selected = false;
+        
+        var analysisReadyMessagesSent = 0;
+        WeakReferenceMessenger.Default.Register<BatchAnalyze.BatchAnalyzeAnalysisReadyMessage>(this, (_, _) =>
+        {
+            analysisReadyMessagesSent++;
+        });
+
+        batchAnalyzeViewModel.TransferResultsCommand.Execute(null);
+
+        Assert.Equal(3, analysisReadyMessagesSent);
+    }
 
     [Fact]
     public void TestClearAnalysisData()

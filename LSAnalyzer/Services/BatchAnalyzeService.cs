@@ -51,11 +51,25 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             return;
         }
 
+        foreach (var entry in analyses)
+        {
+            entry.Success = null;
+            entry.WasIgnored = false;
+            entry.Message = string.Empty;
+        }
+
         AnalysisConfiguration? previousAnalysisConfiguration = null;
         string? previousSubsettingExpression = "$$$initialize$$$";
 
         foreach (var entry in analyses)
         {
+            if (!entry.Selected)
+            {
+                entry.WasIgnored = true;
+                WeakReferenceMessenger.Default.Send<BatchAnalyzeProgression>();
+                continue;
+            }
+            
             entry.Message = "Working ...";
             WeakReferenceMessenger.Default.Send<BatchAnalyzeProgression>();
             
@@ -222,7 +236,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                 var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
                 if (valueLabels != null)
                 {
-                    analysis.ValueLabels.Add(groupByVariable.Name, valueLabels);
+                    analysis.ValueLabels.TryAdd(groupByVariable.Name, valueLabels);
                 }
             }
 
