@@ -91,7 +91,7 @@
             </Button.IsEnabled>
         </Button>
         <Border x:Name="dataGridWidthHelper" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,10,0,0" >
-            <DataGrid x:Name="dataGridBatchResults" Width="{Binding Path=ActualWidth, ElementName=dataGridWidthHelper}" ItemsSource="{Binding AnalysesTable}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
+            <DataGrid x:Name="dataGridBatchResults" Width="{Binding Path=ActualWidth, ElementName=dataGridWidthHelper}" ItemsSource="{Binding AnalysesTable}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False">
                 <DataGrid.Resources>
                     <Style x:Key="DataGridCenteredText" TargetType="TextBlock">
                         <Setter Property="VerticalAlignment" Value="Center" />
