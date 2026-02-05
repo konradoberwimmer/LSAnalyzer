@@ -122,7 +122,7 @@ public partial class BatchAnalyze : ObservableObject
         _configuration = new Configuration();
     }
 
-    public BatchAnalyze(BatchAnalyzeService batchAnalyzeService, Configuration configuration)
+    public BatchAnalyze(IBatchAnalyzeService batchAnalyzeService, Configuration configuration)
     {
         _batchAnalyzeService = batchAnalyzeService;
         _configuration = configuration;

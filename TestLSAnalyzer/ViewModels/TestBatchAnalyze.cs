@@ -12,7 +12,6 @@ using BatchAnalyzeViewModel = LSAnalyzer.ViewModels.BatchAnalyze;
 
 namespace TestLSAnalyzer.ViewModels;
 
-[Collection("Sequential")]
 public class TestBatchAnalyze
 {
     [Fact]
@@ -45,10 +44,7 @@ public class TestBatchAnalyze
     [Fact]
     public void TestRunBatchSendsFailureMessageOnInvalidJSON()
     {
-        Rservice rservice = new();
-        Assert.True(rservice.Connect(), "R must also be available for tests");
-
-        BatchAnalyzeService batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+        BatchAnalyzeService batchAnalyzeService = new(new RserviceStub(), Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
         BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>());
 
         bool messageSent = false;
@@ -81,13 +77,10 @@ public class TestBatchAnalyze
     [Fact]
     public void TestRunBatchInvokesService()
     {
-        Rservice rservice = new();
-        Assert.True(rservice.Connect(), "R must also be available for tests");
-
         AnalysisConfiguration analysisConfiguration = new()
         {
             FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
-            DatasetType = new()
+            DatasetType = new DatasetType
             {
                 Weight = "wgt",
                 NMI = 10,
@@ -96,13 +89,11 @@ public class TestBatchAnalyze
             ModeKeep = true,
         };
 
-        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
-
         var configuration = new Mock<Configuration>();
+
+        var batchAnalyzeService = new Mock<IBatchAnalyzeService>();
         
-        BatchAnalyzeService batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
-        BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, configuration.Object)
+        BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService.Object, configuration.Object)
         {
             FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json"),
             UseCurrentFile = true,
@@ -110,104 +101,65 @@ public class TestBatchAnalyze
         };
 
         batchAnalyzeViewModel.LoadBatchFileCommand.Execute(null);
-        batchAnalyzeViewModel.RunBatchCommand.Execute(null);
-
-        Policy.Handle<NotNullException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.NotNull(batchAnalyzeViewModel.AnalysesTable));
-        Assert.Equal(4, batchAnalyzeViewModel.AnalysesTable.Count);
         
         configuration.Verify(conf => conf.StoreRecentBatchAnalyzeFile(It.IsAny<string>()), Times.Once);
+
+        batchAnalyzeViewModel.RunBatchCommand.Execute(null);
         
-        Policy.Handle<Exception>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() =>
-            {
-                foreach (var entry in batchAnalyzeViewModel.AnalysesTable)
-                {
-                    Assert.True(entry.Success);
-                }
-            });
+        batchAnalyzeService.Verify(service => service.RunBatch(It.IsAny<IEnumerable<BatchAnalyze.BatchEntry>>(), It.IsAny<bool>(), It.IsAny<AnalysisConfiguration>()), Times.Once);
     }
 
     [Fact]
-    public void TestRunBatchWorksWithViewSettings()
+    public void TestRunBatchWorksWithAndWithoutViewSettings()
     {
-        Rservice rservice = new();
-        Assert.True(rservice.Connect(), "R must also be available for tests");
-
-        AnalysisConfiguration analysisConfiguration = new()
-        {
-            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
-            DatasetType = new()
-            {
-                Weight = "wgt",
-                NMI = 10,
-                MIvar = "mi",
-            },
-            ModeKeep = true,
-        };
-
-        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
-
-        BatchAnalyzeService batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+        AnalysisPresentation dummyAnalysisPresentation = new();
+        
+        BatchAnalyzeService batchAnalyzeService = new(new RserviceStub(), Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
         BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>())
         {
             FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat_v1_2.json"),
-            UseCurrentFile = true,
-            CurrentConfiguration = analysisConfiguration
+            UseCurrentFile = false,
+            CurrentConfiguration = null
         };
 
         batchAnalyzeViewModel.LoadBatchFileCommand.Execute(null);
-        batchAnalyzeViewModel.RunBatchCommand.Execute(null);
-
-        Policy.Handle<NotNullException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.NotNull(batchAnalyzeViewModel.AnalysesTable));
-        Assert.Equal(4, batchAnalyzeViewModel.AnalysesTable.Count);
         
-        Policy.Handle<Exception>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() =>
-            {
-                foreach (var entry in batchAnalyzeViewModel.AnalysesTable)
-                {
-                    Assert.True(entry.Success);
-                }
-            });
+        Assert.NotEmpty(batchAnalyzeViewModel.AnalysesTable.First().Analysis.ViewSettings);
+        var alternativeView = new AnalysisPresentation(new AnalysisCorr(new AnalysisConfiguration()));
+        alternativeView.ApplyDeserializedViewSettings(batchAnalyzeViewModel.AnalysesTable.First().Analysis.ViewSettings);
+        Assert.Contains(alternativeView.ViewSettings, viewSetting => !dummyAnalysisPresentation.ViewSettings[viewSetting.Key].Equals(viewSetting.Value));
+
+        batchAnalyzeViewModel.FileName =
+            Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json");
+        
+        Assert.Empty(batchAnalyzeViewModel.AnalysesTable);
+
+        batchAnalyzeViewModel.LoadBatchFileCommand.Execute(null);
+        
+        Assert.NotEmpty(batchAnalyzeViewModel.AnalysesTable.First().Analysis.ViewSettings);
+        var defaultView = new AnalysisPresentation(new AnalysisCorr(new AnalysisConfiguration()));
+        defaultView.ApplyDeserializedViewSettings(batchAnalyzeViewModel.AnalysesTable.First().Analysis.ViewSettings);
+        Assert.DoesNotContain(defaultView.ViewSettings, viewSetting => !dummyAnalysisPresentation.ViewSettings[viewSetting.Key].Equals(viewSetting.Value));
     }
     
     [Fact]
     public void TestTransferResultsSendMessages()
     {
-        Rservice rservice = new();
-        Assert.True(rservice.Connect(), "R must also be available for tests");
-
-        AnalysisConfiguration analysisConfiguration = new()
-        {
-            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
-            DatasetType = new()
-            {
-                Weight = "wgt",
-                NMI = 10,
-                MIvar = "mi",
-            },
-            ModeKeep = true,
-        };
-
-        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
-
-        BatchAnalyzeService batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+        BatchAnalyzeService batchAnalyzeService = new(new RserviceStub(), Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
         BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>())
         {
             FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json"),
-            UseCurrentFile = true,
-            CurrentConfiguration = analysisConfiguration
+            UseCurrentFile = false,
+            CurrentConfiguration = null
         };
         
         batchAnalyzeViewModel.LoadBatchFileCommand.Execute(null);
-        batchAnalyzeViewModel.RunBatchCommand.Execute(null);
-     
-        Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.True(batchAnalyzeViewModel.AnalysesTable.All(analysis => analysis.Success is not null)));
+
+        foreach (var entry in batchAnalyzeViewModel.AnalysesTable)
+        {
+            entry.Success = true;
+            entry.PreparedPresentation = new AnalysisPresentation();
+        }
 
         var analysisReadyMessagesSent = 0;
         WeakReferenceMessenger.Default.Register<BatchAnalyze.BatchAnalyzeAnalysisReadyMessage>(this, (_, _) =>
@@ -217,44 +169,28 @@ public class TestBatchAnalyze
 
         batchAnalyzeViewModel.TransferResultsCommand.Execute(null);
 
-        Assert.Equal(4, analysisReadyMessagesSent);
+        Assert.Equal(batchAnalyzeViewModel.AnalysesTable.Count, analysisReadyMessagesSent);
     }
     
     [Fact]
     public void TestTransferResultsIgnoresUnselected()
     {
-        Rservice rservice = new();
-        Assert.True(rservice.Connect(), "R must also be available for tests");
-
-        AnalysisConfiguration analysisConfiguration = new()
-        {
-            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
-            DatasetType = new()
-            {
-                Weight = "wgt",
-                NMI = 10,
-                MIvar = "mi",
-            },
-            ModeKeep = true,
-        };
-
-        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
-
-        BatchAnalyzeService batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+        BatchAnalyzeService batchAnalyzeService = new(new RserviceStub(), Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
         BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>())
         {
             FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json"),
-            UseCurrentFile = true,
-            CurrentConfiguration = analysisConfiguration
+            UseCurrentFile = false,
+            CurrentConfiguration = null
         };
         
         batchAnalyzeViewModel.LoadBatchFileCommand.Execute(null);
-        batchAnalyzeViewModel.RunBatchCommand.Execute(null);
-     
-        Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.True(batchAnalyzeViewModel.AnalysesTable.All(analysis => analysis.Success is not null)));
-
+        
+        foreach (var entry in batchAnalyzeViewModel.AnalysesTable)
+        {
+            entry.Success = true;
+            entry.PreparedPresentation = new AnalysisPresentation();
+        }
+        
         batchAnalyzeViewModel.AnalysesTable.First().Selected = false;
         
         var analysisReadyMessagesSent = 0;
@@ -265,51 +201,27 @@ public class TestBatchAnalyze
 
         batchAnalyzeViewModel.TransferResultsCommand.Execute(null);
 
-        Assert.Equal(3, analysisReadyMessagesSent);
+        Assert.Equal(batchAnalyzeViewModel.AnalysesTable.Count - 1, analysisReadyMessagesSent);
     }
 
     [Fact]
     public void TestAbortBatch()
     {
-        Rservice rservice = new();
-        Assert.True(rservice.Connect(), "R must also be available for tests");
-
-        AnalysisConfiguration analysisConfiguration = new()
-        {
-            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
-            DatasetType = new()
-            {
-                Weight = "wgt",
-                NMI = 10,
-                MIvar = "mi",
-            },
-            ModeKeep = true,
-        };
-
-        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
-
-        BatchAnalyzeService batchAnalyzeService = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
-        BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService, Mock.Of<Configuration>())
+        var batchAnalyzeService = new Mock<IBatchAnalyzeService>();
+        
+        BatchAnalyze batchAnalyzeViewModel = new(batchAnalyzeService.Object, Mock.Of<Configuration>())
         {
             FileName = Path.Combine(AssemblyDirectory, "_testData", "analyze_test_nmi10_multicat.json"),
-            UseCurrentFile = true,
-            CurrentConfiguration = analysisConfiguration
+            UseCurrentFile = false,
+            CurrentConfiguration = null
         };
         
         batchAnalyzeViewModel.LoadBatchFileCommand.Execute(null);
         batchAnalyzeViewModel.RunBatchCommand.Execute(null);
-
-        Policy.Handle<EqualException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.Equal("Working ...", batchAnalyzeViewModel.AnalysesTable.First().Message));
-        
         batchAnalyzeViewModel.AbortBatchCommand.Execute(null);
      
-        Policy.Handle<ContainsException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
-            .Execute(() => Assert.Contains(batchAnalyzeViewModel.AnalysesTable, analysis => analysis is { Success: false, Message: "Aborted!" }));
-        
-        Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.True(batchAnalyzeViewModel.AnalysesTable.All(analysis => analysis.Success is not null || analysis.WasIgnored)));
+        batchAnalyzeService.Verify(service => service.RunBatch(It.IsAny<IEnumerable<BatchAnalyze.BatchEntry>>(), It.IsAny<bool>(), It.IsAny<AnalysisConfiguration>()), Times.Once);
+        batchAnalyzeService.Verify(service => service.AbortBatch(), Times.Once);
     }
     
     [Fact]

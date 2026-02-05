@@ -57,7 +57,7 @@
 		},
 		"ViewSettings": {
 			"ShowFMI": false,
-			"ShowPValues": false,
+			"ShowPValues": true,
 			"ShowRank": false,
 			"ShowNCases": false,
 			"ShowNWeight": false,

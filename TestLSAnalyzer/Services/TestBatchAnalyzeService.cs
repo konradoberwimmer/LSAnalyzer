@@ -574,6 +574,8 @@ public class TestBatchAnalyzeService
 
         Policy.Handle<ContainsException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.Contains(analyses, analysis => analysis is { Success: false, Message: "Aborted!" }));
+
+        Assert.Contains(analyses, analysis => analysis is { Success: null, WasIgnored: true });
     }
 
     [Fact]
