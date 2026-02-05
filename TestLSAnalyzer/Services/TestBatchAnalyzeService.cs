@@ -465,6 +465,57 @@ public class TestBatchAnalyzeService
         Assert.True(analyses[3].Success);
     }
     
+        [Fact]
+    public void TestRunBatchPreparesAnalysisPresentation()
+    {
+        Rservice rservice = new();
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+
+        AnalysisConfiguration analysisConfigurationNmi10Multicat = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multicat.sav"),
+            DatasetType = new()
+            {
+                Weight = "wgt",
+                NMI = 10,
+                MIvar = "mi",
+            },
+            ModeKeep = false,
+        };
+
+        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Multicat.FileName));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Multicat));
+
+        BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+        
+        AnalysisPresentation dummyAnalysisPresentation = new();
+
+        List<BatchAnalyze.BatchEntry> analyses =
+        [
+            new()
+            {
+                Id = 3, Selected = true, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
+                    {
+                        Vars = new() { new(1, "cat", false) },
+                    },
+                    ViewSettings = dummyAnalysisPresentation.ViewSettings
+                }
+            },
+        ];
+
+        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat);
+
+        Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
+            .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
+
+        Assert.True(analyses[0].Success);
+        Assert.NotNull(analyses[0].PreparedPresentation);
+        Assert.NotEmpty(analyses[0].PreparedPresentation!.Analysis.Result);
+        Assert.NotEmpty(analyses[0].PreparedPresentation!.DataTable.Rows);
+    }
+    
     [Fact]
     public void TestAbortBatch()
     {

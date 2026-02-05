@@ -174,13 +174,10 @@ public partial class MainWindow : ObservableObject
 
         WeakReferenceMessenger.Default.Register<BatchAnalyze.BatchAnalyzeAnalysisReadyMessage>(this, (_, m) =>
         {
-            AnalysisPresentation analysisPresentation = new(m.AnalysisWithViewSettings.Analysis, this);
+            var analysisPresentation = m.AnalysisPresentation;
+            analysisPresentation.MainWindowViewModel = this;
             
             Analyses.Add(analysisPresentation);
-
-            analysisPresentation.SetAnalysisResult(m.AnalysisWithViewSettings.Analysis.Result);
-            
-            analysisPresentation.ApplyDeserializedViewSettings(m.AnalysisWithViewSettings.ViewSettings);
         });
     }
 

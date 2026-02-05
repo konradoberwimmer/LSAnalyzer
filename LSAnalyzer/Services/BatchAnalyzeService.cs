@@ -254,6 +254,10 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             analysis.ResultAt = DateTime.Now;
             analysis.ResultDuration = (analysis.ResultAt! - beforeCalculation).Value.TotalSeconds;
 
+            entry.PreparedPresentation = new AnalysisPresentation(entry.Analysis.Analysis);
+            entry.PreparedPresentation.SetAnalysisResult(entry.Analysis.Analysis.Result);
+            entry.PreparedPresentation.ApplyDeserializedViewSettings(entry.Analysis.ViewSettings);
+            
             entry.Success = true;
             entry.Message = "Success!";
         }

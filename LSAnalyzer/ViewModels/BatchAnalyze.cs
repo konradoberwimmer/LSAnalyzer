@@ -225,9 +225,9 @@ public partial class BatchAnalyze : ObservableObject
     [RelayCommand]
     private void TransferResults(ICloseable? window)
     {
-        foreach (var entry in AnalysesTable.Where(entry => entry is { Success: true, Selected: true }))
+        foreach (var entry in AnalysesTable.Where(entry => entry is { Success: true, Selected: true, PreparedPresentation: not null }))
         { 
-            WeakReferenceMessenger.Default.Send(new BatchAnalyzeAnalysisReadyMessage(entry.Analysis));
+            WeakReferenceMessenger.Default.Send(new BatchAnalyzeAnalysisReadyMessage(entry.PreparedPresentation!));
         }
 
         window?.Close();
@@ -251,6 +251,8 @@ public partial class BatchAnalyze : ObservableObject
         [ObservableProperty] private bool _wasIgnored = false;
         
         [ObservableProperty] private string _message = string.Empty;
+        
+        public AnalysisPresentation? PreparedPresentation { get; set; }
 
         public bool IsSuccess => Success is true;
         
@@ -262,8 +264,8 @@ public partial class BatchAnalyze : ObservableObject
         public string Message { get; init; } = string.Empty;
     }
 
-    public class BatchAnalyzeAnalysisReadyMessage(AnalysisWithViewSettings analysisWithViewSettings)
+    public class BatchAnalyzeAnalysisReadyMessage(AnalysisPresentation analysisPresentation)
     {
-        public readonly AnalysisWithViewSettings AnalysisWithViewSettings = analysisWithViewSettings;
+        public readonly AnalysisPresentation AnalysisPresentation = analysisPresentation;
     }
 }
