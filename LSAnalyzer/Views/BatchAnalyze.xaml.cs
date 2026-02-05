@@ -3,19 +3,10 @@ using LSAnalyzer.Helper;
 using LSAnalyzer.ViewModels;
 using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace LSAnalyzer.Views
 {
@@ -33,7 +24,7 @@ namespace LSAnalyzer.Views
             WeakReferenceMessenger.Default.Register<RecentFileInvalidMessage>(this, (_, m) => 
                 MessageBox.Show($"File '{ m.FileName }' is no longer available.", "Error", MessageBoxButton.OK, MessageBoxImage.Error));
             
-            WeakReferenceMessenger.Default.Register<BatchAnalyzeFailureMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.BatchAnalyze.BatchAnalyzeFailureMessage>(this, (r, m) =>
             {
                 MessageBox.Show(m.Message, "Error running analysis requests", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
@@ -66,20 +57,6 @@ namespace LSAnalyzer.Views
             }
             
             WeakReferenceMessenger.Default.UnregisterAll(this);
-        }
-
-        private void DataGridBatchResults_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
-        {
-            if (e.Column is not DataGridTextColumn column)
-            {
-                return;
-            }
-
-            if (column.Header is string columnHeader && columnHeader == "Info")
-            {
-                column.ElementStyle = Resources["wordWrapStyle"] as Style;
-                column.Width = 250;
-            }
         }
     }
 }

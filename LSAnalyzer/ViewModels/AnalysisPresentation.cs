@@ -26,9 +26,8 @@ public partial class AnalysisPresentation : ObservableObject
         new() { Name = "csvMultiple", Filter = "CSV: Multiple files (*.csv)|*.csv" },
         new() { Name = "csvMainTable", Filter = "CSV: Main table only (*.csv)|*.csv" },
     ];
-    
-    protected MainWindow? _mainWindowViewModel = null;
-    public MainWindow? MainWindowViewModel => _mainWindowViewModel;
+
+    public MainWindow? MainWindowViewModel { get; set; }
 
     private IResultService? _resultService;
     public IResultService ResultService
@@ -211,7 +210,7 @@ public partial class AnalysisPresentation : ObservableObject
         Analysis = analysis;
         DataTable = new();
         DataView = new(DataTable);
-        _mainWindowViewModel = mainWindowViewModel;
+        MainWindowViewModel = mainWindowViewModel;
     }
 
     public void SetAnalysisResult(List<GenericVector> result)

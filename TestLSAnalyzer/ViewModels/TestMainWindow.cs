@@ -86,6 +86,19 @@ namespace TestLSAnalyzer.ViewModels
 
             Assert.True(sentNotifyIsBusyChanged);
         }
+
+        [Fact]
+        public void TestHandleBatchAnalyzeAnalysisReadyMessage()
+        {
+            MainWindow mainWindowViewModel = new(new RserviceStub(), new AnalysisQueueStub());
+            
+            Assert.Empty(mainWindowViewModel.Analyses);
+            
+            WeakReferenceMessenger.Default.Send(new BatchAnalyze.BatchAnalyzeAnalysisReadyMessage(new AnalysisPresentation()));
+            
+            Assert.Single(mainWindowViewModel.Analyses);
+            Assert.Equal(mainWindowViewModel, mainWindowViewModel.Analyses.First().MainWindowViewModel);
+        }
         
         [Fact]
         public void TestSetAnalysisConfigurationClearsSubsetting()
