@@ -57,7 +57,7 @@ public class TestBatchAnalyzeService
             },
         ];
         
-        batchAnalyze.RunBatch(analyses, true, analysisConfiguration);
+        batchAnalyze.RunBatch(analyses, true, analysisConfiguration, null);
 
         Policy.Handle<EqualException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
             .Execute(() => Assert.Equal(3, messageCounter));
@@ -165,7 +165,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, false, null);
+        batchAnalyze.RunBatch(analyses, false, null, null);
 
         Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
@@ -250,7 +250,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, false, null);
+        batchAnalyze.RunBatch(analyses, false, null, null);
 
         Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null || analysis.WasIgnored)));
@@ -350,7 +350,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5);
+        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5, null);
 
         Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(10))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
@@ -452,7 +452,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat);
+        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat, null);
 
         Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
@@ -505,7 +505,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat);
+        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat, null);
 
         Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
@@ -565,7 +565,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, false, null);
+        batchAnalyze.RunBatch(analyses, false, null, null);
         
         Policy.Handle<EqualException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
             .Execute(() => Assert.Equal("Working ...", analyses.First().Message));
@@ -661,7 +661,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, false, null);
+        batchAnalyze.RunBatch(analyses, false, null, null);
 
         Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
@@ -670,12 +670,62 @@ public class TestBatchAnalyzeService
 
         analyses[0].Success = null;
         
-        batchAnalyze.RunBatch(analyses, false, null);
+        batchAnalyze.RunBatch(analyses, false, null, null);
 
         Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
         
         Assert.True(analyses[0].Success);
+    }
+    
+    [Fact]
+    public void TestRunBatchDoesNotReapplySameSubsettingOnCurrentFile()
+    {
+        var rservice = new Mock<IRservice>();
+        rservice.Setup(service => service.CalculateUnivar(It.IsAny<AnalysisUnivar>())).Returns([]);
+        rservice.Setup(service =>
+            service.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>())).Returns(true);
+        
+        AnalysisConfiguration analysisConfigurationNmi10Rep5 = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+            DatasetType = new()
+            {
+                Weight = "wgt",
+                NMI = 10, MIvar = "mi",
+                RepWgts = "repwgt", FayFac = 0.5,
+            },
+            ModeKeep = true,
+        };
+
+        BatchAnalyzeService batchAnalyze = new(rservice.Object, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+
+        AnalysisPresentation dummyAnalysisPresentation = new();
+
+        List<BatchAnalyze.BatchEntry> analyses =
+        [
+            new()
+            {
+                Id = 1, Selected = true, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
+                    {
+                        Vars = [new Variable(1, "x", false)],
+                        GroupBy = [new Variable(2, "cat", false)],
+                        SubsettingExpression = "cat == 1",
+                    },
+                    ViewSettings = dummyAnalysisPresentation.ViewSettings
+                }
+            },
+        ];
+
+        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5, "cat == 1");
+
+        Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
+            .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
+
+        rservice.Verify(service => service.CalculateUnivar(It.IsAny<AnalysisUnivar>()), Times.Once);
+        rservice.Verify(service => service.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>()), Times.Never);
     }
 
     [Fact]

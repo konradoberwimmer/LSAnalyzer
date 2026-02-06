@@ -636,8 +636,12 @@ namespace LSAnalyzer.Services
             return true;
         }
 
-        public bool PrepareForAnalysis(Analysis analysis, List<string>? additionalVariables = null)
+        public bool PrepareForAnalysis(Analysis analysis)
         {
+            List<string>? additionalVariables = analysis is AnalysisRegression analysisRegression
+                ? [analysisRegression.Dependent?.Name ?? "insufficient_analysis_definition_"]
+                : null;
+            
             if (analysis.AnalysisConfiguration.DatasetType == null || !ReduceToNecessaryVariables(analysis, additionalVariables, analysis.SubsettingExpression))
             {
                 return false;
@@ -1118,7 +1122,7 @@ namespace LSAnalyzer.Services
         private List<GenericVector>? CalculateRegression(string method, string r2parameter, AnalysisRegression analysis)
         {
             if (analysis.Dependent == null || analysis.Vars.Count == 0 ||
-                analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis, new() { analysis.Dependent.Name }))
+                analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
             {
                 return null;
             }

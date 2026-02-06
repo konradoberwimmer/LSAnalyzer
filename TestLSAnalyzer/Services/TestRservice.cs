@@ -365,15 +365,25 @@ namespace TestLSAnalyzer.Services
                 Vars = new() { new(1, "x", false) },
                 GroupBy = new() { new(2, "cat", false) },
             };
+            AnalysisLinreg analysisLinregCorrect = new(analysisConfiguration)
+            {
+                Dependent = new Variable(1, "x", false),
+                Vars = [new Variable(1, "y", false)],
+                GroupBy = [new Variable(2, "cat", false)]
+            };
+            AnalysisLogistReg analysisLogistregIncorrect = new(analysisConfiguration)
+            {
+                Vars = [new Variable(1, "y", false)],
+                GroupBy = [new Variable(2, "cat", false)]
+            };
 
             Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
 
             Assert.True(rservice.PrepareForAnalysis(analysisUnivar));
-            Assert.False(rservice.PrepareForAnalysis(analysisUnivar, new() { "xyz" }));
-
-
+            Assert.True(rservice.PrepareForAnalysis(analysisLinregCorrect));
+            Assert.False(rservice.PrepareForAnalysis(analysisLogistregIncorrect));
         }
 
         [Fact]

@@ -48,7 +48,7 @@ public interface IRservice
 
     public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, string? subsettingExpression = null);
 
-    public bool PrepareForAnalysis(Analysis analysis, List<string>? additionalVariables = null);
+    public bool PrepareForAnalysis(Analysis analysis);
 
     public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, bool fromStoredRaw = false);
 

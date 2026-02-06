@@ -18,6 +18,8 @@ public class BatchAnalyzeService : IBatchAnalyzeService
     
     private bool _useCurrentFile = true;
     private AnalysisConfiguration? _currentConfiguration;
+    private string _currentSubsettingExpression;
+    
     private BackgroundWorker? _worker;
 
     public BatchAnalyzeService(IRservice rservice, Configuration configuration, IServiceProvider serviceProvider)
@@ -27,12 +29,13 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         _serviceProvider = serviceProvider;
     }
 
-    public void RunBatch(IEnumerable<BatchAnalyze.BatchEntry> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration)
+    public void RunBatch(IEnumerable<BatchAnalyze.BatchEntry> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration, string? currentSubsettingExpression)
     {
         if (_worker?.IsBusy is true) return;
         
         _useCurrentFile = useCurrentFile;
         _currentConfiguration = currentConfiguration;
+        _currentSubsettingExpression = currentSubsettingExpression ?? string.Empty;
 
         if (analyses.Any() && !_useCurrentFile)
         {
@@ -69,7 +72,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         }
 
         AnalysisConfiguration? previousAnalysisConfiguration = null;
-        var previousSubsettingExpression = "$$$initialize$$$";
+        var previousSubsettingExpression = _currentSubsettingExpression;
 
         foreach (var entry in batchEntries)
         {
@@ -106,110 +109,15 @@ public class BatchAnalyzeService : IBatchAnalyzeService
                 !analysis.AnalysisConfiguration.IsEqual(previousAnalysisConfiguration) || 
                 analysis.SubsettingExpression != previousSubsettingExpression))
         {
-            if (analysis.AnalysisConfiguration.FileName?.StartsWith("[") ?? false)
-            {
-                if (string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.FileRetrieval))
-                {
-                    entry.Success = false;
-                    entry.Message = AbortedOr("Reloading from data provider is not supported for json files created before v1.2!");
-                    return;
-                }
-
-                var providerRetrieval = RetrieveDataProvider(analysis.AnalysisConfiguration.FileRetrieval);
-
-                if (!providerRetrieval.success)
-                {
-                    entry.Success = false;
-                    entry.Message = AbortedOr(providerRetrieval.errorMessage ?? "Unknown error when retrieving data provider!");
-                    return;
-                }
-
-                var fileInformation = RetrieveFileInformation(providerRetrieval.dataProvider!,
-                    analysis.AnalysisConfiguration.FileRetrieval);
-
-                if (!fileInformation.success)
-                {
-                    entry.Success = false;
-                    entry.Message = AbortedOr(fileInformation.errorMessage ?? "Unknown error when retrieving file information!");
-                    return;
-                }
-
-                if (!providerRetrieval.dataProvider!.LoadFileIntoGlobalEnvironment(fileInformation
-                        .fileInformation!))
-                {
-                    entry.Success = false;
-                    entry.Message = AbortedOr("Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!");
-                    return;
-                }
-            } else if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.AnalysisConfiguration.FileName ?? string.Empty, analysis.AnalysisConfiguration.FileType))
-            {
-                entry.Success = false;
-                entry.Message = AbortedOr("Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!");
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysis.AnalysisConfiguration.DatasetType!.IDvar))
-            {
-                entry.Success = false;
-                entry.Message = AbortedOr("Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!");
-                return;
-            }
-
-            if (!_rservice.TestAnalysisConfiguration(analysis.AnalysisConfiguration, analysis.SubsettingExpression))
-            {
-                entry.Success = false;
-                entry.Message = AbortedOr("Could not use file for dataset type '" + analysis.AnalysisConfiguration.DatasetType?.Name + "'!");
-                return;
-            }
-
-            if (analysis.AnalysisConfiguration.ModeKeep == false)
-            {
-                List<string>? additionalVariables = null;
-                if (analysis is AnalysisRegression analysisRegression)
-                {
-                    additionalVariables = [analysisRegression.Dependent?.Name ?? "insufficient_analysis_definition_"];
-                }
-                if (!_rservice.PrepareForAnalysis(analysis, additionalVariables))
-                {
-                    entry.Success = false;
-                    entry.Message = AbortedOr("Could not build file '" + analysis.AnalysisConfiguration.FileName + "' for analysis!");
-                    return;
-                }
-            }
+            previousAnalysisConfiguration = null;
+            previousSubsettingExpression = "$$$initialize$$$";
+            
+            if (!ReloadSpecifiedFile(entry)) return;
         }
 
         if (_useCurrentFile)
         {
-            if (analysis.SubsettingExpression != previousSubsettingExpression)
-            {
-                if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, analysis.SubsettingExpression))
-                {
-                    entry.Success = false;
-                    entry.Message = AbortedOr("Could not reapply subsetting '" + analysis.SubsettingExpression + "'!");
-                    return;
-                }
-
-                previousSubsettingExpression = analysis.SubsettingExpression;
-            
-                WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedSubsettingMessage { SubsettingExpression = analysis.SubsettingExpression ?? string.Empty });
-            }
-
-            if (!(_currentConfiguration?.ModeKeep ?? true))
-            {
-                List<string>? additionalVariables = null;
-                if (analysis is AnalysisRegression analysisRegression)
-                {
-                    additionalVariables = [analysisRegression.Dependent?.Name ?? "insufficient_analysis_definition_"];
-                }
-                if (!_rservice.PrepareForAnalysis(analysis, additionalVariables))
-                {
-                    entry.Success = false;
-                    entry.Message = AbortedOr("Could not build current file for analysis!");
-                    return;
-                }
-            }
-
-            analysis.AnalysisConfiguration = _currentConfiguration!;
+            if (!PrepareCurrentFile(entry, ref previousSubsettingExpression)) return;
         }
 
         previousSubsettingExpression = analysis.SubsettingExpression;
@@ -271,6 +179,108 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         
         entry.Success = true;
         entry.Message = "Success!";
+    }
+
+    private bool ReloadSpecifiedFile(BatchAnalyze.BatchEntry entry)
+    {
+        var analysis = entry.Analysis.Analysis;
+        
+        if (analysis.AnalysisConfiguration.FileName?.StartsWith("[") ?? false)
+        {
+            if (string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.FileRetrieval))
+            {
+                entry.Success = false;
+                entry.Message = AbortedOr("Reloading from data provider is not supported for json files created before v1.2!");
+                return false;
+            }
+
+            var providerRetrieval = RetrieveDataProvider(analysis.AnalysisConfiguration.FileRetrieval);
+
+            if (!providerRetrieval.success)
+            {
+                entry.Success = false;
+                entry.Message = AbortedOr(providerRetrieval.errorMessage ?? "Unknown error when retrieving data provider!");
+                return false;
+            }
+
+            var fileInformation = RetrieveFileInformation(providerRetrieval.dataProvider!,
+                analysis.AnalysisConfiguration.FileRetrieval);
+
+            if (!fileInformation.success)
+            {
+                entry.Success = false;
+                entry.Message = AbortedOr(fileInformation.errorMessage ?? "Unknown error when retrieving file information!");
+                return false;
+            }
+
+            if (!providerRetrieval.dataProvider!.LoadFileIntoGlobalEnvironment(fileInformation
+                    .fileInformation!))
+            {
+                entry.Success = false;
+                entry.Message = AbortedOr("Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!");
+                return false;
+            }
+        } else if (!_rservice.LoadFileIntoGlobalEnvironment(analysis.AnalysisConfiguration.FileName ?? string.Empty, analysis.AnalysisConfiguration.FileType))
+        {
+            entry.Success = false;
+            entry.Message = AbortedOr("Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!");
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysis.AnalysisConfiguration.DatasetType!.IDvar))
+        {
+            entry.Success = false;
+            entry.Message = AbortedOr("Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!");
+            return false;
+        }
+
+        if (!_rservice.TestAnalysisConfiguration(analysis.AnalysisConfiguration, analysis.SubsettingExpression))
+        {
+            entry.Success = false;
+            entry.Message = AbortedOr("Could not use file for dataset type '" + analysis.AnalysisConfiguration.DatasetType?.Name + "'!");
+            return false;
+        }
+
+        if (analysis.AnalysisConfiguration.ModeKeep == false && !_rservice.PrepareForAnalysis(analysis))
+        {
+            entry.Success = false;
+            entry.Message = AbortedOr("Could not build file '" + analysis.AnalysisConfiguration.FileName + "' for analysis!");
+            return false;
+        }
+        
+        return true;
+    }
+
+    private bool PrepareCurrentFile(BatchAnalyze.BatchEntry entry, ref string? previousSubsettingExpression)
+    {
+        var analysis = entry.Analysis.Analysis;
+        
+        if ((analysis.SubsettingExpression ?? string.Empty) != (previousSubsettingExpression ?? string.Empty))
+        {
+            previousSubsettingExpression = "$$$initialize$$$";
+            
+            if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, analysis.SubsettingExpression))
+            {
+                entry.Success = false;
+                entry.Message = AbortedOr("Could not reapply subsetting '" + analysis.SubsettingExpression + "'!");
+                return false;
+            }
+
+            previousSubsettingExpression = analysis.SubsettingExpression;
+            
+            WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedSubsettingMessage { SubsettingExpression = analysis.SubsettingExpression ?? string.Empty });
+        }
+
+        if (!(_currentConfiguration?.ModeKeep ?? true) && !_rservice.PrepareForAnalysis(analysis))
+        {
+            entry.Success = false;
+            entry.Message = AbortedOr("Could not build current file for analysis!");
+            return false;
+        }
+
+        analysis.AnalysisConfiguration = _currentConfiguration!;
+        
+        return true;
     }
 
     private string AbortedOr(string message)
