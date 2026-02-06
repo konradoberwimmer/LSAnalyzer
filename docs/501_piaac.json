@@ -1,0 +1,37 @@
+{
+  "Id": 501,
+  "Name": "PIAAC",
+  "Group": "PIAAC",
+  "Description": "PIAAC since 2011 - person level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "SPFWT0",
+  "NMI": 10,
+  "MIvar": null,
+  "IDvar": null,
+  "PVvarsList": [
+    {
+      "Regex": "PVLIT",
+      "DisplayName": "PVLIT",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PVNUM",
+      "DisplayName": "PVNUM",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PVPSL",
+      "DisplayName": "PVPSL",
+      "Mandatory": true,
+      "HasErrors": false
+    }
+  ],
+  "RepWgts": "SPFWT[1-9][0-9]?",
+  "FayFac": 1,
+  "JKzone": null,
+  "JKrep": null,
+  "JKreverse": false,
+  "HasErrors": false
+}
