@@ -18,6 +18,8 @@ public class BatchAnalyzeService : IBatchAnalyzeService
     
     private bool _useCurrentFile = true;
     private AnalysisConfiguration? _currentConfiguration;
+    private string _currentSubsettingExpression;
+    
     private BackgroundWorker? _worker;
 
     public BatchAnalyzeService(IRservice rservice, Configuration configuration, IServiceProvider serviceProvider)
@@ -27,12 +29,13 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         _serviceProvider = serviceProvider;
     }
 
-    public void RunBatch(IEnumerable<BatchAnalyze.BatchEntry> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration)
+    public void RunBatch(IEnumerable<BatchAnalyze.BatchEntry> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration, string? currentSubsettingExpression)
     {
         if (_worker?.IsBusy is true) return;
         
         _useCurrentFile = useCurrentFile;
         _currentConfiguration = currentConfiguration;
+        _currentSubsettingExpression = currentSubsettingExpression ?? string.Empty;
 
         if (analyses.Any() && !_useCurrentFile)
         {
@@ -69,7 +72,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         }
 
         AnalysisConfiguration? previousAnalysisConfiguration = null;
-        var previousSubsettingExpression = "$$$initialize$$$";
+        var previousSubsettingExpression = _currentSubsettingExpression;
 
         foreach (var entry in batchEntries)
         {
@@ -252,7 +255,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
     {
         var analysis = entry.Analysis.Analysis;
         
-        if (analysis.SubsettingExpression != previousSubsettingExpression)
+        if ((analysis.SubsettingExpression ?? string.Empty) != (previousSubsettingExpression ?? string.Empty))
         {
             previousSubsettingExpression = "$$$initialize$$$";
             

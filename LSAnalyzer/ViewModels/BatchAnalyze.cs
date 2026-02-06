@@ -66,6 +66,9 @@ public partial class BatchAnalyze : ObservableObject
 
     [ObservableProperty]
     private AnalysisConfiguration? _currentConfiguration;
+    
+    [ObservableProperty]
+    private string? _currentSubsetting;
 
     [ObservableProperty]
     private ObservableCollection<BatchEntry> _analysesTable = [];
@@ -213,7 +216,7 @@ public partial class BatchAnalyze : ObservableObject
 
         IsBusy = true;
 
-        _batchAnalyzeService.RunBatch(AnalysesTable, UseCurrentFile, CurrentConfiguration);
+        _batchAnalyzeService.RunBatch(AnalysesTable, UseCurrentFile, CurrentConfiguration, CurrentSubsetting);
     }
 
     [RelayCommand]
