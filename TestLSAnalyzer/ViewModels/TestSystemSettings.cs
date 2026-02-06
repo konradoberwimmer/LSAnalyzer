@@ -254,7 +254,7 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
-        public bool PrepareForAnalysis(Analysis analysis, List<string>? additionalVariables = null)
+        public bool PrepareForAnalysis(Analysis analysis)
         {
             throw new NotImplementedException();
         }

@@ -98,7 +98,7 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
-    public bool PrepareForAnalysis(Analysis analysis, List<string>? additionalVariables = null)
+    public bool PrepareForAnalysis(Analysis analysis)
     {
         throw new System.NotImplementedException();
     }

@@ -238,19 +238,11 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             return false;
         }
 
-        if (analysis.AnalysisConfiguration.ModeKeep == false)
+        if (analysis.AnalysisConfiguration.ModeKeep == false && !_rservice.PrepareForAnalysis(analysis))
         {
-            List<string>? additionalVariables = null;
-            if (analysis is AnalysisRegression analysisRegression)
-            {
-                additionalVariables = [analysisRegression.Dependent?.Name ?? "insufficient_analysis_definition_"];
-            }
-            if (!_rservice.PrepareForAnalysis(analysis, additionalVariables))
-            {
-                entry.Success = false;
-                entry.Message = AbortedOr("Could not build file '" + analysis.AnalysisConfiguration.FileName + "' for analysis!");
-                return false;
-            }
+            entry.Success = false;
+            entry.Message = AbortedOr("Could not build file '" + analysis.AnalysisConfiguration.FileName + "' for analysis!");
+            return false;
         }
         
         return true;
@@ -276,19 +268,11 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             WeakReferenceMessenger.Default.Send(new BatchAnalyzeChangedSubsettingMessage { SubsettingExpression = analysis.SubsettingExpression ?? string.Empty });
         }
 
-        if (!(_currentConfiguration?.ModeKeep ?? true))
+        if (!(_currentConfiguration?.ModeKeep ?? true) && !_rservice.PrepareForAnalysis(analysis))
         {
-            List<string>? additionalVariables = null;
-            if (analysis is AnalysisRegression analysisRegression)
-            {
-                additionalVariables = [analysisRegression.Dependent?.Name ?? "insufficient_analysis_definition_"];
-            }
-            if (!_rservice.PrepareForAnalysis(analysis, additionalVariables))
-            {
-                entry.Success = false;
-                entry.Message = AbortedOr("Could not build current file for analysis!");
-                return false;
-            }
+            entry.Success = false;
+            entry.Message = AbortedOr("Could not build current file for analysis!");
+            return false;
         }
 
         analysis.AnalysisConfiguration = _currentConfiguration!;
