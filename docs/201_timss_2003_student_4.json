@@ -1,0 +1,109 @@
+{
+  "Id": 201,
+  "Name": "TIMSS 2003 - 4th grade student level",
+  "Group": "PIRLS/TIMSS",
+  "Description": "TIMSS 2003 - 4th grade student level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "totwgt;senwgt",
+  "NMI": 5,
+  "MIvar": null,
+  "IDvar": "idstud",
+  "PVvarsList": [
+    {
+      "Regex": "asmmat",
+      "DisplayName": "asmmat",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "asssci",
+      "DisplayName": "asssci",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "asmalg",
+      "DisplayName": "asmalg",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "asmdap",
+      "DisplayName": "asmdap",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "asmfns",
+      "DisplayName": "asmfns",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "asmgeo",
+      "DisplayName": "asmgeo",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "asmmea",
+      "DisplayName": "asmmea",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "asseas",
+      "DisplayName": "asseas",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "asslis",
+      "DisplayName": "asslis",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "assphy",
+      "DisplayName": "assphy",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "asmapp",
+      "DisplayName": "asmapp",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "asmkno",
+      "DisplayName": "asmkno",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "asmrea",
+      "DisplayName": "asmrea",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "asmibm",
+      "DisplayName": "asmibm",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "assibm",
+      "DisplayName": "assibm",
+      "Mandatory": true,
+      "HasErrors": false
+    }
+  ],
+  "RepWgts": null,
+  "FayFac": 1,
+  "JKzone": "jkzone",
+  "JKrep": "jkrep",
+  "JKreverse": false,
+  "HasErrors": false
+}

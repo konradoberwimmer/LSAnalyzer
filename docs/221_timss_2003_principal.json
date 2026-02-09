@@ -1,0 +1,18 @@
+{
+  "Id": 221,
+  "Name": "TIMSS 2003 - principal level",
+  "Group": "PIRLS/TIMSS",
+  "Description": "TIMSS 2003 - principal level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "schwgt;stotwgtu",
+  "NMI": 1,
+  "MIvar": null,
+  "IDvar": "idschool",
+  "PVvarsList": [],
+  "RepWgts": null,
+  "FayFac": 1,
+  "JKzone": "jkczone",
+  "JKrep": "jkcrep",
+  "JKreverse": false,
+  "HasErrors": false
+}

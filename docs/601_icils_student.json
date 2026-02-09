@@ -1,0 +1,31 @@
+{
+  "Id": 601,
+  "Name": "ICILS - student level",
+  "Group": "ICILS",
+  "Description": "ICILS since 2013 - student level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "TOTWGTS",
+  "NMI": 5,
+  "MIvar": null,
+  "IDvar": null,
+  "PVvarsList": [
+    {
+      "Regex": "PV[0-9]+CIL",
+      "DisplayName": "PVCIL",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+CT",
+      "DisplayName": "PVCT",
+      "Mandatory": false,
+      "HasErrors": false
+    }
+  ],
+  "RepWgts": "SRWGT[0-9]+",
+  "FayFac": 1,
+  "JKzone": null,
+  "JKrep": null,
+  "JKreverse": false,
+  "HasErrors": false
+}

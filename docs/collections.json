@@ -1,0 +1,140 @@
+[
+  {
+    "Name": "default",
+    "Entries": [
+      {
+        "DatasetTypeId": 102,
+        "FileName": "102_pirls_since_2016_student.json"
+      },
+      {
+        "DatasetTypeId": 112,
+        "FileName": "112_pirls_since_2016_teacher.json"
+      },
+      {
+        "DatasetTypeId": 122,
+        "FileName": "122_pirls_since_2016_principal.json"
+      },
+      {
+        "DatasetTypeId": 205,
+        "FileName": "205_timss_since_2015_student_4.json"
+      },
+      {
+        "DatasetTypeId": 206,
+        "FileName": "206_timss_since_2015_student_8.json"
+      },
+      {
+        "DatasetTypeId": 215,
+        "FileName": "215_timss_since_2015_teacher_4.json"
+      },
+      {
+        "DatasetTypeId": 216,
+        "FileName": "216_timss_since_2015_teacher_8.json"
+      },
+      {
+        "DatasetTypeId": 225,
+        "FileName": "225_timss_since_2015_principal.json"
+      },
+      {
+        "DatasetTypeId": 302,
+        "FileName": "302_pisa_since_2015.json"
+      },
+      {
+        "DatasetTypeId": 401,
+        "FileName": "401_talis_principal.json"
+      },
+      {
+        "DatasetTypeId": 402,
+        "FileName": "402_talis_teacher.json"
+      },
+      {
+        "DatasetTypeId": 501,
+        "FileName": "501_piaac.json"
+      },
+      {
+        "DatasetTypeId": 601,
+        "FileName": "601_icils_student.json"
+      },
+      {
+        "DatasetTypeId": 611,
+        "FileName": "611_icils_teacher.json"
+      },
+      {
+        "DatasetTypeId": 621,
+        "FileName": "621_icils_school.json"
+      }
+    ]
+  },
+  {
+    "Name": "historic",
+    "Entries": [
+      {
+        "DatasetTypeId": 101,
+        "FileName": "101_pirls_until_2011_student.json"
+      },
+      {
+        "DatasetTypeId": 103,
+        "FileName": "103_pirlstimss_2011_student.json"
+      },
+      {
+        "DatasetTypeId": 111,
+        "FileName": "111_pirls_until_2011_teacher.json"
+      },
+      {
+        "DatasetTypeId": 113,
+        "FileName": "113_pirlstimss_2011_teacher.json"
+      },
+      {
+        "DatasetTypeId": 121,
+        "FileName": "121_pirls_until_2011_principal.json"
+      },
+      {
+        "DatasetTypeId": 123,
+        "FileName": "123_pirlstimss_2011_principal.json"
+      },
+      {
+        "DatasetTypeId": 201,
+        "FileName": "201_timss_2003_student_4.json"
+      },
+      {
+        "DatasetTypeId": 202,
+        "FileName": "202_timss_2003_student_8.json"
+      },
+      {
+        "DatasetTypeId": 203,
+        "FileName": "203_timss_2007_2011_student_4.json"
+      },
+      {
+        "DatasetTypeId": 204,
+        "FileName": "204_timss_2007_2011_student_8.json"
+      },
+      {
+        "DatasetTypeId": 211,
+        "FileName": "211_timss_2003_teacher_4.json"
+      },
+      {
+        "DatasetTypeId": 212,
+        "FileName": "212_timss_2003_teacher_8.json"
+      },
+      {
+        "DatasetTypeId": 213,
+        "FileName": "213_timss_2007_2011_teacher_4.json"
+      },
+      {
+        "DatasetTypeId": 214,
+        "FileName": "214_timss_2007_2011_teacher_8.json"
+      },
+      {
+        "DatasetTypeId": 221,
+        "FileName": "221_timss_2003_principal.json"
+      },
+      {
+        "DatasetTypeId": 223,
+        "FileName": "223_timss_2007_2011_principal.json"
+      },
+      {
+        "DatasetTypeId": 301,
+        "FileName": "301_pisa_until_2012.json"
+      }
+    ]
+  }
+]

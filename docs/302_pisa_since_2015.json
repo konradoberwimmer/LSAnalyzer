@@ -1,0 +1,121 @@
+{
+  "Id": 302,
+  "Name": "PISA since 2015 - student level",
+  "Group": "PISA",
+  "Description": "PISA since 2015 - student level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "W_FSTUWT",
+  "NMI": 10,
+  "MIvar": null,
+  "IDvar": "CNTSTUID",
+  "PVvarsList": [
+    {
+      "Regex": "PV[0-9]+MATH",
+      "DisplayName": "PVMATH",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+READ",
+      "DisplayName": "PVREAD",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+SCIE",
+      "DisplayName": "PVSCIE",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+GLCM",
+      "DisplayName": "PVGLCM",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+RCLI",
+      "DisplayName": "PVRCLI",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+RCUN",
+      "DisplayName": "PVRCUN",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+RCER",
+      "DisplayName": "PVRCER",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+RTSN",
+      "DisplayName": "PVRTSN",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+RTML",
+      "DisplayName": "PVRTML",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+SCEP",
+      "DisplayName": "PVSCEP",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+SCED",
+      "DisplayName": "PVSCED",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+SCID",
+      "DisplayName": "PVSCID",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+SKCO",
+      "DisplayName": "PVSKCO",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+SKPE",
+      "DisplayName": "PVSKPE",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+SSPH",
+      "DisplayName": "PVSSPH",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+SSLI",
+      "DisplayName": "PVSSLI",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+SSES",
+      "DisplayName": "PVSSES",
+      "Mandatory": false,
+      "HasErrors": false
+    }
+  ],
+  "RepWgts": "W_FSTURWT",
+  "FayFac": 0.05,
+  "JKzone": null,
+  "JKrep": null,
+  "JKreverse": false,
+  "HasErrors": false
+}

@@ -1,0 +1,121 @@
+{
+  "Id": 212,
+  "Name": "TIMSS 2003 - 8th grade teacher data on student level",
+  "Group": "PIRLS/TIMSS",
+  "Description": "TIMSS 2003 - 8th grade teacher data on student level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "tchwgt;matwgt;sciwgt",
+  "NMI": 5,
+  "MIvar": null,
+  "IDvar": "idstud",
+  "PVvarsList": [
+    {
+      "Regex": "bsmmat",
+      "DisplayName": "bsmmat",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsssci",
+      "DisplayName": "bsssci",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsmalg",
+      "DisplayName": "bsmalg",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsmdap",
+      "DisplayName": "bsmdap",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsmfns",
+      "DisplayName": "bsmfns",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsmgeo",
+      "DisplayName": "bsmgeo",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsmmea",
+      "DisplayName": "bsmmea",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsseas",
+      "DisplayName": "bsseas",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsslis",
+      "DisplayName": "bsslis",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bssphy",
+      "DisplayName": "bssphy",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bssche",
+      "DisplayName": "bssche",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsseri",
+      "DisplayName": "bsseri",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsmapp",
+      "DisplayName": "bsmapp",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsmkno",
+      "DisplayName": "bsmkno",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsmrea",
+      "DisplayName": "bsmrea",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bsmibm",
+      "DisplayName": "bsmibm",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "bssibm",
+      "DisplayName": "bssibm",
+      "Mandatory": false,
+      "HasErrors": false
+    }
+  ],
+  "RepWgts": null,
+  "FayFac": 1,
+  "JKzone": "jkzone",
+  "JKrep": "jkrep",
+  "JKreverse": false,
+  "HasErrors": false
+}

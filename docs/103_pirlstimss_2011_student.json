@@ -1,0 +1,55 @@
+{
+  "Id": 103,
+  "Name": "PIRLS/TIMSS 2011 joint - student level",
+  "Group": "PIRLS/TIMSS",
+  "Description": "PIRLS/TIMSS 2011 joint - student level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "TOTWGT;SENWGT",
+  "NMI": 5,
+  "MIvar": null,
+  "IDvar": "IDSTUD",
+  "PVvarsList": [
+    {
+      "Regex": "ASMMAT",
+      "DisplayName": "ASMMAT",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSSCI",
+      "DisplayName": "ASSSCI",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASRREA",
+      "DisplayName": "ASRREA",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMIBM",
+      "DisplayName": "ASMIBM",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSIBM",
+      "DisplayName": "ASSIBM",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASRIBM",
+      "DisplayName": "ASRIBM",
+      "Mandatory": true,
+      "HasErrors": false
+    }
+  ],
+  "RepWgts": null,
+  "FayFac": 1,
+  "JKzone": "JKZONE",
+  "JKrep": "JKREP",
+  "JKreverse": false,
+  "HasErrors": false
+}

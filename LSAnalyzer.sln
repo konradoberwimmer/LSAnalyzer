@@ -14,6 +14,8 @@ Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "LSAnalyzerSetup", "LSAnalyz
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RDotNet", "rdotnet\src\R.NET\RDotNet.csproj", "{0923E1A0-2032-4997-AB73-49E42C4034A9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateDatasetTypeRepository", "CreateDatasetTypeRepository\CreateDatasetTypeRepository.csproj", "{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,6 +92,22 @@ Global
 		{0923E1A0-2032-4997-AB73-49E42C4034A9}.Release|x64.Build.0 = Release|Any CPU
 		{0923E1A0-2032-4997-AB73-49E42C4034A9}.Release|x86.ActiveCfg = Release|Any CPU
 		{0923E1A0-2032-4997-AB73-49E42C4034A9}.Release|x86.Build.0 = Release|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Debug|x64.Build.0 = Debug|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Debug|x86.Build.0 = Debug|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Release|ARM64.Build.0 = Release|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Release|x64.ActiveCfg = Release|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Release|x64.Build.0 = Release|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Release|x86.ActiveCfg = Release|Any CPU
+		{D3D7AED8-CDE8-4E19-86EF-09CDF0EBFB56}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,127 @@
+{
+  "Id": 204,
+  "Name": "TIMSS 2007/2011 - 8th grade student level",
+  "Group": "PIRLS/TIMSS",
+  "Description": "TIMSS 2007/2011 - 8th grade student level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "TOTWGT;SENWGT",
+  "NMI": 5,
+  "MIvar": null,
+  "IDvar": "IDSTUD",
+  "PVvarsList": [
+    {
+      "Regex": "BSMMAT",
+      "DisplayName": "BSMMAT",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSSSCI",
+      "DisplayName": "BSSSCI",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSMALG",
+      "DisplayName": "BSMALG",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSMAPP",
+      "DisplayName": "BSMAPP",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSMDAT",
+      "DisplayName": "BSMDAT",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSMGEO",
+      "DisplayName": "BSMGEO",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSMKNO",
+      "DisplayName": "BSMKNO",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSMNUM",
+      "DisplayName": "BSMNUM",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSMREA",
+      "DisplayName": "BSMREA",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSSAPP",
+      "DisplayName": "BSSAPP",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSSBIO",
+      "DisplayName": "BSSBIO",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSSCHE",
+      "DisplayName": "BSSCHE",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSSEAR",
+      "DisplayName": "BSSEAR",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSSKNO",
+      "DisplayName": "BSSKNO",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSSPHY",
+      "DisplayName": "BSSPHY",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSSREA",
+      "DisplayName": "BSSREA",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSMIBM",
+      "DisplayName": "BSMIBM",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "BSSIBM",
+      "DisplayName": "BSSIBM",
+      "Mandatory": true,
+      "HasErrors": false
+    }
+  ],
+  "RepWgts": null,
+  "FayFac": 1,
+  "JKzone": "JKZONE",
+  "JKrep": "JKREP",
+  "JKreverse": false,
+  "HasErrors": false
+}

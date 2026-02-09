@@ -1,0 +1,175 @@
+{
+  "Id": 301,
+  "Name": "PISA 2003-2012 - student level",
+  "Group": "PISA",
+  "Description": "PISA 2003-2012 - student level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "W_FSTUWT",
+  "NMI": 5,
+  "MIvar": null,
+  "IDvar": null,
+  "PVvarsList": [
+    {
+      "Regex": "PV[0-9]+MATH",
+      "DisplayName": "PVMATH",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+READ",
+      "DisplayName": "PVREAD",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+SCIE",
+      "DisplayName": "PVSCIE",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MACC",
+      "DisplayName": "PVMACC",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MACQ",
+      "DisplayName": "PVMACQ",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MACS",
+      "DisplayName": "PVMACS",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MACU",
+      "DisplayName": "PVMACU",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MAPE",
+      "DisplayName": "PVMAPE",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MAPF",
+      "DisplayName": "PVMAPF",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MAPI",
+      "DisplayName": "PVMAPI",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+READ1",
+      "DisplayName": "PVREAD1",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+READ2",
+      "DisplayName": "PVREAD2",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+READ3",
+      "DisplayName": "PVREAD3",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+READ4",
+      "DisplayName": "PVREAD4",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+READ5",
+      "DisplayName": "PVREAD5",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+INTR",
+      "DisplayName": "PVINTR",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+SUPP",
+      "DisplayName": "PVSUPP",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+EPS",
+      "DisplayName": "PVEPS",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+ISI",
+      "DisplayName": "PVISI",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+USE",
+      "DisplayName": "PVUSE",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MATH1",
+      "DisplayName": "PVMATH1",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MATH2",
+      "DisplayName": "PVMATH2",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MATH3",
+      "DisplayName": "PVMATH3",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MATH4",
+      "DisplayName": "PVMATH4",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MATH5",
+      "DisplayName": "PVMATH5",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+PROB",
+      "DisplayName": "PVPROB",
+      "Mandatory": false,
+      "HasErrors": false
+    }
+  ],
+  "RepWgts": "W_FSTR",
+  "FayFac": 0.05,
+  "JKzone": null,
+  "JKrep": null,
+  "JKreverse": false,
+  "HasErrors": false
+}

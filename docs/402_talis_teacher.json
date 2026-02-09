@@ -1,0 +1,18 @@
+{
+  "Id": 402,
+  "Name": "TALIS - teacher level",
+  "Group": "TALIS",
+  "Description": "TALIS - teacher level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "TCHWGT",
+  "NMI": 1,
+  "MIvar": null,
+  "IDvar": "IDTEACH",
+  "PVvarsList": [],
+  "RepWgts": "TRWGT",
+  "FayFac": 0.04,
+  "JKzone": null,
+  "JKrep": null,
+  "JKreverse": false,
+  "HasErrors": false
+}

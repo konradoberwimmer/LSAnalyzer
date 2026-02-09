@@ -1,0 +1,18 @@
+{
+  "Id": 121,
+  "Name": "PIRLS until 2011 - principal level",
+  "Group": "PIRLS/TIMSS",
+  "Description": "PIRLS until 2011 - principal level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "SCHWGT;STOTWGTU",
+  "NMI": 1,
+  "MIvar": null,
+  "IDvar": "IDSCHOOL",
+  "PVvarsList": [],
+  "RepWgts": null,
+  "FayFac": 1,
+  "JKzone": "JKCZONE",
+  "JKrep": "JKCREP",
+  "JKreverse": false,
+  "HasErrors": false
+}

@@ -1,0 +1,18 @@
+{
+  "Id": 123,
+  "Name": "PIRLS/TIMSS 2011 joint - principal level",
+  "Group": "PIRLS/TIMSS",
+  "Description": "PIRLS/TIMSS 2011 joint - principal level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "SCHWGT;STOTWGTU",
+  "NMI": 1,
+  "MIvar": null,
+  "IDvar": "IDSCHOOL",
+  "PVvarsList": [],
+  "RepWgts": null,
+  "FayFac": 1,
+  "JKzone": "JKCZONE",
+  "JKrep": "JKCREP",
+  "JKreverse": false,
+  "HasErrors": false
+}

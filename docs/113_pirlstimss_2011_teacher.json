@@ -1,0 +1,151 @@
+{
+  "Id": 113,
+  "Name": "PIRLS/TIMSS 2011 joint - teacher data on student level",
+  "Group": "PIRLS/TIMSS",
+  "Description": "PIRLS/TIMSS 2011 joint - teacher data on student level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "TCHWGT;MATWGT;REAWGT;SCIWGT",
+  "NMI": 5,
+  "MIvar": null,
+  "IDvar": "IDSTUD",
+  "PVvarsList": [
+    {
+      "Regex": "ASMMAT",
+      "DisplayName": "ASMMAT",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSSCI",
+      "DisplayName": "ASSSCI",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASRREA",
+      "DisplayName": "ASRREA",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMIBM",
+      "DisplayName": "ASMIBM",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSIBM",
+      "DisplayName": "ASSIBM",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASRIBM",
+      "DisplayName": "ASRIBM",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMMAT",
+      "DisplayName": "ASMMAT",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSSCI",
+      "DisplayName": "ASSSCI",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMNUM",
+      "DisplayName": "ASMNUM",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMGEO",
+      "DisplayName": "ASMGEO",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMDAT",
+      "DisplayName": "ASMDAT",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMKNO",
+      "DisplayName": "ASMKNO",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMAPP",
+      "DisplayName": "ASMAPP",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMREA",
+      "DisplayName": "ASMREA",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSLIF",
+      "DisplayName": "ASSLIF",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSPHY",
+      "DisplayName": "ASSPHY",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSEAR",
+      "DisplayName": "ASSEAR",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSKNO",
+      "DisplayName": "ASSKNO",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSAPP",
+      "DisplayName": "ASSAPP",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSREA",
+      "DisplayName": "ASSREA",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMIBM",
+      "DisplayName": "ASMIBM",
+      "Mandatory": false,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSIBM",
+      "DisplayName": "ASSIBM",
+      "Mandatory": false,
+      "HasErrors": false
+    }
+  ],
+  "RepWgts": null,
+  "FayFac": 1,
+  "JKzone": "JKZONE",
+  "JKrep": "JKREP",
+  "JKreverse": false,
+  "HasErrors": false
+}

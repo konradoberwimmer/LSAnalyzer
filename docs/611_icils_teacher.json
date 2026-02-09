@@ -1,0 +1,18 @@
+{
+  "Id": 611,
+  "Name": "ICILS - teacher level",
+  "Group": "ICILS",
+  "Description": "ICILS since 2013 - teacher level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "TOTWGTT",
+  "NMI": 1,
+  "MIvar": null,
+  "IDvar": null,
+  "PVvarsList": [],
+  "RepWgts": "TRWGT[0-9]+",
+  "FayFac": 1,
+  "JKzone": null,
+  "JKrep": null,
+  "JKreverse": false,
+  "HasErrors": false
+}

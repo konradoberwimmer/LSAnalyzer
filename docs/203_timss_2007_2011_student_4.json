@@ -1,0 +1,115 @@
+{
+  "Id": 203,
+  "Name": "TIMSS 2007/2011 - 4th grade student level",
+  "Group": "PIRLS/TIMSS",
+  "Description": "TIMSS 2007/2011 - 4th grade student level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "TOTWGT;SENWGT",
+  "NMI": 5,
+  "MIvar": null,
+  "IDvar": "IDSTUD",
+  "PVvarsList": [
+    {
+      "Regex": "ASMMAT",
+      "DisplayName": "ASMMAT",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSSCI",
+      "DisplayName": "ASSSCI",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMNUM",
+      "DisplayName": "ASMNUM",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMGEO",
+      "DisplayName": "ASMGEO",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMDAT",
+      "DisplayName": "ASMDAT",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMKNO",
+      "DisplayName": "ASMKNO",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMAPP",
+      "DisplayName": "ASMAPP",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMREA",
+      "DisplayName": "ASMREA",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSLIF",
+      "DisplayName": "ASSLIF",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSPHY",
+      "DisplayName": "ASSPHY",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSEAR",
+      "DisplayName": "ASSEAR",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSKNO",
+      "DisplayName": "ASSKNO",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSAPP",
+      "DisplayName": "ASSAPP",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSREA",
+      "DisplayName": "ASSREA",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASMIBM",
+      "DisplayName": "ASMIBM",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASSIBM",
+      "DisplayName": "ASSIBM",
+      "Mandatory": true,
+      "HasErrors": false
+    }
+  ],
+  "RepWgts": null,
+  "FayFac": 1,
+  "JKzone": "JKZONE",
+  "JKrep": "JKREP",
+  "JKreverse": false,
+  "HasErrors": false
+}

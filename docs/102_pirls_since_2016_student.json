@@ -1,0 +1,55 @@
+{
+  "Id": 102,
+  "Name": "PIRLS since 2016 - student level",
+  "Group": "PIRLS/TIMSS",
+  "Description": "PIRLS since 2016 (reverse jackknife) - student level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "TOTWGT;SENWGT",
+  "NMI": 5,
+  "MIvar": null,
+  "IDvar": "IDSTUD",
+  "PVvarsList": [
+    {
+      "Regex": "ASRREA",
+      "DisplayName": "ASRREA",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASRLIT",
+      "DisplayName": "ASRLIT",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASRINF",
+      "DisplayName": "ASRINF",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASRIIE",
+      "DisplayName": "ASRIIE",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASRRSI",
+      "DisplayName": "ASRRSI",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Regex": "ASRIBM",
+      "DisplayName": "ASRIBM",
+      "Mandatory": true,
+      "HasErrors": false
+    }
+  ],
+  "RepWgts": null,
+  "FayFac": 0.5,
+  "JKzone": "JKZONE",
+  "JKrep": "JKREP",
+  "JKreverse": true,
+  "HasErrors": false
+}

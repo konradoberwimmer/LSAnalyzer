@@ -1,0 +1,18 @@
+{
+  "Id": 401,
+  "Name": "TALIS - principal level",
+  "Group": "TALIS",
+  "Description": "TALIS - principal level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "SCHWGT",
+  "NMI": 1,
+  "MIvar": null,
+  "IDvar": "IDSCHOOL",
+  "PVvarsList": [],
+  "RepWgts": "SRWGT",
+  "FayFac": 0.04,
+  "JKzone": null,
+  "JKrep": null,
+  "JKreverse": false,
+  "HasErrors": false
+}
