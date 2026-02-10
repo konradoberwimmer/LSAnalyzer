@@ -30,14 +30,14 @@ namespace LSAnalyzer.Views
 
             DataContext = systemSettingsViewModel;
 
-            WeakReferenceMessenger.Default.Register<LoadedDefaultDatasetTypesMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.LoadedDefaultDatasetTypesMessage>(this, (r, m) =>
             {
                 MessageBox.Show("Loading default dataset types successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             });
             
-            WeakReferenceMessenger.Default.Register<SavedSettingsMessage>(this, (_, _) => MessageBox.Show("Settings saved.", "Info", MessageBoxButton.OK, MessageBoxImage.Information));
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.SavedSettingsMessage>(this, (_, _) => MessageBox.Show("Settings saved.", "Info", MessageBoxButton.OK, MessageBoxImage.Information));
             
-            WeakReferenceMessenger.Default.Register<ImpossibleRLocationMessage>(this, (_, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.ImpossibleRLocationMessage>(this, (_, m) =>
             {
                 MessageBox.Show($"""Ignoring, because "{Path.Combine(m.Path, "bin", "x64", "R.dll")}" does not exist!""", "Wrong directory", MessageBoxButton.OK, MessageBoxImage.Warning);
             });

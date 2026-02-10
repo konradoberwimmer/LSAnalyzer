@@ -156,7 +156,7 @@ public class Configuration
         return JsonSerializer.Deserialize<List<DatasetType>>(fileContent);
     }
 
-    public void StoreDatasetType(DatasetType datasetType)
+    public virtual void StoreDatasetType(DatasetType datasetType)
     {
         if (!File.Exists(_datasetTypesConfigFile))
         {

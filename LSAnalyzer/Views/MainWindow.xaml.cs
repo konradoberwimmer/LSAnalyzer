@@ -42,7 +42,7 @@ namespace LSAnalyzer.Views
                 MessageBox.Show("File '" + m.FileName + "' is currently in use by another process. Please close the file and start export again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             });
             
-            WeakReferenceMessenger.Default.Register<RequestRestartMessage>(this, (_, _) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.RequestRestartMessage>(this, (_, _) =>
             {
                 var wantsRestart = MessageBox.Show(
                     "Do you want to restart LSAnalyzer for the new settings to take effect?",
