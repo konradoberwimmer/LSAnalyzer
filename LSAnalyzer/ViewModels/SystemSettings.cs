@@ -166,6 +166,8 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
             _configuration.RemoveRecentSubsettingExpressions(datasetType.Id);
             _configuration.StoreDatasetType(datasetType);
         }
+        
+        CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
 
         WeakReferenceMessenger.Default.Send(new FetchDatasetTypeCollectionSuccessfulMessage
             { Count = datasetTypeCollections.First(collection => collection.Name == CollectionName).Entries.Count });

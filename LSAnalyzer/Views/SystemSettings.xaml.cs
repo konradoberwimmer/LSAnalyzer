@@ -35,6 +35,26 @@ namespace LSAnalyzer.Views
                 MessageBox.Show("Loading default dataset types successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             });
             
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.DatasetTypeRepositoryUrlInvalidMessage>(this, (_, m) =>
+            {
+                    MessageBox.Show($"Cannot reach {m.Url} or it is not a valid repository!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
+            
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.CollectionNotInDatasetTypeRepositoryMessage>(this, (_, m) =>
+            {
+                MessageBox.Show($"Collection not found! Available collections in repository: {string.Join(", ", m.ValidNames)}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
+            
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.DatasetTypeUrlInvalidMessage>(this, (_, m) =>
+            {
+                MessageBox.Show($"Invalid file encountered in repository: {m.Url}! Aborting ... please inform the repository owner!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
+            
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.FetchDatasetTypeCollectionSuccessfulMessage>(this, (_, m) =>
+            {
+                MessageBox.Show($"Fetched {m.Count} dataset types from repository!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);        
+            });
+            
             WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.SavedSettingsMessage>(this, (_, _) => MessageBox.Show("Settings saved.", "Info", MessageBoxButton.OK, MessageBoxImage.Information));
             
             WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.ImpossibleRLocationMessage>(this, (_, m) =>

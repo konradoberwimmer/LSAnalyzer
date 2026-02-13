@@ -8,8 +8,9 @@
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewModels:SystemSettings, IsDesignTimeCreatable=True}"
-        x:Name="windowSystemSettings" Title="System information" Height="600" MinHeight="600" Width="600" MinWidth="300" WindowStartupLocation="CenterScreen" Closing="SystemSettings_OnClosing">
+        x:Name="windowSystemSettings" Title="System information" Height="700" MinHeight="600" Width="600" MinWidth="350" WindowStartupLocation="CenterScreen" Closing="SystemSettings_OnClosing">
     <Window.Resources>
+        <converter:BooleanAnd x:Key="BooleanAndConverter"/>
         <converter:EmptyStringTo x:Key="EmptyStringToConverter"/>
         <converter:IntegerToStringLenient x:Key="IntegerToStringLenientConverter"/>
         <viewModels:AnalysisPresentation x:Key="AnalysisPresentation"/>
@@ -29,15 +30,36 @@
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
-                <TextBlock Margin="0,0,0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
                      by Konrad Oberwimmer, released under 
                     <Hyperlink x:Name="hyperLinkGPL3" NavigateUri="https://www.gnu.org/licenses/gpl-3.0.html" RequestNavigate="HyperLinkGPL3_RequestNavigate">
                         GPL-3
                     </Hyperlink>
                 </TextBlock>
-                <TextBlock Grid.Row="1" Text="{Binding CountConfiguredDatasetTypes, StringFormat={}{0} configured dataset types ...}"/>
-                <Button x:Name="buttonLoadDefaultDatasetConfiguration" Grid.Row="1" Width="80" Height="22" Content="Load default" HorizontalAlignment="Right" Click="ButtonLoadDefaultDatasetConfiguration_Click"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,5,0,0" Text="{Binding CountConfiguredDatasetTypes, StringFormat={}{0} configured dataset types ...}"/>
+                <Button x:Name="buttonLoadDefaultDatasetConfiguration" Grid.Row="1" Grid.Column="2" Margin="0,5,0,0" Width="80" Height="22" Content="Load default" HorizontalAlignment="Right" Click="ButtonLoadDefaultDatasetConfiguration_Click"/>
+                <Rectangle Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Height="1" Stroke="Gray" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,5,0,0" Text="Dataset type repository URL:"/>
+                <TextBox Grid.Row="4" Grid.Column="0" Margin="0,5,0,0" Text="{Binding RepositoryUrl, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Row="3" Grid.Column="1" Margin="5,5,0,0" Text="Collection:"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Margin="5,5,0,0" Text="{Binding CollectionName, UpdateSourceTrigger=PropertyChanged}" Width="80"/>
+                <Button Grid.Row="4" Grid.Column="2" Margin="5,5,0,0" Content="Fetch new" Width="80" Height="22" Command="{Binding FetchDatasetTypesCommand}">
+                    <Button.IsEnabled>
+                        <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                            <Binding Path="RepositoryUrl.Length"/>
+                            <Binding Path="CollectionName.Length"/>
+                        </MultiBinding>
+                    </Button.IsEnabled>
+                </Button>
             </Grid>            
         </GroupBox>
         <GroupBox Grid.Row="2" Margin="10,0,10,10" Padding="5">
