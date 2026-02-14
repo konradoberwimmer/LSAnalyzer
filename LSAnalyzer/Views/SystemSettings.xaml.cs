@@ -30,14 +30,34 @@ namespace LSAnalyzer.Views
 
             DataContext = systemSettingsViewModel;
 
-            WeakReferenceMessenger.Default.Register<LoadedDefaultDatasetTypesMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.LoadedDefaultDatasetTypesMessage>(this, (r, m) =>
             {
                 MessageBox.Show("Loading default dataset types successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             });
             
-            WeakReferenceMessenger.Default.Register<SavedSettingsMessage>(this, (_, _) => MessageBox.Show("Settings saved.", "Info", MessageBoxButton.OK, MessageBoxImage.Information));
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.DatasetTypeRepositoryUrlInvalidMessage>(this, (_, m) =>
+            {
+                    MessageBox.Show($"Cannot reach {m.Url} or it is not a valid repository!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
             
-            WeakReferenceMessenger.Default.Register<ImpossibleRLocationMessage>(this, (_, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.CollectionNotInDatasetTypeRepositoryMessage>(this, (_, m) =>
+            {
+                MessageBox.Show($"Collection not found! Available collections in repository: {string.Join(", ", m.ValidNames)}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
+            
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.DatasetTypeUrlInvalidMessage>(this, (_, m) =>
+            {
+                MessageBox.Show($"Invalid file encountered in repository: {m.Url}! Aborting ... please inform the repository owner!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
+            
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.FetchDatasetTypeCollectionSuccessfulMessage>(this, (_, m) =>
+            {
+                MessageBox.Show($"Fetched {m.Count} new or updated dataset types from repository!\n(Ignored {m.Ignored} dataset types that were up to date.)", "Success", MessageBoxButton.OK, MessageBoxImage.Information);        
+            });
+            
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.SavedSettingsMessage>(this, (_, _) => MessageBox.Show("Settings saved.", "Info", MessageBoxButton.OK, MessageBoxImage.Information));
+            
+            WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.ImpossibleRLocationMessage>(this, (_, m) =>
             {
                 MessageBox.Show($"""Ignoring, because "{Path.Combine(m.Path, "bin", "x64", "R.dll")}" does not exist!""", "Wrong directory", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
@@ -100,7 +120,11 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            var result = MessageBox.Show("This will load all default dataset types of the current version. Your user-specific dataset types will be preserved, except for the very rare case where their IDs may collide with default values. Consider exporting your user-specific datasets beforehand!\n\nDo you want to proceed?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            var result = MessageBox.Show(
+                string.IsNullOrEmpty(Properties.Settings.Default.datasetTypeHashes)
+                    ? "This will load all default dataset types of the current version. Your user-specific dataset types will be preserved, except for the very rare case where their IDs may collide with default values. Consider exporting your user-specific datasets beforehand!\n\nDo you want to proceed?"
+                    : "It seems that you have already fetched dataset types from a repository. Default dataset types from the current program version might be out of date. Consider fetching from repository again!\n\nDo you want to proceed?",
+                "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (result == MessageBoxResult.No) 
             {

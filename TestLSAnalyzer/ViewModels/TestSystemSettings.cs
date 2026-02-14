@@ -19,7 +19,7 @@ public class TestSystemSettings
         rservice.Connect();
         rservice.InjectAppFunctions();
 
-        SystemSettings systemSettingsViewModel = new(rservice, new Mock<Configuration>().Object, logger);
+        SystemSettings systemSettingsViewModel = new(rservice, new Mock<Configuration>().Object, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
 
         var filename = Path.GetTempFileName();
         systemSettingsViewModel.SaveSessionRcodeCommand.Execute(filename);
@@ -38,7 +38,7 @@ public class TestSystemSettings
         rservice.Connect();
         rservice.InjectAppFunctions();
 
-        SystemSettings systemSettingsViewModel = new(rservice, new Mock<Configuration>().Object, logger);
+        SystemSettings systemSettingsViewModel = new(rservice, new Mock<Configuration>().Object, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
 
         var filename = Path.GetTempFileName();
         systemSettingsViewModel.SaveSessionLogCommand.Execute(filename);
@@ -55,7 +55,7 @@ public class TestSystemSettings
 
         configuration.StoreDatasetType(new() { Id = 33 });
 
-        SystemSettings systemSettingsViewModel = new(new Mock<IRservice>().Object, configuration, logger);
+        SystemSettings systemSettingsViewModel = new(new Mock<IRservice>().Object, configuration, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
         systemSettingsViewModel.LoadDefaultDatasetTypesCommand.Execute(null);
 
         Assert.Equal(DatasetType.CreateDefaultDatasetTypes().Count + 1, configuration.GetStoredDatasetTypes()!.Count);
@@ -89,7 +89,7 @@ public class TestSystemSettings
     {
         var configuration = new Mock<Configuration>();
         
-        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub());
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), new DatasetTypeRepositoryStub(), new SettingsServiceStub());
 
         systemSettingsViewModel.SaveSettingsCommand.Execute(null);
         
@@ -102,9 +102,9 @@ public class TestSystemSettings
     public void TestSetAlternativeRLocation()
     {
         var impossibleRLocationMessage = false;
-        WeakReferenceMessenger.Default.Register<ImpossibleRLocationMessage>(this, (_, _) => impossibleRLocationMessage = true);
+        WeakReferenceMessenger.Default.Register<SystemSettings.ImpossibleRLocationMessage>(this, (_, _) => impossibleRLocationMessage = true);
         var requestRestartMessage = false;
-        WeakReferenceMessenger.Default.Register<RequestRestartMessage>(this, (_, _) => requestRestartMessage = true);
+        WeakReferenceMessenger.Default.Register<SystemSettings.RequestRestartMessage>(this, (_, _) => requestRestartMessage = true);
 
         SystemSettings systemSettingsViewModel = new();
         
@@ -141,7 +141,7 @@ public class TestSystemSettings
     public void TestClearAlternativeRLocation()
     {
         var requestRestartMessage = false;
-        WeakReferenceMessenger.Default.Register<RequestRestartMessage>(this, (_, _) => requestRestartMessage = true);
+        WeakReferenceMessenger.Default.Register<SystemSettings.RequestRestartMessage>(this, (_, _) => requestRestartMessage = true);
 
         SystemSettings systemSettingsViewModel = new();
         systemSettingsViewModel.AlternativeRLocation = """C:\somewhere_good""";
@@ -152,6 +152,308 @@ public class TestSystemSettings
         Assert.True(requestRestartMessage);
     }
 
+    [Fact]
+    public void TestFetchDatasetTypesInvalidRepository()
+    {
+        var configuration = new Mock<Configuration>();
+
+        const string wrongUrl = "https://www.nothere.com/index.json";
+        
+        var datasetTypeRepository = new Mock<IDatasetTypeRepository>();
+        datasetTypeRepository
+            .Setup(service => service.FetchDatasetTypeCollections(It.Is<string>(url => url == wrongUrl)))
+            .Returns((IDatasetTypeRepository.FetchResult.NotFound, []));
+        
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, new SettingsServiceStub())
+        {
+            RepositoryUrl = wrongUrl,
+            CollectionName = "default"
+        };
+
+        var messageSent = false;
+        WeakReferenceMessenger.Default.Register<SystemSettings.DatasetTypeRepositoryUrlInvalidMessage>(this, (_, _) => messageSent = true);
+        
+        systemSettingsViewModel.FetchDatasetTypesCommand.Execute(null);
+        
+        Assert.True(messageSent);
+    }
+    
+    [Fact]
+    public void TestFetchDatasetTypesInvalidCollection()
+    {
+        var configuration = new Mock<Configuration>();
+
+        const string correctUrl = "https://www.my_lsanalyzer_repo.com/index.json";
+        
+        var datasetTypeRepository = new Mock<IDatasetTypeRepository>();
+        datasetTypeRepository
+            .Setup(service => service.FetchDatasetTypeCollections(It.Is<string>(url => url == correctUrl)))
+            .Returns((IDatasetTypeRepository.FetchResult.Success, [
+                new DatasetTypeCollection
+                {
+                    Name = "default",
+                }
+            ]));
+        
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, new SettingsServiceStub())
+        {
+            RepositoryUrl = correctUrl,
+            CollectionName = "indisputable"
+        };
+
+        var messageSent = false;
+        WeakReferenceMessenger.Default.Register<SystemSettings.CollectionNotInDatasetTypeRepositoryMessage>(this, (_, _) => messageSent = true);
+        
+        systemSettingsViewModel.FetchDatasetTypesCommand.Execute(null);
+        
+        Assert.True(messageSent);
+    }
+    
+    [Fact]
+    public void TestFetchDatasetTypesInvalidFile()
+    {
+        var configuration = new Mock<Configuration>();
+
+        const string correctUrl = "https://www.my_lsanalyzer_repo.com/index.json";
+        const string correctFile = "12_exists.json";
+        const string wrongFile = "24_does_not_exist.json";
+        
+        var datasetTypeRepository = new Mock<IDatasetTypeRepository>();
+        datasetTypeRepository
+            .Setup(service => service.FetchDatasetTypeCollections(It.Is<string>(url => url == correctUrl)))
+            .Returns((IDatasetTypeRepository.FetchResult.Success, [
+                new DatasetTypeCollection
+                {
+                    Name = "default",
+                    Entries = [
+                        new DatasetTypeCollection.Entry
+                        {
+                            DatasetTypeId = 12,
+                            FileName = correctFile,
+                        },
+                        new DatasetTypeCollection.Entry
+                        {
+                            DatasetTypeId = 24,
+                            FileName = wrongFile,
+                        }
+                    ]
+                }
+            ]));
+        datasetTypeRepository
+            .Setup(service => service.FetchDatasetType(It.Is<string>(baseUrl => correctUrl.StartsWith(baseUrl)),It.Is<string>(fileName => fileName == correctFile)))
+            .Returns((IDatasetTypeRepository.FetchResult.Success, new DatasetType()));
+        datasetTypeRepository
+            .Setup(service => service.FetchDatasetType(It.Is<string>(baseUrl => correctUrl.StartsWith(baseUrl)),It.Is<string>(fileName => fileName == wrongFile)))
+            .Returns((IDatasetTypeRepository.FetchResult.Malformed, null));
+        
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, new SettingsServiceStub())
+        {
+            RepositoryUrl = correctUrl,
+            CollectionName = "default"
+        };
+
+        var messageSent = false;
+        WeakReferenceMessenger.Default.Register<SystemSettings.DatasetTypeUrlInvalidMessage>(this, (_, _) => messageSent = true);
+        
+        systemSettingsViewModel.FetchDatasetTypesCommand.Execute(null);
+        
+        Assert.True(messageSent);
+        
+        // first file should have worked
+        configuration.Verify(conf => conf.StoreDatasetType(It.IsAny<DatasetType>()), Times.Once);
+    }
+        
+    [Fact]
+    public void TestFetchDatasetTypesSuccessful()
+    {
+        var configuration = new Mock<Configuration>();
+
+        const string correctUrl = "https://www.my_lsanalyzer_repo.com/index.json";
+        
+        var datasetTypeRepository = new Mock<IDatasetTypeRepository>();
+        datasetTypeRepository
+            .Setup(service => service.FetchDatasetTypeCollections(It.Is<string>(url => url == correctUrl)))
+            .Returns((IDatasetTypeRepository.FetchResult.Success, [
+                new DatasetTypeCollection
+                {
+                    Name = "default",
+                    Entries = [
+                        new DatasetTypeCollection.Entry
+                        {
+                            DatasetTypeId = 101,
+                            FileName = "101_correct1.json",
+                        },
+                        new DatasetTypeCollection.Entry
+                        {
+                            DatasetTypeId = 102,
+                            FileName = "102_correct2.json",
+                        }
+                    ]
+                },
+                new DatasetTypeCollection
+                {
+                    Name = "historic",
+                    Entries = [
+                        new DatasetTypeCollection.Entry
+                        {
+                            DatasetTypeId = 22,
+                            FileName = "22_historic.json",
+                        },
+                    ]
+                }
+            ]));
+        datasetTypeRepository
+            .Setup(service => service.FetchDatasetType(It.Is<string>(baseUrl => correctUrl.StartsWith(baseUrl)),It.IsAny<string>()))
+            .Returns((IDatasetTypeRepository.FetchResult.Success, new DatasetType()));
+        
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, new SettingsServiceStub())
+        {
+            RepositoryUrl = correctUrl,
+            CollectionName = "default"
+        };
+
+        var messageSent = false;
+        var count = 0;
+        WeakReferenceMessenger.Default.Register<SystemSettings.FetchDatasetTypeCollectionSuccessfulMessage>(this, (_, m) =>
+        {
+            count = m.Count;
+            messageSent = true;
+        });
+        
+        systemSettingsViewModel.FetchDatasetTypesCommand.Execute(null);
+        
+        Assert.True(messageSent);
+        Assert.Equal(2, count);
+
+        configuration.Verify(conf => conf.StoreDatasetType(It.IsAny<DatasetType>()), Times.Exactly(2));
+    }
+        
+    [Fact]
+    public void TestFetchDatasetTypesStoresHash()
+    {
+        var configuration = new Mock<Configuration>();
+
+        const string correctUrl = "https://www.my_lsanalyzer_repo.com/index.json";
+        
+        var datasetTypeRepository = new Mock<IDatasetTypeRepository>();
+        datasetTypeRepository
+            .Setup(service => service.FetchDatasetTypeCollections(It.Is<string>(url => url == correctUrl)))
+            .Returns((IDatasetTypeRepository.FetchResult.Success, [
+                new DatasetTypeCollection
+                {
+                    Name = "default",
+                    Entries = [
+                        new DatasetTypeCollection.Entry
+                        {
+                            DatasetTypeId = 101,
+                            Hash = "3FD4",
+                            FileName = "101_correct1.json",
+                        },
+                        new DatasetTypeCollection.Entry
+                        {
+                            DatasetTypeId = 102,
+                            Hash = "4EE1",
+                            FileName = "102_correct2.json",
+                        }
+                    ]
+                }
+            ]));
+        datasetTypeRepository
+            .Setup(service => service.FetchDatasetType(It.Is<string>(baseUrl => correctUrl.StartsWith(baseUrl)),It.IsAny<string>()))
+            .Returns((IDatasetTypeRepository.FetchResult.Success, new DatasetType()));
+        
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.Setup(service => service.DatasetTypeHashes).Returns(new Dictionary<int, string>());
+        
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, settingsService.Object)
+        {
+            RepositoryUrl = correctUrl,
+            CollectionName = "default"
+        };
+
+        var messageSent = false;
+        var count = -1;
+        var ignored = -1;
+        WeakReferenceMessenger.Default.Register<SystemSettings.FetchDatasetTypeCollectionSuccessfulMessage>(this, (_, m) =>
+        {
+            count = m.Count;
+            ignored = m.Ignored;
+            messageSent = true;
+        });
+        
+        systemSettingsViewModel.FetchDatasetTypesCommand.Execute(null);
+        
+        Assert.True(messageSent);
+        Assert.Equal(2, count);
+        Assert.Equal(0, ignored);
+
+        settingsService.VerifySet(service => service.DatasetTypeHashes = new Dictionary<int, string> { { 101, "3FD4" }, { 102, "4EE1" } });
+    }
+            
+    [Fact]
+    public void TestFetchDatasetIgnoresUpToDate()
+    {
+        var configuration = new Mock<Configuration>();
+
+        const string correctUrl = "https://www.my_lsanalyzer_repo.com/index.json";
+        
+        var datasetTypeRepository = new Mock<IDatasetTypeRepository>();
+        datasetTypeRepository
+            .Setup(service => service.FetchDatasetTypeCollections(It.Is<string>(url => url == correctUrl)))
+            .Returns((IDatasetTypeRepository.FetchResult.Success, [
+                new DatasetTypeCollection
+                {
+                    Name = "default",
+                    Entries = [
+                        new DatasetTypeCollection.Entry
+                        {
+                            DatasetTypeId = 101,
+                            Hash = "3FD4",
+                            FileName = "101_correct1.json",
+                        },
+                        new DatasetTypeCollection.Entry
+                        {
+                            DatasetTypeId = 102,
+                            Hash = "4EE1",
+                            FileName = "102_correct2.json",
+                        }
+                    ]
+                }
+            ]));
+        datasetTypeRepository
+            .Setup(service => service.FetchDatasetType(It.Is<string>(baseUrl => correctUrl.StartsWith(baseUrl)),It.IsAny<string>()))
+            .Returns((IDatasetTypeRepository.FetchResult.Success, new DatasetType()));
+        
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.Setup(service => service.DatasetTypeHashes).Returns(new Dictionary<int, string> { { 102, "4EE1" } });
+        
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, settingsService.Object)
+        {
+            RepositoryUrl = correctUrl,
+            CollectionName = "default"
+        };
+
+        var messageSent = false;
+        var count = -1;
+        var ignored = -1;
+        WeakReferenceMessenger.Default.Register<SystemSettings.FetchDatasetTypeCollectionSuccessfulMessage>(this, (_, m) =>
+        {
+            count = m.Count;
+            ignored = m.Ignored;
+            messageSent = true;
+        });
+        
+        systemSettingsViewModel.FetchDatasetTypesCommand.Execute(null);
+        
+        Assert.True(messageSent);
+        Assert.Equal(1, count);
+        Assert.Equal(1, ignored);
+
+        configuration.Verify(conf => conf.StoreDatasetType(It.IsAny<DatasetType>()), Times.Once);
+        
+        settingsService.VerifySet(service => service.DatasetTypeHashes = new Dictionary<int, string> { { 102, "4EE1" }, { 101, "3FD4" } });
+    }
+    
     internal class FakeRservice : IRservice
     {
         private ILogging _logger;

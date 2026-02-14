@@ -165,5 +165,17 @@ namespace LSAnalyzer.Properties {
                 this["recentBatchAnalyzeFiles"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string datasetTypeHashes {
+            get {
+                return ((string)(this["datasetTypeHashes"]));
+            }
+            set {
+                this["datasetTypeHashes"] = value;
+            }
+        }
     }
 }

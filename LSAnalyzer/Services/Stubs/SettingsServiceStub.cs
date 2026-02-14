@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace LSAnalyzer.Services.Stubs;
 
 public class SettingsServiceStub : ISettingsService
@@ -8,4 +10,6 @@ public class SettingsServiceStub : ISettingsService
     {
        
     }
+
+    public Dictionary<int, string> DatasetTypeHashes { get; set; } = [];
 }

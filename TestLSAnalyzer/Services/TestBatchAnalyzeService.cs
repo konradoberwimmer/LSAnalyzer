@@ -536,6 +536,9 @@ public class TestBatchAnalyzeService
             ModeKeep = true,
         };
 
+        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Rep5.FileName));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5));
+        
         BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
 
         List<BatchAnalyze.BatchEntry> analyses =
@@ -563,16 +566,40 @@ public class TestBatchAnalyzeService
                     ViewSettings = []
                 }
             },
+            new()
+            {
+                Id = 3, Selected = true, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
+                    {
+                        Vars = new() { new(1, "x", false) },
+                        GroupBy = new() { new(2, "cat", false) },
+                    },
+                    ViewSettings = []
+                }
+            },
+            new()
+            {
+                Id = 4, Selected = true, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
+                    {
+                        Vars = new() { new(1, "x", false) },
+                        GroupBy = new() { new(2, "cat", false) },
+                    },
+                    ViewSettings = []
+                }
+            },
         ];
 
         batchAnalyze.RunBatch(analyses, false, null, null);
         
-        Policy.Handle<EqualException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.Equal("Working ...", analyses.First().Message));
+        Policy.Handle<ContainsException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(10))
+            .Execute(() => Assert.Contains(analyses, analysis => analysis.Message == "Working ..."));
         
         batchAnalyze.AbortBatch();
 
-        Policy.Handle<ContainsException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
+        Policy.Handle<ContainsException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(10))
             .Execute(() => Assert.Contains(analyses, analysis => analysis is { Success: false, Message: "Aborted!" }));
 
         Assert.Contains(analyses, analysis => analysis is { Success: null, WasIgnored: true });
