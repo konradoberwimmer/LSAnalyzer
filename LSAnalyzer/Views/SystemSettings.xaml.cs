@@ -52,7 +52,7 @@ namespace LSAnalyzer.Views
             
             WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.FetchDatasetTypeCollectionSuccessfulMessage>(this, (_, m) =>
             {
-                MessageBox.Show($"Fetched {m.Count} dataset types from repository!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);        
+                MessageBox.Show($"Fetched {m.Count} new or updated dataset types from repository!\n(Ignored {m.Ignored} dataset types that were up to date.)", "Success", MessageBoxButton.OK, MessageBoxImage.Information);        
             });
             
             WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.SavedSettingsMessage>(this, (_, _) => MessageBox.Show("Settings saved.", "Info", MessageBoxButton.OK, MessageBoxImage.Information));

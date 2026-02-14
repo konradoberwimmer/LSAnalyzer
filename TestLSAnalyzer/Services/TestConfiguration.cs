@@ -53,7 +53,7 @@ public class TestConfiguration
     {
         Configuration configuration = new();
         
-        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub());
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
         systemSettings.NumberRecentSubsettingExpressions = 20;
         systemSettings.SaveSettingsCommand.Execute(null);
         
@@ -73,7 +73,7 @@ public class TestConfiguration
     {
         Configuration configuration = new();
         
-        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub());
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
         systemSettings.NumberRecentSubsettingExpressions = 3;
         systemSettings.SaveSettingsCommand.Execute(null);
         
@@ -113,7 +113,7 @@ public class TestConfiguration
     {
         Configuration configuration = new();
         
-        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub());
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
         systemSettings.NumberRecentSubsettingExpressions = 20;
         systemSettings.SaveSettingsCommand.Execute(null);
         
@@ -131,7 +131,7 @@ public class TestConfiguration
     {
         Configuration configuration = new();
         
-        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub());
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
         systemSettings.NumberRecentSubsettingExpressions = 20;
         systemSettings.SaveSettingsCommand.Execute(null);
         
@@ -156,7 +156,7 @@ public class TestConfiguration
     {
         Configuration configuration = new();
         
-        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub());
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
         systemSettings.NumberRecentFiles = 20;
         systemSettings.SaveSettingsCommand.Execute(null);
         
@@ -176,7 +176,7 @@ public class TestConfiguration
     {
         Configuration configuration = new();
         
-        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub());
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
         systemSettings.NumberRecentFiles = 3;
         systemSettings.SaveSettingsCommand.Execute(null);
         
@@ -216,7 +216,7 @@ public class TestConfiguration
     {
         Configuration configuration = new();
         
-        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub());
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
         systemSettings.NumberRecentFiles = 20;
         systemSettings.SaveSettingsCommand.Execute(null);
         
@@ -234,7 +234,7 @@ public class TestConfiguration
     {
         Configuration configuration = new();
         
-        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub());
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
         systemSettings.NumberRecentFiles = 20;
         systemSettings.SaveSettingsCommand.Execute(null);
         
@@ -254,7 +254,7 @@ public class TestConfiguration
     {
         Configuration configuration = new();
         
-        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub());
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
         systemSettings.NumberRecentFiles = 20;
         systemSettings.SaveSettingsCommand.Execute(null);
         
@@ -274,7 +274,7 @@ public class TestConfiguration
     {
         Configuration configuration = new();
         
-        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub());
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
         systemSettings.NumberRecentFiles = 20;
         systemSettings.SaveSettingsCommand.Execute(null);
         
@@ -338,7 +338,7 @@ public class TestConfiguration
     {
         Configuration configuration = new();
         
-        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub());
+        SystemSettings systemSettings = new(new Mock<Rservice>().Object, configuration, new Mock<Logging>().Object, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
         systemSettings.NumberRecentFiles = 20;
         systemSettings.SaveSettingsCommand.Execute(null);
         

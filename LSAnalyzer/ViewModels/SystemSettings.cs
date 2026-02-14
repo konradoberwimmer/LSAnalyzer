@@ -24,6 +24,7 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
     private readonly ILogging _logger;
     private readonly Configuration _configuration;
     private readonly IDatasetTypeRepository _datasetTypeRepository;
+    private readonly ISettingsService _settingsService;
 
     [ObservableProperty] private string _version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
 
@@ -113,9 +114,10 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
         _logger.AddEntry(new LogEntry(DateTime.Now, "stats::sd(c(1,2,3))"));
         _logger.AddEntry(new LogEntry(DateTime.Now, "rm(dummy_result)"));
         _sessionLog = new(_logger.LogEntries);
+        _settingsService = new SettingsServiceStub();
     }
 
-    public SystemSettings(IRservice rservice, Configuration configuration, ILogging logger, IDatasetTypeRepository datasetTypeRepository)
+    public SystemSettings(IRservice rservice, Configuration configuration, ILogging logger, IDatasetTypeRepository datasetTypeRepository, ISettingsService settingsService)
     {
         _rservice = rservice;
         RVersion = _rservice.IsConnected ? _rservice.GetRVersion() : "---";
@@ -126,12 +128,15 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
         CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
         _logger = logger;
         _sessionLog = new(_logger.LogEntries);
+        _settingsService = settingsService;
     }
 
     [RelayCommand]
     private void FetchDatasetTypes()
     {
         if (string.IsNullOrEmpty(RepositoryUrl) || string.IsNullOrEmpty(CollectionName)) return;
+
+        var datasetTypeHashes = _settingsService.DatasetTypeHashes;
 
         var (fetchResult, datasetTypeCollections) = _datasetTypeRepository.FetchDatasetTypeCollections(RepositoryUrl);
 
@@ -149,8 +154,17 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
 
         var baseUrl = RepositoryUrl[..(RepositoryUrl.LastIndexOf('/') + 1)];
 
+        var count = 0;
+        var ignored = 0;
+        
         foreach (var entry in datasetTypeCollections.First(collection => collection.Name == CollectionName).Entries)
         {
+            if (datasetTypeHashes.TryGetValue(entry.DatasetTypeId, out var hash) && entry.Hash == hash)
+            {
+                ignored++;
+                continue;
+            }
+            
             var fetchDatasetType = _datasetTypeRepository.FetchDatasetType(baseUrl, entry.FileName);
 
             if (fetchDatasetType.result is IDatasetTypeRepository.FetchResult.NotFound
@@ -165,12 +179,17 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
             _configuration.RemoveDatasetType(datasetType);
             _configuration.RemoveRecentSubsettingExpressions(datasetType.Id);
             _configuration.StoreDatasetType(datasetType);
+            
+            datasetTypeHashes.TryAdd(entry.DatasetTypeId, entry.Hash);
+
+            count++;
         }
+        
+        _settingsService.DatasetTypeHashes = datasetTypeHashes;
         
         CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
 
-        WeakReferenceMessenger.Default.Send(new FetchDatasetTypeCollectionSuccessfulMessage
-            { Count = datasetTypeCollections.First(collection => collection.Name == CollectionName).Entries.Count });
+        WeakReferenceMessenger.Default.Send(new FetchDatasetTypeCollectionSuccessfulMessage { Count = count, Ignored = ignored});
     }
     
     [RelayCommand]
@@ -310,7 +329,10 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
     
     public class DatasetTypeUrlInvalidMessage { public required string Url { init; get; } }
     
-    public class FetchDatasetTypeCollectionSuccessfulMessage { public int Count { init; get; } }
+    public class FetchDatasetTypeCollectionSuccessfulMessage { 
+        public int Count { init; get; } 
+        public int Ignored { init; get; }
+    }
     
     public class LoadedDefaultDatasetTypesMessage { }
 
