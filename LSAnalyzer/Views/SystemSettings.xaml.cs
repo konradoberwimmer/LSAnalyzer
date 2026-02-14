@@ -120,7 +120,11 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            var result = MessageBox.Show("This will load all default dataset types of the current version. Your user-specific dataset types will be preserved, except for the very rare case where their IDs may collide with default values. Consider exporting your user-specific datasets beforehand!\n\nDo you want to proceed?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            var result = MessageBox.Show(
+                string.IsNullOrEmpty(Properties.Settings.Default.datasetTypeHashes)
+                    ? "This will load all default dataset types of the current version. Your user-specific dataset types will be preserved, except for the very rare case where their IDs may collide with default values. Consider exporting your user-specific datasets beforehand!\n\nDo you want to proceed?"
+                    : "It seems that you have already fetched dataset types from a repository. Default dataset types from the current program version might be out of date. Consider fetching from repository again!\n\nDo you want to proceed?",
+                "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (result == MessageBoxResult.No) 
             {
