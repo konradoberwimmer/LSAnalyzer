@@ -50,9 +50,15 @@ public class AnalysisQueue : IAnalysisQueue
         analysisWorker.WorkerReportsProgress = false;
         analysisWorker.WorkerSupportsCancellation = false;
         analysisWorker.DoWork += AnalysisWorker_DoWork;
-        analysisWorker.RunWorkerCompleted += (_, _) =>
+        analysisWorker.RunWorkerCompleted += (_, e) =>
         {
             _analysisQueue.Dequeue();
+
+            if (e is { Cancelled: false, Result: null })
+            {
+                WeakReferenceMessenger.Default.Send(new FailureWithAnalysisCalculationMessage(analysisPresentation.Analysis));
+            }
+            
             WeakReferenceMessenger.Default.Send<AnalysisQueueCountChangedMessage>();
             
             StartNextAnalysis();
@@ -84,20 +90,18 @@ public class AnalysisQueue : IAnalysisQueue
 
         if (result == null)
         {
-            WeakReferenceMessenger.Default.Send(new FailureWithAnalysisCalculationMessage(analysisPresentation.Analysis));
             analysisPresentation.IsBusy = false;
             
             e.Result = null;
             return;
         }
         
-        if (analysisPresentation.Analysis is AnalysisFreq { CalculateBivariate: true } analysisFreqWithBivariate)
+        if (analysisPresentation.Analysis is AnalysisFreq { GroupBy.Count: > 0, CalculateBivariate: true } analysisFreqWithBivariate)
         {
             var bivariateResult = _rservice.CalculateBivariate(analysisFreqWithBivariate);
             
             if (bivariateResult == null)
             {
-                WeakReferenceMessenger.Default.Send(new FailureWithAnalysisCalculationMessage(analysisPresentation.Analysis));
                 analysisPresentation.IsBusy = false;
             
                 e.Result = null;
