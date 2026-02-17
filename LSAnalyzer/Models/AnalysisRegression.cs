@@ -25,12 +25,19 @@ namespace LSAnalyzer.Models
 
         public override string ShortInfo
         {
-            get =>
-                AnalysisName +
-                " (" + (Dependent?.Name ?? "undefined") + " by " + String.Join(", ", Vars.ConvertAll(var => var.Name).ToArray()) +
-                " - " + AnalysisConfiguration.DatasetType?.Name +
-                "; " + AnalysisConfiguration.DatasetType?.Weight +
-                ")";
+            get
+            {
+                var sequenceInfo = Sequence switch
+                {
+                    RegressionSequence.AllIn => string.Empty,
+                    RegressionSequence.Forward => " forward",
+                    RegressionSequence.Backward => " backward",
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                var interceptInfo = WithIntercept ? "1" : "0";
+                var groupByInfo = GroupBy.Count > 0 ? $" by {string.Join(", ", GroupBy.ConvertAll(var => var.Name).ToArray())}" : string.Empty;
+                return $"{AnalysisName}{sequenceInfo} ({Dependent?.Name ?? "undefined"} ~ {interceptInfo} + {string.Join(" + ", Vars.ConvertAll(var => var.Name).ToArray())}{groupByInfo} - {AnalysisConfiguration.DatasetType?.Name})";
+            }
         }
     }
 }

@@ -46,12 +46,11 @@ namespace LSAnalyzer.Models
         [JsonIgnore]
         public virtual string ShortInfo
         {
-            get => 
-                AnalysisName + 
-                " (" + String.Join(", ", Vars.ConvertAll(var => var.Name).ToArray()) + 
-                " - " + AnalysisConfiguration.DatasetType?.Name +
-                "; " + AnalysisConfiguration.DatasetType?.Weight +
-                ")";
+            get
+            {
+                var groupByInfo = GroupBy.Count > 0 ? $" by {string.Join(", ", GroupBy.ConvertAll(var => var.Name).ToArray())}" : string.Empty;
+                return $"{AnalysisName} ({string.Join(", ", Vars.ConvertAll(var => var.Name).ToArray())}{groupByInfo} - {AnalysisConfiguration.DatasetType?.Name})";
+            }
         }
 
         [JsonIgnore]

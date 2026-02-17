@@ -105,6 +105,14 @@
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Nr." Binding="{Binding Id}" ElementStyle="{StaticResource DataGridCenteredText}" IsReadOnly="True"/>
                     <DataGridCheckBoxColumn Header="Select" Binding="{Binding Selected, UpdateSourceTrigger=PropertyChanged}" ElementStyle="{StaticResource DataGridCenteredCheckBox}"/>
+                    <DataGridTextColumn Header="File" Binding="{Binding Analysis.Analysis.AnalysisConfiguration.FileName, FallbackValue=?, Converter={StaticResource LeftSideFileNameConverter}}" Visibility="{Binding Source={x:Reference radioButtonTargetReload}, Path=IsChecked, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}" Width="200" IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style>
+                                <Setter Property="TextBlock.VerticalAlignment" Value="Center"/>
+                                <Setter Property="TextBlock.ClipToBounds" Value="True" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>     
+                    </DataGridTextColumn>
                     <DataGridTextColumn Header="Analysis" Binding="{Binding Analysis.Analysis.ShortInfo}" Width="300" IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
                             <Style>

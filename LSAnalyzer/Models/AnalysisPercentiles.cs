@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -26,12 +27,11 @@ namespace LSAnalyzer.Models
         [JsonIgnore]
         public override string ShortInfo
         {
-            get =>
-                AnalysisName +
-                " (" + (UseInterpolation ? "interpolation" : (MimicIdbAnalyzer ? "like IDBanalyzer" : "no interpolation")) + "; " + String.Join(", ", Vars.ConvertAll(var => var.Name).ToArray()) +
-                " - " + AnalysisConfiguration.DatasetType?.Name +
-                "; " + AnalysisConfiguration.DatasetType?.Weight +
-                ")";
+            get
+            {
+                var groupByInfo = GroupBy.Count > 0 ? $" by {string.Join(", ", GroupBy.ConvertAll(var => var.Name).ToArray())}" : string.Empty;
+                return $"{AnalysisName} {string.Join(";",Percentiles.ConvertAll(perc => perc.ToString("0.00", CultureInfo.InvariantCulture)))} ({string.Join(", ", Vars.ConvertAll(var => var.Name).ToArray())}{groupByInfo} - {AnalysisConfiguration.DatasetType?.Name})";
+            }
         }
 
         [JsonIgnore]
