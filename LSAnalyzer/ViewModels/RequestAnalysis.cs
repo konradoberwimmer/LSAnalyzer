@@ -7,13 +7,15 @@ using LSAnalyzer.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace LSAnalyzer.ViewModels;
 
-public partial class RequestAnalysis : ObservableObject
+public partial class RequestAnalysis : ObservableValidatorExtended
 {
     public required AnalysisConfiguration AnalysisConfiguration { set; get; }
 
@@ -56,6 +58,10 @@ public partial class RequestAnalysis : ObservableObject
     [ObservableProperty]
     private bool _calculateSeparately = false;
 
+    [ObservableProperty]
+    [RegularExpression(@"^0\.(([0-9]*[1-9])|([1-9][0-9]*))$")]
+    private string _newPercentile = string.Empty;
+    
     [ObservableProperty]
     private ObservableCollection<PercentileWrapper> _percentiles = [ new() { Value = 0.25 }, new() { Value = 0.50 }, new() { Value = 0.75 } ];
 
@@ -267,6 +273,28 @@ public partial class RequestAnalysis : ObservableObject
     }
 
     [RelayCommand]
+    private void AddPercentile()
+    {
+        if (!Validate()) return;
+
+        if (!double.TryParse(NewPercentile, CultureInfo.InvariantCulture, out var percentile)) return;
+
+        if (Percentiles.All(perc => Math.Abs(perc.Value - percentile) > 1e-10))
+        {
+            Percentiles.Add(new PercentileWrapper { Value = percentile });
+            Percentiles = new ObservableCollection<PercentileWrapper>(Percentiles.Order());
+        }
+
+        NewPercentile = string.Empty;
+    }
+
+    [RelayCommand]
+    private void RemovePercentile(PercentileWrapper percentile)
+    {
+        Percentiles.Remove(percentile);
+    }
+
+    [RelayCommand]
     private void SendAnalysisRequest(IRequestingAnalysis? window)
     {
         if (AnalysisConfiguration == null || AnalysisVariables.Count == 0 || window == null)
@@ -375,9 +403,14 @@ public partial class RequestAnalysis : ObservableObject
     }
 }
 
-public class PercentileWrapper
+public class PercentileWrapper : IComparable<PercentileWrapper>
 {
-    public double Value { get; set; }
+    public double Value { init; get; }
+
+    public int CompareTo(PercentileWrapper? other)
+    {
+        return Value.CompareTo(other?.Value);
+    }
 }
 
 internal class RequestAnalysisMessage : ValueChangedMessage<Analysis>

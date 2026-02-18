@@ -8,6 +8,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:LSAnalyzer.Views"
         xmlns:ViewModels="clr-namespace:LSAnalyzer.ViewModels" 
+        xmlns:customControls="clr-namespace:LSAnalyzer.Views.CustomControls"
         xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
         x:Name="windowRequestAnalysisPercentiles"
         mc:Ignorable="d"
@@ -79,13 +80,15 @@
                     </CheckBox.IsEnabled>
                 </CheckBox>
             </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="15,0,0,0">
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="15,0,0,0" VerticalAlignment="Top">
                 <TextBlock Text="Percentiles:"/>
-                <DataGrid ItemsSource="{Binding Percentiles}" VerticalAlignment="Stretch" Margin="10,0,0,0" MinWidth="100" MaxHeight="70" HeadersVisibility="None" GridLinesVisibility="None" AutoGenerateColumns="False">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Binding="{Binding Value}"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <ContentControl Content="{Binding}" Margin="5,0,0,0" Validation.ErrorTemplate="{x:Null}">
+                    <ContentControl.Resources>
+                        <DataTemplate DataType="{x:Type ViewModels:RequestAnalysis}">
+                            <customControls:Percentiles/>
+                        </DataTemplate>
+                    </ContentControl.Resources>
+                </ContentControl>
             </StackPanel>
         </Grid>
         <Grid Grid.Row="2">
