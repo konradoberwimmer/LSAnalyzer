@@ -82,6 +82,67 @@ public class TestRequestAnalysis
     }
 
     [Fact]
+    public void TestAddPercentile()
+    {
+        RequestAnalysis requestAnalysisViewModel = new()
+        {
+            AnalysisConfiguration = new()
+            {
+                DatasetType = new(),
+                FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                ModeKeep = true,
+            },
+            AvailableVariables = new(GetCurrentVariables())
+        };
+        
+        Assert.Equal(3, requestAnalysisViewModel.Percentiles.Count);
+        Assert.False(requestAnalysisViewModel.HasErrors);
+        
+        requestAnalysisViewModel.NewPercentile = "abc";
+        requestAnalysisViewModel.AddPercentileCommand.Execute(null);
+
+        Assert.True(requestAnalysisViewModel.HasErrors);
+        Assert.Contains("NewPercentile", requestAnalysisViewModel.Errors.Keys);
+        
+        requestAnalysisViewModel.NewPercentile = "0.500";
+        requestAnalysisViewModel.AddPercentileCommand.Execute(null);
+        
+        Assert.False(requestAnalysisViewModel.HasErrors);
+        Assert.Equal(3, requestAnalysisViewModel.Percentiles.Count);
+        Assert.True(string.IsNullOrEmpty(requestAnalysisViewModel.NewPercentile));
+        
+        requestAnalysisViewModel.NewPercentile = "0.95";
+        requestAnalysisViewModel.AddPercentileCommand.Execute(null);
+        requestAnalysisViewModel.NewPercentile = "0.05";
+        requestAnalysisViewModel.AddPercentileCommand.Execute(null);
+        
+        Assert.Equal(5, requestAnalysisViewModel.Percentiles.Count);
+        Assert.True(requestAnalysisViewModel.Percentiles.Select(perc => perc.Value).SequenceEqual([0.05, 0.25, 0.50, 0.75, 0.95]));
+    }
+    
+    [Fact]
+    public void TestRemovePercentile()
+    {
+        RequestAnalysis requestAnalysisViewModel = new()
+        {
+            AnalysisConfiguration = new()
+            {
+                DatasetType = new(),
+                FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+                ModeKeep = true,
+            },
+            AvailableVariables = new(GetCurrentVariables())
+        };
+        
+        // expect not to raise an exception
+        requestAnalysisViewModel.RemovePercentileCommand.Execute(new PercentileWrapper { Value = -0.33 });
+        
+        Assert.Equal(3, requestAnalysisViewModel.Percentiles.Count);
+        requestAnalysisViewModel.RemovePercentileCommand.Execute(requestAnalysisViewModel.Percentiles.First());
+        Assert.Equal(2, requestAnalysisViewModel.Percentiles.Count);
+    }
+
+    [Fact]
     public void TestInitializeWithAnalysis()
     {
         RequestAnalysis requestAnalysisViewModel = new()
