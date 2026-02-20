@@ -111,7 +111,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = [new Variable(1, "doesntExist", false)],
+                        Vars = [new Variable(1, "doesntExist")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -122,8 +122,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = [new Variable(1, "x", false)],
-                        GroupBy = [new Variable(2, "cat", false)],
+                        Vars = [new Variable(1, "x")],
+                        GroupBy = [new Variable(2, "cat")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -134,7 +134,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = [new Variable(1, "doesntExist", false)],
+                        Vars = [new Variable(1, "doesntExist")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -145,8 +145,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = [new Variable(1, "item1", false), new(2, "item2", false)],
-                        GroupBy = [new Variable(2, "cat", false)],
+                        Vars = [new Variable(1, "item1"), new(2, "item2")],
+                        GroupBy = [new Variable(2, "cat")],
                         CalculateBivariate = true,
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
@@ -158,7 +158,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisCorr(analysisConfigurationInvalid)
                     {
-                        Vars = [new Variable(1, "dummy", false)],
+                        Vars = [new Variable(1, "dummy")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -220,7 +220,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = [new Variable(1, "doesntExist", false)],
+                        Vars = [new Variable(1, "doesntExist")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -231,8 +231,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = [new Variable(1, "x", false)],
-                        GroupBy = [new Variable(2, "cat", false)],
+                        Vars = [new Variable(1, "x")],
+                        GroupBy = [new Variable(2, "cat")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -243,7 +243,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = [new Variable(1, "doesntExist", false)],
+                        Vars = [new Variable(1, "doesntExist")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -307,7 +307,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "doesntExist", false) },
+                        Vars = new() { new(1, "doesntExist") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -318,8 +318,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "x", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "x") },
+                        GroupBy = new() { new(2, "cat") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -330,7 +330,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = new() { new(1, "cat", false) },
+                        Vars = new() { new(1, "cat") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -341,8 +341,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = new() { new(1, "item1", false), new(2, "item2", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "item1"), new(2, "item2") },
+                        GroupBy = new() { new(2, "cat") },
                         CalculateBivariate = true,
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
@@ -409,7 +409,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "item1", false) },
+                        Vars = new() { new(1, "item1") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -420,8 +420,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "x", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "x") },
+                        GroupBy = new() { new(2, "cat") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -432,7 +432,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = new() { new(1, "cat", false) },
+                        Vars = new() { new(1, "cat") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -443,8 +443,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = new() { new(1, "item1", false), new(2, "item2", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "item1"), new(2, "item2") },
+                        GroupBy = new() { new(2, "cat") },
                         CalculateBivariate = true,
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
@@ -498,7 +498,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = new() { new(1, "cat", false) },
+                        Vars = new() { new(1, "cat") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -549,7 +549,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "item1", false) },
+                        Vars = new() { new(1, "item1") },
                     },
                     ViewSettings = []
                 }
@@ -560,8 +560,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "x", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "x") },
+                        GroupBy = new() { new(2, "cat") },
                     },
                     ViewSettings = []
                 }
@@ -572,8 +572,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "x", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "x") },
+                        GroupBy = new() { new(2, "cat") },
                     },
                     ViewSettings = []
                 }
@@ -584,8 +584,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "x", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "x") },
+                        GroupBy = new() { new(2, "cat") },
                     },
                     ViewSettings = []
                 }
@@ -680,8 +680,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = [new Variable(1, "x", false)],
-                        GroupBy = [new Variable(2, "cat", false)],
+                        Vars = [new Variable(1, "x")],
+                        GroupBy = [new Variable(2, "cat")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -737,8 +737,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = [new Variable(1, "x", false)],
-                        GroupBy = [new Variable(2, "cat", false)],
+                        Vars = [new Variable(1, "x")],
+                        GroupBy = [new Variable(2, "cat")],
                         SubsettingExpression = "cat == 1",
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings

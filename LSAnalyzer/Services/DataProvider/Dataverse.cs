@@ -181,7 +181,7 @@ namespace LSAnalyzer.Services.DataProvider
                 int vv = 0;
                 foreach (var variable in variables)
                 {
-                    variableList.Add(new(++vv, variable, false));
+                    variableList.Add(new(++vv, variable));
                 }
 
                 return variableList;

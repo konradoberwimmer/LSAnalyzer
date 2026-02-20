@@ -111,8 +111,8 @@ public partial class BatchAnalyze : ObservableObject
                     {
                         Vars =
                         [
-                            new Variable(1, "item1", false), new Variable(2, "item2", false),
-                            new Variable(3, "item3", false), new Variable(4, "item4", false)
+                            new Variable(1, "item1"), new Variable(2, "item2"),
+                            new Variable(3, "item3"), new Variable(4, "item4")
                         ]
                     },
                     ViewSettings = []

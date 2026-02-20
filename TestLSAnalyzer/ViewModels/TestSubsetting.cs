@@ -18,9 +18,9 @@ public class TestSubsetting
         var mockRservice = new Mock<IRservice>();
         mockRservice.Setup(rservice => rservice.GetCurrentDatasetVariables(dummyAnalysisConfiguration, true)).Returns(new List<Variable>()
         {
-            new(1, "x", false),
-            new(2, "y", false),
-            new(3, "z", false),
+            new(1, "x"),
+            new(2, "y"),
+            new(3, "z"),
         });
         
         Subsetting subsettingViewModel = new(mockRservice.Object, new Mock<Configuration>().Object);

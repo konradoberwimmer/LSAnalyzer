@@ -22,9 +22,9 @@ namespace TestLSAnalyzer.ViewModels.ValueConverter
             new List<object[]>
             {
                 new object[] { new List<Variable>(), "" },
-                new object[] { new List<Variable>() { new(1, "x1", false) }, "x1" },
-                new object[] { new List<Variable>() { new(1, "x1", false), new(1, "x2", false) }, "x1, x2" },
-                new object[] { new List<Variable>() { new(1, "x1", false), new(1, "x2", false), new(1, "x3", false) }, "x1, x2, x3" },
+                new object[] { new List<Variable>() { new(1, "x1") }, "x1" },
+                new object[] { new List<Variable>() { new(1, "x1"), new(1, "x2") }, "x1, x2" },
+                new object[] { new List<Variable>() { new(1, "x1"), new(1, "x2"), new(1, "x3") }, "x1, x2, x3" },
             };
 
         [Fact]

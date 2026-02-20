@@ -705,7 +705,8 @@ namespace LSAnalyzer.Services
                 List<Variable> variableList = new();
                 foreach (var variable in variables.GetRows())
                 {
-                    Variable newVariable = new(variable.RowIndex, (string)variable["variable"], analysisConfiguration.HasSystemVariable((string)variable["variable"]));
+                    Variable newVariable = new(variable.RowIndex, (string)variable["variable"])
+                        { IsSystemVariable = analysisConfiguration.HasSystemVariable((string)variable["variable"]) };
 
                     if (variableLabels.Keys.Contains(newVariable.Name))
                     {
@@ -745,13 +746,13 @@ namespace LSAnalyzer.Services
                         if (firstMatch != null)
                         {
                             variableList.RemoveAll(var => Regex.IsMatch(var.Name, pvVarRegex));
-                            Variable newVariable = new(maxPosition++, pvVar.DisplayName, false);
+                            Variable newVariable = new(maxPosition++, pvVar.DisplayName);
                             newVariable.Label = firstMatch?.Label;
                             variableList.Add(newVariable);
                         }
                     }
                                         
-                    variableList.Add(new(maxPosition++, "one", false));
+                    variableList.Add(new(maxPosition++, "one"));
                 }
 
                 return variableList;
@@ -1316,7 +1317,7 @@ namespace LSAnalyzer.Services
                 int vv = 0;
                 foreach (var variable in variables)
                 {
-                    variableList.Add(new(++vv, variable, false));
+                    variableList.Add(new(++vv, variable));
                 }
 
                 return variableList;

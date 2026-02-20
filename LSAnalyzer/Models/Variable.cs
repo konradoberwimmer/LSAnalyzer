@@ -10,19 +10,19 @@ namespace LSAnalyzer.Models
     {
         public int Position { get; set; }
         public string Name { get; set; }
-        public string? Label { get; set; }
-        public bool IsSystemVariable { get; set; }
+        public string? Label { get; set; } = null;
+        public bool IsSystemVariable { get; set; } = false;
+        
+        public bool FromPlausibleValues { get; set; } = false;
+        
+        public bool IsVirtual { get; set; } = false;
 
-        public Variable(int position, string name, bool isSystemVariable)
+        public Variable(int position, string name)
         {
             Position = position;
             Name = name;
-            IsSystemVariable = isSystemVariable;
         }
 
-        public string Info
-        {
-            get => Name + (Label != null ? " (" + Label + ")" : "");
-        }
+        public string Info => Name + (Label != null ? " (" + Label + ")" : "");
     }
 }

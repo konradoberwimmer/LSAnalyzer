@@ -46,8 +46,8 @@ public class TestMassExport
         AnalysisCorr analysisCorr = new(new AnalysisConfiguration())
         {
             Vars =  [
-                new Variable(1, "x1", false),
-                new Variable(2, "x2", false),
+                new Variable(1, "x1"),
+                new Variable(2, "x2"),
             ],
             GroupBy = [],
             CalculateOverall = false,
@@ -105,8 +105,8 @@ public class TestMassExport
 
         List<Variable> variables =
         [
-            new(1, "x1", false),
-            new(2, "x2", false),
+            new(1, "x1"),
+            new(2, "x2"),
         ];
 
         AnalysisCorr analysisCorr1 = new(analysisConfiguration)
@@ -119,7 +119,7 @@ public class TestMassExport
         AnalysisCorr analysisCorr2 = new(analysisConfiguration)
         {
             Vars = variables,
-            GroupBy = [new Variable(3, "cat1", false)],
+            GroupBy = [new Variable(3, "cat1")],
             CalculateOverall = true,
         };
 
@@ -198,8 +198,8 @@ public class TestMassExport
 
         List<Variable> variables =
         [
-            new(1, "x1", false),
-            new(2, "x2", false),
+            new(1, "x1"),
+            new(2, "x2"),
         ];
 
         AnalysisCorr analysisCorr1 = new(analysisConfiguration)
@@ -232,7 +232,7 @@ public class TestMassExport
         AnalysisCorr analysisCorr2 = new(analysisConfiguration)
         {
             Vars = variables,
-            GroupBy = [new Variable(3, "cat1", false)],
+            GroupBy = [new Variable(3, "cat1")],
             CalculateOverall = true,
         };
 

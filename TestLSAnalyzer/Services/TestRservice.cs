@@ -180,7 +180,7 @@ namespace TestLSAnalyzer.Services
                 },
                 ModeKeep = true,
             };
-            Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfiguration) { Vars = new() { new(1, "x", false) } }, new() { "y" }, "cat == 2"));
+            Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfiguration) { Vars = new() { new(1, "x") } }, new() { "y" }, "cat == 2"));
         }
 
         [Fact]
@@ -362,19 +362,19 @@ namespace TestLSAnalyzer.Services
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false) },
-                GroupBy = new() { new(2, "cat", false) },
+                Vars = new() { new(1, "x") },
+                GroupBy = new() { new(2, "cat") },
             };
             AnalysisLinreg analysisLinregCorrect = new(analysisConfiguration)
             {
-                Dependent = new Variable(1, "x", false),
-                Vars = [new Variable(1, "y", false)],
-                GroupBy = [new Variable(2, "cat", false)]
+                Dependent = new Variable(1, "x"),
+                Vars = [new Variable(1, "y")],
+                GroupBy = [new Variable(2, "cat")]
             };
             AnalysisLogistReg analysisLogistregIncorrect = new(analysisConfiguration)
             {
-                Vars = [new Variable(1, "y", false)],
-                GroupBy = [new Variable(2, "cat", false)]
+                Vars = [new Variable(1, "y")],
+                GroupBy = [new Variable(2, "cat")]
             };
 
             Rservice rservice = new();
@@ -410,8 +410,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
 
@@ -443,8 +443,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisUnivar analysisUnivarModeBuild = new(analysisConfigurationModeBuild)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
 
@@ -487,8 +487,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = true,
             };
 
@@ -500,8 +500,8 @@ namespace TestLSAnalyzer.Services
 
             analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false) },
-                GroupBy = new() { new(3, "cat", false), new(3, "mi", false) },
+                Vars = new() { new(1, "x") },
+                GroupBy = new() { new(3, "cat"), new(3, "mi") },
                 CalculateOverall = true,
             };
 
@@ -515,8 +515,8 @@ namespace TestLSAnalyzer.Services
             
             analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false) },
-                GroupBy = new() { new(3, "cat", false), new(3, "mi", false) },
+                Vars = new() { new(1, "x") },
+                GroupBy = new() { new(3, "cat"), new(3, "mi") },
                 CalculateOverall = true,
                 CalculateCrosswise = false,
             };
@@ -529,7 +529,7 @@ namespace TestLSAnalyzer.Services
 
             analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false) },
+                Vars = new() { new(1, "x") },
                 CalculateOverall = true,
             };
 
@@ -564,14 +564,14 @@ namespace TestLSAnalyzer.Services
 
             AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "ASRREA", false) },
+                Vars = new() { new(1, "ASRREA") },
                 GroupBy = new() { },
                 CalculateSeparately = false,
             };
 
             Assert.Null(rservice.CalculateMeanDiff(analysisMeanDiff));
 
-            analysisMeanDiff.GroupBy = new() { new(2, "ITSEX", false), new(3, "ASBG05C", false) };
+            analysisMeanDiff.GroupBy = new() { new(2, "ITSEX"), new(3, "ASBG05C") };
 
             var result = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(result);
@@ -613,8 +613,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "ASRREA", false) },
-                GroupBy = new() { new(2, "ITSEX", false), new(3, "ASBG05C", false) },
+                Vars = new() { new(1, "ASRREA") },
+                GroupBy = new() { new(2, "ITSEX"), new(3, "ASBG05C") },
                 CalculateSeparately = true,
             };
 
@@ -655,8 +655,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisFreq analysisFreq = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "item1"), new(1, "item2") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
 
@@ -686,8 +686,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisFreq analysisFreqModeBuild = new(analysisConfigurationModeBuild)
             {
-                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "item1"), new(1, "item2") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
 
@@ -725,8 +725,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisFreq analysisFreq = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
-                GroupBy = new() { new(3, "cat", false), new(4, "instable", false) },
+                Vars = new() { new(1, "item1"), new(1, "item2") },
+                GroupBy = new() { new(3, "cat"), new(4, "instable") },
                 CalculateOverall = false,
             };
 
@@ -764,8 +764,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisFreq analysisFreq = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "item1"), new(1, "item2") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = true,
             };
 
@@ -803,8 +803,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisPercentiles analysisPercentiles = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 Percentiles = new() { 0.25, 0.50, 0.75 },
                 CalculateOverall = false,
                 CalculateSE = false,
@@ -852,7 +852,7 @@ namespace TestLSAnalyzer.Services
 
             AnalysisPercentiles analysisPercentiles = new(analysisConfiguration)
             {
-                Vars = [ new(1, "x", false) ],
+                Vars = [ new(1, "x") ],
                 Percentiles = new() { 0.25, 0.50, 0.75, 0.05, 0.95 },
                 CalculateSE = false,
             };
@@ -894,8 +894,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisPercentiles analysisPercentiles = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 Percentiles = new() { 0.25, 0.50, 0.75 },
                 CalculateOverall = false,
                 CalculateSE = true,
@@ -954,8 +954,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisCorr analysisCorr = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Vars = new() { new(1, "item1"), new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = false,
             };
 
@@ -986,8 +986,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisCorr analysisCorrModeBuild = new(analysisConfigurationModeBuild)
             {
-                Vars = new() { new(1, "item1", false), new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Vars = new() { new(1, "item1"), new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = true,
             };
 
@@ -1031,9 +1031,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLinreg analysisLinreg = new(analysisConfiguration)
             {
-                Dependent = new(1, "item1", false),
-                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Dependent = new(1, "item1"),
+                Vars = new() { new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = false,
             };
 
@@ -1063,9 +1063,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLinreg analysisLinregModeBuild = new(analysisConfigurationModeBuild)
             {
-                Dependent = new(1, "item1", false),
-                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Dependent = new(1, "item1"),
+                Vars = new() { new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = true,
             };
 
@@ -1103,9 +1103,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLinreg analysisLinregForward = new(analysisConfiguration)
             {
-                Dependent = new(1, "item1", false),
-                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Dependent = new(1, "item1"),
+                Vars = new() { new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = false,
                 Sequence = AnalysisRegression.RegressionSequence.Forward,
             };
@@ -1149,9 +1149,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLinreg analysisLinregBackward = new(analysisConfiguration)
             {
-                Dependent = new(1, "item1", false),
-                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Dependent = new(1, "item1"),
+                Vars = new() { new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = false,
                 Sequence = AnalysisRegression.RegressionSequence.Backward,
             };
@@ -1196,9 +1196,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLogistReg analysisLogistReg = new(analysisConfiguration)
             {
-                Dependent = new(1, "event", false),
-                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Dependent = new(1, "event"),
+                Vars = new() { new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = false,
             };
 
@@ -1226,9 +1226,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLogistReg analysisLogistRegModeBuild = new(analysisConfigurationModeBuild)
             {
-                Dependent = new(1, "event", false),
-                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Dependent = new(1, "event"),
+                Vars = new() { new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = true,
             };
 
@@ -1266,9 +1266,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLogistReg analysisLogistRegForward = new(analysisConfiguration)
             {
-                Dependent = new(1, "event", false),
-                Vars = new() { new(2, "item1", false), new(3, "item2", false), new(4, "item3", false) },
-                GroupBy = new() { new(5, "cat", false) },
+                Dependent = new(1, "event"),
+                Vars = new() { new(2, "item1"), new(3, "item2"), new(4, "item3") },
+                GroupBy = new() { new(5, "cat") },
                 CalculateOverall = false,
                 Sequence = AnalysisRegression.RegressionSequence.Forward,
             };
@@ -1355,8 +1355,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisCorr analysisCorr = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Vars = new() { new(1, "item1"), new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = false,
             };
 
@@ -1402,8 +1402,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "ASRREA", false) },
-                GroupBy = new() { new(2, "ITSEX", false) },
+                Vars = new() { new(1, "ASRREA") },
+                GroupBy = new() { new(2, "ITSEX") },
                 CalculateSeparately = true,
             };
 

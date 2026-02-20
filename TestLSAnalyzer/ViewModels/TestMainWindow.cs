@@ -153,8 +153,8 @@ namespace TestLSAnalyzer.ViewModels
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
             AnalysisPresentation analysisPresentationViewModelUnivar = new(analysisUnivar);
@@ -169,8 +169,8 @@ namespace TestLSAnalyzer.ViewModels
 
             AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateSeparately = false,
             };
             AnalysisPresentation analysisPresentationViewModelMeanDiff = new(analysisMeanDiff);
@@ -200,8 +200,8 @@ namespace TestLSAnalyzer.ViewModels
 
             AnalysisFreq analysisFreq = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "cat", false) },
-                GroupBy = new() { new(1, "instable", false) },
+                Vars = new() { new(1, "cat") },
+                GroupBy = new() { new(1, "instable") },
                 CalculateOverall = true,
             };
             AnalysisPresentation analysisPresentationViewModelFreq = new(analysisFreq);
@@ -239,8 +239,8 @@ namespace TestLSAnalyzer.ViewModels
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "z", false), new(1, "k", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "z"), new(1, "k") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
             AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
@@ -280,8 +280,8 @@ namespace TestLSAnalyzer.ViewModels
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
             AnalysisPresentation analysisPresentationViewModel = new(analysisUnivar);
@@ -333,8 +333,8 @@ namespace TestLSAnalyzer.ViewModels
 
             AnalysisCorr analysisCorrWgt = new(mainWindowViewModel.AnalysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(2, "item2", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "item1"), new(2, "item2") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
             AnalysisPresentation analysisPresentationViewModelWgt = new(analysisCorrWgt);
@@ -351,8 +351,8 @@ namespace TestLSAnalyzer.ViewModels
 
             AnalysisCorr analysisCorrWgt100 = new(mainWindowViewModel.AnalysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(2, "item2", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "item1"), new(2, "item2") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
             AnalysisPresentation analysisPresentationViewModelWgt100 = new(analysisCorrWgt100);
@@ -405,15 +405,15 @@ namespace TestLSAnalyzer.ViewModels
 
             mainWindowViewModel.Analyses.Add(new(new AnalysisUnivar(dummyAnalysisConfiguration)
             {
-                Vars = new() { new(1, "y1", false), new(2, "y2", false) },
-                GroupBy = new() { new(3, "x", false) },
+                Vars = new() { new(1, "y1"), new(2, "y2") },
+                GroupBy = new() { new(3, "x") },
                 CalculateOverall = false,
             }));
 
             mainWindowViewModel.Analyses.Add(new(new AnalysisFreq(dummyAnalysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(2, "item2", false) },
-                GroupBy = new() { new(3, "x", false) },
+                Vars = new() { new(1, "item1"), new(2, "item2") },
+                GroupBy = new() { new(3, "x") },
                 CalculateOverall = false,
                 CalculateBivariate = false,
             }));
