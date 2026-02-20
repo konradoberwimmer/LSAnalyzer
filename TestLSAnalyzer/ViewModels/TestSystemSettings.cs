@@ -606,6 +606,11 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
+        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null)
         {
             throw new NotImplementedException();

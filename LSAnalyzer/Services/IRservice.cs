@@ -68,6 +68,8 @@ public interface IRservice
 
     public List<GenericVector>? CalculateLogistReg(AnalysisLogistReg analysis);
 
+    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null);
+    
     public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null);
 
     public DataFrame? GetValueLabels(string variable);

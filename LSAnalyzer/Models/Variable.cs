@@ -23,6 +23,17 @@ namespace LSAnalyzer.Models
             Name = name;
         }
 
+        public Variable Clone()
+        {
+            return new Variable(Position, Name)
+            {
+                Label = Label,
+                IsSystemVariable = IsSystemVariable,
+                FromPlausibleValues = FromPlausibleValues,
+                IsVirtual = IsVirtual,
+            };
+        }
+
         public string Info => Name + (Label != null ? " (" + Label + ")" : "");
     }
 }

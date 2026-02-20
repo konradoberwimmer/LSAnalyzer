@@ -148,6 +148,11 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
+    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null)
     {
         throw new System.NotImplementedException();

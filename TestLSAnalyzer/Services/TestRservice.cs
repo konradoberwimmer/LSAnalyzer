@@ -1538,6 +1538,176 @@ namespace TestLSAnalyzer.Services
             Assert.False(rservice.IsConnected);
         }
 
+        [Fact]
+        public void TestCreateVirtualVariableCombine()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } },
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+            
+            Rservice rservice = new();
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.InjectAppFunctions());
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            VirtualVariableCombine virtualVariable = new() { Name = "ASBR01_mean_rmNA" };
+            
+            // not possible without at least one input variable
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable));
+            
+            // not possible to overwrite an existing variable
+            virtualVariable.Variables = [
+                new Variable(1, "ASBG05A"),
+                new Variable(2, "ASBG05B"),
+                new Variable(3, "ASBG05C"),
+            ];
+            virtualVariable.Name = "ASBG01";
+            
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable));
+            
+            // possible with mean (default) and removeNa (default)
+            virtualVariable.Name = "ASBR01_mean_rmNA";
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_mean_rmNA' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("missingValues <- sum(is.na(lsanalyzer_dat_raw_stored$ASBR01_mean_rmNA))"));
+            Assert.Equal(14, rservice.Fetch("missingValues").AsInteger().First());
+            
+            // possible with mean (default) without removeNa
+            virtualVariable.RemoveNa = false;
+            virtualVariable.Name = "ASBR01_mean";
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_mean' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("missingValues <- sum(is.na(lsanalyzer_dat_raw_stored$ASBR01_mean))"));
+            Assert.Equal(65, rservice.Fetch("missingValues").AsInteger().First());
+            
+            // possible with label
+            virtualVariable.Label = "label for new variable";
+            virtualVariable.Name = "ASBR01_label";
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_label' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("hasLabel <- 'label for new variable' == attributes(lsanalyzer_dat_raw_stored)$variable.labels['ASBR01_label']"));
+            Assert.True(rservice.Fetch("hasLabel").AsLogical().First());
+            
+            // possible with sum without removeNa
+            virtualVariable.Type = VirtualVariableCombine.CombinationFunction.Sum;
+            virtualVariable.Name = "ASBR01_sum";
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_sum' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("missingValues <- sum(is.na(lsanalyzer_dat_raw_stored$ASBR01_sum))"));
+            Assert.Equal(65, rservice.Fetch("missingValues").AsInteger().First());
+            
+            // possible with factor scores without removeNa
+            virtualVariable.Type = VirtualVariableCombine.CombinationFunction.FactorScores;
+            virtualVariable.Name = "ASBR01_factor";
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_factor' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("missingValues <- sum(is.na(lsanalyzer_dat_raw_stored$ASBR01_factor))"));
+            Assert.Equal(65, rservice.Fetch("missingValues").AsInteger().First());
+        }
+
+                [Fact]
+        public void TestCreateVirtualVariableCombineFromPVs()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvarsList = [
+                        new PlausibleValueVariable { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true },
+                        new PlausibleValueVariable { Regex = "ASRLIT", DisplayName = "ASRLIT", Mandatory = true },
+                        new PlausibleValueVariable { Regex = "ASRINF", DisplayName = "ASRINF", Mandatory = true }
+                    ],
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+            
+            Rservice rservice = new();
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            VirtualVariableCombine virtualVariable = new()
+            {
+                Name = "mean_of_subdimensions",
+                FromPlausibleValues = true,
+                Variables = [
+                    new Variable(1, "ASRLIT"),
+                    new Variable(2, "ASRINF"),
+                ]
+            };
+            
+            // not possible without passing pv list
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable));
+            
+            // not possible when not actually pvs
+            virtualVariable.Variables = [
+                new Variable(1, "ASBG05A"),
+                new Variable(2, "ASBG05B"),
+                new Variable(3, "ASBG05C"),
+            ];
+            
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable, new List<PlausibleValueVariable>(analysisConfiguration.DatasetType.PVvarsList)));
+            
+            // not possible when pv vars are inconsistent
+            virtualVariable.Variables = [
+                new Variable(1, "ASRLIT"),
+                new Variable(2, "ASRINF"),
+            ];
+            
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable, [
+                new PlausibleValueVariable { Regex = "ASRLIT", DisplayName = "ASRLIT", Mandatory = true },
+                new PlausibleValueVariable { Regex = "ASRINF01", DisplayName = "ASRINF", Mandatory = true }
+            ]));
+            
+            // possible
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, new List<PlausibleValueVariable>(analysisConfiguration.DatasetType.PVvarsList)));
+            Assert.True(rservice.Execute("newVariables <- grep('mean_of_subdimensions', colnames(lsanalyzer_dat_raw_stored), value = TRUE)"));
+            var newVariables = rservice.Fetch("newVariables").AsCharacter().ToList();
+            Assert.Equal(5, newVariables.Count);
+            
+            // equals single variable transformation
+            virtualVariable.Name = "verify";
+            virtualVariable.Variables = [
+                new Variable(1, "ASRLIT03"),
+                new Variable(2, "ASRINF03"),
+            ];
+            virtualVariable.FromPlausibleValues = false;
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.Execute("areEqual <- all(stats::na.omit(lsanalyzer_dat_raw_stored$mean_of_subdimensions_3) == stats::na.omit(lsanalyzer_dat_raw_stored$verify))"));
+            Assert.True(rservice.Fetch("areEqual").AsLogical().First());
+        }
+        
         public static string AssemblyDirectory
         {
             get
