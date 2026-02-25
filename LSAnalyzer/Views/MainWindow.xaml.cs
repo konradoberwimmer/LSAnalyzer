@@ -337,5 +337,16 @@ namespace LSAnalyzer.Views
             
             return requestAnalysisViewModel;
         }
+
+        private void MenuItemVirtualVariables_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.MainWindow mainWindowViewModel || mainWindowViewModel.AnalysisConfiguration is null) return;
+            
+            var virtualVariablesViewModel = _serviceProvider.GetRequiredService<ViewModels.VirtualVariables>();
+            virtualVariablesViewModel.AnalysisConfiguration = mainWindowViewModel.AnalysisConfiguration;
+            
+            VirtualVariables virtualVariablesView = new(virtualVariablesViewModel);
+            virtualVariablesView.ShowDialog();
+        }
     }
 }

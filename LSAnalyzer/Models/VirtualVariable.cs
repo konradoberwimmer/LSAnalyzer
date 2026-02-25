@@ -6,6 +6,8 @@ namespace LSAnalyzer.Models;
 public abstract class VirtualVariable
 {
     public abstract string TypeName { get; }
+
+    public int Id { get; set; } = 0;
     
     public string Name { get; set; } = string.Empty;
     

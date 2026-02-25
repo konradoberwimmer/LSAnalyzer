@@ -540,6 +540,40 @@ public class Configuration
             // ignore
         }
     }
+
+    public List<VirtualVariable> GetVirtualVariablesFor(string fileName, DatasetType datasetType)
+    {
+        return _settingsService.VirtualVariables.Where(vv => vv.ForFileName == fileName || vv.ForDatasetTypeId == datasetType.Id).ToList();
+    }
+
+    public int GetNextVirtualVariableId()
+    {
+        var virtualVariables = _settingsService.VirtualVariables;
+
+        if (virtualVariables.Count == 0) return 1;
+        
+        return virtualVariables.Max(vv => vv.Id) + 1;
+    }
+
+    public void RemoveVirtualVariable(VirtualVariable virtualVariable)
+    {
+        var virtualVariables = _settingsService.VirtualVariables;
+        
+        virtualVariables.Where(vv => vv.Id == virtualVariable.Id).ToList().ForEach(vv => virtualVariables.Remove(vv));
+        
+        _settingsService.VirtualVariables = virtualVariables;
+    }
+
+    public void StoreVirtualVariable(VirtualVariable virtualVariable)
+    {
+        var virtualVariables = _settingsService.VirtualVariables;
+        
+        virtualVariables.Where(vv => vv.Id == virtualVariable.Id).ToList().ForEach(vv => virtualVariables.Remove(vv));
+        
+        virtualVariables.Add(virtualVariable);
+        
+        _settingsService.VirtualVariables = virtualVariables;
+    }
     
     public class RecentFileForAnalysis
     {

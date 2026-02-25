@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using LSAnalyzer.Models;
 
 namespace LSAnalyzer.Services;
 
@@ -36,6 +37,31 @@ public class SettingsService : ISettingsService
             var jsonEncoded = JsonSerializer.Serialize(value);
             
             Properties.Settings.Default.datasetTypeHashes = jsonEncoded;
+            Properties.Settings.Default.Save();
+        }
+    }
+
+    public List<VirtualVariable> VirtualVariables
+    {
+        get
+        {
+            var jsonEncoded = Properties.Settings.Default.virtualVariables ?? string.Empty;
+
+            try
+            {
+                var virtualVariables = JsonSerializer.Deserialize<List<VirtualVariable>>(jsonEncoded);
+
+                return virtualVariables ?? [];
+            } catch (Exception)
+            {
+                return [];
+            }
+        }
+        set
+        {
+            var jsonEncoded = JsonSerializer.Serialize(value);
+            
+            Properties.Settings.Default.virtualVariables = jsonEncoded;
             Properties.Settings.Default.Save();
         }
     }

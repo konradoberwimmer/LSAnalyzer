@@ -177,5 +177,17 @@ namespace LSAnalyzer.Properties {
                 this["datasetTypeHashes"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string virtualVariables {
+            get {
+                return ((string)(this["virtualVariables"]));
+            }
+            set {
+                this["virtualVariables"] = value;
+            }
+        }
     }
 }

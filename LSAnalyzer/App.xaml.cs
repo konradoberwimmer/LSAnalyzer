@@ -51,6 +51,7 @@ namespace LSAnalyzer
             ConfigurationBuilder configurationBuilder = new();
             configurationBuilder.AddUserSecrets<Configuration>();
 
+            // Services
             services.AddSingleton<IServiceProvider>(_ => _serviceProvider);
             services.AddSingleton<ILogging, Logging>();
             services.AddTransient<IBatchAnalyzeService, BatchAnalyzeService>();
@@ -64,6 +65,7 @@ namespace LSAnalyzer
             services.AddTransient<IResultService, ResultService>();
             services.AddSingleton<IRservice, Rservice>();
             services.AddSingleton<IAnalysisQueue, AnalysisQueue>();
+            // ViewModels
             services.AddTransient<ConfigDatasetTypes>();
             services.AddTransient<DataProviders>();
             services.AddSingleton<MassExport>();
@@ -73,12 +75,15 @@ namespace LSAnalyzer
             services.AddTransient<RequestAnalysis>();
             services.AddTransient<MainWindow>();
             services.AddSingleton<BatchAnalyze>();
+            services.AddTransient<VirtualVariables>();
+            // Views
             services.AddTransient<Views.ConfigDatasetTypes>();
             services.AddTransient<Views.DataProviders>();
             services.AddTransient<Views.MassExport>();
             services.AddTransient<Views.SystemSettings>();
             services.AddTransient<Views.SelectAnalysisFile>();
             services.AddTransient<Views.BatchAnalyze>();
+            services.AddTransient<Views.VirtualVariables>();
             services.AddSingleton<Views.MainWindow>(_ => new Views.MainWindow(_serviceProvider));
         }
 

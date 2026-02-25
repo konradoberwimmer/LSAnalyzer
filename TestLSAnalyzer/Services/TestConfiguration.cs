@@ -375,6 +375,106 @@ public class TestConfiguration
         Assert.Empty(configuration.GetStoredRecentBatchAnalyzeFiles());
     }
 
+    [Fact]
+    public void TestGetVirtualVariablesFor()
+    {
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.SetupSequence(service => service.VirtualVariables)
+            .Returns([])
+            .Returns([ new VirtualVariableCombine { ForFileName = "other_file.sav" } ])
+            .Returns([ new VirtualVariableCombine { ForFileName = "other_file.sav", ForDatasetTypeId = 12 }, new VirtualVariableCombine { ForFileName = "some_file.csv" }])
+            .Returns([ new VirtualVariableCombine { ForFileName = "other_file.sav", ForDatasetTypeId = 12 }, new VirtualVariableCombine { ForFileName = "some_file.csv" }])
+            .Returns([ new VirtualVariableCombine { ForFileName = "other_file.sav", ForDatasetTypeId = 12 }, new VirtualVariableCombine { ForFileName = "some_file.csv" }]);
+
+        Configuration configuration = new(string.Empty, null, settingsService.Object, new RegistryServiceStub());
+
+        var noVirtualVariablesAtAll = configuration.GetVirtualVariablesFor("some_file.csv", new DatasetType());
+        Assert.Empty(noVirtualVariablesAtAll);
+        
+        var noVirtualVariableForFile = configuration.GetVirtualVariablesFor("some_file.csv", new DatasetType());
+        Assert.Empty(noVirtualVariableForFile);
+        
+        var virtualVariableFromFileName = configuration.GetVirtualVariablesFor("some_file.csv", new DatasetType());
+        Assert.Single(virtualVariableFromFileName);
+        
+        var virtualVariableFromDatasetType = configuration.GetVirtualVariablesFor("new_file.csv", new DatasetType { Id = 12 });
+        Assert.Single(virtualVariableFromDatasetType);
+        
+        var virtualVariablesFromBoth = configuration.GetVirtualVariablesFor("some_file.csv", new DatasetType { Id = 12 });
+        Assert.Equal(2, virtualVariablesFromBoth.Count);
+    }
+
+    [Fact]
+    public void TestGetNextVirtualVariableIdFirst()
+    {
+        List<VirtualVariable> virtualVariables = [];
+        
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.SetupGet(service => service.VirtualVariables).Returns(virtualVariables);
+        
+        Configuration configuration = new(string.Empty, null, settingsService.Object, new RegistryServiceStub());
+        
+        Assert.Equal(1, configuration.GetNextVirtualVariableId());
+    }
+    
+    [Fact]
+    public void TestGetNextVirtualVariableId()
+    {
+        List<VirtualVariable> virtualVariables =
+            [new VirtualVariableCombine { Id = 21 }, new VirtualVariableCombine { Id = 7 }];
+        
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.SetupGet(service => service.VirtualVariables).Returns(virtualVariables);
+        
+        Configuration configuration = new(string.Empty, null, settingsService.Object, new RegistryServiceStub());
+        
+        Assert.Equal(22, configuration.GetNextVirtualVariableId());
+    }
+
+    [Fact]
+    public void TestRemoveVirtualVariable()
+    {
+        List<VirtualVariable> virtualVariables =
+            [new VirtualVariableCombine { Id = 21, ForFileName = "some_file.sav" }];
+        
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.SetupGet(service => service.VirtualVariables).Returns(virtualVariables);
+
+        Configuration configuration = new(string.Empty, null, settingsService.Object, new RegistryServiceStub());
+
+        settingsService.SetupSet(service => service.VirtualVariables = It.Is<List<VirtualVariable>>(list => list.Count == 1)).Verifiable();
+
+        configuration.RemoveVirtualVariable(new VirtualVariableCombine { Id = 34 });
+
+        settingsService.SetupSet(service => service.VirtualVariables = It.Is<List<VirtualVariable>>(list => list.Count == 0)).Verifiable();
+
+        configuration.RemoveVirtualVariable(new VirtualVariableCombine { Id = 21 });
+        
+        settingsService.VerifyAll();
+    }
+
+    [Fact]
+    public void TestStoreVirtualVariable()
+    {
+        List<VirtualVariable> virtualVariables =
+            [new VirtualVariableCombine { Id = 21, ForFileName = "some_file.sav" }];
+        
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.SetupGet(service => service.VirtualVariables).Returns(virtualVariables);
+        
+        Configuration configuration = new(string.Empty, null, settingsService.Object, new RegistryServiceStub());
+
+        settingsService.SetupSet(service => service.VirtualVariables = It.Is<List<VirtualVariable>>(list => list.Count == 1)).Verifiable();
+
+        configuration.StoreVirtualVariable(new VirtualVariableCombine { Id = 21 });
+        
+        settingsService.SetupSet(service => service.VirtualVariables = It.Is<List<VirtualVariable>>(list => list.Count == 2)).Verifiable();
+
+        configuration.StoreVirtualVariable(new VirtualVariableCombine { Id = 34 });
+        
+        settingsService.VerifyAll();
+    }
+
     class MockedConfiguration : Configuration
     {
         public override List<IDataProviderConfiguration> GetDataProviderConfigurations()

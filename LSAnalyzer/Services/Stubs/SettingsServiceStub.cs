@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using LSAnalyzer.Models;
 
 namespace LSAnalyzer.Services.Stubs;
 
@@ -12,4 +13,13 @@ public class SettingsServiceStub : ISettingsService
     }
 
     public Dictionary<int, string> DatasetTypeHashes { get; set; } = [];
+
+    public List<VirtualVariable> VirtualVariables
+    {
+        get => [];
+        set
+        {
+            
+        }
+    }
 }
