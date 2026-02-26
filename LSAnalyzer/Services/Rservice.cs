@@ -1165,7 +1165,7 @@ namespace LSAnalyzer.Services
                     _ => throw new ArgumentOutOfRangeException(nameof(virtualVariableCombine), virtualVariableCombine.Type.ToString(), "not in enum")
                 };
 
-                var subset = $"subset(lsanalyzer_dat_raw_stored, select = c({string.Join(", ", virtualVariableCombine.Variables.ConvertAll(var => "'" + var.Name + "'"))}))";
+                var subset = $"subset(lsanalyzer_dat_raw_stored, select = c({string.Join(", ", virtualVariableCombine.Variables.ToList().ConvertAll(var => "'" + var.Name + "'"))}))";
                 var removeNa = virtualVariableCombine.RemoveNa ? "TRUE" : "FALSE";
                 
                 var fullCall = $"{target} <- {baseCall}({subset}, na.rm = {removeNa})";

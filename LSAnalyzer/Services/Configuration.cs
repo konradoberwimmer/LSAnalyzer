@@ -564,7 +564,7 @@ public class Configuration
         _settingsService.VirtualVariables = virtualVariables;
     }
 
-    public void StoreVirtualVariable(VirtualVariable virtualVariable)
+    public virtual void StoreVirtualVariable(VirtualVariable virtualVariable)
     {
         var virtualVariables = _settingsService.VirtualVariables;
         

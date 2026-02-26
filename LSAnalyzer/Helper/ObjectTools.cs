@@ -11,7 +11,7 @@ namespace LSAnalyzer.Helper
     public static class ObjectTools
     {
         // Kudos to Taras Alenin
-        public static bool PublicInstancePropertiesEqual<T>(T self, T to, params string[] ignore) where T : class
+        public static bool PublicInstancePropertiesEqual<T>(T self, T to, string[] ignore) where T : class
         {
             if (self != null && to != null)
             {

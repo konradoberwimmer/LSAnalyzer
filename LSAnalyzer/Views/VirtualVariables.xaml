@@ -8,10 +8,15 @@
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         xmlns:models="clr-namespace:LSAnalyzer.Models"
         xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
+        xmlns:virtualVariableControls="clr-namespace:LSAnalyzer.Views.CustomControls.VirtualVariable"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewModels:VirtualVariables, IsDesignTimeCreatable=True}"
-        Title="VirtualVariables" Height="600" Width="1000" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen">
+        Title="Virtual variables" Height="600" Width="1000" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen" Closing="Window_OnClosing">
     <Window.Resources>
+        <sys:Boolean x:Key="BooleanTrue">True</sys:Boolean>
+        <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
+        <converter:DictionaryHasElementToBool x:Key="DictionaryHasElementToBoolConverter"/>
         <converter:NullToBool x:Key="NullToBoolConverter"/>
         <converter:VirtualVariableTypeToName x:Key="VirtualVariableTypeToNameConverter"/>
         <Style x:Key="ComboBoxSelectOverlay" TargetType="TextBlock">
@@ -26,6 +31,11 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <DataTemplate x:Key="ModifiedTemplate" DataType="{x:Type models:VirtualVariable}">
+            <StackPanel VerticalAlignment="Center">
+                <fa:IconImage Icon="Star" Foreground="Black" Width="10" Visibility="{Binding IsChanged, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
+            </StackPanel>
+        </DataTemplate>
     </Window.Resources>
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
@@ -44,12 +54,14 @@
                 <TextBlock Text="{Binding CurrentDatasetTypeName, StringFormat={} ({0})}"/>
             </StackPanel>
             <Border Grid.Row="1" x:Name="BorderDataGridVirtualVariables" Margin="0,5,0,0">
-                <DataGrid ItemsSource="{Binding CurrentVirtualVariables}" SelectedItem="{Binding SelectedVirtualVariable}" SelectionMode="Single" AutoGenerateColumns="False" IsReadOnly="True">
+                <DataGrid Validation.ErrorTemplate="{x:Null}" ItemsSource="{Binding CurrentVirtualVariables}" SelectedItem="{Binding SelectedVirtualVariable}" SelectionMode="Single" AutoGenerateColumns="False" IsReadOnly="True">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Binding="{Binding Name}" Header="Type"/>
-                        <DataGridTextColumn Binding="{Binding Name}" Header="Variable name(s)"/>
-                        <DataGridTextColumn Binding="{Binding ForFileName}" Header="For file name"/>
-                        <DataGridCheckBoxColumn Binding="{Binding ForDatasetTypeId, Converter={StaticResource NullToBoolConverter}}" Header="For dataset type"/>
+                        <DataGridTemplateColumn Header="" CellTemplate="{StaticResource ModifiedTemplate}" IsReadOnly="True"/>
+                        <DataGridTextColumn Binding="{Binding TypeName}" Header="Type" MinWidth="100"/>
+                        <DataGridTextColumn Binding="{Binding Name}" Header="Variable name(s)" MinWidth="120"/>
+                        <DataGridTextColumn Binding="{Binding Info}" Header="Info" Width="300"/>
+                        <DataGridTextColumn Binding="{Binding ForFileName}" Header="For file name" MinWidth="100"/>
+                        <DataGridCheckBoxColumn Binding="{Binding ForDatasetTypeId, Converter={StaticResource NullToBoolConverter}}" Header="For dataset type" MinWidth="100"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>
@@ -58,7 +70,7 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <ComboBox x:Name="ComboBoxSelectedType" Grid.Column="0" ItemsSource="{Binding VirtualVariableTypes}" Width="120" HorizontalAlignment="Left">
+                <ComboBox x:Name="ComboBoxSelectedType" Grid.Column="0" ItemsSource="{Binding VirtualVariableTypes}" SelectedItem="{Binding SelectedVirtualVariableType}" Width="120" HorizontalAlignment="Left" SelectionChanged="ComboBoxSelectedType_OnSelectionChanged">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Converter={StaticResource VirtualVariableTypeToNameConverter}}"/>
@@ -66,15 +78,50 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
                 <TextBlock Grid.Column="0" DataContext="{Binding ElementName=ComboBoxSelectedType, Path=SelectedItem}" Text="New ..." Style="{StaticResource ComboBoxSelectOverlay}"/>
-                <Button Grid.Column="1" Content="Remove" Width="80" Height="22" HorizontalAlignment="Right" IsEnabled="{Binding SelectedVirtualVariable, Converter={StaticResource NullToBoolConverter}}"/>
+                <Button Grid.Column="1" Content="Remove" Width="80" Height="22" HorizontalAlignment="Right" IsEnabled="{Binding HasSelectedVirtualVariable}" Click="ButtonRemoveVirtualVariable_OnClick"/>
             </Grid>
-            <ContentControl Grid.Row="3" Content="{Binding SelectedVirtualVariable}" HorizontalAlignment="Stretch" Margin="0,5,0,0" BorderThickness="0,1,0,0">
-                <ContentControl.Resources>
-                    <DataTemplate DataType="{x:Type models:VirtualVariableCombine}">
-                        <TextBlock>HI!</TextBlock>
-                    </DataTemplate>
-                </ContentControl.Resources>
-            </ContentControl>
+            <Border Grid.Row="3" BorderBrush="Gray" BorderThickness="0,0.5,0,0" Margin="0,5,0,0" MinHeight="350" Padding="0,5,0,0">
+                <Grid Visibility="{Binding HasSelectedVirtualVariable, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="New variable:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" Width="120" HorizontalAlignment="Left" Text="{Binding SelectedVirtualVariable.Name, FallbackValue=new1, UpdateSourceTrigger=PropertyChanged}">
+                        <ToolTipService.ToolTip>
+                            <TextBlock Text="{Binding SelectedVirtualVariable.Errors[Name], FallbackValue=...}" Foreground="Red"/>
+                        </ToolTipService.ToolTip>
+                        <ToolTipService.IsEnabled>
+                            <Binding Path="SelectedVirtualVariable.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Name"/>
+                        </ToolTipService.IsEnabled>
+                    </TextBox>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,5,0,0" Text="Label:"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Margin="5,5,0,0" Width="240" HorizontalAlignment="Left" Text="{Binding SelectedVirtualVariable.Label, FallbackValue=newLabel, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,5,0,0" Text="For dataset type:" VerticalAlignment="Center"/>
+                    <CheckBox Grid.Row="2" Grid.Column="1" Margin="5,5,0,0" HorizontalAlignment="Left" IsChecked="{Binding SelectedIsForDatasetType}"></CheckBox>
+                    <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,5,0,0" Text="Available variables:"/>
+                    <Border x:Name="BorderAvailableVariables" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,5,0,0">
+                        <ListBox ItemsSource="{Binding AvailableVariables}" DisplayMemberPath="Info" Height="{Binding ElementName=BorderAvailableVariables, Path=ActualHeight}" Width="{Binding ElementName=BorderAvailableVariables, Path=ActualWidth}" MouseDoubleClick="ListBoxAvailableVariables_OnMouseDoubleClick" SelectionMode="Extended"/>
+                    </Border>
+                    <ContentControl Grid.Row="0" Grid.Column="2" Grid.RowSpan="5" HorizontalAlignment="Stretch" Margin="5,0,0,0" Validation.ErrorTemplate="{x:Null}" Content="{Binding SelectedVirtualVariable}">
+                        <ContentControl.Resources>
+                            <DataTemplate DataType="{x:Type models:VirtualVariableCombine}">
+                                <virtualVariableControls:VirtualVariableCombine/>
+                            </DataTemplate>
+                        </ContentControl.Resources>
+                    </ContentControl>
+                    <Button Grid.Row="5" Grid.Column="2" HorizontalAlignment="Right" Margin="5,5,0,0" Width="80" Height="22" Content="Save" IsEnabled="{Binding SelectedVirtualVariable.IsChanged, FallbackValue=False}" Command="{Binding SaveSelectedVirtualVariableCommand}"/>
+                </Grid>
+            </Border>
         </Grid>
         <Grid Grid.Column="1" Margin="5,0,0,0">
             <Grid.RowDefinitions>
@@ -87,7 +134,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="Preview:"/>
-                <Button Grid.Column="1" Margin="5,0,0,0" Width="16" Height="16" HorizontalAlignment="Right" IsEnabled="{Binding SelectedVirtualVariable, Converter={StaticResource NullToBoolConverter}}">
+                <Button Grid.Column="1" Margin="5,0,0,0" Width="16" Height="16" HorizontalAlignment="Right" IsEnabled="{Binding HasSelectedVirtualVariable}">
                     <Button.Content>
                         <fa:IconBlock Icon="Redo"/>
                     </Button.Content>

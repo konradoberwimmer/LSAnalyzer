@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace LSAnalyzer.Models
 {
-    public class Variable
+    public class Variable : ObservableObject
     {
         public int Position { get; set; }
         public string Name { get; set; }

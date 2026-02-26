@@ -1,8 +1,15 @@
-using System.Collections.Generic;
+
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text.Json.Serialization;
+using CommunityToolkit.Mvvm.ComponentModel;
+using LSAnalyzer.Helper;
 
 namespace LSAnalyzer.Models;
 
-public class VirtualVariableCombine : VirtualVariable
+public partial class VirtualVariableCombine : VirtualVariable
 {
     public override string TypeName => "Combine";
 
@@ -13,14 +20,58 @@ public class VirtualVariableCombine : VirtualVariable
         FactorScores,
     }
     
-    public CombinationFunction Type { get; set; } = CombinationFunction.Mean;
+    [ObservableProperty]
+    private CombinationFunction _type = CombinationFunction.Mean;
+    partial void OnTypeChanged(CombinationFunction value)
+    {
+        OnPropertyChanged(nameof(IsChanged));
+    }
     
-    public bool RemoveNa { get; set; } = true;
+    [ObservableProperty]
+    private bool _removeNa = true;
+    partial void OnRemoveNaChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsChanged));
+    }
 
-    public List<Variable> Variables { get; set; } = [];
+    [ObservableProperty]
+    [MinLength(1)]
+    private ItemsChangeObservableCollection<Variable> _variables = [];
+    partial void OnVariablesChanged(ItemsChangeObservableCollection<Variable> value)
+    {
+        Variables.CollectionChanged += delegate (object? sender, NotifyCollectionChangedEventArgs args) 
+        { 
+            OnPropertyChanged(nameof(IsChanged)); 
+        };
+        OnPropertyChanged(nameof(IsChanged));
+    }
+
+    public override string Info => $"{Type.ToString().ToLower()}({string.Join(", ", Variables.Select(variable => variable.Name))}, rmNA = {(RemoveNa ? "T" : "F")})";
+
+    private VirtualVariableCombine? _savedState;
+    [JsonIgnore]
+    public override bool IsChanged 
+    {
+        get
+        {
+            OnPropertyChanged(nameof(Info));
+            
+            if (_savedState is null) return true;
+            
+            return !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, [ "Info", "IsChanged", "Errors", "Variables" ]) ||
+                   !Variables.ElementObjectsEqual(_savedState.Variables);
+        }
+    }
     
     public override VirtualVariable Clone()
     {
+        ItemsChangeObservableCollection<Variable> variables = [];
+
+        foreach (var variable in Variables)
+        {
+            variables.Add(variable.Clone());
+        }
+        
         return new VirtualVariableCombine
         {
             Name = Name,
@@ -30,7 +81,24 @@ public class VirtualVariableCombine : VirtualVariable
             FromPlausibleValues = FromPlausibleValues,
             Type = Type,
             RemoveNa = RemoveNa,
-            Variables = new List<Variable>(Variables.ConvertAll(variable => variable.Clone())),
+            Variables = variables,
         };
+    }
+
+    public override void AcceptChanges()
+    {
+        _savedState = new VirtualVariableCombine
+        {
+            Id = Id,
+            Name = Name,
+            Label = Label,
+            ForFileName = ForFileName,
+            ForDatasetTypeId = ForDatasetTypeId,
+            FromPlausibleValues = FromPlausibleValues,
+            Type = Type,
+            RemoveNa = RemoveNa,
+            Variables = [..Variables],
+        };
+        OnPropertyChanged(nameof(IsChanged));
     }
 }
