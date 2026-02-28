@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Data;
 using LSAnalyzer.Models;
 using RDotNet;
 
@@ -68,7 +69,9 @@ public interface IRservice
 
     public List<GenericVector>? CalculateLogistReg(AnalysisLogistReg analysis);
 
-    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null);
+    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false);
+
+    public (bool success, DataTable? dataTable) GetPreviewData();
     
     public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null);
 

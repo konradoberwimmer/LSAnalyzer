@@ -1,8 +1,11 @@
+using System.Data;
+using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.Services.Stubs;
 using LSAnalyzer.ViewModels;
 using Moq;
+using RDotNet;
 
 namespace TestLSAnalyzer.ViewModels;
 
@@ -104,7 +107,10 @@ public class TestVirtualVariables
         
         VirtualVariables viewModel = new(configuration.Object, new RserviceStub())
         {
-            SelectedVirtualVariable = null
+            SelectedVirtualVariable = null,
+            AvailableVariables = [
+                new Variable(1, "existing_variable")
+            ],
         };
         
         // expect no error
@@ -132,6 +138,35 @@ public class TestVirtualVariables
         
         configuration.Verify(conf => conf.StoreVirtualVariable(It.IsAny<VirtualVariable>()), Times.Once);
         Assert.False(viewModel.SelectedVirtualVariable.IsChanged);
+        Assert.Single(viewModel.CurrentVirtualVariables);
+        
+        var messageSent = false;
+        WeakReferenceMessenger.Default.Register<VirtualVariables.VariableNameNotAvailableMessage>(this, (_,_) => messageSent = true);
+        
+        viewModel.SelectedVirtualVariableType = typeof(VirtualVariableCombine);
+        viewModel.NewVirtualVariableCommand.Execute(null);
+        
+        viewModel.SelectedVirtualVariable.Name = "new_variable";
+        (viewModel.SelectedVirtualVariable as VirtualVariableCombine)!.Variables =
+        [
+            new Variable(1, "item1"),
+            new Variable(2, "item2"),
+        ];
+        Assert.True(viewModel.SelectedVirtualVariable.Validate());
+        
+        viewModel.SaveSelectedVirtualVariableCommand.Execute(null);
+
+        Assert.True(messageSent);
+        Assert.True(viewModel.SelectedVirtualVariable.IsChanged);
+        
+        messageSent = false;
+        
+        viewModel.SelectedVirtualVariable.Name = "existing_variable";
+        
+        viewModel.SaveSelectedVirtualVariableCommand.Execute(null);
+
+        Assert.True(messageSent);
+        Assert.True(viewModel.SelectedVirtualVariable.IsChanged);
     }
 
     [Fact]
@@ -156,5 +191,56 @@ public class TestVirtualVariables
         
         Assert.Empty(viewModel.CurrentVirtualVariables);
         Assert.Null(viewModel.SelectedVirtualVariable);
+    }
+
+    [Fact]
+    public void TestFetchPreviewData()
+    {
+        var rservice = new Mock<IRservice>();
+        rservice
+            .SetupSequence(service => service.CreateVirtualVariable(It.IsAny<VirtualVariable>(), It.IsAny<List<PlausibleValueVariable>>(), It.Is<bool>(b => b == true)))
+            .Returns(false).Returns(true).Returns(true);
+        rservice
+            .SetupSequence(service => service.GetPreviewData())
+            .Returns((false, null)).Returns((true, new DataTable("preview")));
+        
+        VirtualVariables viewModel = new(Mock.Of<Configuration>(), rservice.Object)
+        {
+            SelectedVirtualVariable = null,
+            CurrentVirtualVariables = [],
+            SelectedVirtualVariableType = typeof(VirtualVariableCombine),
+        };
+        
+        Assert.Equal("Input", viewModel.Preview.Table?.Columns[0].ColumnName);
+        Assert.Equal("Output", viewModel.Preview.Table?.Columns[1].ColumnName);
+
+        // expect no error
+        viewModel.FetchPreviewDataCommand.Execute(null);
+        
+        viewModel.NewVirtualVariableCommand.Execute(null);
+        
+        var messageSent = false;
+        WeakReferenceMessenger.Default.Register<VirtualVariables.PreviewImpossibleMessage>(this, (_,_) => messageSent = true);
+        
+        // 1st run: not possible to calculate
+        viewModel.FetchPreviewDataCommand.Execute(null);
+        
+        Assert.True(messageSent);
+        
+        messageSent = false;
+        
+        // 2nd run: not possible to fetch
+        viewModel.FetchPreviewDataCommand.Execute(null);
+        
+        Assert.True(messageSent);
+        
+        messageSent = false;
+        
+        // 3rd run: response
+        viewModel.FetchPreviewDataCommand.Execute(null);
+        
+        Assert.False(messageSent);
+        
+        Assert.Equal("preview", viewModel.Preview.Table?.TableName);
     }
 }

@@ -4,6 +4,7 @@ using RDotNet;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -720,7 +721,10 @@ namespace LSAnalyzer.Services
                 foreach (var variable in variables.GetRows())
                 {
                     Variable newVariable = new(variable.RowIndex, (string)variable["variable"])
-                        { IsSystemVariable = analysisConfiguration.HasSystemVariable((string)variable["variable"]) };
+                    {
+                        IsSystemVariable = analysisConfiguration.HasSystemVariable((string)variable["variable"]),
+                        FromPlausibleValues = analysisConfiguration.DatasetType.PVvarsList.Any(pvVar => pvVar.DisplayName == (string)variable["variable"]),
+                    };
 
                     if (variableLabels.Keys.Contains(newVariable.Name))
                     {
@@ -761,6 +765,7 @@ namespace LSAnalyzer.Services
                         {
                             variableList.RemoveAll(var => Regex.IsMatch(var.Name, pvVarRegex));
                             Variable newVariable = new(maxPosition++, pvVar.DisplayName);
+                            newVariable.FromPlausibleValues = true;
                             newVariable.Label = firstMatch?.Label;
                             variableList.Add(newVariable);
                         }
@@ -1134,28 +1139,53 @@ namespace LSAnalyzer.Services
             return CalculateRegression("BIFIE.logistreg", "R2", analysis);
         }
 
-        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null)
+        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false)
         {
             if (virtualVariable.FromPlausibleValues && pvVars is null) return false;
             
             return virtualVariable switch
             {
-                VirtualVariableCombine { FromPlausibleValues: false } virtualVariableCombine => CreateVirtualVariableCombine(virtualVariableCombine),
-                VirtualVariableCombine { FromPlausibleValues: true } virtualVariableCombine => CreateVirtualVariableCombineFromPVs(virtualVariableCombine, pvVars!),
+                VirtualVariableCombine { FromPlausibleValues: false } virtualVariableCombine => CreateVirtualVariableCombine(virtualVariableCombine, forPreview),
+                VirtualVariableCombine { FromPlausibleValues: true } virtualVariableCombine => CreateVirtualVariableCombineFromPVs(virtualVariableCombine, pvVars!, forPreview),
                 _ => throw new ArgumentOutOfRangeException(nameof(virtualVariable), virtualVariable, null)
             };
         }
 
-        private bool CreateVirtualVariableCombine(VirtualVariableCombine virtualVariableCombine)
+        public (bool success, DataTable? dataTable) GetPreviewData()
+        {
+            try
+            {
+                _engine?.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview[!duplicated(lsanalyzer_dat_raw_preview),]");
+                _engine?.Evaluate("if (nrow(lsanalyzer_dat_raw_preview_distinct) > 50) lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[1:50,]");
+
+                var previewData = Fetch("lsanalyzer_dat_raw_preview_distinct")?.AsDataFrame();
+                
+                return previewData is null ? (false, null) : (true, DataFrameToDataTable(previewData, "preview"));
+            }
+            catch
+            {
+                return (false, null);
+            }
+        }
+
+        private bool CreateVirtualVariableCombine(VirtualVariableCombine virtualVariableCombine, bool forPreview)
         {
             try
             {
                 if (virtualVariableCombine.Variables.Count == 0) return false;
+
+                if (forPreview)
+                {
+                    var inputVariablesString = string.Join(", ", virtualVariableCombine.Variables.Select(v => "'" + v.Name + "'"));
+                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString})]");
+                }
+
+                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
                 
-                var nameExists = _engine?.Evaluate($"'{virtualVariableCombine.Name}' %in% colnames(lsanalyzer_dat_raw_stored)").AsLogical().First() ?? true;
+                var nameExists = _engine?.Evaluate($"'{virtualVariableCombine.Name}' %in% colnames({target})").AsLogical().First() ?? true;
                 if (nameExists) return false;
 
-                var target = $"lsanalyzer_dat_raw_stored[,'{virtualVariableCombine.Name}']";
+                var assignment = $"{target}[,'{virtualVariableCombine.Name}']";
                 
                 var baseCall = virtualVariableCombine.Type switch
                 {
@@ -1165,16 +1195,16 @@ namespace LSAnalyzer.Services
                     _ => throw new ArgumentOutOfRangeException(nameof(virtualVariableCombine), virtualVariableCombine.Type.ToString(), "not in enum")
                 };
 
-                var subset = $"subset(lsanalyzer_dat_raw_stored, select = c({string.Join(", ", virtualVariableCombine.Variables.ToList().ConvertAll(var => "'" + var.Name + "'"))}))";
+                var subset = $"subset({target}, select = c({string.Join(", ", virtualVariableCombine.Variables.ToList().ConvertAll(var => "'" + var.Name + "'"))}))";
                 var removeNa = virtualVariableCombine.RemoveNa ? "TRUE" : "FALSE";
                 
-                var fullCall = $"{target} <- {baseCall}({subset}, na.rm = {removeNa})";
+                var fullCall = $"{assignment} <- {baseCall}({subset}, na.rm = {removeNa})";
                 
                 EvaluateAndLog(fullCall);
 
-                if (!string.IsNullOrWhiteSpace(virtualVariableCombine.Label) && _engine?.Evaluate("'variable.labels' %in% attributes(lsanalyzer_dat_raw_stored)").AsLogical().First() == false)
+                if (!string.IsNullOrWhiteSpace(virtualVariableCombine.Label) && _engine?.Evaluate($"'variable.labels' %in% attributes({target})").AsLogical().First() is true)
                 {
-                    EvaluateAndLog($"attributes(lsanalyzer_dat_raw_stored)$variable.labels['{virtualVariableCombine.Name}'] = '{virtualVariableCombine.Label}'");
+                    EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableCombine.Name}'] = '{virtualVariableCombine.Label}'");
                 }
                 
                 return true;
@@ -1185,7 +1215,7 @@ namespace LSAnalyzer.Services
             }
         }
 
-        private bool CreateVirtualVariableCombineFromPVs(VirtualVariableCombine virtualVariableCombine, List<PlausibleValueVariable> pvVars)
+        private bool CreateVirtualVariableCombineFromPVs(VirtualVariableCombine virtualVariableCombine, List<PlausibleValueVariable> pvVars, bool forPreview)
         {
             try
             {
@@ -1211,7 +1241,7 @@ namespace LSAnalyzer.Services
                         virtualVariableClone.Variables.First(variable => variable.Name == name).Name = varNames[imputation];
                     }
 
-                    if (!CreateVirtualVariableCombine(virtualVariableClone)) return false;
+                    if (!CreateVirtualVariableCombine(virtualVariableClone, forPreview)) return false;
                 }
                 
                 return true;
@@ -1497,6 +1527,25 @@ namespace LSAnalyzer.Services
             {
                 return null;
             }
+        }
+
+        private DataTable DataFrameToDataTable(DataFrame dataFrame, string name)
+        {
+            DataTable previewTable = new(name);
+            for (var cc = 0; cc < dataFrame.ColumnCount; cc++)
+            {
+                previewTable.Columns.Add(dataFrame.ColumnNames[cc].Replace("_", "__"), typeof(double));
+            }
+            for (var rc = 0; rc < dataFrame.RowCount; rc++)
+            {
+                var newRow = previewTable.Rows.Add();
+                for (var cc = 0; cc < dataFrame.ColumnCount; cc++)
+                {
+                    newRow[cc] = dataFrame[rc, cc];
+                }
+            }
+
+            return previewTable;
         }
 
         public void SendUserInterrupt()

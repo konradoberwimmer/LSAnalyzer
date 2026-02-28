@@ -1,8 +1,10 @@
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Models;
 
 namespace LSAnalyzer.Views;
@@ -14,6 +16,16 @@ public partial class VirtualVariables : Window
         InitializeComponent();
         
         DataContext = viewModel;
+        
+        WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.VariableNameNotAvailableMessage>(this, (_, _) =>
+        {
+            MessageBox.Show($"Cannot save: Variable name '{viewModel.SelectedVirtualVariable?.Name ?? string.Empty}' is already in use.", "Saving not possible",  MessageBoxButton.OK, MessageBoxImage.Information);
+        });
+        
+        WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.PreviewImpossibleMessage>(this, (_, _) =>
+        {
+            MessageBox.Show("Preview not possible - check your virtual variable definition!", "Preview not possible", MessageBoxButton.OK, MessageBoxImage.Information);
+        });
     }
 
     private void ComboBoxSelectedType_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -54,5 +66,10 @@ public partial class VirtualVariables : Window
         {
             e.Cancel = true;
         }
+    }
+
+    private void Window_OnClosed(object? sender, EventArgs e)
+    {
+        WeakReferenceMessenger.Default.UnregisterAll(this);
     }
 }

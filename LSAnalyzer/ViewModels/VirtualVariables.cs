@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.Services.Stubs;
@@ -83,6 +84,7 @@ public partial class VirtualVariables : ObservableObject
     partial void OnSelectedVirtualVariableChanged(VirtualVariable? value)
     {
         SelectedIsForDatasetType = value?.ForDatasetTypeId is not null;
+        Preview = DefaultDataView();
         OnPropertyChanged(nameof(HasSelectedVirtualVariable));
     }
 
@@ -104,10 +106,7 @@ public partial class VirtualVariables : ObservableObject
         _configuration = new Configuration();
         _rservice = new RserviceStub();
         CurrentFileName = "";
-        DataTable defaultTable = new("default");
-        defaultTable.Columns.Add("Input", typeof(double));
-        defaultTable.Columns.Add("Output", typeof(double));
-        Preview = new DataView(defaultTable);
+        Preview = DefaultDataView();
         CurrentVirtualVariables =
         [
             new VirtualVariableCombine
@@ -124,10 +123,7 @@ public partial class VirtualVariables : ObservableObject
     {
         _configuration = configuration;
         _rservice = rservice;
-        DataTable defaultTable = new("default");
-        defaultTable.Columns.Add("Input", typeof(double));
-        defaultTable.Columns.Add("Output", typeof(double));
-        Preview = new DataView(defaultTable);
+        Preview = DefaultDataView();
     }
 
     [RelayCommand]
@@ -137,11 +133,11 @@ public partial class VirtualVariables : ObservableObject
 
         if (Activator.CreateInstance(SelectedVirtualVariableType) is not VirtualVariable newVirtualVariable) return;
         
+        CurrentVirtualVariables.Add(newVirtualVariable);
+        
         SelectedVirtualVariable = newVirtualVariable;
         SelectedVirtualVariable.ForFileName = CurrentFileName;
         
-        CurrentVirtualVariables.Add(newVirtualVariable);
-
         SelectedVirtualVariableType = null;
     }
 
@@ -170,6 +166,13 @@ public partial class VirtualVariables : ObservableObject
         
         if (!SelectedVirtualVariable.Validate()) return;
 
+        if (AvailableVariables.Any(variable => variable.Name == SelectedVirtualVariable.Name) ||
+            CurrentVirtualVariables.Any(vv => vv != SelectedVirtualVariable && vv.Name == SelectedVirtualVariable.Name))
+        {
+            WeakReferenceMessenger.Default.Send(new VariableNameNotAvailableMessage());
+            return;
+        }
+
         if (SelectedVirtualVariable.Id == 0)
         {
             SelectedVirtualVariable.Id = _configuration.GetNextVirtualVariableId();
@@ -190,4 +193,41 @@ public partial class VirtualVariables : ObservableObject
         CurrentVirtualVariables.Remove(SelectedVirtualVariable);
         SelectedVirtualVariable = null;
     }
+
+    [RelayCommand]
+    private void FetchPreviewData()
+    {
+        if (SelectedVirtualVariable is null) return;
+        
+        Preview = DefaultDataView();
+        
+        if (!_rservice.CreateVirtualVariable(SelectedVirtualVariable,
+                AnalysisConfiguration?.DatasetType?.PVvarsList.ToList(), true))
+        {
+            WeakReferenceMessenger.Default.Send(new PreviewImpossibleMessage());
+            return;
+        }
+
+        var (success, previewData) = _rservice.GetPreviewData();
+
+        if (!success || previewData is null)
+        {
+            WeakReferenceMessenger.Default.Send(new PreviewImpossibleMessage());
+            return;
+        }
+
+        Preview = new DataView(previewData);
+    }
+
+    private DataView DefaultDataView()
+    {
+        DataTable defaultTable = new("default");
+        defaultTable.Columns.Add("Input", typeof(double));
+        defaultTable.Columns.Add("Output", typeof(double));
+        return new DataView(defaultTable);
+    }
+
+    public class VariableNameNotAvailableMessage;
+
+    public class PreviewImpossibleMessage;
 }

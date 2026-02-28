@@ -1,4 +1,5 @@
-﻿using LSAnalyzer.Models;
+﻿using System.Data;
+using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using CommunityToolkit.Mvvm.Messaging;
@@ -606,7 +607,12 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
-        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null)
+        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        public (bool success, DataTable? dataTable) GetPreviewData()
         {
             throw new NotImplementedException();
         }

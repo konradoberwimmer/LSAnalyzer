@@ -39,12 +39,16 @@ public partial class VirtualVariableCombine : VirtualVariable
     private ItemsChangeObservableCollection<Variable> _variables = [];
     partial void OnVariablesChanged(ItemsChangeObservableCollection<Variable> value)
     {
-        Variables.CollectionChanged += delegate (object? sender, NotifyCollectionChangedEventArgs args) 
-        { 
+        Variables.CollectionChanged += delegate (object? sender, NotifyCollectionChangedEventArgs args)
+        {
+            OnPropertyChanged(nameof(FromPlausibleValues));
             OnPropertyChanged(nameof(IsChanged)); 
         };
+        OnPropertyChanged(nameof(FromPlausibleValues));
         OnPropertyChanged(nameof(IsChanged));
     }
+
+    public override bool FromPlausibleValues => Variables.Any(variable => variable.FromPlausibleValues);
 
     public override string Info => $"{Type.ToString().ToLower()}({string.Join(", ", Variables.Select(variable => variable.Name))}, rmNA = {(RemoveNa ? "T" : "F")})";
 
@@ -78,7 +82,6 @@ public partial class VirtualVariableCombine : VirtualVariable
             Label = Label,
             ForFileName = ForFileName,
             ForDatasetTypeId = ForDatasetTypeId,
-            FromPlausibleValues = FromPlausibleValues,
             Type = Type,
             RemoveNa = RemoveNa,
             Variables = variables,
@@ -94,7 +97,6 @@ public partial class VirtualVariableCombine : VirtualVariable
             Label = Label,
             ForFileName = ForFileName,
             ForDatasetTypeId = ForDatasetTypeId,
-            FromPlausibleValues = FromPlausibleValues,
             Type = Type,
             RemoveNa = RemoveNa,
             Variables = [..Variables],

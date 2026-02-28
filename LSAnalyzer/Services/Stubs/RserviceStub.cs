@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Data;
 using LSAnalyzer.Models;
 using RDotNet;
 
@@ -148,7 +149,12 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
-    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null)
+    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public (bool success, DataTable? dataTable) GetPreviewData()
     {
         throw new System.NotImplementedException();
     }

@@ -14,7 +14,7 @@ public abstract partial class VirtualVariable : ObservableValidatorExtended, ICh
     public int Id { get; set; } = 0;
     
     [ObservableProperty]
-    [MinLength(3, ErrorMessage = "Name must have length of at least three characters!")]
+    [RegularExpression("[a-zA-Z][a-zA-Z0-9_]{2,}", ErrorMessage = "Name must start with a letter and consist of letters, digits and underscores (at least 3)!")]
     private string _name = string.Empty;
     partial void OnNameChanged(string value)
     {
@@ -42,12 +42,7 @@ public abstract partial class VirtualVariable : ObservableValidatorExtended, ICh
         OnPropertyChanged(nameof(IsChanged));
     }
     
-    [ObservableProperty] 
-    private bool _fromPlausibleValues = false;    
-    partial void OnFromPlausibleValuesChanged(bool value)
-    {
-        OnPropertyChanged(nameof(IsChanged));
-    }
+    public abstract bool FromPlausibleValues { get; }    
     
     [JsonIgnore]
     public abstract string Info { get; }

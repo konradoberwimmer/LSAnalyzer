@@ -12,7 +12,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewModels:VirtualVariables, IsDesignTimeCreatable=True}"
-        Title="Virtual variables" Height="600" Width="1000" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen" Closing="Window_OnClosing">
+        Title="Virtual variables" Height="600" Width="1000" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen" Closing="Window_OnClosing" Closed="Window_OnClosed">
     <Window.Resources>
         <sys:Boolean x:Key="BooleanTrue">True</sys:Boolean>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
@@ -39,8 +39,8 @@
     </Window.Resources>
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
@@ -134,13 +134,15 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="Preview:"/>
-                <Button Grid.Column="1" Margin="5,0,0,0" Width="16" Height="16" HorizontalAlignment="Right" IsEnabled="{Binding HasSelectedVirtualVariable}">
+                <Button Grid.Column="1" Margin="5,0,0,0" Width="16" Height="16" HorizontalAlignment="Right" IsEnabled="{Binding HasSelectedVirtualVariable}" Command="{Binding FetchPreviewDataCommand}">
                     <Button.Content>
                         <fa:IconBlock Icon="Redo"/>
                     </Button.Content>
                 </Button>
             </Grid>
-            <DataGrid Grid.Row="1" Margin="0,5,0,0" MinWidth="200" ItemsSource="{Binding Preview}" AutoGenerateColumns="True" IsReadOnly="True"/>
+            <Border x:Name="BorderPreview" MinWidth="200" Grid.Row="1">
+                <DataGrid Margin="0,5,0,0" Width="{Binding ElementName=BorderPreview, Path=ActualWidth}" ItemsSource="{Binding Preview}" AutoGenerateColumns="True" IsReadOnly="True"/>
+            </Border>
         </Grid>
     </Grid>
 </Window>
