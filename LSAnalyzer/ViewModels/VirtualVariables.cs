@@ -86,6 +86,12 @@ public partial class VirtualVariables : ObservableObject
 
     [ObservableProperty]
     private bool _selectedIsForDatasetType = false;
+    partial void OnSelectedIsForDatasetTypeChanged(bool value)
+    {
+        if (SelectedVirtualVariable is null || AnalysisConfiguration?.DatasetType is null) return;
+        
+        SelectedVirtualVariable.ForDatasetTypeId = value ? AnalysisConfiguration.DatasetType.Id : null;
+    }
     
     [ObservableProperty]
     private ObservableCollection<Variable> _availableVariables = [];

@@ -242,7 +242,7 @@ public partial class MainWindow : ObservableObject
         
         var virtualVariables = _configuration.GetVirtualVariablesFor(AnalysisConfiguration.FileNameWithoutPath!, AnalysisConfiguration.DatasetType);
 
-        if (AnalysisConfiguration.ModeKeep == true && !_rservice.TestAnalysisConfiguration(AnalysisConfiguration, virtualVariables, SubsettingExpression))
+        if (!_rservice.TestAnalysisConfiguration(AnalysisConfiguration, virtualVariables, SubsettingExpression))
         {
             WeakReferenceMessenger.Default.Send(new ReloadErrorMessage());
             

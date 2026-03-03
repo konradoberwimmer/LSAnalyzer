@@ -446,7 +446,7 @@ public class TestMainWindow
     }
 
     [Fact]
-    public void TestReloadCurrentDatasetCommand()
+    public void TestReloadCurrentDatasetCommandModeKeep()
     {
         AnalysisConfiguration analysisConfiguration = new()
         {
@@ -484,6 +484,44 @@ public class TestMainWindow
         Assert.Contains("xy", mainWindowViewModel.CurrentDatasetVariables.Select(v => v.Name));
     }
 
+
+    [Fact]
+    public void TestReloadCurrentDatasetCommandModeBuild()
+    {
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+            DatasetType = new()
+            {
+                Weight = "wgt",
+                NMI = 10,
+                MIvar = "mi",
+                RepWgts = "repwgt",
+                FayFac = 1,
+            },
+            ModeKeep = false,
+        };
+
+        Rservice rservice = new();
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+        
+        var configuration = new Mock<Configuration>();
+        configuration
+            .Setup(service => service.GetVirtualVariablesFor(It.Is<string>(fileName => fileName == "test_nmi10_nrep5.sav"), It.Is<DatasetType>(dst => dst == analysisConfiguration.DatasetType)))
+            .Returns([ new VirtualVariableCombine { Name = "xy", Variables = [ new Variable(1, "x"), new Variable(2, "y") ]} ]);
+        
+        MainWindow mainWindowViewModel = new(rservice, new AnalysisQueue(rservice), configuration.Object)
+        {
+            AnalysisConfiguration = analysisConfiguration
+        };
+
+        mainWindowViewModel.ReloadCurrentDatasetCommand.Execute(null);
+        
+        Assert.NotEmpty(mainWindowViewModel.CurrentDatasetVariables);
+        Assert.Contains("xy", mainWindowViewModel.CurrentDatasetVariables.Select(v => v.Name));
+    }
+    
     public static string AssemblyDirectory
     {
         get

@@ -5,7 +5,6 @@ using LSAnalyzer.Services;
 using LSAnalyzer.Services.Stubs;
 using LSAnalyzer.ViewModels;
 using Moq;
-using RDotNet;
 
 namespace TestLSAnalyzer.ViewModels;
 
@@ -245,5 +244,21 @@ public class TestVirtualVariables
         Assert.False(messageSent);
         
         Assert.Equal("preview", viewModel.Preview.Table?.TableName);
+    }
+    
+    [Fact]
+    public void SetIsForDatasetTypeActuallySetsValue()
+    {
+        VirtualVariables viewModel = new()
+        {
+            SelectedVirtualVariable = new VirtualVariableCombine(),
+            AnalysisConfiguration = new AnalysisConfiguration { DatasetType = new DatasetType { Id = 77 } }
+        };
+        
+        Assert.Null(viewModel.SelectedVirtualVariable.ForDatasetTypeId);
+        
+        viewModel.SelectedIsForDatasetType = true;
+        
+        Assert.Equal(77, viewModel.SelectedVirtualVariable.ForDatasetTypeId);
     }
 }
