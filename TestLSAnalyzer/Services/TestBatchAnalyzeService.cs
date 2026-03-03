@@ -293,7 +293,7 @@ public class TestBatchAnalyzeService
         };
 
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Rep5.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5, []));
 
         BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
         
@@ -395,7 +395,7 @@ public class TestBatchAnalyzeService
         };
 
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Multicat.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Multicat));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Multicat, []));
 
         BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
         
@@ -484,7 +484,7 @@ public class TestBatchAnalyzeService
         };
 
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Multicat.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Multicat));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Multicat, []));
 
         BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
         
@@ -537,7 +537,7 @@ public class TestBatchAnalyzeService
         };
 
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Rep5.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5, []));
         
         BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
 
@@ -711,7 +711,7 @@ public class TestBatchAnalyzeService
         var rservice = new Mock<IRservice>();
         rservice.Setup(service => service.CalculateUnivar(It.IsAny<AnalysisUnivar>())).Returns([]);
         rservice.Setup(service =>
-            service.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>())).Returns(true);
+            service.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(), It.IsAny<string?>())).Returns(true);
         
         AnalysisConfiguration analysisConfigurationNmi10Rep5 = new()
         {
@@ -752,7 +752,7 @@ public class TestBatchAnalyzeService
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
 
         rservice.Verify(service => service.CalculateUnivar(It.IsAny<AnalysisUnivar>()), Times.Once);
-        rservice.Verify(service => service.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>()), Times.Never);
+        rservice.Verify(service => service.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(), It.IsAny<string?>()), Times.Never);
     }
 
     [Fact]

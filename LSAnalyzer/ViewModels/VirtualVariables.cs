@@ -37,24 +37,18 @@ public partial class VirtualVariables : ObservableObject
                 return;
             }
 
-            var fileName = _analysisConfiguration.FileName;
-            if (!fileName.StartsWith('[') && !fileName.StartsWith('{'))
-            {
-                fileName = Path.GetFileName(fileName);
-            }
-
-            CurrentFileName = fileName;
+            CurrentFileName = _analysisConfiguration.FileNameWithoutPath!;
             CurrentDatasetTypeName = _analysisConfiguration.DatasetType.Name;
 
             var currentVirtualVariables =
-                _configuration.GetVirtualVariablesFor(fileName, _analysisConfiguration.DatasetType);
+                _configuration.GetVirtualVariablesFor(CurrentFileName, _analysisConfiguration.DatasetType);
             foreach (var currentVirtualVariable in currentVirtualVariables)
             {
                 currentVirtualVariable.AcceptChanges();
             }
             CurrentVirtualVariables = new ObservableCollection<VirtualVariable>(currentVirtualVariables);
 
-            var availableVariables = _rservice.GetCurrentDatasetVariables(_analysisConfiguration);
+            var availableVariables = _rservice.GetCurrentDatasetVariables(_analysisConfiguration, currentVirtualVariables);
             if (availableVariables != null)
             {
                 AvailableVariables = new ObservableCollection<Variable>(availableVariables.Where(variable => variable is { IsSystemVariable: false, IsVirtual: false }));
@@ -98,6 +92,8 @@ public partial class VirtualVariables : ObservableObject
     
     [ObservableProperty] 
     private DataView _preview = new();
+
+    public bool HasChangedVirtualVariables { get; set; } = false;
     
     [ExcludeFromCodeCoverage]
     public VirtualVariables()
@@ -181,6 +177,8 @@ public partial class VirtualVariables : ObservableObject
         _configuration.StoreVirtualVariable(SelectedVirtualVariable);
         
         SelectedVirtualVariable.AcceptChanges();
+
+        HasChangedVirtualVariables = true;
     }
 
     [RelayCommand]
@@ -192,6 +190,8 @@ public partial class VirtualVariables : ObservableObject
         
         CurrentVirtualVariables.Remove(SelectedVirtualVariable);
         SelectedVirtualVariable = null;
+
+        HasChangedVirtualVariables = true;
     }
 
     [RelayCommand]

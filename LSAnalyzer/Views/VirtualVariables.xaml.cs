@@ -57,14 +57,29 @@ public partial class VirtualVariables : Window
 
     private void Window_OnClosing(object? sender, CancelEventArgs e)
     {
-        if (DataContext is not ViewModels.VirtualVariables viewModel ||
-            !viewModel.CurrentVirtualVariables.Any(v => v.IsChanged)) return;
-        
-        var result = MessageBox.Show("Unsaved changes to virtual variables will be lost. Do you really want to close the window?", "Confirm close", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (DataContext is not ViewModels.VirtualVariables viewModel) return;
 
-        if (result == MessageBoxResult.No)
+        if (viewModel.CurrentVirtualVariables.Any(v => v.IsChanged))
         {
-            e.Cancel = true;
+            var result =
+                MessageBox.Show(
+                    "Unsaved changes to virtual variables will be lost. Do you really want to close the window?",
+                    "Confirm close", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.No)
+            {
+                e.Cancel = true;
+                return;
+            }
+        }
+
+        if (viewModel.HasChangedVirtualVariables)
+        {
+            var confirmReload = MessageBox.Show("Do you want to reload the current dataset so that new or changed virtual variables take effect?", "Reload dataset", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirmReload == MessageBoxResult.Yes)
+            {
+                WeakReferenceMessenger.Default.Send(new ReloadCurrentDatasetMessage());
+            }
         }
     }
 
@@ -72,4 +87,6 @@ public partial class VirtualVariables : Window
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
     }
+
+    public class ReloadCurrentDatasetMessage;
 }

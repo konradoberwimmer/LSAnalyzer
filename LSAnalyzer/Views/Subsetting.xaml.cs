@@ -13,6 +13,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using CommunityToolkit.Mvvm.Messaging;
+using LSAnalyzer.Services;
 
 namespace LSAnalyzer.Views
 {
@@ -26,6 +28,9 @@ namespace LSAnalyzer.Views
             InitializeComponent();
 
             DataContext = subsettingViewModel;
+            
+            WeakReferenceMessenger.Default.Register<Rservice.VirtualVariableErrorMessage>(this, (_, m) =>
+                MessageBox.Show($"The following virtual variables could not be created: {string.Join(", ", m.FailedVirtualVariables.Select(v => v.Name))}!", "Virtual variable error", MessageBoxButton.OK, MessageBoxImage.Warning));
         }
 
         private void AvailableVariablesCollectionView_FilterSystemVariables(object sender, FilterEventArgs e)

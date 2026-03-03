@@ -47,11 +47,11 @@ public interface IRservice
 
     public bool CreateBIFIEdataObject(string weight, int nmi, string? mivar, ICollection<PlausibleValueVariable>? pvvars, string? repwgts, double? fayfac, bool autoEncapsulatePVvars = false);
 
-    public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, string? subsettingExpression = null);
+    public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, string? subsettingExpression = null);
 
     public bool PrepareForAnalysis(Analysis analysis);
 
-    public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, bool fromStoredRaw = false);
+    public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, bool fromStoredRaw = false);
 
     public List<GenericVector>? CalculateUnivar(AnalysisUnivar analysis);
 

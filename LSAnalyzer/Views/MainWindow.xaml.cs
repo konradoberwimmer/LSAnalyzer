@@ -26,7 +26,7 @@ namespace LSAnalyzer.Views
             
             InitializeComponent();
 
-            DataContext = new ViewModels.MainWindow(_serviceProvider.GetRequiredService<IRservice>(), _serviceProvider.GetRequiredService<IAnalysisQueue>());
+            DataContext = new ViewModels.MainWindow(_serviceProvider.GetRequiredService<IRservice>(), _serviceProvider.GetRequiredService<IAnalysisQueue>(), _serviceProvider.GetRequiredService<Configuration>());
 
             Closed += WindowClosed;
 
@@ -54,6 +54,33 @@ namespace LSAnalyzer.Views
                 System.Diagnostics.Process.Start(Environment.ProcessPath);
                 Application.Current.Shutdown();
             });
+            
+            WeakReferenceMessenger.Default.Register<VirtualVariables.ReloadCurrentDatasetMessage>(this, (_, _) =>
+            {
+                if (DataContext is not ViewModels.MainWindow mainWindowViewModel) return;
+                
+                mainWindowViewModel.ReloadCurrentDatasetCommand.Execute(null);
+            });
+            
+            WeakReferenceMessenger.Default.Register<ViewModels.MainWindow.ReloadErrorMessage>(this, (_, _) => 
+                MessageBox.Show("Error while reloading the current dataset!", "Error", MessageBoxButton.OK, MessageBoxImage.Error));
+            
+            SetHandleVirtualVariableErrorMessage(true);
+        }
+
+        private void SetHandleVirtualVariableErrorMessage(bool handleIt)
+        {
+            if (handleIt)
+            {
+                WeakReferenceMessenger.Default.Register<Rservice.VirtualVariableErrorMessage>(this, (_, m) =>
+                    MessageBox.Show(
+                        $"The following virtual variables could not be created: {string.Join(", ", m.FailedVirtualVariables.Select(v => v.Name))}!",
+                        "Virtual variable error", MessageBoxButton.OK, MessageBoxImage.Warning));
+            }
+            else
+            {
+                WeakReferenceMessenger.Default.Unregister<Rservice.VirtualVariableErrorMessage>(this);
+            }
         }
 
         private void WindowClosed(object? sender, EventArgs e)
@@ -84,7 +111,11 @@ namespace LSAnalyzer.Views
                 selectAnalysisFileView.InitialDirectory = Directory.Exists(lastDirectory) ? lastDirectory : null;
             }
 
+            SetHandleVirtualVariableErrorMessage(false);
+            
             selectAnalysisFileView.ShowDialog();
+            
+            SetHandleVirtualVariableErrorMessage(true);
         }
 
         private void MenuItemAnalysisSubsetting_Click(object sender, RoutedEventArgs e)
@@ -104,7 +135,12 @@ namespace LSAnalyzer.Views
             }
 
             Subsetting subsettingView = new(subsettingViewModel);
+            
+            SetHandleVirtualVariableErrorMessage(false);
+            
             subsettingView.ShowDialog();
+            
+            SetHandleVirtualVariableErrorMessage(true);
         }
 
         private void MenuItemAnalysisUnivar_Click (object sender, RoutedEventArgs e)

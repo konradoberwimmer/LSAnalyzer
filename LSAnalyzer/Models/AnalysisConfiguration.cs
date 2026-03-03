@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,14 @@ namespace LSAnalyzer.Models
     public class AnalysisConfiguration
     {
         public string? FileName { get; set; }
+
+        public string? FileNameWithoutPath =>
+            FileName is null
+                ? null
+                : FileName.StartsWith('[') || FileName.StartsWith('{') 
+                    ? FileName 
+                    : Path.GetFileName(FileName);
+
         public string? FileRetrieval { get; set; }
         public string? FileType { get; set; }
         public DatasetType? DatasetType { get; set; }

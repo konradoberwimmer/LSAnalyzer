@@ -616,8 +616,10 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
             IsBusy = false;
             return;
         }
+        
+        var virtualVariables = _configuration.GetVirtualVariablesFor(analysisConfiguration.FileNameWithoutPath!, analysisConfiguration.DatasetType!);
 
-        var testAnalysisConfiguration = _rservice.TestAnalysisConfiguration(analysisConfiguration);
+        var testAnalysisConfiguration = _rservice.TestAnalysisConfiguration(analysisConfiguration, virtualVariables);
 
         if (!testAnalysisConfiguration)
         {

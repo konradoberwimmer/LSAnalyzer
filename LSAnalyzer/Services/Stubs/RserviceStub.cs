@@ -94,7 +94,7 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
-    public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, string? subsettingExpression = null)
+    public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, string? subsettingExpression = null)
     {
         throw new System.NotImplementedException();
     }
@@ -104,7 +104,7 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
-    public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, bool fromStoredRaw = false)
+    public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, bool fromStoredRaw = false)
     {
         throw new System.NotImplementedException();
     }

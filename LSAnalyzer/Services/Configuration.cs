@@ -541,7 +541,7 @@ public class Configuration
         }
     }
 
-    public List<VirtualVariable> GetVirtualVariablesFor(string fileName, DatasetType datasetType)
+    public virtual List<VirtualVariable> GetVirtualVariablesFor(string fileName, DatasetType datasetType)
     {
         return _settingsService.VirtualVariables.Where(vv => vv.ForFileName == fileName || vv.ForDatasetTypeId == datasetType.Id).ToList();
     }

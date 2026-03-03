@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Services.Stubs;
 
 namespace LSAnalyzer.Services
@@ -19,6 +20,8 @@ namespace LSAnalyzer.Services
         private REngine? _engine;
         private readonly string[] _rPackagesNecessary = [ "BIFIEsurvey", "foreign" ];
 
+        private List<string> _lastVirtualVariableNames = [];
+        
         public (string rHome, string rPath) RLocation { get; set; } = (string.Empty, string.Empty);
         
         [ExcludeFromCodeCoverage]
@@ -302,6 +305,8 @@ namespace LSAnalyzer.Services
                         return false;
                 }
 
+                _lastVirtualVariableNames = [];
+                    
                 EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
 
                 var rawData = _engine!.GetSymbol("lsanalyzer_dat_raw_stored").AsDataFrame();
@@ -602,7 +607,7 @@ namespace LSAnalyzer.Services
             return true;
         }
 
-        public virtual bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, string? subsettingExpression = null)
+        public virtual bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, string? subsettingExpression = null)
         {
             if (_engine == null || 
                 analysisConfiguration.FileName == null || 
@@ -611,6 +616,27 @@ namespace LSAnalyzer.Services
                 )
             {
                 return false;
+            }
+
+            foreach (var lastVirtualVariableName in _lastVirtualVariableNames)
+            {
+                EvaluateAndLog($"lsanalyzer_dat_raw_stored$`{lastVirtualVariableName}` <- NULL");
+                // because a potential label for lastVirtualVariableName does no harm, it will not be removed
+            }
+            _lastVirtualVariableNames.Clear();
+            
+            List<VirtualVariable> failedVirtualVariables = [];
+            foreach (var virtualVariable in virtualVariables)
+            {
+                if (!CreateVirtualVariable(virtualVariable, analysisConfiguration.DatasetType.PVvarsList.ToList()))
+                {
+                    failedVirtualVariables.Add(virtualVariable);
+                }
+            }
+
+            if (failedVirtualVariables.Count > 0)
+            {
+                WeakReferenceMessenger.Default.Send(new VirtualVariableErrorMessage { FailedVirtualVariables = failedVirtualVariables });
             }
 
             EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
@@ -688,7 +714,7 @@ namespace LSAnalyzer.Services
             return true;
         }
 
-        public virtual List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, bool fromStoredRaw = false)
+        public virtual List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, bool fromStoredRaw = false)
         {
             if (analysisConfiguration.DatasetType == null)
             {
@@ -724,6 +750,7 @@ namespace LSAnalyzer.Services
                     {
                         IsSystemVariable = analysisConfiguration.HasSystemVariable((string)variable["variable"]),
                         FromPlausibleValues = analysisConfiguration.DatasetType.PVvarsList.Any(pvVar => pvVar.DisplayName == (string)variable["variable"]),
+                        IsVirtual = virtualVariables.Select(vv => vv.Name).Contains((string)variable["variable"]),
                     };
 
                     if (variableLabels.Keys.Contains(newVariable.Name))
@@ -1202,10 +1229,12 @@ namespace LSAnalyzer.Services
                 
                 EvaluateAndLog(fullCall);
 
-                if (!string.IsNullOrWhiteSpace(virtualVariableCombine.Label) && _engine?.Evaluate($"'variable.labels' %in% attributes({target})").AsLogical().First() is true)
+                if (!string.IsNullOrWhiteSpace(virtualVariableCombine.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
                 {
                     EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableCombine.Name}'] = '{virtualVariableCombine.Label}'");
                 }
+                
+                _lastVirtualVariableNames.Add(virtualVariableCombine.Name);
                 
                 return true;
             }
@@ -1557,6 +1586,11 @@ namespace LSAnalyzer.Services
         {
             _engine?.Dispose();
             _engine = null;
+        }
+
+        public class VirtualVariableErrorMessage
+        {
+            public required List<VirtualVariable> FailedVirtualVariables { init; get; }
         }
     }
 

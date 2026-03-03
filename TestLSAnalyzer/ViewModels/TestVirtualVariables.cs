@@ -23,7 +23,7 @@ public class TestVirtualVariables
         Configuration configuration = new(String.Empty, null, settingsService.Object, new RegistryServiceStub());
 
         var rservice = new Mock<IRservice>();
-        rservice.Setup(service => service.GetCurrentDatasetVariables(It.IsAny<AnalysisConfiguration>(), false)).Returns(
+        rservice.Setup(service => service.GetCurrentDatasetVariables(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(), false)).Returns(
         [
             new Variable(1, "x"),
             new Variable(2, "y"),
@@ -133,12 +133,14 @@ public class TestVirtualVariables
             new Variable(2, "item2"),
         ];
         Assert.True(viewModel.SelectedVirtualVariable.Validate());
+        Assert.False(viewModel.HasChangedVirtualVariables);
         
         viewModel.SaveSelectedVirtualVariableCommand.Execute(null);
         
         configuration.Verify(conf => conf.StoreVirtualVariable(It.IsAny<VirtualVariable>()), Times.Once);
         Assert.False(viewModel.SelectedVirtualVariable.IsChanged);
         Assert.Single(viewModel.CurrentVirtualVariables);
+        Assert.True(viewModel.HasChangedVirtualVariables);
         
         var messageSent = false;
         WeakReferenceMessenger.Default.Register<VirtualVariables.VariableNameNotAvailableMessage>(this, (_,_) => messageSent = true);
@@ -191,6 +193,7 @@ public class TestVirtualVariables
         
         Assert.Empty(viewModel.CurrentVirtualVariables);
         Assert.Null(viewModel.SelectedVirtualVariable);
+        Assert.True(viewModel.HasChangedVirtualVariables);
     }
 
     [Fact]

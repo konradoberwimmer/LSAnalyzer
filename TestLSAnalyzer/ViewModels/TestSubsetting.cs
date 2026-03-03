@@ -16,7 +16,7 @@ public class TestSubsetting
         AnalysisConfiguration dummyAnalysisConfiguration = new();
 
         var mockRservice = new Mock<IRservice>();
-        mockRservice.Setup(rservice => rservice.GetCurrentDatasetVariables(dummyAnalysisConfiguration, true)).Returns(new List<Variable>()
+        mockRservice.Setup(rservice => rservice.GetCurrentDatasetVariables(dummyAnalysisConfiguration, It.IsAny<List<VirtualVariable>>(), true)).Returns(new List<Variable>()
         {
             new(1, "x"),
             new(2, "y"),
@@ -79,9 +79,12 @@ public class TestSubsetting
         var mockRservice = new Mock<IRservice>();
         mockRservice.Setup(rservice => rservice.TestSubsetting("invalid", null)).Returns(new SubsettingInformation() { ValidSubset = false });
         mockRservice.Setup(rservice => rservice.TestSubsetting("valid", null)).Returns(new SubsettingInformation() { ValidSubset = true });
-        mockRservice.Setup(rservice => rservice.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>())).Returns(true);
+        mockRservice.Setup(rservice => rservice.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(), It.IsAny<string?>())).Returns(true);
 
-        Subsetting subsettingViewModel = new(mockRservice.Object, new Mock<Configuration>().Object);
+        var configuration = new Mock<Configuration>();
+        configuration.Setup(conf => conf.GetVirtualVariablesFor(It.IsAny<string>(), It.IsAny<DatasetType>())).Returns([]).Verifiable();
+        
+        Subsetting subsettingViewModel = new(mockRservice.Object, configuration.Object);
         subsettingViewModel.AnalysisConfiguration = new() { ModeKeep = false, DatasetType = new() { Id = 1234 } };
 
         string? message = null;
@@ -117,6 +120,8 @@ public class TestSubsetting
         Policy.Handle<NotNullException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
             .Execute(() => Assert.NotNull(message));
         Assert.Equal("valid", message);
+        
+        configuration.Verify();
     }
 
     [Fact]
@@ -124,9 +129,12 @@ public class TestSubsetting
     {
         var mockRservice = new Mock<IRservice>();
         mockRservice.Setup(rservice => rservice.TestSubsetting("valid", null)).Returns(new SubsettingInformation() { ValidSubset = true });
-        mockRservice.Setup(rservice => rservice.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>())).Returns(true);
+        mockRservice.Setup(rservice => rservice.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(), It.IsAny<string?>())).Returns(true);
 
-        Subsetting subsettingViewModel = new(mockRservice.Object, new Mock<Configuration>().Object);
+        var configuration = new Mock<Configuration>();
+        configuration.Setup(conf => conf.GetVirtualVariablesFor(It.IsAny<string>(), It.IsAny<DatasetType>())).Returns([]).Verifiable();
+        
+        Subsetting subsettingViewModel = new(mockRservice.Object, configuration.Object);
         subsettingViewModel.AnalysisConfiguration = new() { ModeKeep = true, DatasetType = new() { Id = 1234 } };
 
         bool messageReceived = false;
@@ -152,5 +160,7 @@ public class TestSubsetting
         Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
             .Execute(() => Assert.True(messageReceived));
         Assert.Null(message);
+        
+        configuration.Verify();
     }
 }

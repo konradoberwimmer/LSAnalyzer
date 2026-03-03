@@ -552,6 +552,12 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
+        public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables,
+            string? subsettingExpression = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, string? subsettingExpression = null)
         {
             throw new NotImplementedException();
@@ -562,7 +568,8 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
-        public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, bool fromStoredRaw = false)
+        public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables,
+            bool fromStoredRaw = false)
         {
             throw new NotImplementedException();
         }

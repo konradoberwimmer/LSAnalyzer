@@ -234,7 +234,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             return false;
         }
 
-        if (!_rservice.TestAnalysisConfiguration(analysis.AnalysisConfiguration, analysis.SubsettingExpression))
+        if (!_rservice.TestAnalysisConfiguration(analysis.AnalysisConfiguration, [], analysis.SubsettingExpression))
         {
             entry.Success = false;
             entry.Message = AbortedOr("Could not use file for dataset type '" + analysis.AnalysisConfiguration.DatasetType?.Name + "'!");
@@ -259,7 +259,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         {
             previousSubsettingExpression = "$$$initialize$$$";
             
-            if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, analysis.SubsettingExpression))
+            if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, [], analysis.SubsettingExpression))
             {
                 entry.Success = false;
                 entry.Message = AbortedOr("Could not reapply subsetting '" + analysis.SubsettingExpression + "'!");
