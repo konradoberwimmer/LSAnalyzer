@@ -521,6 +521,24 @@ public class TestMainWindow
         Assert.NotEmpty(mainWindowViewModel.CurrentDatasetVariables);
         Assert.Contains("xy", mainWindowViewModel.CurrentDatasetVariables.Select(v => v.Name));
     }
+
+    [Fact]
+    public void TestHandleRequestAnalysisMessagePacksVirtualVariables()
+    {
+        var configuration = new Mock<Configuration>();
+        configuration.Setup(conf => conf.GetVirtualVariablesFor(It.IsAny<string>(), It.IsAny<DatasetType>())).Returns([
+            new VirtualVariableCombine { Name = "aVirtualVariable" }
+        ]);
+        
+        MainWindow mainWindow = new(Mock.Of<IRservice>(), Mock.Of<IAnalysisQueue>(), configuration.Object);
+        
+        Assert.Empty(mainWindow.Analyses);
+
+        WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(new AnalysisCorr(new AnalysisConfiguration())));
+        
+        Assert.Single(mainWindow.Analyses);
+        Assert.Single(mainWindow.Analyses.First().Analysis.VirtualVariables);
+    }
     
     public static string AssemblyDirectory
     {

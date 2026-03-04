@@ -624,6 +624,8 @@ namespace LSAnalyzer.Services
                 // because a potential label for lastVirtualVariableName does no harm, it will not be removed
             }
             _lastVirtualVariableNames.Clear();
+
+            List<PlausibleValueVariable> plausibleValueVariables = [];
             
             List<VirtualVariable> failedVirtualVariables = [];
             foreach (var virtualVariable in virtualVariables)
@@ -631,6 +633,13 @@ namespace LSAnalyzer.Services
                 if (!CreateVirtualVariable(virtualVariable, analysisConfiguration.DatasetType.PVvarsList.ToList()))
                 {
                     failedVirtualVariables.Add(virtualVariable);
+                }
+                else
+                {
+                    if (virtualVariable.FromPlausibleValues)
+                    {
+                        plausibleValueVariables.Add(new PlausibleValueVariable { DisplayName = virtualVariable.Name, Regex = $"^{virtualVariable.Name}_[0-9]+$", Mandatory = false });
+                    }
                 }
             }
 
@@ -668,8 +677,10 @@ namespace LSAnalyzer.Services
 
                 repWgtsRegex = "lsanalyzer_repwgt_";
             }
+            
+            plausibleValueVariables.AddRange(analysisConfiguration.DatasetType.PVvarsList);
 
-            if (!CreateBIFIEdataObject(analysisConfiguration.DatasetType.Weight, (int)analysisConfiguration.DatasetType.NMI, analysisConfiguration.DatasetType.MIvar, analysisConfiguration.DatasetType.PVvarsList, repWgtsRegex, analysisConfiguration.DatasetType.FayFac, analysisConfiguration.DatasetType.AutoEncapsulateRegex))
+            if (!CreateBIFIEdataObject(analysisConfiguration.DatasetType.Weight, (int)analysisConfiguration.DatasetType.NMI, analysisConfiguration.DatasetType.MIvar, plausibleValueVariables, repWgtsRegex, analysisConfiguration.DatasetType.FayFac, analysisConfiguration.DatasetType.AutoEncapsulateRegex))
             {
                 return false;
             }
@@ -705,8 +716,15 @@ namespace LSAnalyzer.Services
 
                 repWgtsRegex = "lsanalyzer_repwgt_";
             }
+            
+            List<PlausibleValueVariable> plausibleValueVariables = [];
+            foreach (var virtualVariable in analysis.VirtualVariables.Where(vv => vv.FromPlausibleValues))
+            {
+                plausibleValueVariables.Add(new PlausibleValueVariable { DisplayName = virtualVariable.Name, Regex = virtualVariable.Name, Mandatory = false });
+            }
+            plausibleValueVariables.AddRange(analysis.AnalysisConfiguration.DatasetType.PVvarsList);
 
-            if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI, analysis.AnalysisConfiguration.DatasetType.MIvar, analysis.AnalysisConfiguration.DatasetType.PVvarsList, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex))
+            if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI, analysis.AnalysisConfiguration.DatasetType.MIvar, plausibleValueVariables, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex))
             {
                 return false;
             }
@@ -778,11 +796,20 @@ namespace LSAnalyzer.Services
                     variableList.Add(newVariable);
                 }
 
-                if (analysisConfiguration.ModeKeep == false)
+                if (analysisConfiguration.ModeKeep == false && !fromStoredRaw)
                 {
                     var maxPosition = variableList.Last().Position + 1;
+
+                    List<PlausibleValueVariable> plausibleValueVariables = [];
+
+                    foreach (var virtualVariable in virtualVariables.Where(vv => vv.FromPlausibleValues))
+                    {
+                        plausibleValueVariables.Add(new PlausibleValueVariable { DisplayName = virtualVariable.Name, Regex = $"{virtualVariable.Name}_", Mandatory = false });
+                    }
                     
-                    foreach (var pvVar in analysisConfiguration.DatasetType.PVvarsList)
+                    plausibleValueVariables.AddRange(analysisConfiguration.DatasetType.PVvarsList);
+                    
+                    foreach (var pvVar in plausibleValueVariables)
                     {
                         var pvVarRegex = StringFormats.EncapsulateRegex(pvVar.Regex, analysisConfiguration.DatasetType.AutoEncapsulateRegex)!;
 
@@ -1252,7 +1279,7 @@ namespace LSAnalyzer.Services
                 
                 foreach (var pvVar in pvVars.Where(pvVar => virtualVariableCombine.Variables.Any(var => var.Name == pvVar.DisplayName)))
                 {
-                    pvVarsNames.Add(pvVar.DisplayName, _engine?.Evaluate($"""grep("{pvVar.Regex}", colnames(lsanalyzer_dat_raw_stored), value = TRUE)""").AsCharacter().ToList() ?? []);
+                    pvVarsNames.Add(pvVar.DisplayName, _engine?.Evaluate($"""grep("{pvVar.Regex}", colnames(lsanalyzer_dat_raw_stored), value = TRUE)""").AsCharacter().Order().ToList() ?? []);
                 }
                 
                 if (pvVarsNames.Count == 0) return false;

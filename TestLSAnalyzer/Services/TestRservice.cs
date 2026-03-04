@@ -1926,6 +1926,62 @@ namespace TestLSAnalyzer.Services
             Assert.NotNull(result);
             Assert.Equal([ "ITSEXclone", "ASBG05_combined" ], result.Where(v => v.IsVirtual).Select(v => v.Name).ToList());
         }
+
+        [Fact]
+        public void TestVirtualVariablesFromPVsAreHandledCorrectly()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
+                    RepWgts = "repwgt",
+                    FayFac = 0.5,
+                }
+            };
+            
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            List<VirtualVariable> virtualVariables =
+            [
+                new VirtualVariableCombine
+                    { Name = "combined", Label = "xy", Variables = [ new Variable(1, "x") { FromPlausibleValues = true }, new Variable(2, "y") { FromPlausibleValues = true } ] },
+            ];
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariables[0], analysisConfiguration.DatasetType.PVvarsList.ToList()));
+            
+            // concerning GetCurrentDatasetVariables and PrepareForAnalysis, virtual variables from PV vars are only interesting with ModeBuild, as they will already exist in the BIFIEdata object otherwise anyway 
+            analysisConfiguration.ModeKeep = false;
+            
+            Assert.Contains("combined", rservice.GetCurrentDatasetVariables(analysisConfiguration, virtualVariables)?.Select(v => v.Name).ToList() ?? [ "cannot get list" ]);
+
+            var analysisCorr = new AnalysisCorr(analysisConfiguration)
+            {
+                Vars = [ new Variable(1, "x"), new Variable(2, "y"), new Variable(3, "combined") ],
+                VirtualVariables = virtualVariables,
+            };
+            Assert.True(rservice.PrepareForAnalysis(analysisCorr));
+            
+            var result = rservice.CalculateCorr(analysisCorr);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            
+            // TestAnalysisConfiguration is relevant in ModeKeep
+            analysisConfiguration.ModeKeep = true;
+            
+            Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration, virtualVariables));
+            
+            Assert.Contains("combined", rservice.GetCurrentDatasetVariables(analysisConfiguration, virtualVariables)?.Select(v => v.Name).ToList() ?? [ "cannot get list" ]);
+            
+            var result2 = rservice.CalculateCorr(analysisCorr);
+            Assert.NotNull(result2);
+            Assert.NotEmpty(result2);
+        }
         
         public static string AssemblyDirectory
         {

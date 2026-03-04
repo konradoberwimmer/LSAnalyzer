@@ -156,7 +156,10 @@ public partial class MainWindow : ObservableObject
 
         WeakReferenceMessenger.Default.Register<RequestAnalysisMessage>(this, (_, m) =>
         {
-            AnalysisPresentation analysisPresentation = new(m.Value, this);
+            var analysis = m.Value;
+            analysis.VirtualVariables = _configuration.GetVirtualVariablesFor(AnalysisConfiguration?.FileNameWithoutPath ?? string.Empty, AnalysisConfiguration?.DatasetType ?? new DatasetType { Id = -1 });
+            
+            AnalysisPresentation analysisPresentation = new(analysis, this);
 
             Analyses.Add(analysisPresentation);
             if (RecentAnalyses.ContainsKey(m.Value.GetType()))
