@@ -335,7 +335,7 @@ public class TestSelectAnalysisFile
             .Execute(() => Assert.True(successMessageSent));
         Assert.NotNull(analysisConfiguration);
 
-        var currentVariables = rservice.GetCurrentDatasetVariables(analysisConfiguration);
+        var currentVariables = rservice.GetCurrentDatasetVariables(analysisConfiguration, []);
         Assert.NotNull(currentVariables);
         Assert.Contains("^x[0-9]+$", currentVariables.ConvertAll<string>(var => var.Name));
     }
@@ -379,5 +379,44 @@ public class TestSelectAnalysisFile
         
         Assert.Equal(tempFile, selectAnalysisFile.FileName);
         Assert.Empty(selectAnalysisFile.RecentFilesForAnalyses); // because the mock won't return any recent files when they are fetched again after removing one
+    }
+    
+    
+    [Fact]
+    public void TestUseFileForAnalysisAddsVirtualVariables()
+    {
+        DispatcherHelper.Initialize();
+
+        var configuration = new Mock<Configuration>();
+        configuration.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
+        configuration.Setup(conf => conf.GetDataProviderConfigurations()).Returns([]);
+        configuration
+            .Setup(conf => conf.GetVirtualVariablesFor(It.Is<string>(fileName => fileName == "test_nmi10_nrep5.sav"),It.IsAny<DatasetType>()))
+            .Returns([ new VirtualVariableCombine { Name = "xy", Variables = [ new Variable(1, "x"), new Variable(2, "y") ]} ]);
+        
+        Rservice rservice = new();
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+
+        SelectAnalysisFile selectAnalysisFileViewModel = new(configuration.Object, rservice, new ServiceCollection().BuildServiceProvider());
+        
+        selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
+        selectAnalysisFileViewModel.SelectedDatasetType = new()
+        {
+            Id = 999991,
+            Name = "Test with NMI 10 and NREP 5",
+            Weight = "wgt",
+            NMI = 10,
+            MIvar = "mi",
+            RepWgts = "repwgt",
+        };
+
+        var messageSent = false;
+        WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (_, _) => messageSent = true);
+
+        selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
+        
+        Policy.Handle<TrueException>().WaitAndRetry(20, _ => TimeSpan.FromMilliseconds(100)).Execute(() => Assert.True(messageSent));
+        
+        Assert.True(rservice.Execute("hasVariable <- 'xy' %in% lsanalyzer_dat_BO$variables$variable"));
     }
 }

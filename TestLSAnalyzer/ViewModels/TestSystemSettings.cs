@@ -1,4 +1,5 @@
-﻿using LSAnalyzer.Models;
+﻿using System.Data;
+using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
 using CommunityToolkit.Mvvm.Messaging;
@@ -551,6 +552,12 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
+        public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables,
+            string? subsettingExpression = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, string? subsettingExpression = null)
         {
             throw new NotImplementedException();
@@ -561,7 +568,8 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
-        public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, bool fromStoredRaw = false)
+        public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables,
+            bool fromStoredRaw = false)
         {
             throw new NotImplementedException();
         }
@@ -602,6 +610,16 @@ public class TestSystemSettings
         }
 
         public List<GenericVector>? CalculateLogistReg(AnalysisLogistReg analysis)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        public (bool success, DataTable? dataTable) GetPreviewData()
         {
             throw new NotImplementedException();
         }

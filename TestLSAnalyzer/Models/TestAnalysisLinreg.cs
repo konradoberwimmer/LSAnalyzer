@@ -16,10 +16,10 @@ namespace TestLSAnalyzer.Models
             {
                 Vars = new()
                     {
-                        new(1, "x1", false),
-                        new(2, "x2", false),
+                        new(1, "x1"),
+                        new(2, "x2"),
                     },
-                Dependent = new(3, "y", false),
+                Dependent = new(3, "y"),
             };
 
             Assert.Equal("Linear regression (y ~ 1 + x1 + x2 - BIST-UE)", analysisLinreg.ShortInfo);
@@ -36,14 +36,14 @@ namespace TestLSAnalyzer.Models
             {
                 Vars = new()
                 {
-                    new(1, "x1", false),
-                    new(2, "x2", false),
+                    new(1, "x1"),
+                    new(2, "x2"),
                 },
                 GroupBy = new()
                 {
-                    new(3, "cat", false),
+                    new(3, "cat"),
                 },
-                Dependent = new(3, "y", false),
+                Dependent = new(3, "y"),
             };
 
             Assert.Equal("Linear regression (y ~ 1 + x1 + x2 by cat - BIST-UE)", analysisLinreg.ShortInfo);
@@ -56,10 +56,10 @@ namespace TestLSAnalyzer.Models
             {
                 Vars = new()
                 {
-                    new(1, "x1", false),
-                    new(2, "x2", false),
+                    new(1, "x1"),
+                    new(2, "x2"),
                 },
-                Dependent = new(3, "y", false),
+                Dependent = new(3, "y"),
                 Sequence = AnalysisRegression.RegressionSequence.Forward,
             };
 

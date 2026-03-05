@@ -111,7 +111,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = [new Variable(1, "doesntExist", false)],
+                        Vars = [new Variable(1, "doesntExist")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -122,8 +122,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = [new Variable(1, "x", false)],
-                        GroupBy = [new Variable(2, "cat", false)],
+                        Vars = [new Variable(1, "x")],
+                        GroupBy = [new Variable(2, "cat")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -134,7 +134,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = [new Variable(1, "doesntExist", false)],
+                        Vars = [new Variable(1, "doesntExist")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -145,8 +145,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = [new Variable(1, "item1", false), new(2, "item2", false)],
-                        GroupBy = [new Variable(2, "cat", false)],
+                        Vars = [new Variable(1, "item1"), new(2, "item2")],
+                        GroupBy = [new Variable(2, "cat")],
                         CalculateBivariate = true,
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
@@ -158,7 +158,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisCorr(analysisConfigurationInvalid)
                     {
-                        Vars = [new Variable(1, "dummy", false)],
+                        Vars = [new Variable(1, "dummy")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -220,7 +220,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = [new Variable(1, "doesntExist", false)],
+                        Vars = [new Variable(1, "doesntExist")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -231,8 +231,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = [new Variable(1, "x", false)],
-                        GroupBy = [new Variable(2, "cat", false)],
+                        Vars = [new Variable(1, "x")],
+                        GroupBy = [new Variable(2, "cat")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -243,7 +243,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = [new Variable(1, "doesntExist", false)],
+                        Vars = [new Variable(1, "doesntExist")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -293,7 +293,7 @@ public class TestBatchAnalyzeService
         };
 
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Rep5.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5, []));
 
         BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
         
@@ -307,7 +307,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "doesntExist", false) },
+                        Vars = new() { new(1, "doesntExist") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -318,8 +318,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "x", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "x") },
+                        GroupBy = new() { new(2, "cat") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -330,7 +330,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = new() { new(1, "cat", false) },
+                        Vars = new() { new(1, "cat") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -341,8 +341,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = new() { new(1, "item1", false), new(2, "item2", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "item1"), new(2, "item2") },
+                        GroupBy = new() { new(2, "cat") },
                         CalculateBivariate = true,
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
@@ -395,7 +395,7 @@ public class TestBatchAnalyzeService
         };
 
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Multicat.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Multicat));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Multicat, []));
 
         BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
         
@@ -409,7 +409,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "item1", false) },
+                        Vars = new() { new(1, "item1") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -420,8 +420,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "x", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "x") },
+                        GroupBy = new() { new(2, "cat") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -432,7 +432,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = new() { new(1, "cat", false) },
+                        Vars = new() { new(1, "cat") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -443,8 +443,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = new() { new(1, "item1", false), new(2, "item2", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "item1"), new(2, "item2") },
+                        GroupBy = new() { new(2, "cat") },
                         CalculateBivariate = true,
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
@@ -484,7 +484,7 @@ public class TestBatchAnalyzeService
         };
 
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Multicat.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Multicat));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Multicat, []));
 
         BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
         
@@ -498,7 +498,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisFreq(analysisConfigurationNmi10Multicat)
                     {
-                        Vars = new() { new(1, "cat", false) },
+                        Vars = new() { new(1, "cat") },
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -537,7 +537,7 @@ public class TestBatchAnalyzeService
         };
 
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Rep5.FileName));
-        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5, []));
         
         BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
 
@@ -549,7 +549,7 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "item1", false) },
+                        Vars = new() { new(1, "item1") },
                     },
                     ViewSettings = []
                 }
@@ -560,8 +560,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "x", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "x") },
+                        GroupBy = new() { new(2, "cat") },
                     },
                     ViewSettings = []
                 }
@@ -572,8 +572,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "x", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "x") },
+                        GroupBy = new() { new(2, "cat") },
                     },
                     ViewSettings = []
                 }
@@ -584,8 +584,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = new() { new(1, "x", false) },
-                        GroupBy = new() { new(2, "cat", false) },
+                        Vars = new() { new(1, "x") },
+                        GroupBy = new() { new(2, "cat") },
                     },
                     ViewSettings = []
                 }
@@ -680,8 +680,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = [new Variable(1, "x", false)],
-                        GroupBy = [new Variable(2, "cat", false)],
+                        Vars = [new Variable(1, "x")],
+                        GroupBy = [new Variable(2, "cat")],
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
                 }
@@ -711,7 +711,7 @@ public class TestBatchAnalyzeService
         var rservice = new Mock<IRservice>();
         rservice.Setup(service => service.CalculateUnivar(It.IsAny<AnalysisUnivar>())).Returns([]);
         rservice.Setup(service =>
-            service.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>())).Returns(true);
+            service.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(), It.IsAny<string?>())).Returns(true);
         
         AnalysisConfiguration analysisConfigurationNmi10Rep5 = new()
         {
@@ -737,8 +737,8 @@ public class TestBatchAnalyzeService
                 {
                     Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
                     {
-                        Vars = [new Variable(1, "x", false)],
-                        GroupBy = [new Variable(2, "cat", false)],
+                        Vars = [new Variable(1, "x")],
+                        GroupBy = [new Variable(2, "cat")],
                         SubsettingExpression = "cat == 1",
                     },
                     ViewSettings = dummyAnalysisPresentation.ViewSettings
@@ -752,7 +752,7 @@ public class TestBatchAnalyzeService
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
 
         rservice.Verify(service => service.CalculateUnivar(It.IsAny<AnalysisUnivar>()), Times.Once);
-        rservice.Verify(service => service.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>()), Times.Never);
+        rservice.Verify(service => service.TestAnalysisConfiguration(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(), It.IsAny<string?>()), Times.Never);
     }
 
     [Fact]

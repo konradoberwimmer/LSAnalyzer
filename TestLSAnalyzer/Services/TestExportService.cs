@@ -198,9 +198,9 @@ public class TestExportService
         Analysis analysis = new AnalysisCorr(analysisConfiguration)
         {
             Vars = [
-                new Variable(1, "item1", false),
-                new Variable(2, "item2", false),
-                new Variable(3, "item3", false),
+                new Variable(1, "item1"),
+                new Variable(2, "item2"),
+                new Variable(3, "item3"),
             ],
             CalculateOverall = true,
             ResultAt = DateTime.Now,
@@ -246,9 +246,9 @@ public class TestExportService
         Analysis analysis = new AnalysisCorr(analysisConfiguration)
         {
             Vars = [
-                new Variable(1, "item1", false) { Label = "Item 1" },
-                new Variable(2, "item2", false) { Label = "Item 2" },
-                new Variable(3, "item3", false),
+                new Variable(1, "item1") { Label = "Item 1" },
+                new Variable(2, "item2") { Label = "Item 2" },
+                new Variable(3, "item3"),
             ],
             CalculateOverall = true,
             ResultAt = DateTime.Now,
@@ -282,9 +282,9 @@ public class TestExportService
         Analysis analysis = new AnalysisCorr(analysisConfiguration)
         {
             Vars = [
-                new Variable(1, "item1", false) { Label = "Item 1" },
-                new Variable(2, "item2", false) { Label = "Item 2" },
-                new Variable(3, "item3", false),
+                new Variable(1, "item1") { Label = "Item 1" },
+                new Variable(2, "item2") { Label = "Item 2" },
+                new Variable(3, "item3"),
             ],
             CalculateOverall = true,
             ResultAt = DateTime.Now,
@@ -314,10 +314,10 @@ public class TestExportService
         Analysis analysis = new AnalysisFreq(analysisConfiguration)
         {
             Vars = [
-                new Variable(1, "myVar", false) { Label = "My Categorical Variable" },
+                new Variable(1, "myVar") { Label = "My Categorical Variable" },
             ],
             GroupBy = [
-                new Variable(2, "group", false) { Label = "My Grouping Variable" }
+                new Variable(2, "group") { Label = "My Grouping Variable" }
             ],
             CalculateOverall = false,
             ResultAt = DateTime.Now,
@@ -368,10 +368,10 @@ public class TestExportService
         Analysis analysis = new AnalysisFreq(analysisConfiguration)
         {
             Vars = [
-                new Variable(1, "myVar", false) { Label = "My Categorical Variable" },
+                new Variable(1, "myVar") { Label = "My Categorical Variable" },
             ],
             GroupBy = [
-                new Variable(2, "group", false) { Label = "My Grouping Variable" }
+                new Variable(2, "group") { Label = "My Grouping Variable" }
             ],
             CalculateOverall = false,
             ResultAt = DateTime.Now,
@@ -415,8 +415,8 @@ public class TestExportService
 
         List<Variable> variables =
         [
-            new(1, "x1", false),
-            new(2, "x2", false),
+            new(1, "x1"),
+            new(2, "x2"),
         ];
 
         AnalysisCorr analysisCorr1 = new(analysisConfiguration)
@@ -449,7 +449,7 @@ public class TestExportService
         AnalysisCorr analysisCorr2 = new(analysisConfiguration)
         {
             Vars = variables,
-            GroupBy = [new Variable(3, "cat1", false)],
+            GroupBy = [new Variable(3, "cat1")],
             CalculateOverall = true,
         };
 
@@ -516,10 +516,10 @@ public class TestExportService
         Analysis analysis = new AnalysisFreq(analysisConfiguration)
         {
             Vars = [
-                new Variable(1, "myVar", false) { Label = "My Categorical Variable" },
+                new Variable(1, "myVar") { Label = "My Categorical Variable" },
             ],
             GroupBy = [
-                new Variable(2, "group", false) { Label = "My Grouping Variable" }
+                new Variable(2, "group") { Label = "My Grouping Variable" }
             ],
             CalculateOverall = false,
             ResultAt = DateTime.Now,

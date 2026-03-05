@@ -36,24 +36,24 @@ public class TestAnalysisQueue
         
         AnalysisUnivar analysisUnivar = new(analysisConfiguration)
         {
-            Vars = new() { new(1, "x", false), new(1, "y", false) },
-            GroupBy = new() { new(3, "cat", false) },
+            Vars = new() { new(1, "x"), new(1, "y") },
+            GroupBy = new() { new(3, "cat") },
             CalculateOverall = false,
         };
         AnalysisPresentation analysisPresentationViewModelUnivar = new(analysisUnivar);
         
         AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
         {
-            Vars = new() { new(1, "x", false), new(1, "y", false) },
-            GroupBy = new() { new(3, "cat", false) },
+            Vars = new() { new(1, "x"), new(1, "y") },
+            GroupBy = new() { new(3, "cat") },
             CalculateSeparately = false,
         };
         AnalysisPresentation analysisPresentationViewModelMeanDiff = new(analysisMeanDiff);
         
         AnalysisCorr analysisCorr = new(analysisConfiguration)
         {
-            Vars = new() { new(1, "x", false), new(1, "y", false) },
-            GroupBy = new() { new(3, "cat", false) },
+            Vars = new() { new(1, "x"), new(1, "y") },
+            GroupBy = new() { new(3, "cat") },
         };
         AnalysisPresentation analysisPresentationViewModelCorr = new(analysisCorr);
 

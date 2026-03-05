@@ -37,6 +37,7 @@ namespace LSAnalyzer.Models
         [JsonIgnore]
         public Dictionary<string, DataFrame> ValueLabels { get; set; } = new();
         public string? SubsettingExpression { get; set; } = null;
+        public List<VirtualVariable> VirtualVariables = [];
 
         public Analysis(AnalysisConfiguration analysisConfiguration) 
         {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Data;
 using LSAnalyzer.Models;
 using RDotNet;
 
@@ -93,7 +94,7 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
-    public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, string? subsettingExpression = null)
+    public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, string? subsettingExpression = null)
     {
         throw new System.NotImplementedException();
     }
@@ -103,7 +104,7 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
-    public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, bool fromStoredRaw = false)
+    public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, bool fromStoredRaw = false)
     {
         throw new System.NotImplementedException();
     }
@@ -144,6 +145,16 @@ public class RserviceStub : IRservice
     }
 
     public List<GenericVector>? CalculateLogistReg(AnalysisLogistReg analysis)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public (bool success, DataTable? dataTable) GetPreviewData()
     {
         throw new System.NotImplementedException();
     }

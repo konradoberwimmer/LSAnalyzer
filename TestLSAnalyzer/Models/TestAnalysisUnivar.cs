@@ -16,8 +16,8 @@ namespace TestLSAnalyzer.Models
             {
                 Vars = new()
                 {
-                    new(1, "x", false),
-                    new(2, "y", false),
+                    new(1, "x"),
+                    new(2, "y"),
                 },
             };
 
@@ -31,12 +31,12 @@ namespace TestLSAnalyzer.Models
             {
                 Vars = new()
                 {
-                    new(1, "x", false),
-                    new(2, "y", false),
+                    new(1, "x"),
+                    new(2, "y"),
                 },
                 GroupBy = new()
                 {
-                    new(3, "cat", false),
+                    new(3, "cat"),
                 },
             };
 

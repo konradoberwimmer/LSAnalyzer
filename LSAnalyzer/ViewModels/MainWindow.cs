@@ -20,6 +20,8 @@ public partial class MainWindow : ObservableObject
     
     private readonly IAnalysisQueue _analysisQueue;
 
+    private readonly Configuration _configuration;
+
     [ObservableProperty]
     private AnalysisConfiguration? _analysisConfiguration;
     partial void OnAnalysisConfigurationChanged(AnalysisConfiguration? value)
@@ -52,6 +54,7 @@ public partial class MainWindow : ObservableObject
         // design-time only constructor
         _rservice = new RserviceStub();
         _analysisQueue = new AnalysisQueueStub();
+        _configuration = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryServiceStub());
         
         AnalysisConfiguration dummyConfiguration = new()
         {
@@ -76,13 +79,13 @@ public partial class MainWindow : ObservableObject
                 {
                     Vars =
                     [
-                        new(1, "x1", false),
-                        new(2, "x2", false),
-                        new(3, "x3", false)
+                        new(1, "x1"),
+                        new(2, "x2"),
+                        new(3, "x3")
                     ],
                     GroupBy =
                     [
-                        new(4, "y1", false)
+                        new(4, "y1")
                     ],
                     SubsettingExpression = "cat == 1 & val < 0.5",
                 },
@@ -129,16 +132,21 @@ public partial class MainWindow : ObservableObject
         SubsettingExpression = "cat == 1";
     }
 
-    public MainWindow(IRservice rservice, IAnalysisQueue analysisQueue) 
+    public MainWindow(IRservice rservice, IAnalysisQueue analysisQueue, Configuration configuration) 
     {
         _rservice = rservice;
         _analysisQueue = analysisQueue;
+        _configuration = configuration;
+        
         BifieSurveyVersion = rservice.GetBifieSurveyVersion() ?? string.Empty;
 
         WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (_, m) =>
         {
             AnalysisConfiguration = m.Value;
-            CurrentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration) ?? [];
+
+            var virtualVariables = _configuration.GetVirtualVariablesFor(AnalysisConfiguration.FileNameWithoutPath ?? string.Empty, AnalysisConfiguration.DatasetType ?? new DatasetType { Id = -1 });
+
+            CurrentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, virtualVariables) ?? [];
         });
 
         WeakReferenceMessenger.Default.Register<SetSubsettingExpressionMessage>(this, (_, m) =>
@@ -148,7 +156,10 @@ public partial class MainWindow : ObservableObject
 
         WeakReferenceMessenger.Default.Register<RequestAnalysisMessage>(this, (_, m) =>
         {
-            AnalysisPresentation analysisPresentation = new(m.Value, this);
+            var analysis = m.Value;
+            analysis.VirtualVariables = _configuration.GetVirtualVariablesFor(AnalysisConfiguration?.FileNameWithoutPath ?? string.Empty, AnalysisConfiguration?.DatasetType ?? new DatasetType { Id = -1 });
+            
+            AnalysisPresentation analysisPresentation = new(analysis, this);
 
             Analyses.Add(analysisPresentation);
             if (RecentAnalyses.ContainsKey(m.Value.GetType()))
@@ -226,4 +237,24 @@ public partial class MainWindow : ObservableObject
     {
         Analyses.Clear();
     }
+
+    [RelayCommand]
+    private void ReloadCurrentDataset()
+    {
+        if (AnalysisConfiguration?.FileName is null || AnalysisConfiguration.DatasetType is null) return;
+        
+        var virtualVariables = _configuration.GetVirtualVariablesFor(AnalysisConfiguration.FileNameWithoutPath!, AnalysisConfiguration.DatasetType);
+
+        if (!_rservice.TestAnalysisConfiguration(AnalysisConfiguration, virtualVariables, SubsettingExpression))
+        {
+            WeakReferenceMessenger.Default.Send(new ReloadErrorMessage());
+            
+            AnalysisConfiguration = null;
+            return;
+        }
+        
+        CurrentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, virtualVariables) ?? [];
+    }
+
+    public class ReloadErrorMessage;
 }

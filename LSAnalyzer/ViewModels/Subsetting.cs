@@ -39,7 +39,9 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
                 return;
             }
             
-            var currentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, true);
+            var virtualVariables = _configuration.GetVirtualVariablesFor(AnalysisConfiguration.FileNameWithoutPath ?? string.Empty, AnalysisConfiguration.DatasetType ?? new DatasetType { Id = -1 });
+            
+            var currentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, virtualVariables, true);
             if (currentDatasetVariables != null)
             {
                 ObservableCollection<Variable> newAvailableVariables = new();
@@ -211,7 +213,8 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
         IsBusy = true;
         if (AnalysisConfiguration?.ModeKeep == true)
         {
-            _rservice.TestAnalysisConfiguration(AnalysisConfiguration);
+            var virtualVariables = _configuration.GetVirtualVariablesFor(AnalysisConfiguration.FileNameWithoutPath ?? string.Empty, AnalysisConfiguration.DatasetType ?? new DatasetType { Id = -1 });
+            _rservice.TestAnalysisConfiguration(AnalysisConfiguration, virtualVariables);
         }
 
         WeakReferenceMessenger.Default.Send(new SetSubsettingExpressionMessage(SubsetExpression));
@@ -297,7 +300,9 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
         
         if (AnalysisConfiguration!.ModeKeep == true)
         {
-            if (!_rservice.TestAnalysisConfiguration(AnalysisConfiguration!, SubsetExpression))
+            var virtualVariables = _configuration.GetVirtualVariablesFor(AnalysisConfiguration.FileNameWithoutPath ?? string.Empty, AnalysisConfiguration.DatasetType ?? new DatasetType { Id = -1 });
+            
+            if (!_rservice.TestAnalysisConfiguration(AnalysisConfiguration!, virtualVariables, SubsetExpression))
             {
                 SubsettingInformation = new()
                 {

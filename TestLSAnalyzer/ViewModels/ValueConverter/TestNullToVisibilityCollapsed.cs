@@ -25,7 +25,7 @@ namespace TestLSAnalyzer.ViewModels.ValueConverter
             new List<object?[]>()
             {
                 new object?[] { null, Visibility.Collapsed },
-                new object?[] { new Variable(1, "Ulldrael", true), Visibility.Visible },
+                new object?[] { new Variable(1, "Ulldrael"), Visibility.Visible },
                 new object?[] { new List<string>() { "Ulldrael der Gerechte" }, Visibility.Visible },
             };
     }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Data;
 using LSAnalyzer.Models;
 using RDotNet;
 
@@ -46,11 +47,11 @@ public interface IRservice
 
     public bool CreateBIFIEdataObject(string weight, int nmi, string? mivar, ICollection<PlausibleValueVariable>? pvvars, string? repwgts, double? fayfac, bool autoEncapsulatePVvars = false);
 
-    public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, string? subsettingExpression = null);
+    public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, string? subsettingExpression = null);
 
     public bool PrepareForAnalysis(Analysis analysis);
 
-    public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, bool fromStoredRaw = false);
+    public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, bool fromStoredRaw = false);
 
     public List<GenericVector>? CalculateUnivar(AnalysisUnivar analysis);
 
@@ -68,6 +69,10 @@ public interface IRservice
 
     public List<GenericVector>? CalculateLogistReg(AnalysisLogistReg analysis);
 
+    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false);
+
+    public (bool success, DataTable? dataTable) GetPreviewData();
+    
     public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null);
 
     public DataFrame? GetValueLabels(string variable);

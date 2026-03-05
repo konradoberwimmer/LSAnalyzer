@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace TestLSAnalyzer.Services
 {
@@ -180,7 +181,7 @@ namespace TestLSAnalyzer.Services
                 },
                 ModeKeep = true,
             };
-            Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfiguration) { Vars = new() { new(1, "x", false) } }, new() { "y" }, "cat == 2"));
+            Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfiguration) { Vars = new() { new(1, "x") } }, new() { "y" }, "cat == 2"));
         }
 
         [Fact]
@@ -245,11 +246,12 @@ namespace TestLSAnalyzer.Services
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 0.5));
 
-            var variablesList = rservice.GetCurrentDatasetVariables(analysisConfiguration);
+            var variablesList = rservice.GetCurrentDatasetVariables(analysisConfiguration, []);
             Assert.NotNull(variablesList);
             Assert.True(variablesList.Count == 11);
             Assert.True(variablesList.Where(var => var.Name == "repwgt1").First().IsSystemVariable);
             Assert.Equal("my categories", variablesList.Where(var => var.Name == "cat").First().Label);
+            Assert.True(variablesList.All(variable => !variable.FromPlausibleValues));
 
             AnalysisConfiguration analysisConfigurationModeBuild = new()
             {
@@ -266,7 +268,7 @@ namespace TestLSAnalyzer.Services
             };
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationModeBuild.FileName));
-            var variablesListModeBuild = rservice.GetCurrentDatasetVariables(analysisConfigurationModeBuild);
+            var variablesListModeBuild = rservice.GetCurrentDatasetVariables(analysisConfigurationModeBuild, []);
 
             Assert.NotNull(variablesListModeBuild);
             Assert.True(variablesListModeBuild.Count == 20);
@@ -274,6 +276,8 @@ namespace TestLSAnalyzer.Services
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "y").ToList());
             Assert.Single(variablesListModeBuild.Where(var => var.Name == "one").ToList());
             Assert.Equal("PV Mathematics 1", variablesListModeBuild.Where(var => var.Name == "y").First().Label);
+            Assert.Contains(variablesListModeBuild, variable => variable.FromPlausibleValues);
+            Assert.True(variablesListModeBuild.Where(var => var.Name == "y").First().FromPlausibleValues);
 
             AnalysisConfiguration analysisConfigurationKeepPV = new()
             {
@@ -290,19 +294,22 @@ namespace TestLSAnalyzer.Services
             };
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationKeepPV.FileName));
-            var variablesListKeepPV = rservice.GetCurrentDatasetVariables(analysisConfigurationKeepPV);
+            var variablesListKeepPV = rservice.GetCurrentDatasetVariables(analysisConfigurationKeepPV, []);
 
             Assert.NotNull(variablesListKeepPV);
             Assert.True(variablesListKeepPV.Count == 11);
             Assert.Single(variablesListKeepPV.Where(var => var.Name == "y").ToList());
             Assert.Equal("PV Mathematics 1", variablesListKeepPV.Where(var => var.Name == "y").First().Label);
+            Assert.Contains(variablesListKeepPV, variable => variable.FromPlausibleValues);
+            Assert.True(variablesListKeepPV.Where(var => var.Name == "y").First().FromPlausibleValues);
 
-            var rawVariablesListKeepPV = rservice.GetCurrentDatasetVariables(analysisConfigurationKeepPV, true);
+            var rawVariablesListKeepPV = rservice.GetCurrentDatasetVariables(analysisConfigurationKeepPV, [], true);
 
             Assert.NotNull(rawVariablesListKeepPV);
             Assert.True(rawVariablesListKeepPV.Count == 37);
             Assert.Empty(rawVariablesListKeepPV.Where(var => var.Name == "y").ToList());
             Assert.Single(rawVariablesListKeepPV.Where(var => var.Name == "y1").ToList());
+            Assert.True(rawVariablesListKeepPV.All(variable => !variable.FromPlausibleValues));
         }
 
         [Fact]
@@ -326,21 +333,21 @@ namespace TestLSAnalyzer.Services
 
             analysisConfiguration.FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
+            Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration, []));
 
             analysisConfiguration.ModeKeep = false;
-            Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration));
+            Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration, []));
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
-            Assert.False(rservice.TestAnalysisConfiguration(analysisConfiguration, "xyz == 1"));
-            Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration, "cat == 1"));
+            Assert.False(rservice.TestAnalysisConfiguration(analysisConfiguration, [], "xyz == 1"));
+            Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration, [], "cat == 1"));
 
             analysisConfiguration.DatasetType.JKzone = "mi";
-            Assert.False(rservice.TestAnalysisConfiguration(analysisConfiguration));
+            Assert.False(rservice.TestAnalysisConfiguration(analysisConfiguration, []));
 
             analysisConfiguration.DatasetType.JKzone = null;
             analysisConfiguration.DatasetType.RepWgts = "Bloedsinn";
-            Assert.False(rservice.TestAnalysisConfiguration(analysisConfiguration));
+            Assert.False(rservice.TestAnalysisConfiguration(analysisConfiguration, []));
         }
 
         [Fact]
@@ -362,19 +369,19 @@ namespace TestLSAnalyzer.Services
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false) },
-                GroupBy = new() { new(2, "cat", false) },
+                Vars = new() { new(1, "x") },
+                GroupBy = new() { new(2, "cat") },
             };
             AnalysisLinreg analysisLinregCorrect = new(analysisConfiguration)
             {
-                Dependent = new Variable(1, "x", false),
-                Vars = [new Variable(1, "y", false)],
-                GroupBy = [new Variable(2, "cat", false)]
+                Dependent = new Variable(1, "x"),
+                Vars = [new Variable(1, "y")],
+                GroupBy = [new Variable(2, "cat")]
             };
             AnalysisLogistReg analysisLogistregIncorrect = new(analysisConfiguration)
             {
-                Vars = [new Variable(1, "y", false)],
-                GroupBy = [new Variable(2, "cat", false)]
+                Vars = [new Variable(1, "y")],
+                GroupBy = [new Variable(2, "cat")]
             };
 
             Rservice rservice = new();
@@ -410,8 +417,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
 
@@ -443,8 +450,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisUnivar analysisUnivarModeBuild = new(analysisConfigurationModeBuild)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
 
@@ -487,8 +494,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisUnivar analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = true,
             };
 
@@ -500,8 +507,8 @@ namespace TestLSAnalyzer.Services
 
             analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false) },
-                GroupBy = new() { new(3, "cat", false), new(3, "mi", false) },
+                Vars = new() { new(1, "x") },
+                GroupBy = new() { new(3, "cat"), new(3, "mi") },
                 CalculateOverall = true,
             };
 
@@ -515,8 +522,8 @@ namespace TestLSAnalyzer.Services
             
             analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false) },
-                GroupBy = new() { new(3, "cat", false), new(3, "mi", false) },
+                Vars = new() { new(1, "x") },
+                GroupBy = new() { new(3, "cat"), new(3, "mi") },
                 CalculateOverall = true,
                 CalculateCrosswise = false,
             };
@@ -529,7 +536,7 @@ namespace TestLSAnalyzer.Services
 
             analysisUnivar = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false) },
+                Vars = new() { new(1, "x") },
                 CalculateOverall = true,
             };
 
@@ -564,14 +571,14 @@ namespace TestLSAnalyzer.Services
 
             AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "ASRREA", false) },
+                Vars = new() { new(1, "ASRREA") },
                 GroupBy = new() { },
                 CalculateSeparately = false,
             };
 
             Assert.Null(rservice.CalculateMeanDiff(analysisMeanDiff));
 
-            analysisMeanDiff.GroupBy = new() { new(2, "ITSEX", false), new(3, "ASBG05C", false) };
+            analysisMeanDiff.GroupBy = new() { new(2, "ITSEX"), new(3, "ASBG05C") };
 
             var result = rservice.CalculateMeanDiff(analysisMeanDiff);
             Assert.NotNull(result);
@@ -613,8 +620,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "ASRREA", false) },
-                GroupBy = new() { new(2, "ITSEX", false), new(3, "ASBG05C", false) },
+                Vars = new() { new(1, "ASRREA") },
+                GroupBy = new() { new(2, "ITSEX"), new(3, "ASBG05C") },
                 CalculateSeparately = true,
             };
 
@@ -655,8 +662,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisFreq analysisFreq = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "item1"), new(1, "item2") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
 
@@ -686,8 +693,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisFreq analysisFreqModeBuild = new(analysisConfigurationModeBuild)
             {
-                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "item1"), new(1, "item2") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = false,
             };
 
@@ -725,8 +732,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisFreq analysisFreq = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
-                GroupBy = new() { new(3, "cat", false), new(4, "instable", false) },
+                Vars = new() { new(1, "item1"), new(1, "item2") },
+                GroupBy = new() { new(3, "cat"), new(4, "instable") },
                 CalculateOverall = false,
             };
 
@@ -764,8 +771,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisFreq analysisFreq = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(1, "item2", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "item1"), new(1, "item2") },
+                GroupBy = new() { new(3, "cat") },
                 CalculateOverall = true,
             };
 
@@ -803,8 +810,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisPercentiles analysisPercentiles = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 Percentiles = new() { 0.25, 0.50, 0.75 },
                 CalculateOverall = false,
                 CalculateSE = false,
@@ -852,7 +859,7 @@ namespace TestLSAnalyzer.Services
 
             AnalysisPercentiles analysisPercentiles = new(analysisConfiguration)
             {
-                Vars = [ new(1, "x", false) ],
+                Vars = [ new(1, "x") ],
                 Percentiles = new() { 0.25, 0.50, 0.75, 0.05, 0.95 },
                 CalculateSE = false,
             };
@@ -894,8 +901,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisPercentiles analysisPercentiles = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "x", false), new(1, "y", false) },
-                GroupBy = new() { new(3, "cat", false) },
+                Vars = new() { new(1, "x"), new(1, "y") },
+                GroupBy = new() { new(3, "cat") },
                 Percentiles = new() { 0.25, 0.50, 0.75 },
                 CalculateOverall = false,
                 CalculateSE = true,
@@ -954,8 +961,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisCorr analysisCorr = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Vars = new() { new(1, "item1"), new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = false,
             };
 
@@ -986,8 +993,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisCorr analysisCorrModeBuild = new(analysisConfigurationModeBuild)
             {
-                Vars = new() { new(1, "item1", false), new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Vars = new() { new(1, "item1"), new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = true,
             };
 
@@ -1031,9 +1038,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLinreg analysisLinreg = new(analysisConfiguration)
             {
-                Dependent = new(1, "item1", false),
-                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Dependent = new(1, "item1"),
+                Vars = new() { new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = false,
             };
 
@@ -1063,9 +1070,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLinreg analysisLinregModeBuild = new(analysisConfigurationModeBuild)
             {
-                Dependent = new(1, "item1", false),
-                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Dependent = new(1, "item1"),
+                Vars = new() { new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = true,
             };
 
@@ -1103,9 +1110,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLinreg analysisLinregForward = new(analysisConfiguration)
             {
-                Dependent = new(1, "item1", false),
-                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Dependent = new(1, "item1"),
+                Vars = new() { new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = false,
                 Sequence = AnalysisRegression.RegressionSequence.Forward,
             };
@@ -1149,9 +1156,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLinreg analysisLinregBackward = new(analysisConfiguration)
             {
-                Dependent = new(1, "item1", false),
-                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Dependent = new(1, "item1"),
+                Vars = new() { new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = false,
                 Sequence = AnalysisRegression.RegressionSequence.Backward,
             };
@@ -1196,9 +1203,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLogistReg analysisLogistReg = new(analysisConfiguration)
             {
-                Dependent = new(1, "event", false),
-                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Dependent = new(1, "event"),
+                Vars = new() { new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = false,
             };
 
@@ -1226,9 +1233,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLogistReg analysisLogistRegModeBuild = new(analysisConfigurationModeBuild)
             {
-                Dependent = new(1, "event", false),
-                Vars = new() { new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Dependent = new(1, "event"),
+                Vars = new() { new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = true,
             };
 
@@ -1266,9 +1273,9 @@ namespace TestLSAnalyzer.Services
 
             AnalysisLogistReg analysisLogistRegForward = new(analysisConfiguration)
             {
-                Dependent = new(1, "event", false),
-                Vars = new() { new(2, "item1", false), new(3, "item2", false), new(4, "item3", false) },
-                GroupBy = new() { new(5, "cat", false) },
+                Dependent = new(1, "event"),
+                Vars = new() { new(2, "item1"), new(3, "item2"), new(4, "item3") },
+                GroupBy = new() { new(5, "cat") },
                 CalculateOverall = false,
                 Sequence = AnalysisRegression.RegressionSequence.Forward,
             };
@@ -1355,8 +1362,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisCorr analysisCorr = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "item1", false), new(2, "item2", false), new(3, "item3", false) },
-                GroupBy = new() { new(4, "cat", false) },
+                Vars = new() { new(1, "item1"), new(2, "item2"), new(3, "item3") },
+                GroupBy = new() { new(4, "cat") },
                 CalculateOverall = false,
             };
 
@@ -1402,8 +1409,8 @@ namespace TestLSAnalyzer.Services
 
             AnalysisMeanDiff analysisMeanDiff = new(analysisConfiguration)
             {
-                Vars = new() { new(1, "ASRREA", false) },
-                GroupBy = new() { new(2, "ITSEX", false) },
+                Vars = new() { new(1, "ASRREA") },
+                GroupBy = new() { new(2, "ITSEX") },
                 CalculateSeparately = true,
             };
 
@@ -1494,17 +1501,17 @@ namespace TestLSAnalyzer.Services
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileFullPVs));
             Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationAll)));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = true } }, "repwgt", 0.5));
-            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
-            Assert.Contains("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll, [])!.Select(var => var.Name));
+            Assert.Contains("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll, [])!.Select(var => var.Name));
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileFullPVs));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "yoptional", Mandatory = false } }, "repwgt", 0.5));
-            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
-            Assert.Contains("yoptional", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll, [])!.Select(var => var.Name));
+            Assert.Contains("yoptional", rservice.GetCurrentDatasetVariables(analysisConfigurationAll, [])!.Select(var => var.Name));
             Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationSome)));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, "repwgt", 0.5));
-            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
-            Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll, [])!.Select(var => var.Name));
+            Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll, [])!.Select(var => var.Name));
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileMissingPVs));
             Assert.False(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = true } }, "repwgt", 0.5));
@@ -1512,17 +1519,17 @@ namespace TestLSAnalyzer.Services
 
             Assert.True(rservice.LoadFileIntoGlobalEnvironment(fileMissingPVs));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, "repwgt", 0.5));
-            Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
-            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll, [])!.Select(var => var.Name));
+            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll, [])!.Select(var => var.Name));
             Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfigurationSome)));
             Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, new Collection<PlausibleValueVariable>() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y", DisplayName = "y", Mandatory = false } }, "repwgt", 0.5));
-            Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
-            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.DoesNotContain("y", rservice.GetCurrentDatasetVariables(analysisConfigurationAll, [])!.Select(var => var.Name));
+            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll, [])!.Select(var => var.Name));
 
             analysisConfigurationSome.ModeKeep = false;
             analysisConfigurationSome.DatasetType.PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = false }, new() { Regex = "y", DisplayName = "y", Mandatory = false } };
-            Assert.DoesNotContain("(y)", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
-            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll)!.Select(var => var.Name));
+            Assert.DoesNotContain("(y)", rservice.GetCurrentDatasetVariables(analysisConfigurationAll, [])!.Select(var => var.Name));
+            Assert.Contains("x", rservice.GetCurrentDatasetVariables(analysisConfigurationAll, [])!.Select(var => var.Name));
         }
         
         [Fact(Skip = "Interferes with other tests when not run on its own")]
@@ -1538,6 +1545,444 @@ namespace TestLSAnalyzer.Services
             Assert.False(rservice.IsConnected);
         }
 
+        [Fact]
+        public void TestCreateVirtualVariableCombine()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } },
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+            
+            Rservice rservice = new();
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.InjectAppFunctions());
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            VirtualVariableCombine virtualVariable = new() { Name = "ASBR01_mean_rmNA" };
+            
+            // not possible without at least one input variable
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable));
+            
+            // not possible to overwrite an existing variable
+            virtualVariable.Variables = [
+                new Variable(1, "ASBG05A"),
+                new Variable(2, "ASBG05B"),
+                new Variable(3, "ASBG05C"),
+            ];
+            virtualVariable.Name = "ASBG01";
+            
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable));
+            
+            // possible with mean (default) and removeNa (default)
+            virtualVariable.Name = "ASBR01_mean_rmNA";
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_mean_rmNA' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("missingValues <- sum(is.na(lsanalyzer_dat_raw_stored$ASBR01_mean_rmNA))"));
+            Assert.Equal(14, rservice.Fetch("missingValues").AsInteger().First());
+            
+            // possible with mean (default) without removeNa
+            virtualVariable.RemoveNa = false;
+            virtualVariable.Name = "ASBR01_mean";
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_mean' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("missingValues <- sum(is.na(lsanalyzer_dat_raw_stored$ASBR01_mean))"));
+            Assert.Equal(65, rservice.Fetch("missingValues").AsInteger().First());
+            
+            // possible with label
+            virtualVariable.Label = "label for new variable";
+            virtualVariable.Name = "ASBR01_label";
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_label' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("hasLabel <- 'label for new variable' == attributes(lsanalyzer_dat_raw_stored)$variable.labels['ASBR01_label']"));
+            Assert.True(rservice.Fetch("hasLabel").AsLogical().First());
+            
+            // possible with sum without removeNa
+            virtualVariable.Type = VirtualVariableCombine.CombinationFunction.Sum;
+            virtualVariable.Name = "ASBR01_sum";
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_sum' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("missingValues <- sum(is.na(lsanalyzer_dat_raw_stored$ASBR01_sum))"));
+            Assert.Equal(65, rservice.Fetch("missingValues").AsInteger().First());
+            
+            // possible with factor scores without removeNa
+            virtualVariable.Type = VirtualVariableCombine.CombinationFunction.FactorScores;
+            virtualVariable.Name = "ASBR01_factor";
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_factor' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("missingValues <- sum(is.na(lsanalyzer_dat_raw_stored$ASBR01_factor))"));
+            Assert.Equal(65, rservice.Fetch("missingValues").AsInteger().First());
+            
+            // as preview (preview is possible even though virtual variable now exists in raw data)
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, null, true));
+            var previewDataSet = rservice.Fetch("lsanalyzer_dat_raw_preview").AsDataFrame();
+            Assert.NotNull(previewDataSet);
+            Assert.Equal(4, previewDataSet.ColumnCount);
+            Assert.Equal(65, previewDataSet["ASBR01_factor"].Count(value => (double)value is double.NaN));
+        }
+
+        [Fact]
+        public void TestCreateVirtualVariableCombineFromPVs()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvarsList = [
+                        new PlausibleValueVariable { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true },
+                        new PlausibleValueVariable { Regex = "ASRLIT", DisplayName = "ASRLIT", Mandatory = true },
+                        new PlausibleValueVariable { Regex = "ASRINF", DisplayName = "ASRINF", Mandatory = true }
+                    ],
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+            
+            Rservice rservice = new();
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            VirtualVariableCombine virtualVariable = new()
+            {
+                Name = "mean_of_subdimensions",
+                Variables = [
+                    new Variable(1, "ASRLIT") { FromPlausibleValues = true },
+                    new Variable(2, "ASRINF") { FromPlausibleValues = true },
+                ]
+            };
+            
+            // not possible without passing pv list
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable));
+            
+            // not possible when not actually pvs
+            virtualVariable.Variables = [
+                new Variable(1, "ASBG05A") { FromPlausibleValues = true },
+                new Variable(2, "ASBG05B") { FromPlausibleValues = true },
+                new Variable(3, "ASBG05C") { FromPlausibleValues = true },
+            ];
+            
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable, new List<PlausibleValueVariable>(analysisConfiguration.DatasetType.PVvarsList)));
+            
+            // not possible when pv vars are inconsistent
+            virtualVariable.Variables = [
+                new Variable(1, "ASRLIT") { FromPlausibleValues = true },
+                new Variable(2, "ASRINF") { FromPlausibleValues = true },
+            ];
+            
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable, [
+                new PlausibleValueVariable { Regex = "ASRLIT", DisplayName = "ASRLIT", Mandatory = true },
+                new PlausibleValueVariable { Regex = "ASRINF01", DisplayName = "ASRINF", Mandatory = true }
+            ]));
+            
+            // possible
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, new List<PlausibleValueVariable>(analysisConfiguration.DatasetType.PVvarsList)));
+            Assert.True(rservice.Execute("newVariables <- grep('mean_of_subdimensions', colnames(lsanalyzer_dat_raw_stored), value = TRUE)"));
+            var newVariables = rservice.Fetch("newVariables").AsCharacter().ToList();
+            Assert.Equal(5, newVariables.Count);
+            Assert.Contains("mean_of_subdimensions_3", newVariables);
+            
+            // equals single variable transformation
+            virtualVariable.Name = "verify";
+            virtualVariable.Variables = [
+                new Variable(1, "ASRLIT03"),
+                new Variable(2, "ASRINF03"),
+            ];
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.Execute("areEqual <- (TRUE == all.equal(lsanalyzer_dat_raw_stored$mean_of_subdimensions_3, lsanalyzer_dat_raw_stored$verify, check.attributes = FALSE))"));
+            Assert.True(rservice.Fetch("areEqual").AsLogical().First());
+            
+            // as preview
+            virtualVariable.Name = "preview";
+            virtualVariable.Variables = [
+                new Variable(1, "ASRLIT") { FromPlausibleValues = true },
+                new Variable(2, "ASRINF") { FromPlausibleValues = true },
+            ];
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, [..analysisConfiguration.DatasetType.PVvarsList], true));
+            var previewDataSet = rservice.Fetch("lsanalyzer_dat_raw_preview").AsDataFrame();
+            Assert.NotNull(previewDataSet);
+            Assert.Equal((IEnumerable<string>?)["ASRLIT05", "ASRINF05", "preview_5"], previewDataSet.ColumnNames);
+        }
+
+        [Fact]
+        public void TestGetPreviewData()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvarsList = [
+                        new PlausibleValueVariable { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true },
+                        new PlausibleValueVariable { Regex = "ASRLIT", DisplayName = "ASRLIT", Mandatory = true },
+                        new PlausibleValueVariable { Regex = "ASRINF", DisplayName = "ASRINF", Mandatory = true }
+                    ],
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+            
+            Rservice rservice = new();
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            
+            var (successNoPreviewData, previewDataNone) = rservice.GetPreviewData();
+            Assert.False(successNoPreviewData);
+            Assert.Null(previewDataNone);
+            
+            VirtualVariableCombine virtualVariable = new()
+            {
+                Variables =
+                [
+                    new Variable(1, "ASBG05A"),
+                    new Variable(2, "ASBG05B"),
+                    new Variable(3, "ASBG05C"),
+                ],
+                RemoveNa = true,
+                Name = "ASBG05sum",
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, null, true));
+
+            var (success, previewData) = rservice.GetPreviewData();
+            Assert.True(success);
+            Assert.NotNull(previewData);
+            Assert.True(previewData.Rows.Count < 50);
+            
+            VirtualVariableCombine virtualVariableContinuous = new()
+            {
+                Variables =
+                [
+                    new Variable(1, "ASRLIT01"),
+                    new Variable(2, "ASRLIT02"),
+                    new Variable(3, "ASRLIT03"),
+                    new Variable(4, "ASRLIT04"),
+                    new Variable(5, "ASRLIT05"),
+                ],
+                RemoveNa = false,
+                Name = "ASRLITnaive",
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableContinuous, null, true));
+
+            var (successContinuous, previewDataContinuous) = rservice.GetPreviewData();
+            Assert.True(successContinuous);
+            Assert.NotNull(previewDataContinuous);
+            Assert.True(previewDataContinuous.Rows.Count == 50);
+        }
+
+        [Fact]
+        public void TestTestAnalysisConfigurationHandlesVirtualVariables()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvarsList = [
+                        new PlausibleValueVariable { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true },
+                        new PlausibleValueVariable { Regex = "ASRLIT", DisplayName = "ASRLIT", Mandatory = true },
+                        new PlausibleValueVariable { Regex = "ASRINF", DisplayName = "ASRINF", Mandatory = true }
+                    ],
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+            
+            Rservice rservice = new();
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            var sentMessage = false;
+            List<string> failedVirtualVariables = [];
+            WeakReferenceMessenger.Default.Register<Rservice.VirtualVariableErrorMessage>(this, (_,m) =>
+            {
+                sentMessage = true;
+                failedVirtualVariables = m.FailedVirtualVariables.Select(x => x.Name).ToList();
+            });
+
+            var result = rservice.TestAnalysisConfiguration(
+                analysisConfiguration,
+                [
+                    new VirtualVariableCombine { Name = "ITSEXclone", Label = "cloneITSEX", Type = VirtualVariableCombine.CombinationFunction.Sum, RemoveNa = false, Variables = [ new Variable(1, "ITSEX") ]},
+                    new VirtualVariableCombine { Name = "impossible", Variables = [ new Variable(13, "not_there"), new Variable(14, "not_here") ]},
+                    new VirtualVariableCombine { Name = "impossible2", Variables = [ new Variable(13, "not_there2"), new Variable(14, "not_here2") ]},
+                ],
+                "ITSEXclone == 1"
+            );
+            
+            Assert.True(result);
+            Assert.True(sentMessage);
+            Assert.Equal([ "impossible", "impossible2" ], failedVirtualVariables);
+            
+            sentMessage = false;
+            
+            var result2 = rservice.TestAnalysisConfiguration(
+                analysisConfiguration,
+                [
+                    new VirtualVariableCombine { Name = "ITSEXcopy", Label = "copyITSEX", Type = VirtualVariableCombine.CombinationFunction.Sum, RemoveNa = false, Variables = [ new Variable(1, "ITSEX") ]},
+                ]
+            );
+            
+            Assert.True(result2);
+            Assert.False(sentMessage);
+            Assert.True(rservice.Execute("hasCorrectVariables <- 'ITSEXcopy' %in% colnames(lsanalyzer_dat_raw_stored) && !('ITSEXclone' %in% colnames(lsanalyzer_dat_raw_stored))"));
+            Assert.True(rservice.Fetch("hasCorrectVariables").AsLogical().First());
+            Assert.True(rservice.Execute("hasLabels <- 'copyITSEX' %in% attributes(lsanalyzer_dat_raw_stored)$variable.labels && 'cloneITSEX' %in% attributes(lsanalyzer_dat_raw_stored)$variable.labels"));
+            Assert.True(rservice.Fetch("hasLabels").AsLogical().First());
+        }
+
+        [Fact]
+        public void TestGetCurrentDatasetVariablesMarksVirtualVariables()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvarsList = [
+                        new PlausibleValueVariable { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true },
+                        new PlausibleValueVariable { Regex = "ASRLIT", DisplayName = "ASRLIT", Mandatory = true },
+                        new PlausibleValueVariable { Regex = "ASRINF", DisplayName = "ASRINF", Mandatory = true }
+                    ],
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = true,
+            };
+            
+            Rservice rservice = new();
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            List<VirtualVariable> virtualVariables =
+            [
+                new VirtualVariableCombine
+                {
+                    Name = "ITSEXclone", Label = "cloneITSEX", Type = VirtualVariableCombine.CombinationFunction.Sum,
+                    RemoveNa = false, Variables = [new Variable(1, "ITSEX")]
+                },
+                new VirtualVariableCombine
+                {
+                    Name = "ASBG05_combined",
+                    Variables =
+                    [
+                        new Variable(1, "ASBG05A"), new Variable(2, "ASBG05B"), new Variable(3, "ASBG05C"),
+                        new Variable(4, "ASBG05D")
+                    ]
+                },
+            ];
+            
+            rservice.TestAnalysisConfiguration(analysisConfiguration, virtualVariables);
+
+            var result = rservice.GetCurrentDatasetVariables(analysisConfiguration, virtualVariables, false);
+
+            Assert.NotNull(result);
+            Assert.Equal([ "ITSEXclone", "ASBG05_combined" ], result.Where(v => v.IsVirtual).Select(v => v.Name).ToList());
+        }
+
+        [Fact]
+        public void TestVirtualVariablesFromPVsAreHandledCorrectly()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav"),
+                DatasetType = new()
+                {
+                    Weight = "wgt",
+                    NMI = 10,
+                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
+                    RepWgts = "repwgt",
+                    FayFac = 0.5,
+                }
+            };
+            
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            List<VirtualVariable> virtualVariables =
+            [
+                new VirtualVariableCombine
+                    { Name = "combined", Label = "xy", Variables = [ new Variable(1, "x") { FromPlausibleValues = true }, new Variable(2, "y") { FromPlausibleValues = true } ] },
+            ];
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariables[0], analysisConfiguration.DatasetType.PVvarsList.ToList()));
+            
+            // concerning GetCurrentDatasetVariables and PrepareForAnalysis, virtual variables from PV vars are only interesting with ModeBuild, as they will already exist in the BIFIEdata object otherwise anyway 
+            analysisConfiguration.ModeKeep = false;
+            
+            Assert.Contains("combined", rservice.GetCurrentDatasetVariables(analysisConfiguration, virtualVariables)?.Select(v => v.Name).ToList() ?? [ "cannot get list" ]);
+
+            var analysisCorr = new AnalysisCorr(analysisConfiguration)
+            {
+                Vars = [ new Variable(1, "x"), new Variable(2, "y"), new Variable(3, "combined") ],
+                VirtualVariables = virtualVariables,
+            };
+            Assert.True(rservice.PrepareForAnalysis(analysisCorr));
+            
+            var result = rservice.CalculateCorr(analysisCorr);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            
+            // TestAnalysisConfiguration is relevant in ModeKeep
+            analysisConfiguration.ModeKeep = true;
+            
+            Assert.True(rservice.TestAnalysisConfiguration(analysisConfiguration, virtualVariables));
+            
+            Assert.Contains("combined", rservice.GetCurrentDatasetVariables(analysisConfiguration, virtualVariables)?.Select(v => v.Name).ToList() ?? [ "cannot get list" ]);
+            
+            var result2 = rservice.CalculateCorr(analysisCorr);
+            Assert.NotNull(result2);
+            Assert.NotEmpty(result2);
+        }
+        
         public static string AssemblyDirectory
         {
             get

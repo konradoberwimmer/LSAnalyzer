@@ -158,8 +158,8 @@ public class TestRequestAnalysis
 
         AnalysisUnivar analysisUnivar = new(requestAnalysisViewModel.AnalysisConfiguration)
         {
-            Vars = new() { new(1, "x", false), new(2, "y", false) },
-            GroupBy = new() { new(3, "cat", false) },
+            Vars = new() { new(1, "x"), new(2, "y") },
+            GroupBy = new() { new(3, "cat") },
             CalculateOverall = false,
         };
 
@@ -171,8 +171,8 @@ public class TestRequestAnalysis
 
         AnalysisMeanDiff analysisMeanDiff = new(requestAnalysisViewModel.AnalysisConfiguration)
         {
-            Vars = new() { new(1, "x", false) },
-            GroupBy = new() { new(2, "mi", true) },
+            Vars = new() { new(1, "x") },
+            GroupBy = new() { new(2, "mi") },
             CalculateSeparately = true,
         };
 
@@ -184,7 +184,7 @@ public class TestRequestAnalysis
 
         AnalysisFreq analysisFreq = new(requestAnalysisViewModel.AnalysisConfiguration)
         {
-            Vars = new() { new(1, "cat", false) },
+            Vars = new() { new(1, "cat") },
             GroupBy = new() { },
             CalculateOverall = true,
             CalculateCrosswise = false
@@ -200,8 +200,8 @@ public class TestRequestAnalysis
         AnalysisPercentiles analysisPercentiles = new(requestAnalysisViewModel.AnalysisConfiguration)
         {
             Percentiles = new() { 0.20, 0.40, 0.60, 0.80 },
-            Vars = new() { new(1, "x", false), new(2, "y", false) },
-            GroupBy = new() { new(3, "cat", false) },
+            Vars = new() { new(1, "x"), new(2, "y") },
+            GroupBy = new() { new(3, "cat") },
             CalculateOverall = false,
             UseInterpolation = false,
         };
@@ -216,8 +216,8 @@ public class TestRequestAnalysis
 
         AnalysisCorr analysisCorr = new(requestAnalysisViewModel.AnalysisConfiguration)
         {
-            Vars = new() { new(1, "x", false), new(2, "y", false) },
-            GroupBy = new() { new(3, "cat", false) },
+            Vars = new() { new(1, "x"), new(2, "y") },
+            GroupBy = new() { new(3, "cat") },
             CalculateOverall = false,
         };
 
@@ -229,9 +229,9 @@ public class TestRequestAnalysis
 
         AnalysisLinreg analysisLinreg = new(requestAnalysisViewModel.AnalysisConfiguration)
         {
-            Dependent = new(2, "y", false),
-            Vars = new() { new(1, "x", false) },
-            GroupBy = new() { new(3, "cat", false) },
+            Dependent = new(2, "y"),
+            Vars = new() { new(1, "x") },
+            GroupBy = new() { new(3, "cat") },
             CalculateOverall = false,
             CalculateCrosswise = false,
             Sequence = AnalysisRegression.RegressionSequence.Forward,
@@ -248,8 +248,8 @@ public class TestRequestAnalysis
 
         AnalysisLinreg analysisLogistReg = new(requestAnalysisViewModel.AnalysisConfiguration)
         {
-            Dependent = new(1, "cat", false),
-            Vars = new() { new(2, "x", false), new(3, "y", false) },
+            Dependent = new(1, "cat"),
+            Vars = new() { new(2, "x"), new(3, "y") },
             CalculateOverall = false,
             Sequence = AnalysisRegression.RegressionSequence.Backward,
         };
@@ -281,8 +281,8 @@ public class TestRequestAnalysis
         AnalysisPercentiles analysisPercentiles = new(requestAnalysisViewModel.AnalysisConfiguration)
         {
             Percentiles = new() { 0.20, 0.40, 0.60, 0.80 },
-            Vars = new() { new(1, "x", false), new(2, "y", false) },
-            GroupBy = new() { new(3, "cat", false) },
+            Vars = new() { new(1, "x"), new(2, "y") },
+            GroupBy = new() { new(3, "cat") },
             CalculateOverall = false,
             CalculateCrosswise = false,
             UseInterpolation = false,
@@ -391,17 +391,17 @@ public class TestRequestAnalysis
     {
         return
         [
-            new Variable(1, "mi", true),
-            new Variable(2, "x", false),
-            new Variable(3, "y", false),
-            new Variable(4, "cat", false),
-            new Variable(5, "wgt", true),
-            new Variable(6, "repwgt1", true),
-            new Variable(7, "repwgt2", true),
-            new Variable(8, "repwgt3", true),
-            new Variable(9, "repwgt4", true),
-            new Variable(10, "repwgt5", true),
-            new Variable(11, "one", false)
+            new Variable(1, "mi"),
+            new Variable(2, "x"),
+            new Variable(3, "y"),
+            new Variable(4, "cat"),
+            new Variable(5, "wgt"),
+            new Variable(6, "repwgt1"),
+            new Variable(7, "repwgt2"),
+            new Variable(8, "repwgt3"),
+            new Variable(9, "repwgt4"),
+            new Variable(10, "repwgt5"),
+            new Variable(11, "one")
         ];
     }
 }

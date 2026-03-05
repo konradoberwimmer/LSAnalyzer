@@ -14,7 +14,7 @@ namespace TestLSAnalyzer.Models
         [InlineData("y", "dependent variable", "y (dependent variable)")]
         public void TestInfo(string name, string? label, string expected)
         {
-            Variable variable = new Variable(1, name, false);
+            Variable variable = new Variable(1, name);
             variable.Label = label;
 
             Assert.Equal(expected, variable.Info);

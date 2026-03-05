@@ -51,6 +51,8 @@
                 </MenuItem.IsEnabled>
                 <MenuItem x:Name="menuItemAnalysisSelectFile" Header="Select File ..." Click="MenuItemAnalysisSelectFile_Click"/>
                 <MenuItem x:Name="menuItemAnalysisSubsetting" Header="Subsetting ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemAnalysisSubsetting_Click"/>
+                <Separator/>
+                <MenuItem Header="Virtual variables ..." IsEnabled="{Binding AnalysisConfiguration, Converter={StaticResource NullToBoolConverter}}" Click="MenuItemVirtualVariables_OnClick"/>
             </MenuItem>
             <MenuItem Header="_Analysis">
                 <MenuItem.IsEnabled>

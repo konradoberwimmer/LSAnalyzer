@@ -21,8 +21,8 @@ namespace TestLSAnalyzer.Models
             {
                 Vars = new()
                 {
-                    new(1, "x", false),
-                    new(2, "y", false),
+                    new(1, "x"),
+                    new(2, "y"),
                 },
                 Percentiles = [ 0.25, 0.50, 0.75 ],
                 CalculateSE = calculateSE,

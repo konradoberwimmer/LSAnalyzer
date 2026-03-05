@@ -93,6 +93,9 @@ namespace LSAnalyzer.Views
                     }
                 }
             });
+            
+            WeakReferenceMessenger.Default.Register<Rservice.VirtualVariableErrorMessage>(this, (_, m) =>
+                MessageBox.Show($"The following virtual variables could not be created: {string.Join(", ", m.FailedVirtualVariables.Select(v => v.Name))}!", "Virtual variable error", MessageBoxButton.OK, MessageBoxImage.Warning));
         }
 
         private void InstallOpenXlsx()

@@ -163,13 +163,13 @@ public partial class AnalysisPresentation : ObservableObject
         {
             Vars = new()
                     {
-                        new(1, "x1", false),
-                        new(2, "x2", false),
-                        new(3, "x3", false),
+                        new(1, "x1"),
+                        new(2, "x2"),
+                        new(3, "x3"),
                     },
             GroupBy = new()
                     {
-                        new(4, "y1", false),
+                        new(4, "y1"),
                     },
             SubsettingExpression = "cat == 1 & val < 0.5",
         };

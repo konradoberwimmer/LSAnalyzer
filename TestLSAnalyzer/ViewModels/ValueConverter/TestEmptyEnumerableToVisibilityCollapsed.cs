@@ -24,7 +24,7 @@ namespace TestLSAnalyzer.ViewModels.ValueConverter
         public static IEnumerable<object[]> ConvertTestData =>
             new List<object[]>()
             {
-                new object[] { new Variable(1, "Ulldrael", true), Visibility.Collapsed },
+                new object[] { new Variable(1, "Ulldrael"), Visibility.Collapsed },
                 new object[] { new List<string>(), Visibility.Collapsed },
                 new object[] { new List<string>() { "Ulldrael der Gerechte" }, Visibility.Visible },
             };

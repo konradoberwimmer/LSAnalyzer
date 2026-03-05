@@ -21,6 +21,28 @@ public class TestAnalysisConfiguration
 
         Assert.True(clone.IsEqual(analysisConfiguration));
     }
+
+    [Fact]
+    public void FileNameWithoutPath()
+    {
+        AnalysisConfiguration analysisConfigurationWithNoFile = new();
+        
+        Assert.Null(analysisConfigurationWithNoFile.FileNameWithoutPath);
+
+        AnalysisConfiguration analysisConfigurationNormalFile = new()
+        {
+            FileName = @"C:\myPathToA\normalFile.rds"
+        };
+        
+        Assert.Equal("normalFile.rds", analysisConfigurationNormalFile.FileNameWithoutPath);
+        
+        AnalysisConfiguration analysisConfigurationDataProvider = new()
+        {
+            FileName = """[ File: "myFile.sav", Doi: "myDOI:12345" ]"""
+        };
+        
+        Assert.Equal("""[ File: "myFile.sav", Doi: "myDOI:12345" ]""", analysisConfigurationDataProvider.FileNameWithoutPath);
+    }
     
     [Theory, ClassData(typeof(IsEqualTestCases))]
     public void TestIsEqual(AnalysisConfiguration a, AnalysisConfiguration b, bool expected)

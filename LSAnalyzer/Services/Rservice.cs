@@ -4,10 +4,12 @@ using RDotNet;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Services.Stubs;
 
 namespace LSAnalyzer.Services
@@ -18,6 +20,8 @@ namespace LSAnalyzer.Services
         private REngine? _engine;
         private readonly string[] _rPackagesNecessary = [ "BIFIEsurvey", "foreign" ];
 
+        private List<string> _lastVirtualVariableNames = [];
+        
         public (string rHome, string rPath) RLocation { get; set; } = (string.Empty, string.Empty);
         
         [ExcludeFromCodeCoverage]
@@ -250,6 +254,20 @@ namespace LSAnalyzer.Services
                     }
                     """, null, true);
 
+                EvaluateAndLog("""
+                    lsanalyzer_func_factorScores <- function(x, na.rm)
+                    {
+                      rownames(x) <- 1:nrow(x)
+                      colnames(x) <- paste0("V", 1:ncol(x))
+                      f <- stats::as.formula(paste0("~",paste(colnames(x), collapse = "+")))
+                      fact <- stats::factanal(f, factors = 1, data = x, scores = "regression")
+                      scores <- fact$scores
+                      scores.df <- data.frame(rows = as.numeric(rownames(scores)), scores = scores)
+                      scores.df <- merge(scores.df, data.frame(rows = 1:nrow(x)), all.y = TRUE)
+                      return(scores.df$Factor1)
+                    }
+                    """, null, true);
+                
                 return true;
             } catch
             {
@@ -287,6 +305,8 @@ namespace LSAnalyzer.Services
                         return false;
                 }
 
+                _lastVirtualVariableNames = [];
+                    
                 EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
 
                 var rawData = _engine!.GetSymbol("lsanalyzer_dat_raw_stored").AsDataFrame();
@@ -587,7 +607,7 @@ namespace LSAnalyzer.Services
             return true;
         }
 
-        public virtual bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, string? subsettingExpression = null)
+        public virtual bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, string? subsettingExpression = null)
         {
             if (_engine == null || 
                 analysisConfiguration.FileName == null || 
@@ -596,6 +616,36 @@ namespace LSAnalyzer.Services
                 )
             {
                 return false;
+            }
+
+            foreach (var lastVirtualVariableName in _lastVirtualVariableNames)
+            {
+                EvaluateAndLog($"lsanalyzer_dat_raw_stored$`{lastVirtualVariableName}` <- NULL");
+                // because a potential label for lastVirtualVariableName does no harm, it will not be removed
+            }
+            _lastVirtualVariableNames.Clear();
+
+            List<PlausibleValueVariable> plausibleValueVariables = [];
+            
+            List<VirtualVariable> failedVirtualVariables = [];
+            foreach (var virtualVariable in virtualVariables)
+            {
+                if (!CreateVirtualVariable(virtualVariable, analysisConfiguration.DatasetType.PVvarsList.ToList()))
+                {
+                    failedVirtualVariables.Add(virtualVariable);
+                }
+                else
+                {
+                    if (virtualVariable.FromPlausibleValues)
+                    {
+                        plausibleValueVariables.Add(new PlausibleValueVariable { DisplayName = virtualVariable.Name, Regex = $"^{virtualVariable.Name}_[0-9]+$", Mandatory = false });
+                    }
+                }
+            }
+
+            if (failedVirtualVariables.Count > 0)
+            {
+                WeakReferenceMessenger.Default.Send(new VirtualVariableErrorMessage { FailedVirtualVariables = failedVirtualVariables });
             }
 
             EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
@@ -627,8 +677,10 @@ namespace LSAnalyzer.Services
 
                 repWgtsRegex = "lsanalyzer_repwgt_";
             }
+            
+            plausibleValueVariables.AddRange(analysisConfiguration.DatasetType.PVvarsList);
 
-            if (!CreateBIFIEdataObject(analysisConfiguration.DatasetType.Weight, (int)analysisConfiguration.DatasetType.NMI, analysisConfiguration.DatasetType.MIvar, analysisConfiguration.DatasetType.PVvarsList, repWgtsRegex, analysisConfiguration.DatasetType.FayFac, analysisConfiguration.DatasetType.AutoEncapsulateRegex))
+            if (!CreateBIFIEdataObject(analysisConfiguration.DatasetType.Weight, (int)analysisConfiguration.DatasetType.NMI, analysisConfiguration.DatasetType.MIvar, plausibleValueVariables, repWgtsRegex, analysisConfiguration.DatasetType.FayFac, analysisConfiguration.DatasetType.AutoEncapsulateRegex))
             {
                 return false;
             }
@@ -664,8 +716,15 @@ namespace LSAnalyzer.Services
 
                 repWgtsRegex = "lsanalyzer_repwgt_";
             }
+            
+            List<PlausibleValueVariable> plausibleValueVariables = [];
+            foreach (var virtualVariable in analysis.VirtualVariables.Where(vv => vv.FromPlausibleValues))
+            {
+                plausibleValueVariables.Add(new PlausibleValueVariable { DisplayName = virtualVariable.Name, Regex = virtualVariable.Name, Mandatory = false });
+            }
+            plausibleValueVariables.AddRange(analysis.AnalysisConfiguration.DatasetType.PVvarsList);
 
-            if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI, analysis.AnalysisConfiguration.DatasetType.MIvar, analysis.AnalysisConfiguration.DatasetType.PVvarsList, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex))
+            if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI, analysis.AnalysisConfiguration.DatasetType.MIvar, plausibleValueVariables, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex))
             {
                 return false;
             }
@@ -673,7 +732,7 @@ namespace LSAnalyzer.Services
             return true;
         }
 
-        public virtual List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, bool fromStoredRaw = false)
+        public virtual List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, bool fromStoredRaw = false)
         {
             if (analysisConfiguration.DatasetType == null)
             {
@@ -705,7 +764,12 @@ namespace LSAnalyzer.Services
                 List<Variable> variableList = new();
                 foreach (var variable in variables.GetRows())
                 {
-                    Variable newVariable = new(variable.RowIndex, (string)variable["variable"], analysisConfiguration.HasSystemVariable((string)variable["variable"]));
+                    Variable newVariable = new(variable.RowIndex, (string)variable["variable"])
+                    {
+                        IsSystemVariable = analysisConfiguration.HasSystemVariable((string)variable["variable"]),
+                        FromPlausibleValues = analysisConfiguration.DatasetType.PVvarsList.Any(pvVar => pvVar.DisplayName == (string)variable["variable"]),
+                        IsVirtual = virtualVariables.Select(vv => vv.Name).Contains((string)variable["variable"]),
+                    };
 
                     if (variableLabels.Keys.Contains(newVariable.Name))
                     {
@@ -732,11 +796,20 @@ namespace LSAnalyzer.Services
                     variableList.Add(newVariable);
                 }
 
-                if (analysisConfiguration.ModeKeep == false)
+                if (analysisConfiguration.ModeKeep == false && !fromStoredRaw)
                 {
                     var maxPosition = variableList.Last().Position + 1;
+
+                    List<PlausibleValueVariable> plausibleValueVariables = [];
+
+                    foreach (var virtualVariable in virtualVariables.Where(vv => vv.FromPlausibleValues))
+                    {
+                        plausibleValueVariables.Add(new PlausibleValueVariable { DisplayName = virtualVariable.Name, Regex = $"{virtualVariable.Name}_", Mandatory = false });
+                    }
                     
-                    foreach (var pvVar in analysisConfiguration.DatasetType.PVvarsList)
+                    plausibleValueVariables.AddRange(analysisConfiguration.DatasetType.PVvarsList);
+                    
+                    foreach (var pvVar in plausibleValueVariables)
                     {
                         var pvVarRegex = StringFormats.EncapsulateRegex(pvVar.Regex, analysisConfiguration.DatasetType.AutoEncapsulateRegex)!;
 
@@ -745,13 +818,14 @@ namespace LSAnalyzer.Services
                         if (firstMatch != null)
                         {
                             variableList.RemoveAll(var => Regex.IsMatch(var.Name, pvVarRegex));
-                            Variable newVariable = new(maxPosition++, pvVar.DisplayName, false);
+                            Variable newVariable = new(maxPosition++, pvVar.DisplayName);
+                            newVariable.FromPlausibleValues = true;
                             newVariable.Label = firstMatch?.Label;
                             variableList.Add(newVariable);
                         }
                     }
                                         
-                    variableList.Add(new(maxPosition++, "one", false));
+                    variableList.Add(new(maxPosition++, "one"));
                 }
 
                 return variableList;
@@ -1119,6 +1193,121 @@ namespace LSAnalyzer.Services
             return CalculateRegression("BIFIE.logistreg", "R2", analysis);
         }
 
+        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false)
+        {
+            if (virtualVariable.FromPlausibleValues && pvVars is null) return false;
+            
+            return virtualVariable switch
+            {
+                VirtualVariableCombine { FromPlausibleValues: false } virtualVariableCombine => CreateVirtualVariableCombine(virtualVariableCombine, forPreview),
+                VirtualVariableCombine { FromPlausibleValues: true } virtualVariableCombine => CreateVirtualVariableCombineFromPVs(virtualVariableCombine, pvVars!, forPreview),
+                _ => throw new ArgumentOutOfRangeException(nameof(virtualVariable), virtualVariable, null)
+            };
+        }
+
+        public (bool success, DataTable? dataTable) GetPreviewData()
+        {
+            try
+            {
+                _engine?.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview[!duplicated(lsanalyzer_dat_raw_preview),]");
+                _engine?.Evaluate("if (nrow(lsanalyzer_dat_raw_preview_distinct) > 50) lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[1:50,]");
+
+                var previewData = Fetch("lsanalyzer_dat_raw_preview_distinct")?.AsDataFrame();
+                
+                return previewData is null ? (false, null) : (true, DataFrameToDataTable(previewData, "preview"));
+            }
+            catch
+            {
+                return (false, null);
+            }
+        }
+
+        private bool CreateVirtualVariableCombine(VirtualVariableCombine virtualVariableCombine, bool forPreview)
+        {
+            try
+            {
+                if (virtualVariableCombine.Variables.Count == 0) return false;
+
+                if (forPreview)
+                {
+                    var inputVariablesString = string.Join(", ", virtualVariableCombine.Variables.Select(v => "'" + v.Name + "'"));
+                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString})]");
+                }
+
+                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
+                
+                var nameExists = _engine?.Evaluate($"'{virtualVariableCombine.Name}' %in% colnames({target})").AsLogical().First() ?? true;
+                if (nameExists) return false;
+
+                var assignment = $"{target}[,'{virtualVariableCombine.Name}']";
+                
+                var baseCall = virtualVariableCombine.Type switch
+                {
+                    VirtualVariableCombine.CombinationFunction.Sum => "rowSums",
+                    VirtualVariableCombine.CombinationFunction.Mean => "rowMeans",
+                    VirtualVariableCombine.CombinationFunction.FactorScores => "lsanalyzer_func_factorScores",
+                    _ => throw new ArgumentOutOfRangeException(nameof(virtualVariableCombine), virtualVariableCombine.Type.ToString(), "not in enum")
+                };
+
+                var subset = $"subset({target}, select = c({string.Join(", ", virtualVariableCombine.Variables.ToList().ConvertAll(var => "'" + var.Name + "'"))}))";
+                var removeNa = virtualVariableCombine.RemoveNa ? "TRUE" : "FALSE";
+                
+                var fullCall = $"{assignment} <- {baseCall}({subset}, na.rm = {removeNa})";
+                
+                EvaluateAndLog(fullCall);
+
+                if (!string.IsNullOrWhiteSpace(virtualVariableCombine.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
+                {
+                    EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableCombine.Name}'] = '{virtualVariableCombine.Label}'");
+                }
+                
+                _lastVirtualVariableNames.Add(virtualVariableCombine.Name);
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool CreateVirtualVariableCombineFromPVs(VirtualVariableCombine virtualVariableCombine, List<PlausibleValueVariable> pvVars, bool forPreview)
+        {
+            try
+            {
+                Dictionary<string, List<string>> pvVarsNames = [];
+                
+                foreach (var pvVar in pvVars.Where(pvVar => virtualVariableCombine.Variables.Any(var => var.Name == pvVar.DisplayName)))
+                {
+                    pvVarsNames.Add(pvVar.DisplayName, _engine?.Evaluate($"""grep("{pvVar.Regex}", colnames(lsanalyzer_dat_raw_stored), value = TRUE)""").AsCharacter().Order().ToList() ?? []);
+                }
+                
+                if (pvVarsNames.Count == 0) return false;
+
+                var numberOfImputations = pvVarsNames.First().Value.Count;
+                if (numberOfImputations == 0 || pvVarsNames.Any(entry => entry.Value.Count != numberOfImputations)) return false;
+
+                for (var imputation = 0; imputation < numberOfImputations; imputation++)
+                {
+                    var virtualVariableClone = (virtualVariableCombine.Clone() as VirtualVariableCombine)!;
+                    virtualVariableClone.Name = virtualVariableCombine.Name + "_" + (imputation + 1);
+                    
+                    foreach (var (name, varNames) in pvVarsNames)
+                    {
+                        virtualVariableClone.Variables.First(variable => variable.Name == name).Name = varNames[imputation];
+                    }
+
+                    if (!CreateVirtualVariableCombine(virtualVariableClone, forPreview)) return false;
+                }
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        
         private List<GenericVector>? CalculateRegression(string method, string r2parameter, AnalysisRegression analysis)
         {
             if (analysis.Dependent == null || analysis.Vars.Count == 0 ||
@@ -1316,7 +1505,7 @@ namespace LSAnalyzer.Services
                 int vv = 0;
                 foreach (var variable in variables)
                 {
-                    variableList.Add(new(++vv, variable, false));
+                    variableList.Add(new(++vv, variable));
                 }
 
                 return variableList;
@@ -1396,6 +1585,25 @@ namespace LSAnalyzer.Services
             }
         }
 
+        private DataTable DataFrameToDataTable(DataFrame dataFrame, string name)
+        {
+            DataTable previewTable = new(name);
+            for (var cc = 0; cc < dataFrame.ColumnCount; cc++)
+            {
+                previewTable.Columns.Add(dataFrame.ColumnNames[cc].Replace("_", "__"), typeof(double));
+            }
+            for (var rc = 0; rc < dataFrame.RowCount; rc++)
+            {
+                var newRow = previewTable.Rows.Add();
+                for (var cc = 0; cc < dataFrame.ColumnCount; cc++)
+                {
+                    newRow[cc] = dataFrame[rc, cc];
+                }
+            }
+
+            return previewTable;
+        }
+
         public void SendUserInterrupt()
         {
             _engine?.UserInterrupt();
@@ -1405,6 +1613,11 @@ namespace LSAnalyzer.Services
         {
             _engine?.Dispose();
             _engine = null;
+        }
+
+        public class VirtualVariableErrorMessage
+        {
+            public required List<VirtualVariable> FailedVirtualVariables { init; get; }
         }
     }
 
