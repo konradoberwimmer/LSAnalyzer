@@ -6,11 +6,20 @@
              xmlns:local="clr-namespace:LSAnalyzer.Views.CustomControls.VirtualVariable"
              xmlns:models="clr-namespace:LSAnalyzer.Models"
              xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=models:VirtualVariableCombine, IsDesignTimeCreatable=True}"
              d:DesignHeight="300" d:DesignWidth="400">
     <UserControl.Resources>
-        <converter:EnumToBoolean x:Key="EnumToBooleanConverter"/>
+        <converter:EnumCamelCase x:Key="EnumCamelCaseConverter"/>
+        <ObjectDataProvider x:Key="EnumCombinationFunctionDataSource"
+                            ObjectType="{x:Type sys:Enum}"
+                            MethodName="GetValues">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:VirtualVariableCombine+CombinationFunction" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -25,16 +34,18 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Calculate:"/>
-        <ComboBox Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" Width="150" HorizontalAlignment="Left">
-            <ComboBoxItem IsSelected="{Binding Type, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Mean}" Content="Mean"/>
-            <ComboBoxItem IsSelected="{Binding Type, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Sum}" Content="Sum"/>
-            <ComboBoxItem IsSelected="{Binding Type, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=FactorScores}" Content="Factor scores"/>
+        <ComboBox Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" Width="150" HorizontalAlignment="Left" ItemsSource="{Binding Source={StaticResource EnumCombinationFunctionDataSource}}" SelectedItem="{Binding Type}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Converter={StaticResource EnumCamelCaseConverter}}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
         </ComboBox>
         <TextBlock Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="5,0,0,0" Text="Remove missings:"/>
-        <CheckBox Grid.Row="0" Grid.Column="3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0" IsChecked="{Binding RemoveNa}"/>
+        <CheckBox Grid.Row="0" Grid.Column="3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0" IsChecked="{Binding RemoveNa}" IsEnabled="{Binding NaRemovalMakesSense}"/>
         <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,5,0,0" Grid.ColumnSpan="2" Text="Variables:"/>
         <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,5,0,0" x:Name="BorderVariables" VerticalAlignment="Stretch">
-            <ListBox ItemsSource="{Binding Variables}" DisplayMemberPath="Name" Height="{Binding ElementName=BorderVariables, Path=ActualHeight}" SelectionMode="Extended" MouseDoubleClick="ListBox_OnMouseDoubleClick" KeyUp="ListBox_KeyUp"/>
+            <ListBox ItemsSource="{Binding Variables}" DisplayMemberPath="Info" Height="{Binding ElementName=BorderVariables, Path=ActualHeight}" SelectionMode="Extended" MouseDoubleClick="ListBox_OnMouseDoubleClick" KeyUp="ListBox_KeyUp" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True"/>
         </Border>
     </Grid>
 </UserControl>

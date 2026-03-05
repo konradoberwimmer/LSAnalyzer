@@ -10,6 +10,7 @@
         xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
         xmlns:virtualVariableControls="clr-namespace:LSAnalyzer.Views.CustomControls.VirtualVariable"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewModels:VirtualVariables, IsDesignTimeCreatable=True}"
         Title="Virtual variables" Height="600" Width="1000" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen" Closing="Window_OnClosing" Closed="Window_OnClosed">
@@ -17,6 +18,7 @@
         <sys:Boolean x:Key="BooleanTrue">True</sys:Boolean>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <converter:DictionaryHasElementToBool x:Key="DictionaryHasElementToBoolConverter"/>
+        <converter:InverseBool x:Key="InverseBoolConverter"/>
         <converter:NullToBool x:Key="NullToBoolConverter"/>
         <converter:VirtualVariableTypeToName x:Key="VirtualVariableTypeToNameConverter"/>
         <Style x:Key="ComboBoxSelectOverlay" TargetType="TextBlock">
@@ -37,7 +39,17 @@
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
+    <Window.IsEnabled>
+        <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
+    </Window.IsEnabled>
     <Grid Margin="10">
+        <Grid.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="Show Labels" Click="ContextMenuShowLabels_Click" IsCheckable="True" IsChecked="True"/>
+                <Separator/>
+                <MenuItem Header="Sort alphabetically" IsCheckable="True" IsChecked="{Binding SortAlphabetically}"/>
+            </ContextMenu>
+        </Grid.ContextMenu>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
@@ -105,12 +117,19 @@
                         </ToolTipService.IsEnabled>
                     </TextBox>
                     <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,5,0,0" Text="Label:"/>
-                    <TextBox Grid.Row="1" Grid.Column="1" Margin="5,5,0,0" Width="240" HorizontalAlignment="Left" Text="{Binding SelectedVirtualVariable.Label, FallbackValue=newLabel, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Margin="5,5,0,0" Width="240" HorizontalAlignment="Left" Text="{Binding SelectedVirtualVariable.Label, FallbackValue=newLabel, UpdateSourceTrigger=PropertyChanged}">
+                        <ToolTipService.ToolTip>
+                            <TextBlock Text="{Binding SelectedVirtualVariable.Errors[Label], FallbackValue=...}" Foreground="Red"/>
+                        </ToolTipService.ToolTip>
+                        <ToolTipService.IsEnabled>
+                            <Binding Path="SelectedVirtualVariable.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Label"/>
+                        </ToolTipService.IsEnabled>
+                    </TextBox>
                     <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,5,0,0" Text="For dataset type:" VerticalAlignment="Center"/>
                     <CheckBox Grid.Row="2" Grid.Column="1" Margin="5,5,0,0" HorizontalAlignment="Left" IsChecked="{Binding SelectedIsForDatasetType}"></CheckBox>
                     <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,5,0,0" Text="Available variables:"/>
                     <Border x:Name="BorderAvailableVariables" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,5,0,0">
-                        <ListBox ItemsSource="{Binding AvailableVariables}" DisplayMemberPath="Info" Height="{Binding ElementName=BorderAvailableVariables, Path=ActualHeight}" Width="{Binding ElementName=BorderAvailableVariables, Path=ActualWidth}" MouseDoubleClick="ListBoxAvailableVariables_OnMouseDoubleClick" SelectionMode="Extended"/>
+                        <ListBox ItemsSource="{Binding AvailableVariables}" DisplayMemberPath="Info" Height="{Binding ElementName=BorderAvailableVariables, Path=ActualHeight}" Width="{Binding ElementName=BorderAvailableVariables, Path=ActualWidth}" ScrollViewer.CanContentScroll="False" MouseDoubleClick="ListBoxAvailableVariables_OnMouseDoubleClick" SelectionMode="Extended" dd:DragDrop.IsDragSource="True" dd:DragDrop.DragDropCopyKeyState="LeftMouseButton"/>
                     </Border>
                     <ContentControl Grid.Row="0" Grid.Column="2" Grid.RowSpan="5" HorizontalAlignment="Stretch" Margin="5,0,0,0" Validation.ErrorTemplate="{x:Null}" Content="{Binding SelectedVirtualVariable}">
                         <ContentControl.Resources>
@@ -144,5 +163,6 @@
                 <DataGrid Margin="0,5,0,0" Width="{Binding ElementName=BorderPreview, Path=ActualWidth}" ItemsSource="{Binding Preview}" AutoGenerateColumns="True" IsReadOnly="True"/>
             </Border>
         </Grid>
+        <fa:IconImage Grid.Column="0" Grid.ColumnSpan="2" Icon="Sun" fa:Awesome.Spin="True" VerticalAlignment="Center" Height="100" Foreground="Gray" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
     </Grid>
 </Window>

@@ -98,8 +98,29 @@ public partial class VirtualVariables : ObservableObject
     
     [ObservableProperty] 
     private DataView _preview = new();
+    
+    private bool _sortAlphabetically = false;
+    public bool SortAlphabetically
+    {
+        get => _sortAlphabetically;
+        set
+        {
+            if (value != _sortAlphabetically)
+            {
+                AvailableVariables = value ? 
+                    new ObservableCollection<Variable>(AvailableVariables.OrderBy(v => v.Name)) : 
+                    new ObservableCollection<Variable>(AvailableVariables.OrderBy(v => v.Position));
+            }
+            
+            _sortAlphabetically = value;
+            OnPropertyChanged();
+        }
+    }
 
     public bool HasChangedVirtualVariables { get; set; } = false;
+    
+    [ObservableProperty]
+    private bool _isBusy = false;
     
     [ExcludeFromCodeCoverage]
     public VirtualVariables()
@@ -207,6 +228,8 @@ public partial class VirtualVariables : ObservableObject
         
         Preview = DefaultDataView();
         
+        IsBusy = true;
+        
         if (!_rservice.CreateVirtualVariable(SelectedVirtualVariable,
                 AnalysisConfiguration?.DatasetType?.PVvarsList.ToList(), true))
         {
@@ -216,6 +239,8 @@ public partial class VirtualVariables : ObservableObject
 
         var (success, previewData) = _rservice.GetPreviewData();
 
+        IsBusy = false;
+        
         if (!success || previewData is null)
         {
             WeakReferenceMessenger.Default.Send(new PreviewImpossibleMessage());

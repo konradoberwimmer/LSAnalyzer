@@ -24,8 +24,12 @@ public partial class VirtualVariableCombine : VirtualVariable
     private CombinationFunction _type = CombinationFunction.Mean;
     partial void OnTypeChanged(CombinationFunction value)
     {
+        OnPropertyChanged(nameof(NaRemovalMakesSense));
         OnPropertyChanged(nameof(IsChanged));
     }
+
+    [JsonIgnore] 
+    public bool NaRemovalMakesSense => Type != CombinationFunction.FactorScores;
     
     [ObservableProperty]
     private bool _removeNa = true;

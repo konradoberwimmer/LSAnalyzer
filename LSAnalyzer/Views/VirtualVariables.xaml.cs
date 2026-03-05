@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Models;
 
@@ -11,6 +12,8 @@ namespace LSAnalyzer.Views;
 
 public partial class VirtualVariables : Window
 {
+    protected bool ShowLabels = true;
+    
     public VirtualVariables(ViewModels.VirtualVariables viewModel)
     {
         InitializeComponent();
@@ -26,6 +29,30 @@ public partial class VirtualVariables : Window
         {
             MessageBox.Show("Preview not possible - check your virtual variable definition!", "Preview not possible", MessageBoxButton.OK, MessageBoxImage.Information);
         });
+    }
+    
+    internal void ContextMenuShowLabels_Click(object sender, RoutedEventArgs e)
+    {
+        ShowLabels = !ShowLabels;
+
+        SetShowLabels(this);
+    }
+
+    internal void SetShowLabels(Visual visual)
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(visual); i++)
+        {
+            Visual childVisual = (Visual)VisualTreeHelper.GetChild(visual, i);
+
+            if (childVisual is ListBox listBox)
+            {
+                listBox.DisplayMemberPath = ShowLabels ? "Info" : "Name";
+            }
+            else
+            {
+                SetShowLabels(childVisual);
+            }
+        }
     }
 
     private void ComboBoxSelectedType_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -78,6 +105,7 @@ public partial class VirtualVariables : Window
             var confirmReload = MessageBox.Show("Do you want to reload the current dataset so that new or changed virtual variables take effect?", "Reload dataset", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (confirmReload == MessageBoxResult.Yes)
             {
+                viewModel.IsBusy = true;
                 WeakReferenceMessenger.Default.Send(new ReloadCurrentDatasetMessage());
             }
         }

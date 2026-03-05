@@ -22,6 +22,7 @@ public abstract partial class VirtualVariable : ObservableValidatorExtended, ICh
     }
     
     [ObservableProperty]
+    [RegularExpression("^[^\"'`´]*$", ErrorMessage = "The label must not contain any kind of quote character.")]
     private string _label = string.Empty;
     partial void OnLabelChanged(string value)
     {
