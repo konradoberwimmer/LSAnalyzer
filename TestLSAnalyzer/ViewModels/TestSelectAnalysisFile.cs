@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Services.Stubs;
 using Polly;
+using RDotNet;
 using Xunit.Sdk;
 
 namespace TestLSAnalyzer.ViewModels;
@@ -415,8 +416,49 @@ public class TestSelectAnalysisFile
 
         selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
         
-        Policy.Handle<TrueException>().WaitAndRetry(20, _ => TimeSpan.FromMilliseconds(100)).Execute(() => Assert.True(messageSent));
+        Policy.Handle<TrueException>().WaitAndRetry(30, _ => TimeSpan.FromMilliseconds(100)).Execute(() => Assert.True(messageSent));
         
         Assert.True(rservice.Execute("hasVariable <- 'xy' %in% lsanalyzer_dat_BO$variables$variable"));
+        Assert.True(rservice.Fetch("hasVariable").AsLogical().First());
+    }
+    
+    [Fact]
+    public void TestUseFileForAnalysisConvertsCharacterVectors()
+    {
+        DispatcherHelper.Initialize();
+
+        var configuration = new Mock<Configuration>();
+        configuration.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
+        configuration.Setup(conf => conf.GetDataProviderConfigurations()).Returns([]);
+        configuration.Setup(conf => conf.GetVirtualVariablesFor(It.IsAny<string>(),It.IsAny<DatasetType>())).Returns([]);
+        
+        Rservice rservice = new();
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+
+        SelectAnalysisFile selectAnalysisFileViewModel = new(configuration.Object, rservice, new ServiceCollection().BuildServiceProvider());
+        
+        selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_chr.csv");
+        selectAnalysisFileViewModel.SelectedDatasetType = new()
+        {
+            Id = 999991,
+            Name = "Test with NMI 10 and character vectors",
+            Weight = "wgt",
+            NMI = 10,
+            MIvar = "mi",
+            RepWgts = "repwgt",
+        };
+        selectAnalysisFileViewModel.SelectedAnalysisMode = SelectAnalysisFile.AnalysisModes.Keep;
+
+        var messageSent = false;
+        WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (_, _) => messageSent = true);
+
+        selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
+        
+        Policy.Handle<TrueException>().WaitAndRetry(30, _ => TimeSpan.FromMilliseconds(100)).Execute(() => Assert.True(messageSent));
+        
+        Assert.True(rservice.Execute("hasVariable <- 'chr' %in% lsanalyzer_dat_BO$variables$variable"));
+        Assert.True(rservice.Fetch("hasVariable").AsLogical().First());
+        Assert.True(rservice.Execute("countValues <- nrow(BIFIEsurvey::BIFIE.freq(lsanalyzer_dat_BO, vars = 'chr')$stat)"));
+        Assert.Equal(3, rservice.Fetch("countValues").AsNumeric().First());
     }
 }

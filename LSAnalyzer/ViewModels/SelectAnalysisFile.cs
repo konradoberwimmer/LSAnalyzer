@@ -616,19 +616,19 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
             IsBusy = false;
             return;
         }
+
+        if (ReplaceCharacterVectors && !_rservice.ReplaceCharacterVariables())
+        {
+            WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
+            IsBusy = false;
+            return;
+        }
         
         var virtualVariables = _configuration.GetVirtualVariablesFor(analysisConfiguration.FileNameWithoutPath!, analysisConfiguration.DatasetType!);
 
         var testAnalysisConfiguration = _rservice.TestAnalysisConfiguration(analysisConfiguration, virtualVariables);
 
         if (!testAnalysisConfiguration)
-        {
-            WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
-            IsBusy = false;
-            return;
-        }
-
-        if (ReplaceCharacterVectors && !_rservice.ReplaceCharacterVariables())
         {
             WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
             IsBusy = false;
