@@ -91,6 +91,9 @@
     <None Update="_testData\analyze_test_nmi10_multicat_v1_2.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="_testData\test_nmi10_chr.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
