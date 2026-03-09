@@ -562,7 +562,7 @@ namespace LSAnalyzer.Services
                         if (!pvvar.Mandatory)
                         {
                             var optionalPvvar = StringFormats.EncapsulateRegex(pvvar.Regex, autoEncapsulatePVvars)!;
-                            var optionalPvExists = EvaluateAndLog("any(grepl('" + optionalPvvar + "', colnames(lsanalyzer_dat_raw)))").AsLogical().First();
+                            var optionalPvExists = _engine?.Evaluate("any(grepl('" + optionalPvvar + "', colnames(lsanalyzer_dat_raw)))").AsLogical().First() ?? false;
 
                             if (optionalPvExists)
                             {
@@ -593,7 +593,7 @@ namespace LSAnalyzer.Services
                     return false;
                 }
 
-                foreach (var pvvar in pvvars ?? new Collection<PlausibleValueVariable>())
+                foreach (var pvvar in (pvvars ?? new Collection<PlausibleValueVariable>()).Where(pvvar => pvvar.Regex != pvvar.DisplayName))
                 {
                     EvaluateAndLog($"lsanalyzer_dat_BO$varnames[lsanalyzer_dat_BO$varnames == '{ pvvar.Regex }'] <- '{ pvvar.DisplayName }'");
                     EvaluateAndLog($"lsanalyzer_dat_BO$variables[lsanalyzer_dat_BO$variables$variable == '{ pvvar.Regex }', c('variable', 'variable_orig')] <- '{pvvar.DisplayName}'");

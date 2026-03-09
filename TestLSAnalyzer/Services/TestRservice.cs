@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.Messaging;
+using LSAnalyzer.Services.Stubs;
 
 namespace TestLSAnalyzer.Services
 {
@@ -1981,6 +1982,24 @@ namespace TestLSAnalyzer.Services
             var result2 = rservice.CalculateCorr(analysisCorr);
             Assert.NotNull(result2);
             Assert.NotEmpty(result2);
+        }
+        
+        [Fact]
+        public void TestCreateBIFIEdataObjectDoesRenamePvVars()
+        {
+            Logging logger = new();
+            
+            Rservice rservice = new(logger)
+            {
+                RLocation = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryService()).GetRLocation() ?? (string.Empty, string.Empty)
+            };
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav")));
+            
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, [ new PlausibleValueVariable { DisplayName = "x", Regex = "x", Mandatory = true }, new PlausibleValueVariable { DisplayName = "y", Regex = "y[0-9]+", Mandatory = true } ], "repwgt", 1.0));
+            
+            Assert.Contains("lsanalyzer_dat_BO$varnames[lsanalyzer_dat_BO$varnames == 'y[0-9]+'] <- 'y'", logger.GetRcode());
+            Assert.DoesNotContain("lsanalyzer_dat_BO$varnames[lsanalyzer_dat_BO$varnames == 'x'] <- 'x'", logger.GetRcode());
         }
         
         public static string AssemblyDirectory
