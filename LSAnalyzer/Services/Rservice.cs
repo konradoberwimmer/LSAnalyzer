@@ -1192,121 +1192,6 @@ namespace LSAnalyzer.Services
         {
             return CalculateRegression("BIFIE.logistreg", "R2", analysis);
         }
-
-        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false)
-        {
-            if (virtualVariable.FromPlausibleValues && pvVars is null) return false;
-            
-            return virtualVariable switch
-            {
-                VirtualVariableCombine { FromPlausibleValues: false } virtualVariableCombine => CreateVirtualVariableCombine(virtualVariableCombine, forPreview),
-                VirtualVariableCombine { FromPlausibleValues: true } virtualVariableCombine => CreateVirtualVariableCombineFromPVs(virtualVariableCombine, pvVars!, forPreview),
-                _ => throw new ArgumentOutOfRangeException(nameof(virtualVariable), virtualVariable, null)
-            };
-        }
-
-        public (bool success, DataTable? dataTable) GetPreviewData()
-        {
-            try
-            {
-                _engine?.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview[!duplicated(lsanalyzer_dat_raw_preview),]");
-                _engine?.Evaluate("if (nrow(lsanalyzer_dat_raw_preview_distinct) > 50) lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[1:50,]");
-
-                var previewData = Fetch("lsanalyzer_dat_raw_preview_distinct")?.AsDataFrame();
-                
-                return previewData is null ? (false, null) : (true, DataFrameToDataTable(previewData, "preview"));
-            }
-            catch
-            {
-                return (false, null);
-            }
-        }
-
-        private bool CreateVirtualVariableCombine(VirtualVariableCombine virtualVariableCombine, bool forPreview)
-        {
-            try
-            {
-                if (virtualVariableCombine.Variables.Count == 0) return false;
-
-                if (forPreview)
-                {
-                    var inputVariablesString = string.Join(", ", virtualVariableCombine.Variables.Select(v => "'" + v.Name + "'"));
-                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString})]");
-                }
-
-                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
-                
-                var nameExists = _engine?.Evaluate($"'{virtualVariableCombine.Name}' %in% colnames({target})").AsLogical().First() ?? true;
-                if (nameExists) return false;
-
-                var assignment = $"{target}[,'{virtualVariableCombine.Name}']";
-                
-                var baseCall = virtualVariableCombine.Type switch
-                {
-                    VirtualVariableCombine.CombinationFunction.Sum => "rowSums",
-                    VirtualVariableCombine.CombinationFunction.Mean => "rowMeans",
-                    VirtualVariableCombine.CombinationFunction.FactorScores => "lsanalyzer_func_factorScores",
-                    _ => throw new ArgumentOutOfRangeException(nameof(virtualVariableCombine), virtualVariableCombine.Type.ToString(), "not in enum")
-                };
-
-                var subset = $"subset({target}, select = c({string.Join(", ", virtualVariableCombine.Variables.ToList().ConvertAll(var => "'" + var.Name + "'"))}))";
-                var removeNa = virtualVariableCombine.RemoveNa ? "TRUE" : "FALSE";
-                
-                var fullCall = $"{assignment} <- {baseCall}({subset}, na.rm = {removeNa})";
-                
-                EvaluateAndLog(fullCall);
-
-                if (!string.IsNullOrWhiteSpace(virtualVariableCombine.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
-                {
-                    EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableCombine.Name}'] = '{virtualVariableCombine.Label}'");
-                }
-                
-                _lastVirtualVariableNames.Add(virtualVariableCombine.Name);
-                
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private bool CreateVirtualVariableCombineFromPVs(VirtualVariableCombine virtualVariableCombine, List<PlausibleValueVariable> pvVars, bool forPreview)
-        {
-            try
-            {
-                Dictionary<string, List<string>> pvVarsNames = [];
-                
-                foreach (var pvVar in pvVars.Where(pvVar => virtualVariableCombine.Variables.Any(var => var.Name == pvVar.DisplayName)))
-                {
-                    pvVarsNames.Add(pvVar.DisplayName, _engine?.Evaluate($"""grep("{pvVar.Regex}", colnames(lsanalyzer_dat_raw_stored), value = TRUE)""").AsCharacter().Order().ToList() ?? []);
-                }
-                
-                if (pvVarsNames.Count == 0) return false;
-
-                var numberOfImputations = pvVarsNames.First().Value.Count;
-                if (numberOfImputations == 0 || pvVarsNames.Any(entry => entry.Value.Count != numberOfImputations)) return false;
-
-                for (var imputation = 0; imputation < numberOfImputations; imputation++)
-                {
-                    var virtualVariableClone = (virtualVariableCombine.Clone() as VirtualVariableCombine)!;
-                    virtualVariableClone.Name = virtualVariableCombine.Name + "_" + (imputation + 1);
-                    
-                    foreach (var (name, varNames) in pvVarsNames)
-                    {
-                        virtualVariableClone.Variables.First(variable => variable.Name == name).Name = varNames[imputation];
-                    }
-
-                    if (!CreateVirtualVariableCombine(virtualVariableClone, forPreview)) return false;
-                }
-                
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
         
         private List<GenericVector>? CalculateRegression(string method, string r2parameter, AnalysisRegression analysis)
         {
@@ -1466,6 +1351,304 @@ namespace LSAnalyzer.Services
             catch
             {
                 return null;
+            }
+        }
+        
+        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false)
+        {
+            return virtualVariable switch
+            {
+                VirtualVariableCombine virtualVariableCombine => CreateVirtualVariableCombine(virtualVariableCombine, pvVars, forPreview),
+                VirtualVariableScale virtualVariableScale => CreateVirtualVariableScale(virtualVariableScale, pvVars, forPreview),
+                _ => throw new ArgumentOutOfRangeException(nameof(virtualVariable), virtualVariable, null)
+            };
+        }
+
+        private bool CreateVirtualVariableCombine(VirtualVariableCombine virtualVariableCombine, List<PlausibleValueVariable>? pvVars, bool forPreview)
+        {
+            try
+            {
+                if (!virtualVariableCombine.FromPlausibleValues)
+                {
+                    return ComputeVirtualVariableCombine(virtualVariableCombine, forPreview);
+                }
+
+                if (pvVars is null) return false;
+                
+                Dictionary<string, List<string>> pvVarsNames = [];
+                
+                foreach (var pvVar in pvVars.Where(pvVar => virtualVariableCombine.Variables.Any(var => var.Name == pvVar.DisplayName)))
+                {
+                    pvVarsNames.Add(pvVar.DisplayName, _engine?.Evaluate($"""grep("{pvVar.Regex}", colnames(lsanalyzer_dat_raw_stored), value = TRUE)""").AsCharacter().Order().ToList() ?? []);
+                }
+                
+                if (pvVarsNames.Count == 0) return false;
+
+                var numberOfImputations = pvVarsNames.First().Value.Count;
+                if (numberOfImputations == 0 || pvVarsNames.Any(entry => entry.Value.Count != numberOfImputations)) return false;
+
+                for (var imputation = 0; imputation < numberOfImputations; imputation++)
+                {
+                    var virtualVariableClone = (virtualVariableCombine.Clone() as VirtualVariableCombine)!;
+                    virtualVariableClone.Name = virtualVariableCombine.Name + "_" + (imputation + 1);
+                    
+                    foreach (var (name, varNames) in pvVarsNames)
+                    {
+                        virtualVariableClone.Variables.First(variable => variable.Name == name).Name = varNames[imputation];
+                    }
+
+                    if (!ComputeVirtualVariableCombine(virtualVariableClone, forPreview)) return false;
+                }
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool ComputeVirtualVariableCombine(VirtualVariableCombine virtualVariableCombine, bool forPreview)
+        {
+            try
+            {
+                if (virtualVariableCombine.Variables.Count == 0) return false;
+
+                if (forPreview)
+                {
+                    var inputVariablesString = string.Join(", ", virtualVariableCombine.Variables.Select(v => "'" + v.Name + "'"));
+                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString})]");
+                }
+
+                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
+                
+                var nameExists = _engine?.Evaluate($"'{virtualVariableCombine.Name}' %in% colnames({target})").AsLogical().First() ?? true;
+                if (nameExists) return false;
+
+                var assignment = $"{target}[,'{virtualVariableCombine.Name}']";
+                
+                var baseCall = virtualVariableCombine.Type switch
+                {
+                    VirtualVariableCombine.CombinationFunction.Sum => "rowSums",
+                    VirtualVariableCombine.CombinationFunction.Mean => "rowMeans",
+                    VirtualVariableCombine.CombinationFunction.FactorScores => "lsanalyzer_func_factorScores",
+                    _ => throw new ArgumentOutOfRangeException(nameof(virtualVariableCombine), virtualVariableCombine.Type.ToString(), "not in enum")
+                };
+
+                var subset = $"subset({target}, select = c({string.Join(", ", virtualVariableCombine.Variables.ToList().ConvertAll(var => "'" + var.Name + "'"))}))";
+                var removeNa = virtualVariableCombine.RemoveNa ? "TRUE" : "FALSE";
+                
+                var fullCall = $"{assignment} <- {baseCall}({subset}, na.rm = {removeNa})";
+                
+                EvaluateAndLog(fullCall);
+
+                if (!string.IsNullOrWhiteSpace(virtualVariableCombine.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
+                {
+                    EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableCombine.Name}'] = '{virtualVariableCombine.Label}'");
+                }
+                
+                _lastVirtualVariableNames.Add(virtualVariableCombine.Name);
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool CreateVirtualVariableScale(VirtualVariableScale virtualVariableScale, List<PlausibleValueVariable>? pvVars, bool forPreview)
+        {
+            try
+            {
+                if (virtualVariableScale.InputVariable is null) return false;
+                
+                if (!virtualVariableScale.FromPlausibleValues)
+                {
+                    return ComputeVirtualVariableScale(virtualVariableScale, forPreview);
+                }
+
+                var pvVar = pvVars?.FirstOrDefault(pvVar => pvVar.DisplayName == virtualVariableScale.InputVariable.Name);
+                if (pvVar is null) return false;
+                
+                var baseVariableNames = _engine?.Evaluate($"""grep("{pvVar.Regex}", colnames(lsanalyzer_dat_raw_stored), value = TRUE)""").AsCharacter().Order().ToList();
+                if (baseVariableNames is null || baseVariableNames.Count == 0) return false;
+                
+                for (var imputation = 0; imputation < baseVariableNames.Count; imputation++)
+                {
+                    var virtualVariableClone = (virtualVariableScale.Clone() as VirtualVariableScale)!;
+                    virtualVariableClone.Name = virtualVariableScale.Name + "_" + (imputation + 1);
+                    virtualVariableClone.InputVariable!.Name = baseVariableNames[imputation];
+                    
+                    if (!ComputeVirtualVariableScale(virtualVariableClone, forPreview)) return false;
+                }
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool ComputeVirtualVariableScale(VirtualVariableScale virtualVariableScale, bool forPreview)
+        {
+            try
+            {
+                if (virtualVariableScale.InputVariable is null || virtualVariableScale.WeightVariable is null) return false;
+
+                if (forPreview)
+                {
+                    var addMiVariableToPreview = virtualVariableScale.MiVariable is null
+                        ? string.Empty
+                        : $", '{virtualVariableScale.MiVariable.Name}'";
+                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c('{virtualVariableScale.InputVariable.Name}', '{virtualVariableScale.WeightVariable.Name}'{addMiVariableToPreview})]");
+                }
+
+                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
+                
+                var nameExists = _engine?.Evaluate($"'{virtualVariableScale.Name}' %in% colnames({target})").AsLogical().First() ?? true;
+                if (nameExists) return false;
+
+                switch (virtualVariableScale.Type)
+                {
+                    case VirtualVariableScale.ScaleType.Linear:
+                        if (!ComputeVirtualVariableScaleLinear(virtualVariableScale, forPreview)) return false;
+                        break;
+                    case VirtualVariableScale.ScaleType.Logarithmic:
+                        if (!ComputeVirtualVariableScaleLogarithmic(virtualVariableScale, forPreview)) return false;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool ComputeVirtualVariableScaleLinear(VirtualVariableScale virtualVariableScale, bool forPreview)
+        {
+            // uses stats::weighted.mean with na.rm = TRUE to get a mean (per MI)
+            // mimics Hmisc::wtd.var (5.2-4) with na.rm = TRUE to a get variance (per MI)
+            try
+            {
+                if (virtualVariableScale.InputVariable is null || virtualVariableScale.WeightVariable is null) return false;
+                
+                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
+                var inputVariable = virtualVariableScale.InputVariable.Name;
+                var weightVariable = virtualVariableScale.WeightVariable.Name;
+                
+                if (virtualVariableScale.MiVariable is null)
+                {
+                    var weightedMean = $"stats::weighted.mean({target}$`{inputVariable}`, w = {target}$`{weightVariable}`, na.rm = TRUE)";
+                    EvaluateAndLog($"{target}$lsanalyzer_tmp_mean <- {weightedMean}");
+
+                    var sumOfWeights = $"sum({target}$`{weightVariable}`[!is.na({target}$`{inputVariable}`)])";
+                    var weightedSd = $"sqrt(sum({target}$`{weightVariable}` * ({target}$`{inputVariable}` - {target}$lsanalyzer_tmp_mean) ^ 2.0, na.rm = TRUE) / ({sumOfWeights} - 1))";
+                    EvaluateAndLog($"{target}$lsanalyzer_tmp_sd <- {weightedSd}");
+                }
+                else
+                {
+                    var miVariable = virtualVariableScale.MiVariable.Name;
+                    var weightedMean = $"stats::weighted.mean(imp1$`{inputVariable}`, w = imp1$`{weightVariable}`, na.rm = TRUE)";
+                    var sumOfWeights = $"sum(imp1$`{weightVariable}`[!is.na(imp1$`{inputVariable}`)])";
+                    var weightedSd = $"sqrt(sum(imp1$`{weightVariable}` * (imp1$`{inputVariable}` - {weightedMean}) ^ 2.0, na.rm = TRUE) / ({sumOfWeights} - 1))";
+                    
+                    EvaluateAndLog($$"""lsanalyzer_tmp_means <- do.call('rbind', lapply(split({{target}}, {{target}}$`{{miVariable}}`), FUN = function(imp1) { return(data.frame(mi = unique(imp1$`{{miVariable}}`), lsanalyzer_tmp_mean = {{weightedMean}}, lsanalyzer_tmp_sd = {{weightedSd}})) }))""");
+                    EvaluateAndLog($"{target} <- merge({target}, lsanalyzer_tmp_means, by.x='{miVariable}', by.y='mi', all.x=TRUE)");
+                }
+
+                EvaluateAndLog($"{target}$`{virtualVariableScale.Name}` <- ({target}$`{inputVariable}` - {target}$lsanalyzer_tmp_mean) / {target}$lsanalyzer_tmp_sd * {virtualVariableScale.Sd.ToString(CultureInfo.InvariantCulture)} + {virtualVariableScale.Mean.ToString(CultureInfo.InvariantCulture)}");
+                
+                EvaluateAndLog($"{target}$lsanalyzer_tmp_mean <- NULL");
+                EvaluateAndLog($"{target}$lsanalyzer_tmp_sd <- NULL");
+
+                if (!string.IsNullOrWhiteSpace(virtualVariableScale.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
+                {
+                    EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableScale.Name}'] = '{virtualVariableScale.Label}'");
+                }
+                
+                _lastVirtualVariableNames.Add(virtualVariableScale.Name);
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool ComputeVirtualVariableScaleLogarithmic(VirtualVariableScale virtualVariableScale, bool forPreview)
+        {
+            try
+            {
+                if (virtualVariableScale.InputVariable is null || virtualVariableScale.LogBase <= 1.0) return false;
+
+                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
+                var inputVariable = virtualVariableScale.InputVariable.Name;
+                
+                if (!virtualVariableScale.Center)
+                {
+                    EvaluateAndLog($"{target}$`{virtualVariableScale.Name}` <- log({target}$`{inputVariable}`, base = {virtualVariableScale.LogBase.ToString(CultureInfo.InvariantCulture)})");
+                }
+                else
+                {
+                    if (virtualVariableScale.WeightVariable is null) return false;
+                    
+                    var weightVariable = virtualVariableScale.WeightVariable.Name;
+                    
+                    if (virtualVariableScale.MiVariable is null)
+                    {
+                        var weightedMean = $"stats::weighted.mean({target}$`{inputVariable}`, w = {target}$`{weightVariable}`, na.rm = TRUE)";
+                        EvaluateAndLog($"{target}$lsanalyzer_tmp_mean <- {weightedMean}");
+                    }
+                    else
+                    {
+                        var miVariable = virtualVariableScale.MiVariable.Name;
+                        var weightedMean = $"stats::weighted.mean(imp1$`{inputVariable}`, w = imp1$`{weightVariable}`, na.rm = TRUE)";
+                        
+                        EvaluateAndLog($$"""lsanalyzer_tmp_means <- do.call('rbind', lapply(split({{target}}, {{target}}$`{{miVariable}}`), FUN = function(imp1) { return(data.frame(mi = unique(imp1$`{{miVariable}}`), lsanalyzer_tmp_mean = {{weightedMean}})) }))""");
+                        EvaluateAndLog($"{target} <- merge({target}, lsanalyzer_tmp_means, by.x='{miVariable}', by.y='mi', all.x=TRUE)");
+                    }
+                    
+                    EvaluateAndLog($"{target}$`{virtualVariableScale.Name}` <- log({target}$`{inputVariable}` / {target}$lsanalyzer_tmp_mean, base = {virtualVariableScale.LogBase.ToString(CultureInfo.InvariantCulture)})");
+                    
+                    EvaluateAndLog($"{target}$lsanalyzer_tmp_mean <- NULL");
+                }
+
+                if (!string.IsNullOrWhiteSpace(virtualVariableScale.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
+                {
+                    EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableScale.Name}'] = '{virtualVariableScale.Label}'");
+                }
+                
+                _lastVirtualVariableNames.Add(virtualVariableScale.Name);
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        
+        public (bool success, DataTable? dataTable) GetPreviewData()
+        {
+            try
+            {
+                _engine?.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview[!duplicated(lsanalyzer_dat_raw_preview),]");
+                _engine?.Evaluate("if (nrow(lsanalyzer_dat_raw_preview_distinct) > 50) lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[1:50,]");
+
+                var previewData = Fetch("lsanalyzer_dat_raw_preview_distinct")?.AsDataFrame();
+                
+                return previewData is null ? (false, null) : (true, DataFrameToDataTable(previewData, "preview"));
+            }
+            catch
+            {
+                return (false, null);
             }
         }
 
