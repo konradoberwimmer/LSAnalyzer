@@ -15,6 +15,7 @@ public class WindowSettings
         { "LogistReg", (width: 800, height: 600) },
         { "BatchAnalyze", (width: 800, height: 600) },
         { "Subsetting", (width: 800, height: 450) },
+        { "VirtualVariables", (width: 1000, height: 600) },
     };
 
     public static int WidthUnivar
@@ -212,6 +213,28 @@ public class WindowSettings
             var currentSettings = _settings["Subsetting"];
             currentSettings.height = value;
             _settings["Subsetting"] = currentSettings;
+        }
+    }
+    
+    public static int WidthVirtualVariables
+    {
+        get => _settings["VirtualVariables"].width;
+        set
+        {
+            var currentSettings = _settings["VirtualVariables"];
+            currentSettings.width = value;
+            _settings["VirtualVariables"] = currentSettings;
+        }
+    }
+    
+    public static int HeightVirtualVariables
+    {
+        get => _settings["VirtualVariables"].height;
+        set
+        {
+            var currentSettings = _settings["VirtualVariables"];
+            currentSettings.height = value;
+            _settings["VirtualVariables"] = currentSettings;
         }
     }
 }

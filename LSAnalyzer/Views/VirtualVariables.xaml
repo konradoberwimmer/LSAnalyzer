@@ -13,7 +13,7 @@
         xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewModels:VirtualVariables, IsDesignTimeCreatable=True}"
-        Title="Virtual variables" Height="600" Width="1000" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen" Closing="Window_OnClosing" Closed="Window_OnClosed">
+        Title="Virtual variables" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen" Closing="Window_OnClosing" Closed="Window_OnClosed">
     <Window.Resources>
         <sys:Boolean x:Key="BooleanTrue">True</sys:Boolean>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
@@ -38,7 +38,14 @@
                 <fa:IconImage Icon="Star" Foreground="Black" Width="10" Visibility="{Binding IsChanged, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
             </StackPanel>
         </DataTemplate>
+        <local:WindowSettings x:Key="WindowSettings"/>
     </Window.Resources>
+    <Window.Width>
+        <Binding Source="{StaticResource WindowSettings}" Path="WidthVirtualVariables" Mode="TwoWay"/>
+    </Window.Width>
+    <Window.Height>
+        <Binding Source="{StaticResource WindowSettings}" Path="HeightVirtualVariables" Mode="TwoWay"/>
+    </Window.Height>
     <Window.IsEnabled>
         <Binding Path="IsBusy" Converter="{StaticResource InverseBoolConverter}"/>
     </Window.IsEnabled>
@@ -135,6 +142,9 @@
                         <ContentControl.Resources>
                             <DataTemplate DataType="{x:Type models:VirtualVariableCombine}">
                                 <virtualVariableControls:VirtualVariableCombine/>
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type models:VirtualVariableScale}">
+                                <virtualVariableControls:VirtualVariableScale/>
                             </DataTemplate>
                         </ContentControl.Resources>
                     </ContentControl>

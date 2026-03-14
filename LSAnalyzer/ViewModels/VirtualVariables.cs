@@ -67,7 +67,8 @@ public partial class VirtualVariables : ObservableObject
 
     [ObservableProperty] 
     private List<Type> _virtualVariableTypes = [
-        typeof(VirtualVariableCombine)
+        typeof(VirtualVariableCombine),
+        typeof(VirtualVariableScale)
     ];
     
     [ObservableProperty]
@@ -155,6 +156,17 @@ public partial class VirtualVariables : ObservableObject
         if (SelectedVirtualVariableType is null) return;
 
         if (Activator.CreateInstance(SelectedVirtualVariableType) is not VirtualVariable newVirtualVariable) return;
+
+        switch (newVirtualVariable)
+        {
+            case VirtualVariableScale virtualVariableScale:
+                if (AnalysisConfiguration?.DatasetType is null) break;
+                
+                var datasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, []) ?? [];
+                virtualVariableScale.WeightVariable = datasetVariables.FirstOrDefault(var => var.Name == AnalysisConfiguration.DatasetType.Weight)?.Clone();
+                virtualVariableScale.MiVariable = AnalysisConfiguration.DatasetType.MIvar is null ? null : datasetVariables.FirstOrDefault(var => var.Name == AnalysisConfiguration.DatasetType.MIvar)?.Clone();
+                break;
+        }
         
         CurrentVirtualVariables.Add(newVirtualVariable);
         
@@ -176,6 +188,9 @@ public partial class VirtualVariables : ObservableObject
                 {
                     virtualVariableCombine.Variables.Add(selectedVariable.Clone());
                 }
+                break;
+            case VirtualVariableScale virtualVariableScale:
+                virtualVariableScale.InputVariable = selectedAvailableVariables.First().Clone();
                 break;
             default:
                 throw new NotImplementedException();
@@ -234,6 +249,8 @@ public partial class VirtualVariables : ObservableObject
                 AnalysisConfiguration?.DatasetType?.PVvarsList.ToList(), true))
         {
             WeakReferenceMessenger.Default.Send(new PreviewImpossibleMessage());
+            
+            IsBusy = false;
             return;
         }
 

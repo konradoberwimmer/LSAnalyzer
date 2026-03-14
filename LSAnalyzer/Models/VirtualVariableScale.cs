@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LSAnalyzer.Helper;
@@ -18,8 +20,8 @@ public partial class VirtualVariableScale : VirtualVariable
         {
             var additionalInfo = Type switch
             {
-                ScaleType.Linear => $", mean = {Mean:#.##}, sd = {Sd:#.##}",
-                ScaleType.Logarithmic => $", logbase = {LogBase:#.##}, center = {(Center ? "T" : "F")}",
+                ScaleType.Linear => $", mean = {Mean.ToString("#.##", CultureInfo.InvariantCulture)}, sd = {Sd.ToString("#.##", CultureInfo.InvariantCulture)}",
+                ScaleType.Logarithmic => $", logbase = {LogBase.ToString("#.##", CultureInfo.InvariantCulture)}, center = {(Center ? "T" : "F")}",
                 _ => throw new ArgumentOutOfRangeException()
             };
             return $"{Type.ToString().ToLower()}({InputVariable?.Name ?? string.Empty}{additionalInfo})";
@@ -29,14 +31,15 @@ public partial class VirtualVariableScale : VirtualVariable
     public enum ScaleType
     {
         Linear,
-        Logarithmic,
-        Dichotomization
+        Logarithmic
     }
     
     [ObservableProperty]
     private ScaleType _type = ScaleType.Linear;
     partial void OnTypeChanged(ScaleType value)
     {
+        OnPropertyChanged(nameof(IsChanged));
+        
         OnPropertyChanged(nameof(MeanMakesSense));
         OnPropertyChanged(nameof(SdMakesSense));
         OnPropertyChanged(nameof(LogBaseMakesSense));
@@ -45,30 +48,52 @@ public partial class VirtualVariableScale : VirtualVariable
 
     [ObservableProperty] 
     private double _mean = 0.0;
+    partial void OnMeanChanged(double value)
+    {
+        OnPropertyChanged(nameof(IsChanged));
+    }
 
     [JsonIgnore]
     public bool MeanMakesSense => Type == ScaleType.Linear;
     
     [ObservableProperty]
     private double _sd = 1.0;
+    partial void OnSdChanged(double value)
+    {
+        OnPropertyChanged(nameof(IsChanged));
+    }
 
     [JsonIgnore]
     public bool SdMakesSense => Type == ScaleType.Linear;
 
     [ObservableProperty] 
+    [Range(1e-10, double.MaxValue)]
     private double _logBase = 10.0;
+    partial void OnLogBaseChanged(double value)
+    {
+        OnPropertyChanged(nameof(IsChanged));
+    }
     
     [JsonIgnore]
     public bool LogBaseMakesSense => Type == ScaleType.Logarithmic;
     
     [ObservableProperty]
     private bool _center = false;
+    partial void OnCenterChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsChanged));
+    }
 
     [JsonIgnore] 
     public bool CenterMakesSense => Type == ScaleType.Logarithmic;
     
-    [ObservableProperty] 
+    [ObservableProperty]
+    [Required]
     private Variable? _inputVariable;
+    partial void OnInputVariableChanged(Variable? value)
+    {
+        OnPropertyChanged(nameof(IsChanged));
+    }
 
     [ObservableProperty] 
     private Variable? _weightVariable;
