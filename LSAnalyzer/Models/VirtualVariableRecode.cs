@@ -1,0 +1,289 @@
+using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using System.Linq;
+using System.Text.Json.Serialization;
+using CommunityToolkit.Mvvm.ComponentModel;
+using LSAnalyzer.Helper;
+
+namespace LSAnalyzer.Models;
+
+public partial class VirtualVariableRecode : VirtualVariable
+{
+    public enum ElseAction
+    {
+        Copy,
+        SetNa,
+    }
+    
+    public override string TypeName => "Recode";
+
+    [ObservableProperty] 
+    private ObservableCollection<Variable> _variables;
+    partial void OnVariablesChanged(ObservableCollection<Variable> value)
+    {
+        Variables.CollectionChanged += delegate
+        {
+            if (Variables.Count != 1)
+            {
+                Else = ElseAction.SetNa;
+            }
+            
+            OnPropertyChanged(nameof(ElseCopyMakesSense));
+            OnPropertyChanged(nameof(IsChanged)); 
+        };
+        OnPropertyChanged(nameof(IsChanged)); 
+    }
+    
+    [ObservableProperty]
+    private ItemsChangeObservableCollection<Rule> _rules;
+    partial void OnRulesChanged(ItemsChangeObservableCollection<Rule> value)
+    {
+        Variables.CollectionChanged += delegate
+        {
+            OnPropertyChanged(nameof(IsChanged)); 
+        };
+        OnPropertyChanged(nameof(IsChanged));
+    }
+
+    [ObservableProperty]
+    private ElseAction _else = ElseAction.SetNa;
+
+    [JsonIgnore]
+    public bool ElseCopyMakesSense => Variables.Count == 1;
+
+    public override bool FromPlausibleValues => Variables.Any(var => var.FromPlausibleValues);
+
+    public override string Info
+    {
+        get
+        {
+            var variables = Variables.Count <= 1 ? Variables.FirstOrDefault()?.Name ?? string.Empty : $"[{string.Join(",", Variables.Select(var => var.Name).ToList())}]";
+            
+            var recodes = string.Join(";", Rules.Select(rule => rule.Info).ToList()) + $";else={(Else==ElseAction.Copy ? "copy" : "NA")}";
+            
+            return $"recode({variables}, '{recodes}')";
+        }
+    } 
+
+    private VirtualVariableRecode? _savedState = null;
+
+    public VirtualVariableRecode()
+    {
+        Variables = [];
+        Rules = [];
+    }
+    
+    public override VirtualVariable Clone()
+    {
+        return new VirtualVariableRecode
+        {
+            Name = Name,
+            Label = Label,
+            ForFileName = ForFileName,
+            ForDatasetTypeId = ForDatasetTypeId,
+            Variables = [..Variables.Select(variable => variable.Clone()).ToList()],
+            Rules = [..Rules.Select(rule => (rule.Clone() as Rule)!).ToList()],
+            Else = Else,
+        };
+    }
+
+    public override void AcceptChanges()
+    {
+        _savedState = new VirtualVariableRecode
+        {
+            Id = Id,
+            Name = Name,
+            Label = Label,
+            ForFileName = ForFileName,
+            ForDatasetTypeId = ForDatasetTypeId,
+            Variables = [..Variables.Select(variable => variable.Clone()).ToList()],
+            Rules = [..Rules.Select(rule => (rule.Clone() as Rule)!).ToList()],
+            Else = Else,
+        };
+        OnPropertyChanged(nameof(IsChanged));
+    }
+
+    [JsonIgnore]
+    public override bool IsChanged
+    {
+        get
+        {
+            OnPropertyChanged(nameof(Info));
+
+            if (_savedState is null) return true;
+
+            return !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, ["IsChanged", "Errors", "Variables", "Rules"]) ||
+                   !Variables.ElementObjectsEqual(_savedState.Variables) ||
+                   !Rules.ElementObjectsEqual(_savedState.Rules, ["Errors", "Criteria"]) ||
+                   !Rules.Index().All(tupleRule => tupleRule.Item.Criteria.ElementObjectsEqual(_savedState.Rules[tupleRule.Index].Criteria, ["Errors"]));
+        }
+    }
+
+    public void AddVariable(Variable variable)
+    {
+        foreach (var rule in Rules)
+        {
+            rule.Criteria.Add(new Term { VariableIndex = Variables.Count });
+        }
+        
+        Variables.Add(variable);
+    }
+
+    public void RemoveLastVariable()
+    {
+        if (Variables.Count == 0) return;
+
+        foreach (var rule in Rules)
+        {
+            rule.Criteria.Remove(rule.Criteria.Last());
+        }
+        
+        Variables.Remove(Variables.Last());
+
+        if (Variables.Count == 0)
+        {
+            Rules.Clear();
+        }
+    }
+
+    public void AddRule()
+    {
+        Rule rule = new();
+
+        for (var i = 0; i < Variables.Count; i++)
+        {
+            rule.Criteria.Add(new Term { VariableIndex = i });
+        }
+        
+        Rules.Add(rule);
+    }
+    
+    public bool ValidateDeep()
+    {
+        var validVirtualVariable = Validate();
+
+        var validRules = true;
+        foreach (var rule in Rules)
+        {
+            validRules = validRules && rule.ValidateDeep();
+        }
+
+        return validVirtualVariable && validRules;
+    }
+
+    public partial class Term : ObservableValidatorExtended, ICloneable
+    {
+        public enum TermType
+        {
+            IsNa,
+            IsExactly,
+            IsBetween,
+        }
+        
+        public int VariableIndex { get; set; } = -1;
+        
+        [ObservableProperty]
+        private TermType _type = TermType.IsExactly;
+        partial void OnTypeChanged(TermType value)
+        {
+            OnPropertyChanged(nameof(ValueMakesSense));
+            OnPropertyChanged(nameof(MaxValueMakesSense));
+        }
+
+        [ObservableProperty] 
+        private double _value = 0.0;
+
+        [JsonIgnore]
+        public bool ValueMakesSense => Type != TermType.IsNa;
+
+        [ObservableProperty] 
+        private double _maxValue = 1.0;
+        
+        [JsonIgnore]
+        public bool MaxValueMakesSense => Type == TermType.IsBetween;
+
+        [JsonIgnore]
+        public string Info
+        {
+            get
+            {
+                return Type switch
+                {
+                    TermType.IsNa => "NA",
+                    TermType.IsExactly => Value.ToString(CultureInfo.InvariantCulture),
+                    TermType.IsBetween => $"{Value.ToString(CultureInfo.InvariantCulture)}-{MaxValue.ToString(CultureInfo.InvariantCulture)}",
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            }
+        }
+
+        public object Clone()
+        {
+            return new Term
+            {
+                VariableIndex = VariableIndex,
+                Type = Type,
+                Value = Value,
+                MaxValue = MaxValue,
+            };
+        }
+    }
+    
+    public partial class Rule : ObservableValidatorExtended, ICloneable
+    {
+        [ObservableProperty] 
+        [MinLength(1)]
+        private ItemsChangeObservableCollection<Term> _criteria = [];
+
+        [ObservableProperty] 
+        private bool _resultNa = false;
+        partial void OnResultNaChanged(bool value)
+        {
+            OnPropertyChanged(nameof(ResultValueMakesSense));
+        }
+
+        [ObservableProperty] 
+        private double _resultValue = 0.0;
+
+        [JsonIgnore]
+        public bool ResultValueMakesSense => !ResultNa;
+
+        [JsonIgnore]
+        public string Info
+        {
+            get
+            {
+                var criteria = Criteria.Count <= 1 ? Criteria.FirstOrDefault()?.Info : $"[{string.Join(",", Criteria.Select(crit => crit.Info).ToList())}]";
+
+                var result = $"{(ResultNa ? "NA" : ResultValue.ToString(CultureInfo.InvariantCulture))}";
+
+                return $"{criteria}={result}";
+            }
+        }
+        
+        public object Clone()
+        {
+            return new Rule
+            {
+                Criteria = [..Criteria.Select(criterion => (criterion.Clone() as Term)!).ToList()],
+                ResultNa = ResultNa,
+                ResultValue = ResultValue,
+            };
+        }
+
+        public bool ValidateDeep()
+        {
+            var validRule = Validate();
+
+            var validCriteria = true;
+            foreach (var criterion in Criteria)
+            {
+                validRule = validRule && criterion.Validate();
+            }
+            
+            return validRule && validCriteria;
+        }
+    }
+}

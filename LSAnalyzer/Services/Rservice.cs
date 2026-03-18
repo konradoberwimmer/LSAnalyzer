@@ -1360,6 +1360,7 @@ namespace LSAnalyzer.Services
             {
                 VirtualVariableCombine virtualVariableCombine => CreateVirtualVariableCombine(virtualVariableCombine, pvVars, forPreview),
                 VirtualVariableScale virtualVariableScale => CreateVirtualVariableScale(virtualVariableScale, pvVars, forPreview),
+                VirtualVariableRecode virtualVariableRecode => CreateVirtualVariableRecode(virtualVariableRecode, pvVars, forPreview),
                 _ => throw new ArgumentOutOfRangeException(nameof(virtualVariable), virtualVariable, null)
             };
         }
@@ -1417,7 +1418,7 @@ namespace LSAnalyzer.Services
                 if (forPreview)
                 {
                     var inputVariablesString = string.Join(", ", virtualVariableCombine.Variables.Select(v => "'" + v.Name + "'"));
-                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString})]");
+                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString}),drop=FALSE]");
                 }
 
                 var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
@@ -1502,7 +1503,7 @@ namespace LSAnalyzer.Services
                     var addMiVariableToPreview = virtualVariableScale.MiVariable is null
                         ? string.Empty
                         : $", '{virtualVariableScale.MiVariable.Name}'";
-                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c('{virtualVariableScale.InputVariable.Name}', '{virtualVariableScale.WeightVariable.Name}'{addMiVariableToPreview})]");
+                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c('{virtualVariableScale.InputVariable.Name}', '{virtualVariableScale.WeightVariable.Name}'{addMiVariableToPreview}),drop=FALSE]");
                 }
 
                 var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
@@ -1626,6 +1627,117 @@ namespace LSAnalyzer.Services
                 }
                 
                 _lastVirtualVariableNames.Add(virtualVariableScale.Name);
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        
+        private bool CreateVirtualVariableRecode(VirtualVariableRecode virtualVariableRecode, List<PlausibleValueVariable>? pvVars, bool forPreview)
+        {
+            try
+            {
+                if (!virtualVariableRecode.FromPlausibleValues)
+                {
+                    return ComputeVirtualVariableRecode(virtualVariableRecode, forPreview);
+                }
+
+                if (pvVars is null) return false;
+                
+                Dictionary<string, List<string>> pvVarsNames = [];
+                
+                foreach (var pvVar in pvVars.Where(pvVar => virtualVariableRecode.Variables.Any(var => var.Name == pvVar.DisplayName)))
+                {
+                    pvVarsNames.Add(pvVar.DisplayName, _engine?.Evaluate($"""grep("{pvVar.Regex}", colnames(lsanalyzer_dat_raw_stored), value = TRUE)""").AsCharacter().Order().ToList() ?? []);
+                }
+                
+                if (pvVarsNames.Count == 0) return false;
+
+                var numberOfImputations = pvVarsNames.First().Value.Count;
+                if (numberOfImputations == 0 || pvVarsNames.Any(entry => entry.Value.Count != numberOfImputations)) return false;
+
+                for (var imputation = 0; imputation < numberOfImputations; imputation++)
+                {
+                    var virtualVariableClone = (virtualVariableRecode.Clone() as VirtualVariableRecode)!;
+                    virtualVariableClone.Name = virtualVariableRecode.Name + "_" + (imputation + 1);
+                    
+                    foreach (var (name, varNames) in pvVarsNames)
+                    {
+                        virtualVariableClone.Variables.First(variable => variable.Name == name).Name = varNames[imputation];
+                    }
+
+                    if (!ComputeVirtualVariableRecode(virtualVariableClone, forPreview)) return false;
+                }
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool ComputeVirtualVariableRecode(VirtualVariableRecode virtualVariableRecode, bool forPreview)
+        {
+            try
+            {
+                if (forPreview)
+                {
+                    if (virtualVariableRecode.Variables.Count > 0)
+                    {
+                        var inputVariablesString = string.Join(", ", virtualVariableRecode.Variables.Select(v => "'" + v.Name + "'"));
+                        EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString}),drop=FALSE]");
+                    }
+                    else
+                    {
+                        EvaluateAndLog($"lsanalyzer_dat_raw_preview <- data.frame(Input = numeric(nrow(lsanalyzer_dat_raw_stored)))");
+                    }
+                }
+                
+                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
+                
+                var nameExists = _engine?.Evaluate($"'{virtualVariableRecode.Name}' %in% colnames({target})").AsLogical().First() ?? true;
+                if (nameExists) return false;
+                
+                if (virtualVariableRecode is { Else: VirtualVariableRecode.ElseAction.Copy, Variables.Count: 0 }) return false;
+                var elseResult = virtualVariableRecode.Else == VirtualVariableRecode.ElseAction.SetNa ? "as.numeric(NA)" : $"{target}$`{virtualVariableRecode.Variables.First().Name}`";
+
+                EvaluateAndLog($"{target}$`{virtualVariableRecode.Name}` <- {elseResult}");
+
+                foreach (var rule in virtualVariableRecode.Rules)
+                {
+                    var criteria = rule.Criteria.Select(crit =>
+                    {
+                        var variable = $"{target}$`{virtualVariableRecode.Variables[crit.VariableIndex].Name}`";
+                        var value = $"{crit.Value.ToString(CultureInfo.InvariantCulture)}";
+                        var maxValue = $"{crit.MaxValue.ToString(CultureInfo.InvariantCulture)}";
+                        
+                        return crit.Type switch
+                        {
+                            VirtualVariableRecode.Term.TermType.IsNa => $"is.na({variable})",
+                            VirtualVariableRecode.Term.TermType.IsExactly => $"{variable} == {value}",
+                            VirtualVariableRecode.Term.TermType.IsBetween => $"{variable} >= {value} & {variable} <= {maxValue}",
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
+                    }).ToList();
+
+                    EvaluateAndLog($"lsanalyzer_tmp_filter <- {string.Join(" & ", criteria)}");
+                    EvaluateAndLog("lsanalyzer_tmp_filter[is.na(lsanalyzer_tmp_filter)] <- FALSE");
+
+                    var result = rule.ResultNa ? "NA" : rule.ResultValue.ToString(CultureInfo.InvariantCulture);
+                    
+                    EvaluateAndLog($"{target}$`{virtualVariableRecode.Name}`[lsanalyzer_tmp_filter] <- {result}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(virtualVariableRecode.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
+                {
+                    EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableRecode.Name}'] = '{virtualVariableRecode.Label}'");
+                }
+                
+                _lastVirtualVariableNames.Add(virtualVariableRecode.Name);
                 
                 return true;
             }
