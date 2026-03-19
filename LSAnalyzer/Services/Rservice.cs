@@ -1703,7 +1703,7 @@ namespace LSAnalyzer.Services
                 if (nameExists) return false;
                 
                 if (virtualVariableRecode is { Else: VirtualVariableRecode.ElseAction.Copy, Variables.Count: 0 }) return false;
-                var elseResult = virtualVariableRecode.Else == VirtualVariableRecode.ElseAction.SetNa ? "as.numeric(NA)" : $"{target}$`{virtualVariableRecode.Variables.First().Name}`";
+                var elseResult = virtualVariableRecode.Else == VirtualVariableRecode.ElseAction.Missing ? "as.numeric(NA)" : $"{target}$`{virtualVariableRecode.Variables.First().Name}`";
 
                 EvaluateAndLog($"{target}$`{virtualVariableRecode.Name}` <- {elseResult}");
 
@@ -1717,9 +1717,9 @@ namespace LSAnalyzer.Services
                         
                         return crit.Type switch
                         {
-                            VirtualVariableRecode.Term.TermType.IsNa => $"is.na({variable})",
-                            VirtualVariableRecode.Term.TermType.IsExactly => $"{variable} == {value}",
-                            VirtualVariableRecode.Term.TermType.IsBetween => $"{variable} >= {value} & {variable} <= {maxValue}",
+                            VirtualVariableRecode.Term.TermType.Missing => $"is.na({variable})",
+                            VirtualVariableRecode.Term.TermType.Exactly => $"{variable} == {value}",
+                            VirtualVariableRecode.Term.TermType.Between => $"{variable} >= {value} & {variable} <= {maxValue}",
                             _ => throw new ArgumentOutOfRangeException()
                         };
                     }).ToList();
@@ -1753,6 +1753,7 @@ namespace LSAnalyzer.Services
             {
                 _engine?.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview[!duplicated(lsanalyzer_dat_raw_preview),]");
                 _engine?.Evaluate("if (nrow(lsanalyzer_dat_raw_preview_distinct) > 50) lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[1:50,]");
+                _engine?.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[do.call(order, lsanalyzer_dat_raw_preview_distinct),]");
 
                 var previewData = Fetch("lsanalyzer_dat_raw_preview_distinct")?.AsDataFrame();
                 

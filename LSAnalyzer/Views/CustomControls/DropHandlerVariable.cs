@@ -8,7 +8,7 @@ using LSAnalyzer.Models;
 
 namespace LSAnalyzer.Views.CustomControls;
 
-public class DropHandlerVariableTextBox : IDropTarget
+public class DropHandlerVariable : IDropTarget
 {
     public void DragOver(IDropInfo dropInfo)
     {
@@ -28,6 +28,9 @@ public class DropHandlerVariableTextBox : IDropTarget
         {
             case VirtualVariableScale virtualVariableScale:
                 virtualVariableScale.InputVariable = variable.Clone();
+                break;
+            case VirtualVariableRecode virtualVariableRecode:
+                virtualVariableRecode.AddVariable(variable.Clone());
                 break;
             default:
                 throw new NotImplementedException();

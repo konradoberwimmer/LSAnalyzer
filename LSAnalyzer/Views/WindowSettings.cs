@@ -15,7 +15,7 @@ public class WindowSettings
         { "LogistReg", (width: 800, height: 600) },
         { "BatchAnalyze", (width: 800, height: 600) },
         { "Subsetting", (width: 800, height: 450) },
-        { "VirtualVariables", (width: 1000, height: 600) },
+        { "VirtualVariables", (width: 1200, height: 600) },
     };
 
     public static int WidthUnivar

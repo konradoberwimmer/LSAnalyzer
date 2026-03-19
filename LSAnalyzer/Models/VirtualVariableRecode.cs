@@ -14,7 +14,7 @@ public partial class VirtualVariableRecode : VirtualVariable
     public enum ElseAction
     {
         Copy,
-        SetNa,
+        Missing,
     }
     
     public override string TypeName => "Recode";
@@ -27,12 +27,17 @@ public partial class VirtualVariableRecode : VirtualVariable
         {
             if (Variables.Count != 1)
             {
-                Else = ElseAction.SetNa;
+                Else = ElseAction.Missing;
             }
             
+            OnPropertyChanged(nameof(CanAddRule));
+            OnPropertyChanged(nameof(CannotAddRule));
             OnPropertyChanged(nameof(ElseCopyMakesSense));
             OnPropertyChanged(nameof(IsChanged)); 
         };
+        OnPropertyChanged(nameof(CanAddRule));
+        OnPropertyChanged(nameof(CannotAddRule));
+        OnPropertyChanged(nameof(ElseCopyMakesSense));
         OnPropertyChanged(nameof(IsChanged)); 
     }
     
@@ -40,15 +45,25 @@ public partial class VirtualVariableRecode : VirtualVariable
     private ItemsChangeObservableCollection<Rule> _rules;
     partial void OnRulesChanged(ItemsChangeObservableCollection<Rule> value)
     {
-        Variables.CollectionChanged += delegate
+        Rules.CollectionChanged += delegate
         {
             OnPropertyChanged(nameof(IsChanged)); 
         };
         OnPropertyChanged(nameof(IsChanged));
     }
 
+    [JsonIgnore] 
+    public bool CanAddRule => Variables.Count > 0;
+    
+    [JsonIgnore] 
+    public bool CannotAddRule => Variables.Count == 0;
+    
     [ObservableProperty]
-    private ElseAction _else = ElseAction.SetNa;
+    private ElseAction _else = ElseAction.Missing;
+    partial void OnElseChanged(ElseAction value)
+    {
+        OnPropertyChanged(nameof(IsChanged));
+    }
 
     [JsonIgnore]
     public bool ElseCopyMakesSense => Variables.Count == 1;
@@ -59,11 +74,17 @@ public partial class VirtualVariableRecode : VirtualVariable
     {
         get
         {
-            var variables = Variables.Count <= 1 ? Variables.FirstOrDefault()?.Name ?? string.Empty : $"[{string.Join(",", Variables.Select(var => var.Name).ToList())}]";
+            var variables = Variables.Count switch
+            {
+                0 => string.Empty,
+                1 => Variables.FirstOrDefault()?.Name + ", ",
+                >= 2 => $"[{string.Join(",", Variables.Select(var => var.Name).ToList())}], ",
+                _ => throw new ArgumentOutOfRangeException()
+            };
             
-            var recodes = string.Join(";", Rules.Select(rule => rule.Info).ToList()) + $";else={(Else==ElseAction.Copy ? "copy" : "NA")}";
+            var recodes = string.Join(";", Rules.Select(rule => rule.Info).ToList().Append($"else={(Else==ElseAction.Copy ? "copy" : "NA")}"));
             
-            return $"recode({variables}, '{recodes}')";
+            return $"recode({variables}'{recodes}')";
         }
     } 
 
@@ -150,6 +171,8 @@ public partial class VirtualVariableRecode : VirtualVariable
 
     public void AddRule()
     {
+        if (Variables.Count == 0) return;
+        
         Rule rule = new();
 
         for (var i = 0; i < Variables.Count; i++)
@@ -177,15 +200,15 @@ public partial class VirtualVariableRecode : VirtualVariable
     {
         public enum TermType
         {
-            IsNa,
-            IsExactly,
-            IsBetween,
+            Missing,
+            Exactly,
+            Between,
         }
         
         public int VariableIndex { get; set; } = -1;
         
         [ObservableProperty]
-        private TermType _type = TermType.IsExactly;
+        private TermType _type = TermType.Exactly;
         partial void OnTypeChanged(TermType value)
         {
             OnPropertyChanged(nameof(ValueMakesSense));
@@ -196,13 +219,13 @@ public partial class VirtualVariableRecode : VirtualVariable
         private double _value = 0.0;
 
         [JsonIgnore]
-        public bool ValueMakesSense => Type != TermType.IsNa;
+        public bool ValueMakesSense => Type != TermType.Missing;
 
         [ObservableProperty] 
         private double _maxValue = 1.0;
         
         [JsonIgnore]
-        public bool MaxValueMakesSense => Type == TermType.IsBetween;
+        public bool MaxValueMakesSense => Type == TermType.Between;
 
         [JsonIgnore]
         public string Info
@@ -211,9 +234,9 @@ public partial class VirtualVariableRecode : VirtualVariable
             {
                 return Type switch
                 {
-                    TermType.IsNa => "NA",
-                    TermType.IsExactly => Value.ToString(CultureInfo.InvariantCulture),
-                    TermType.IsBetween => $"{Value.ToString(CultureInfo.InvariantCulture)}-{MaxValue.ToString(CultureInfo.InvariantCulture)}",
+                    TermType.Missing => "NA",
+                    TermType.Exactly => Value.ToString("0.##", CultureInfo.InvariantCulture),
+                    TermType.Between => $"{Value.ToString("0.##", CultureInfo.InvariantCulture)}-{MaxValue.ToString("0.##", CultureInfo.InvariantCulture)}",
                     _ => throw new ArgumentOutOfRangeException()
                 };
             }
@@ -257,7 +280,7 @@ public partial class VirtualVariableRecode : VirtualVariable
             {
                 var criteria = Criteria.Count <= 1 ? Criteria.FirstOrDefault()?.Info : $"[{string.Join(",", Criteria.Select(crit => crit.Info).ToList())}]";
 
-                var result = $"{(ResultNa ? "NA" : ResultValue.ToString(CultureInfo.InvariantCulture))}";
+                var result = $"{(ResultNa ? "NA" : ResultValue.ToString("0.##", CultureInfo.InvariantCulture))}";
 
                 return $"{criteria}={result}";
             }

@@ -13,7 +13,7 @@
         xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewModels:VirtualVariables, IsDesignTimeCreatable=True}"
-        Title="Virtual variables" MinHeight="600" MinWidth="800" WindowStartupLocation="CenterScreen" Closing="Window_OnClosing" Closed="Window_OnClosed">
+        Title="Virtual variables" MinHeight="600" MinWidth="1000" WindowStartupLocation="CenterScreen" Closing="Window_OnClosing" Closed="Window_OnClosed">
     <Window.Resources>
         <sys:Boolean x:Key="BooleanTrue">True</sys:Boolean>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
@@ -58,7 +58,7 @@
             </ContextMenu>
         </Grid.ContextMenu>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="950"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0">
@@ -145,6 +145,9 @@
                             </DataTemplate>
                             <DataTemplate DataType="{x:Type models:VirtualVariableScale}">
                                 <virtualVariableControls:VirtualVariableScale/>
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type models:VirtualVariableRecode}">
+                                <virtualVariableControls:VirtualVariableRecode/>
                             </DataTemplate>
                         </ContentControl.Resources>
                     </ContentControl>

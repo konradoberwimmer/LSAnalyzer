@@ -15,7 +15,7 @@ public class TestVirtualVariableRecode
 
         virtualVariableRecode.AddVariable(new Variable(2, "item2"));
         
-        Assert.Equal(VirtualVariableRecode.ElseAction.SetNa, virtualVariableRecode.Else);
+        Assert.Equal(VirtualVariableRecode.ElseAction.Missing, virtualVariableRecode.Else);
         Assert.False(virtualVariableRecode.ElseCopyMakesSense);
         
         virtualVariableRecode.AddRule();
@@ -53,7 +53,7 @@ public class TestVirtualVariableRecode
         
         virtualVariableRecodeDeserialized.AddVariable(new Variable(2, "item2"));
         
-        Assert.Equal(VirtualVariableRecode.ElseAction.SetNa, virtualVariableRecodeDeserialized.Else);
+        Assert.Equal(VirtualVariableRecode.ElseAction.Missing, virtualVariableRecodeDeserialized.Else);
         Assert.False(virtualVariableRecodeDeserialized.ElseCopyMakesSense);
         
         virtualVariableRecodeDeserialized.AddRule();
@@ -80,8 +80,8 @@ public class TestVirtualVariableRecode
         
         Assert.Equal("recode([item1,item2], '[0,0]=0;else=NA')", virtualVariableRecode.Info);
 
-        virtualVariableRecode.Rules.First().Criteria.First().Type = VirtualVariableRecode.Term.TermType.IsNa;
-        virtualVariableRecode.Rules.First().Criteria.Last().Type = VirtualVariableRecode.Term.TermType.IsBetween;
+        virtualVariableRecode.Rules.First().Criteria.First().Type = VirtualVariableRecode.Term.TermType.Missing;
+        virtualVariableRecode.Rules.First().Criteria.Last().Type = VirtualVariableRecode.Term.TermType.Between;
         virtualVariableRecode.Rules.First().Criteria.Last().Value = 1.0;
         virtualVariableRecode.Rules.First().Criteria.Last().MaxValue = 2.0;
         virtualVariableRecode.Rules.First().ResultNa = true;
@@ -124,13 +124,13 @@ public class TestVirtualVariableRecode
         virtualVariableRecode.AcceptChanges();
         Assert.False(virtualVariableRecode.IsChanged);
         
-        virtualVariableRecode.Rules.First().Criteria.First().Type = VirtualVariableRecode.Term.TermType.IsNa;
+        virtualVariableRecode.Rules.First().Criteria.First().Type = VirtualVariableRecode.Term.TermType.Missing;
         
         Assert.True(virtualVariableRecode.IsChanged);
         virtualVariableRecode.AcceptChanges();
         Assert.False(virtualVariableRecode.IsChanged);
         
-        virtualVariableRecode.Rules.First().Criteria.Last().Type = VirtualVariableRecode.Term.TermType.IsBetween;
+        virtualVariableRecode.Rules.First().Criteria.Last().Type = VirtualVariableRecode.Term.TermType.Between;
         
         Assert.True(virtualVariableRecode.IsChanged);
         virtualVariableRecode.AcceptChanges();
@@ -190,8 +190,8 @@ public class TestVirtualVariableRecode
         
         Assert.True(virtualVariableRecode.ValidateDeep());
         
-        virtualVariableRecode.Rules.First().Criteria.First().Type = VirtualVariableRecode.Term.TermType.IsNa;
-        virtualVariableRecode.Rules.First().Criteria.Last().Type = VirtualVariableRecode.Term.TermType.IsBetween;
+        virtualVariableRecode.Rules.First().Criteria.First().Type = VirtualVariableRecode.Term.TermType.Missing;
+        virtualVariableRecode.Rules.First().Criteria.Last().Type = VirtualVariableRecode.Term.TermType.Between;
         
         Assert.True(virtualVariableRecode.ValidateDeep());
         

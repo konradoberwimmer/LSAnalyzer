@@ -20,8 +20,8 @@ public partial class VirtualVariableScale : VirtualVariable
         {
             var additionalInfo = Type switch
             {
-                ScaleType.Linear => $", mean = {Mean.ToString("#.##", CultureInfo.InvariantCulture)}, sd = {Sd.ToString("#.##", CultureInfo.InvariantCulture)}",
-                ScaleType.Logarithmic => $", logbase = {LogBase.ToString("#.##", CultureInfo.InvariantCulture)}, center = {(Center ? "T" : "F")}",
+                ScaleType.Linear => $", mean = {Mean.ToString("0.##", CultureInfo.InvariantCulture)}, sd = {Sd.ToString("0.##", CultureInfo.InvariantCulture)}",
+                ScaleType.Logarithmic => $", logbase = {LogBase.ToString("0.##", CultureInfo.InvariantCulture)}, center = {(Center ? "T" : "F")}",
                 _ => throw new ArgumentOutOfRangeException()
             };
             return $"{Type.ToString().ToLower()}({InputVariable?.Name ?? string.Empty}{additionalInfo})";

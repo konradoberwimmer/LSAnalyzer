@@ -14,7 +14,7 @@
              d:DataContext="{d:DesignInstance Type=models:VirtualVariableScale, IsDesignTimeCreatable=True}"
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
-        <customControls:DropHandlerVariableTextBox x:Key="DropHandlerVariableTextBox"/>
+        <customControls:DropHandlerVariable x:Key="DropHandlerVariable"/>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <sys:Boolean x:Key="BooleanTrue">True</sys:Boolean>
         <ObjectDataProvider x:Key="EnumScaleTypeDataSource"
@@ -38,7 +38,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Variable:"/>
-        <ContentControl Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" Height="22" Content="{Binding InputVariable}" dd:DragDrop.IsDropTarget="True" dd:DragDrop.DropHandler="{StaticResource DropHandlerVariableTextBox}">
+        <ContentControl Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" Height="22" Content="{Binding InputVariable}" dd:DragDrop.IsDropTarget="True" dd:DragDrop.DropHandler="{StaticResource DropHandlerVariable}">
             <ContentControl.ContentTemplate>
                 <DataTemplate DataType="{x:Type models:Variable}">
                     <TextBox Text="{Binding Name}" IsReadOnly="True"/>

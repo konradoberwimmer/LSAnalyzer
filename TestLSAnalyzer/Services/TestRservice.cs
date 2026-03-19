@@ -2208,7 +2208,7 @@ namespace TestLSAnalyzer.Services
             {
                 Name = "elseNA",
                 Label = "elseNA - Label",
-                Else = VirtualVariableRecode.ElseAction.SetNa,
+                Else = VirtualVariableRecode.ElseAction.Missing,
             };
             
             Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeElseOnly));
@@ -2243,11 +2243,11 @@ namespace TestLSAnalyzer.Services
                     new Variable(1, "item1"),
                 ],
                 Rules = [
-                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsExactly, Value = 1 } ], ResultNa = false, ResultValue = 1 },
-                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsExactly, Value = 2 } ], ResultNa = false, ResultValue = 1 },
-                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsExactly, Value = 3 } ], ResultNa = false, ResultValue = 1 },
-                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsBetween, Value = 3, MaxValue = 4 } ], ResultNa = false, ResultValue = 2 },
-                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsNa } ], ResultNa = false, ResultValue = 3 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 1 } ], ResultNa = false, ResultValue = 1 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 2 } ], ResultNa = false, ResultValue = 1 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 3 } ], ResultNa = false, ResultValue = 1 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 3, MaxValue = 4 } ], ResultNa = false, ResultValue = 2 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Missing } ], ResultNa = false, ResultValue = 3 },
                 ],
             };
             
@@ -2271,8 +2271,8 @@ namespace TestLSAnalyzer.Services
                     new VirtualVariableRecode.Rule
                     {
                         Criteria = [ 
-                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsExactly, Value = 1 },
-                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.IsExactly, Value = 1 },
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 1 },
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 1 },
                         ], 
                         ResultNa = false, 
                         ResultValue = -1
@@ -2280,8 +2280,8 @@ namespace TestLSAnalyzer.Services
                     new VirtualVariableRecode.Rule
                     {
                         Criteria = [ 
-                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsExactly, Value = 2 },
-                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.IsExactly, Value = 2 },
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 2 },
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 2 },
                         ], 
                         ResultNa = true, 
                         ResultValue = 17
@@ -2289,8 +2289,8 @@ namespace TestLSAnalyzer.Services
                     new VirtualVariableRecode.Rule
                     {
                         Criteria = [ 
-                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsExactly, Value = 4 },
-                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.IsBetween, Value = 4, MaxValue = 5},
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 4 },
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Between, Value = 4, MaxValue = 5},
                         ], 
                         ResultNa = false, 
                         ResultValue = 1
@@ -2327,8 +2327,8 @@ namespace TestLSAnalyzer.Services
                     new Variable(1, "ASRREA") { FromPlausibleValues = true },
                 ],
                 Rules = [
-                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsBetween, Value = 0, MaxValue = 600 } ], ResultNa = false, ResultValue = 0 },
-                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsBetween, Value = 600, MaxValue = 1000 } ], ResultNa = false, ResultValue = 1 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 600 } ], ResultNa = false, ResultValue = 0 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 600, MaxValue = 1000 } ], ResultNa = false, ResultValue = 1 },
                 ],
             };
             
@@ -2353,8 +2353,8 @@ namespace TestLSAnalyzer.Services
                     new VirtualVariableRecode.Rule
                     {
                         Criteria = [ 
-                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsBetween, Value = 0, MaxValue = 400 },
-                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.IsBetween, Value = 0, MaxValue = 400 },
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 400 },
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 400 },
                         ], 
                         ResultNa = false, 
                         ResultValue = 1
@@ -2362,8 +2362,8 @@ namespace TestLSAnalyzer.Services
                     new VirtualVariableRecode.Rule
                     {
                         Criteria = [
-                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsBetween, Value = 400, MaxValue = 1000 }, 
-                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.IsBetween, Value = 400, MaxValue = 1000 }, 
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 400, MaxValue = 1000 }, 
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Between, Value = 400, MaxValue = 1000 }, 
                         ], 
                         ResultNa = false, 
                         ResultValue = 0
@@ -2391,8 +2391,8 @@ namespace TestLSAnalyzer.Services
                     new VirtualVariableRecode.Rule
                     {
                         Criteria = [ 
-                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsBetween, Value = 0, MaxValue = 600 },
-                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.IsBetween, Value = 0, MaxValue = 10 },
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 600 },
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 10 },
                         ], 
                         ResultNa = false, 
                         ResultValue = 0
@@ -2400,8 +2400,8 @@ namespace TestLSAnalyzer.Services
                     new VirtualVariableRecode.Rule
                     {
                         Criteria = [
-                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsBetween, Value = 600, MaxValue = 1000 }, 
-                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.IsExactly, Value = 2 }, 
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 600, MaxValue = 1000 }, 
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 2 }, 
                         ], 
                         ResultNa = false, 
                         ResultValue = 0
@@ -2409,8 +2409,8 @@ namespace TestLSAnalyzer.Services
                     new VirtualVariableRecode.Rule
                     {
                         Criteria = [
-                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.IsBetween, Value = 600, MaxValue = 1000 }, 
-                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.IsExactly, Value = 1 }, 
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 600, MaxValue = 1000 }, 
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 1 }, 
                         ], 
                         ResultNa = false, 
                         ResultValue = 1
