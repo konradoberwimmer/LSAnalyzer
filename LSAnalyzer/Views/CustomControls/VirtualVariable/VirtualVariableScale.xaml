@@ -1,0 +1,68 @@
+<UserControl x:Class="LSAnalyzer.Views.CustomControls.VirtualVariable.VirtualVariableScale"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:LSAnalyzer.Views.CustomControls.VirtualVariable"
+             xmlns:models="clr-namespace:LSAnalyzer.Models"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop"
+             xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
+             xmlns:math="clr-namespace:WpfMath.Controls;assembly=WpfMath"
+             xmlns:customControls="clr-namespace:LSAnalyzer.Views.CustomControls"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=models:VirtualVariableScale, IsDesignTimeCreatable=True}"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <customControls:DropHandlerVariable x:Key="DropHandlerVariable"/>
+        <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
+        <sys:Boolean x:Key="BooleanTrue">True</sys:Boolean>
+        <ObjectDataProvider x:Key="EnumScaleTypeDataSource"
+                            ObjectType="{x:Type sys:Enum}"
+                            MethodName="GetValues">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:VirtualVariableScale+ScaleType" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" MinWidth="75"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Variable:"/>
+        <ContentControl Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" Height="22" Content="{Binding InputVariable}" dd:DragDrop.IsDropTarget="True" dd:DragDrop.DropHandler="{StaticResource DropHandlerVariable}">
+            <ContentControl.ContentTemplate>
+                <DataTemplate DataType="{x:Type models:Variable}">
+                    <TextBox Text="{Binding Name}" IsReadOnly="True"/>
+                </DataTemplate>
+            </ContentControl.ContentTemplate>
+        </ContentControl>
+        <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,5,0,0" Text="Type:"/>
+        <ComboBox Grid.Row="1" Grid.Column="1" Margin="5,5,0,0" Width="150" HorizontalAlignment="Left" ItemsSource="{Binding Source={StaticResource EnumScaleTypeDataSource}}" SelectedItem="{Binding Type}"/>
+        <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,5,0,0" VerticalAlignment="Center" Text="Mean:" Visibility="{Binding MeanMakesSense, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
+        <TextBox Grid.Row="2" Grid.Column="1" Margin="5,5,0,0" Width="60" HorizontalAlignment="Left" Text="{Binding Mean}" Visibility="{Binding MeanMakesSense, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
+        <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,5,0,0" VerticalAlignment="Center" Text="Log base:" Visibility="{Binding LogBaseMakesSense, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
+        <TextBox Grid.Row="2" Grid.Column="1" Margin="5,5,0,0" Width="60" HorizontalAlignment="Left" Text="{Binding LogBase}" Visibility="{Binding LogBaseMakesSense, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
+        <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,5,0,0" VerticalAlignment="Center" Text="Std. deviation:" Visibility="{Binding SdMakesSense, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
+        <TextBox Grid.Row="3" Grid.Column="1" Margin="5,5,0,0" Width="60" HorizontalAlignment="Left" Text="{Binding Sd}" Visibility="{Binding SdMakesSense, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
+        <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,5,0,0" VerticalAlignment="Center" Text="Centering:" Visibility="{Binding CenterMakesSense, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
+        <CheckBox Grid.Row="3" Grid.Column="1" Margin="5,5,0,0" HorizontalAlignment="Left" Content="" IsChecked="{Binding Center}" Visibility="{Binding CenterMakesSense, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
+        <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,5,0,0" Orientation="Vertical" Visibility="{Binding CenterMakesSense, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}">
+            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                <ContentControl ContentTemplate="{StaticResource InfoTipInline}"/>
+                <TextBlock Margin="1,0,0,0">
+                    Centering in logarithmic scaling calculates:
+                </TextBlock>
+            </StackPanel>
+            <math:FormulaControl Margin="12,5,0,0" Formula="\log_{base}\left(\frac{x}{\overline{x}}\right)" Scale="12"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -7,6 +7,8 @@ using LSAnalyzer.Helper;
 namespace LSAnalyzer.Models;
 
 [JsonDerivedType(typeof(VirtualVariableCombine), typeDiscriminator: "combine")]
+[JsonDerivedType(typeof(VirtualVariableScale), typeDiscriminator: "scale")]
+[JsonDerivedType(typeof(VirtualVariableRecode), typeDiscriminator: "recode")]
 public abstract partial class VirtualVariable : ObservableValidatorExtended, IChangeTracking
 {
     public abstract string TypeName { get; }
@@ -14,6 +16,7 @@ public abstract partial class VirtualVariable : ObservableValidatorExtended, ICh
     public int Id { get; set; } = 0;
     
     [ObservableProperty]
+    [Required]
     [RegularExpression("[a-zA-Z][a-zA-Z0-9_]{2,}", ErrorMessage = "Name must start with a letter and consist of letters, digits and underscores (at least 3)!")]
     private string _name = string.Empty;
     partial void OnNameChanged(string value)

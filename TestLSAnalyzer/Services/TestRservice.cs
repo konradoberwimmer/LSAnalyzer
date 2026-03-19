@@ -1983,6 +1983,449 @@ namespace TestLSAnalyzer.Services
             Assert.NotNull(result2);
             Assert.NotEmpty(result2);
         }
+
+        [Fact]
+        public void TestCreateVirtualVariableScaleLinear()
+        {
+            Logging logger = new();
+            Rservice rservice = new(logger)
+            {
+                RLocation = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryService()).GetRLocation() ?? (string.Empty, String.Empty),
+            };
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav")));
+            
+            // no mi/pv
+            VirtualVariableScale scaleNoMiPv = new()
+            {
+                Name = "scaleNoMiPv",
+                Type = VirtualVariableScale.ScaleType.Linear,
+                InputVariable = new(1, "x"),
+                WeightVariable = new Variable(2, "wgt"),
+                Mean = 50,
+                Sd = 10,
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(scaleNoMiPv));
+            Assert.True(rservice.Execute("hasNewVariable <- 'scaleNoMiPv' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 1, null, null, "repwgt", 1.0));
+            Assert.True(rservice.Execute("newMean <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scaleNoMiPv')$stat_M$M"));
+            Assert.True(Math.Abs(rservice.Fetch("newMean").AsNumeric().First() - 50.0) < 1e-10);
+            Assert.True(rservice.Execute("newSd <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scaleNoMiPv')$stat_SD$SD"));
+            Assert.True(Math.Abs(rservice.Fetch("newSd").AsNumeric().First() - 10.0) < 1e-10);
+            
+            // missings
+            Assert.True(rservice.Execute("lsanalyzer_dat_raw_stored[17, 'x'] <- NA"));
+            Assert.True(rservice.Execute("lsanalyzer_dat_raw_stored[22, 'x'] <- NA"));
+            Assert.True(rservice.Execute("lsanalyzer_dat_raw_stored[48, 'x'] <- NA"));
+            Assert.True(rservice.Execute("lsanalyzer_dat_raw_stored[99, 'x'] <- NA"));
+            
+            VirtualVariableScale scaleWithMissings = new()
+            {
+                Name = "scaleWithMissings",
+                Type = VirtualVariableScale.ScaleType.Linear,
+                InputVariable = new(1, "x"),
+                WeightVariable = new Variable(2, "wgt"),
+                Mean = 500,
+                Sd = 100,
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(scaleWithMissings));
+            Assert.True(rservice.Execute("hasNewVariable <- 'scaleWithMissings' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 1, null, null, "repwgt", 1.0));
+            Assert.True(rservice.Execute("newMean <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scaleWithMissings')$stat_M$M"));
+            Assert.True(Math.Abs(rservice.Fetch("newMean").AsNumeric().First() - 500.0) < 1e-10);
+            Assert.True(rservice.Execute("newSd <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scaleWithMissings')$stat_SD$SD"));
+            Assert.True(Math.Abs(rservice.Fetch("newSd").AsNumeric().First() - 100.0) < 1e-10);
+            
+            // mi
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav")));
+            
+            VirtualVariableScale scaleMi = new()
+            {
+                Name = "scaleMi",
+                Type = VirtualVariableScale.ScaleType.Linear,
+                InputVariable = new(1, "x"),
+                WeightVariable = new Variable(2, "wgt"),
+                MiVariable = new Variable(3, "mi"),
+                Mean = 0,
+                Sd = 1,
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(scaleMi));
+            Assert.True(rservice.Execute("hasNewVariable <- 'scaleMi' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1.0));
+            Assert.True(rservice.Execute("newMean <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scaleMi')$stat_M$M"));
+            Assert.True(Math.Abs(rservice.Fetch("newMean").AsNumeric().First() - 0.0) < 1e-10);
+            Assert.True(rservice.Execute("newSd <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scaleMi')$stat_SD$SD"));
+            Assert.True(Math.Abs(rservice.Fetch("newSd").AsNumeric().First() - 1.0) < 1e-10);
+            
+            // pv
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav")));
+            
+            VirtualVariableScale scalePv = new()
+            {
+                Name = "scalePv",
+                Type = VirtualVariableScale.ScaleType.Linear,
+                InputVariable = new(1, "x") { FromPlausibleValues = true },
+                WeightVariable = new Variable(2, "wgt"),
+                Mean = 127.3,
+                Sd = 12.5,
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(scalePv, [ new PlausibleValueVariable { DisplayName = "x", Regex = "x", Mandatory = true }]));
+            Assert.True(rservice.Execute("hasNewVariable <- 'scalePv_7' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, [ new PlausibleValueVariable { DisplayName = "scalePv", Regex = "scalePv", Mandatory = true }], "repwgt", 1.0));
+            Assert.True(rservice.Execute("newMean <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scalePv')$stat_M$M"));
+            Assert.True(Math.Abs(rservice.Fetch("newMean").AsNumeric().First() - 127.3) < 1e-10);
+            Assert.True(rservice.Execute("newSd <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scalePv')$stat_SD$SD"));
+            Assert.True(Math.Abs(rservice.Fetch("newSd").AsNumeric().First() - 12.5) < 1e-10);
+        }
+        
+        [Fact]
+        public void TestCreateVirtualVariableScaleLogarithmic()
+        {
+            Logging logger = new();
+            Rservice rservice = new(logger)
+            {
+                RLocation = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryService()).GetRLocation() ?? (string.Empty, String.Empty),
+            };
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav")));
+            
+            // no centering
+            VirtualVariableScale scaleNoCentering = new()
+            {
+                Name = "scaleNoCentering",
+                Type = VirtualVariableScale.ScaleType.Logarithmic,
+                InputVariable = new(1, "x"),
+                WeightVariable = new Variable(2, "wgt"),
+                LogBase = 2.0,
+                Center = false,
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(scaleNoCentering));
+            Assert.True(rservice.Execute("hasNewVariable <- 'scaleNoCentering' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 1, null, null, "repwgt", 1.0));
+            Assert.True(rservice.Execute("newMean <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scaleNoCentering')$stat_M$M"));
+            Assert.True(Math.Abs(rservice.Fetch("newMean").AsNumeric().First() - 4.94488266445825) < 1e-10);
+            Assert.True(rservice.Execute("newSd <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scaleNoCentering')$stat_SD$SD"));
+            Assert.True(Math.Abs(rservice.Fetch("newSd").AsNumeric().First() - 1.44238700614497) < 1e-10);
+            
+            // centering without mi
+            VirtualVariableScale scaleCenteringWithoutMi = new()
+            {
+                Name = "scaleCenteringWithoutMi",
+                Type = VirtualVariableScale.ScaleType.Logarithmic,
+                InputVariable = new(1, "x"),
+                WeightVariable = new Variable(2, "wgt"),
+                LogBase = 10.0,
+                Center = true,
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(scaleCenteringWithoutMi));
+            Assert.True(rservice.Execute("hasNewVariable <- 'scaleCenteringWithoutMi' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 1, null, null, "repwgt", 1.0));
+            Assert.True(rservice.Execute("newMean <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scaleCenteringWithoutMi')$stat_M$M"));
+            Assert.True(Math.Abs(rservice.Fetch("newMean").AsNumeric().First() - -0.161729068234767) < 1e-10);
+            Assert.True(rservice.Execute("newSd <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scaleCenteringWithoutMi')$stat_SD$SD"));
+            Assert.True(Math.Abs(rservice.Fetch("newSd").AsNumeric().First() - 0.434201754205607) < 1e-10);
+            
+            // centering with mi
+            VirtualVariableScale scaleCenteringWithMi = new()
+            {
+                Name = "scaleCenteringWithMi",
+                Type = VirtualVariableScale.ScaleType.Logarithmic,
+                InputVariable = new(1, "x"),
+                WeightVariable = new Variable(2, "wgt"),
+                MiVariable = new Variable(3, "mi"),
+                LogBase = 2.0,
+                Center = true,
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(scaleCenteringWithMi));
+            Assert.True(rservice.Execute("hasNewVariable <- 'scaleCenteringWithMi' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1.0));
+            Assert.True(rservice.Execute("newMean <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scaleCenteringWithMi')$stat_M$M"));
+            Assert.True(Math.Abs(rservice.Fetch("newMean").AsNumeric().First() - -0.53724825525693) < 1e-10);
+            Assert.True(rservice.Execute("newSd <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scaleCenteringWithMi')$stat_SD$SD"));
+            Assert.True(Math.Abs(rservice.Fetch("newSd").AsNumeric().First() - 1.51278563166873) < 1e-10);
+            
+            // on pvs
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav")));
+            
+            VirtualVariableScale scalePv = new()
+            {
+                Name = "scalePv",
+                Type = VirtualVariableScale.ScaleType.Logarithmic,
+                InputVariable = new(1, "x") { FromPlausibleValues = true },
+                WeightVariable = new Variable(2, "wgt"),
+                LogBase = 2.0,
+                Center = false,
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(scalePv, [ new PlausibleValueVariable { DisplayName = "x", Regex = "x", Mandatory = true} ]));
+            Assert.True(rservice.Execute("hasNewVariable <- 'scalePv_3' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
+            Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, null, [ new PlausibleValueVariable { DisplayName = "scalePv", Regex = "scalePv", Mandatory = true} ], "repwgt", 1.0));
+            Assert.True(rservice.Execute("newMean <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scalePv')$stat_M$M"));
+            Assert.True(Math.Abs(rservice.Fetch("newMean").AsNumeric().First() - 4.94488266445825) < 1e-10);
+            Assert.True(rservice.Execute("newSd <- BIFIEsurvey::BIFIE.univar(lsanalyzer_dat_BO, vars = 'scalePv')$stat_SD$SD"));
+            Assert.True(Math.Abs(rservice.Fetch("newSd").AsNumeric().First() - 1.51278563166873) < 1e-10);
+        }
+
+        [Fact]
+        public void TestCreateVirtualVariableRecodeNoPv()
+        {
+            Logging logger = new();
+            Rservice rservice = new(logger)
+            {
+                RLocation = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryService()).GetRLocation() ?? (string.Empty, String.Empty),
+            };
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_multiitem.sav")));
+            
+            // recode to else only
+            VirtualVariableRecode virtualVariableRecodeElseOnly = new()
+            {
+                Name = "elseNA",
+                Label = "elseNA - Label",
+                Else = VirtualVariableRecode.ElseAction.Missing,
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeElseOnly));
+            Assert.True(rservice.Execute("hasNewVariable <- 'elseNA' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("hasLabel <- 'elseNA - Label' == attributes(lsanalyzer_dat_raw_stored)$variable.labels['elseNA']"));
+            Assert.True(rservice.Fetch("hasLabel").AsLogical().First());
+            Assert.True(rservice.Execute("allNA <- all(is.na(lsanalyzer_dat_raw_stored$elseNA))"));
+            Assert.True(rservice.Fetch("allNA").AsLogical().First());
+            
+            // recode to copy only
+            VirtualVariableRecode virtualVariableRecodeCopyOnly = new()
+            {
+                Name = "elseCopy",
+                Variables = [
+                    new Variable(1, "item1"),
+                ],
+                Else = VirtualVariableRecode.ElseAction.Copy,
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeCopyOnly));
+            Assert.True(rservice.Execute("hasNewVariable <- 'elseCopy' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("anyNA <- any(is.na(lsanalyzer_dat_raw_stored$elseCopy))"));
+            Assert.False(rservice.Fetch("anyNA").AsLogical().First());
+            
+            // recode from single variable
+            VirtualVariableRecode virtualVariableRecodeSingleVariable = new()
+            {
+                Name = "combine2",
+                Variables = [
+                    new Variable(1, "item1"),
+                ],
+                Rules = [
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 1 } ], ResultNa = false, ResultValue = 1 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 2 } ], ResultNa = false, ResultValue = 1 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 3 } ], ResultNa = false, ResultValue = 1 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 3, MaxValue = 4 } ], ResultNa = false, ResultValue = 2 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Missing } ], ResultNa = false, ResultValue = 3 },
+                ],
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeSingleVariable));
+            Assert.True(rservice.Execute("hasNewVariable <- 'combine2' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("anyNA <- any(is.na(lsanalyzer_dat_raw_stored$combine2))"));
+            Assert.False(rservice.Fetch("anyNA").AsLogical().First());
+            Assert.True(rservice.Execute("tab <- table(lsanalyzer_dat_raw_stored$combine2)"));
+            Assert.Equal([50, 50], rservice.Fetch("tab").AsNumeric().ToArray());
+            
+            // recode from two variables
+            VirtualVariableRecode virtualVariableRecodeMultipleVariables = new()
+            {
+                Name = "combineMultiple",
+                Variables = [
+                    new Variable(1, "item1"),
+                    new Variable(2, "item2"),
+                ],
+                Rules = [
+                    new VirtualVariableRecode.Rule
+                    {
+                        Criteria = [ 
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 1 },
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 1 },
+                        ], 
+                        ResultNa = false, 
+                        ResultValue = -1
+                    },
+                    new VirtualVariableRecode.Rule
+                    {
+                        Criteria = [ 
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 2 },
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 2 },
+                        ], 
+                        ResultNa = true, 
+                        ResultValue = 17
+                    },
+                    new VirtualVariableRecode.Rule
+                    {
+                        Criteria = [ 
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 4 },
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Between, Value = 4, MaxValue = 5},
+                        ], 
+                        ResultNa = false, 
+                        ResultValue = 1
+                    },
+                ],
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeMultipleVariables));
+            Assert.True(rservice.Execute("hasNewVariable <- 'combineMultiple' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("anyNA <- any(is.na(lsanalyzer_dat_raw_stored$combineMultiple))"));
+            Assert.True(rservice.Fetch("anyNA").AsLogical().First());
+            Assert.True(rservice.Execute("tab <- table(lsanalyzer_dat_raw_stored$combineMultiple, useNA = 'ifany')"));
+            Assert.Equal([5, 10, 85], rservice.Fetch("tab").AsNumeric().ToArray());
+        }
+
+        [Fact]
+        public void TestCreateVirtualVariableRecodeOnPvs()
+        {
+            Logging logger = new();
+            Rservice rservice = new(logger)
+            {
+                RLocation = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryService()).GetRLocation() ?? (string.Empty, string.Empty),
+            };
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav")));
+            
+            // just from a PV
+            VirtualVariableRecode virtualVariableRecodeOnePv = new()
+            {
+                Name = "topPerformer",
+                Variables = [
+                    new Variable(1, "ASRREA") { FromPlausibleValues = true },
+                ],
+                Rules = [
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 600 } ], ResultNa = false, ResultValue = 0 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 600, MaxValue = 1000 } ], ResultNa = false, ResultValue = 1 },
+                ],
+            };
+            
+            Assert.False(rservice.CreateVirtualVariable(virtualVariableRecodeOnePv));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeOnePv, [ new PlausibleValueVariable { DisplayName = "ASRREA", Regex = "ASRREA", Mandatory = true }], true));
+            Assert.True(rservice.Execute("hasNewVariable <- 'topPerformer_5' %in% colnames(lsanalyzer_dat_raw_preview)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("anyNA <- any(is.na(lsanalyzer_dat_raw_preview$topPerformer_5))"));
+            Assert.False(rservice.Fetch("anyNA").AsLogical().First());
+            Assert.True(rservice.Execute("tabLength <- length(table(lsanalyzer_dat_raw_preview$topPerformer_5))"));
+            Assert.Equal(2, rservice.Fetch("tabLength").AsNumeric().First());
+            
+            // from two PVs
+            VirtualVariableRecode virtualVariableRecodeTwoPvs = new()
+            {
+                Name = "constantUnderPerformer",
+                Variables = [
+                    new Variable(1, "ASRREA") { FromPlausibleValues = true },
+                    new Variable(2, "ASRINF") { FromPlausibleValues = true },
+                ],
+                Rules = [
+                    new VirtualVariableRecode.Rule
+                    {
+                        Criteria = [ 
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 400 },
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 400 },
+                        ], 
+                        ResultNa = false, 
+                        ResultValue = 1
+                    },
+                    new VirtualVariableRecode.Rule
+                    {
+                        Criteria = [
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 400, MaxValue = 1000 }, 
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Between, Value = 400, MaxValue = 1000 }, 
+                        ], 
+                        ResultNa = false, 
+                        ResultValue = 0
+                    },
+                ],
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeTwoPvs, [ new PlausibleValueVariable { DisplayName = "ASRREA", Regex = "ASRREA", Mandatory = true }, new PlausibleValueVariable { DisplayName = "ASRINF", Regex = "ASRINF", Mandatory = true } ]));
+            Assert.True(rservice.Execute("hasNewVariable <- 'constantUnderPerformer_2' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("anyNA <- any(is.na(lsanalyzer_dat_raw_stored$constantUnderPerformer_2))"));
+            Assert.True(rservice.Fetch("anyNA").AsLogical().First());
+            Assert.True(rservice.Execute("tabLength <- length(table(lsanalyzer_dat_raw_stored$constantUnderPerformer_2))"));
+            Assert.Equal(2, rservice.Fetch("tabLength").AsNumeric().First());
+            
+            // from a PV and one other
+            VirtualVariableRecode virtualVariableRecodeMix = new()
+            {
+                Name = "overperformerMales",
+                Variables = [
+                    new Variable(1, "ASRREA") { FromPlausibleValues = true },
+                    new Variable(2, "ITSEX"),
+                ],
+                Rules = [
+                    new VirtualVariableRecode.Rule
+                    {
+                        Criteria = [ 
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 600 },
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 10 },
+                        ], 
+                        ResultNa = false, 
+                        ResultValue = 0
+                    },
+                    new VirtualVariableRecode.Rule
+                    {
+                        Criteria = [
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 600, MaxValue = 1000 }, 
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 2 }, 
+                        ], 
+                        ResultNa = false, 
+                        ResultValue = 0
+                    },
+                    new VirtualVariableRecode.Rule
+                    {
+                        Criteria = [
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 600, MaxValue = 1000 }, 
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 1 }, 
+                        ], 
+                        ResultNa = false, 
+                        ResultValue = 1
+                    },
+                ],
+            };
+            
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeMix, [ new PlausibleValueVariable { DisplayName = "ASRREA", Regex = "ASRREA", Mandatory = true } ]));
+            Assert.True(rservice.Execute("hasNewVariable <- 'overperformerMales_1' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("anyNA <- any(is.na(lsanalyzer_dat_raw_stored$overperformerMales_1))"));
+            Assert.False(rservice.Fetch("anyNA").AsLogical().First());
+            Assert.True(rservice.Execute("tabLength <- length(table(lsanalyzer_dat_raw_stored$overperformerMales_1))"));
+            Assert.Equal(2, rservice.Fetch("tabLength").AsNumeric().First());
+        }
         
         [Fact]
         public void TestCreateBIFIEdataObjectDoesRenamePvVars()

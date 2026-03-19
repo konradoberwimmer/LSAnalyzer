@@ -54,7 +54,16 @@ public class TestVirtualVariables
     [Fact]
     public void TestNewVirtualVariableCommand()
     {
-        VirtualVariables viewModel = new()
+        var rservice = new Mock<IRservice>();
+        rservice.Setup(service =>
+            service.GetCurrentDatasetVariables(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(),
+                false)).Returns([
+            new Variable(1, "x"),
+            new Variable(2, "mi") { IsSystemVariable = true },
+            new Variable(3, "wgt") { IsSystemVariable = true },
+        ]);
+        
+        VirtualVariables viewModel = new(new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryServiceStub()), rservice.Object)
         {
             SelectedVirtualVariable = null,
             CurrentVirtualVariables = [],
@@ -74,6 +83,25 @@ public class TestVirtualVariables
         Assert.Equal("some_file.csv", viewModel.SelectedVirtualVariable.ForFileName);
         Assert.Single(viewModel.CurrentVirtualVariables);
         Assert.True(viewModel.SelectedVirtualVariable.IsChanged);
+
+        viewModel.AnalysisConfiguration = new AnalysisConfiguration
+        {
+            DatasetType = new DatasetType
+            {
+                MIvar = "mi",
+                Weight = "wgt",
+            }
+        };
+        
+        viewModel.SelectedVirtualVariableType = typeof(VirtualVariableScale);
+        
+        viewModel.NewVirtualVariableCommand.Execute(null);
+        
+        Assert.NotNull(viewModel.SelectedVirtualVariable);
+        Assert.Equal(typeof(VirtualVariableScale), viewModel.SelectedVirtualVariable.GetType());
+        var virtualVariableScale = viewModel.SelectedVirtualVariable as VirtualVariableScale;
+        Assert.NotNull(virtualVariableScale!.WeightVariable);
+        Assert.NotNull(virtualVariableScale!.MiVariable);
     }
 
     [Fact]
@@ -97,6 +125,18 @@ public class TestVirtualVariables
         ]);
         
         Assert.Equal(2, (viewModel.SelectedVirtualVariable as VirtualVariableCombine)!.Variables.Count);
+        
+        viewModel.SelectedVirtualVariableType = typeof(VirtualVariableRecode);
+        
+        viewModel.NewVirtualVariableCommand.Execute(null);
+        
+        viewModel.HandleAvailableVariablesCommand.Execute([
+            new Variable(1, "item1"),
+            new Variable(2, "item2"),
+        ]);
+        
+        Assert.Single((viewModel.SelectedVirtualVariable as VirtualVariableRecode)!.Variables);
+        Assert.Equal("item1", (viewModel.SelectedVirtualVariable as VirtualVariableRecode)!.Variables.First().Name);
     }
     
     [Fact]
@@ -168,6 +208,24 @@ public class TestVirtualVariables
 
         Assert.True(messageSent);
         Assert.True(viewModel.SelectedVirtualVariable.IsChanged);
+    }
+
+    [Fact]
+    public void TestSaveSelectedVirtualVariableRecode()
+    {
+        VirtualVariables viewModel = new();
+
+        viewModel.SelectedVirtualVariable = new VirtualVariableRecode();
+        viewModel.SelectedVirtualVariable.Name = "new_variable";
+        
+        viewModel.HandleAvailableVariablesCommand.Execute([new Variable(1, "item1")]);
+        viewModel.AddRuleCommand.Execute(null);
+        viewModel.RemoveRuleCommand.Execute((viewModel.SelectedVirtualVariable as VirtualVariableRecode)!.Rules.First());
+        viewModel.RemoveLastVariableCommand.Execute(null);
+        
+        viewModel.SaveSelectedVirtualVariableCommand.Execute(null);
+        
+        Assert.False(viewModel.SelectedVirtualVariable.IsChanged);
     }
 
     [Fact]

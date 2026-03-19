@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -67,7 +66,9 @@ public partial class VirtualVariables : ObservableObject
 
     [ObservableProperty] 
     private List<Type> _virtualVariableTypes = [
-        typeof(VirtualVariableCombine)
+        typeof(VirtualVariableCombine),
+        typeof(VirtualVariableRecode),
+        typeof(VirtualVariableScale)
     ];
     
     [ObservableProperty]
@@ -147,6 +148,12 @@ public partial class VirtualVariables : ObservableObject
         _configuration = configuration;
         _rservice = rservice;
         Preview = DefaultDataView();
+        
+        WeakReferenceMessenger.Default.Register<Views.CustomControls.VirtualVariable.VirtualVariableRecode.RemoveLastVariableMessage>(this, (_, _) => RemoveLastVariableCommand.Execute(null));
+        
+        WeakReferenceMessenger.Default.Register<Views.CustomControls.VirtualVariable.VirtualVariableRecode.AddRuleMessage>(this, (_, _) => AddRuleCommand.Execute(null));
+        
+        WeakReferenceMessenger.Default.Register<Views.CustomControls.VirtualVariable.VirtualVariableRecode.RemoveRuleMessage>(this, (_, m) => RemoveRuleCommand.Execute(m.Rule));
     }
 
     [RelayCommand]
@@ -155,6 +162,17 @@ public partial class VirtualVariables : ObservableObject
         if (SelectedVirtualVariableType is null) return;
 
         if (Activator.CreateInstance(SelectedVirtualVariableType) is not VirtualVariable newVirtualVariable) return;
+
+        switch (newVirtualVariable)
+        {
+            case VirtualVariableScale virtualVariableScale:
+                if (AnalysisConfiguration?.DatasetType is null) break;
+                
+                var datasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, []) ?? [];
+                virtualVariableScale.WeightVariable = datasetVariables.FirstOrDefault(var => var.Name == AnalysisConfiguration.DatasetType.Weight)?.Clone();
+                virtualVariableScale.MiVariable = AnalysisConfiguration.DatasetType.MIvar is null ? null : datasetVariables.FirstOrDefault(var => var.Name == AnalysisConfiguration.DatasetType.MIvar)?.Clone();
+                break;
+        }
         
         CurrentVirtualVariables.Add(newVirtualVariable);
         
@@ -177,6 +195,12 @@ public partial class VirtualVariables : ObservableObject
                     virtualVariableCombine.Variables.Add(selectedVariable.Clone());
                 }
                 break;
+            case VirtualVariableScale virtualVariableScale:
+                virtualVariableScale.InputVariable = selectedAvailableVariables.First().Clone();
+                break;
+            case VirtualVariableRecode virtualVariableRecode:
+                virtualVariableRecode.AddVariable(selectedAvailableVariables.First().Clone());
+                break;
             default:
                 throw new NotImplementedException();
         }
@@ -186,9 +210,20 @@ public partial class VirtualVariables : ObservableObject
     private void SaveSelectedVirtualVariable()
     {
         if (SelectedVirtualVariable is null) return;
-        
-        if (!SelectedVirtualVariable.Validate()) return;
 
+        switch (SelectedVirtualVariable)
+        {
+            case VirtualVariableCombine:
+            case VirtualVariableScale:
+                if (!SelectedVirtualVariable.Validate()) return;
+                break;
+            case VirtualVariableRecode virtualVariableRecode:
+                if (!virtualVariableRecode.ValidateDeep()) return;
+                break;
+            default:
+                return;
+        }
+        
         if (AvailableVariables.Any(variable => variable.Name == SelectedVirtualVariable.Name) ||
             CurrentVirtualVariables.Any(vv => vv != SelectedVirtualVariable && vv.Name == SelectedVirtualVariable.Name))
         {
@@ -234,6 +269,8 @@ public partial class VirtualVariables : ObservableObject
                 AnalysisConfiguration?.DatasetType?.PVvarsList.ToList(), true))
         {
             WeakReferenceMessenger.Default.Send(new PreviewImpossibleMessage());
+            
+            IsBusy = false;
             return;
         }
 
@@ -248,6 +285,30 @@ public partial class VirtualVariables : ObservableObject
         }
 
         Preview = new DataView(previewData);
+    }
+
+    [RelayCommand]
+    private void AddRule()
+    {
+        if (SelectedVirtualVariable is not VirtualVariableRecode virtualVariableRecode) return;
+        
+        virtualVariableRecode.AddRule();
+    }
+    
+    [RelayCommand]
+    private void RemoveLastVariable()
+    {
+        if (SelectedVirtualVariable is not VirtualVariableRecode virtualVariableRecode) return;
+        
+        virtualVariableRecode.RemoveLastVariable();
+    }
+
+    [RelayCommand]
+    private void RemoveRule(VirtualVariableRecode.Rule rule)
+    {
+        if (SelectedVirtualVariable is not VirtualVariableRecode virtualVariableRecode) return;
+        
+        virtualVariableRecode.Rules.Remove(rule);
     }
 
     private DataView DefaultDataView()
