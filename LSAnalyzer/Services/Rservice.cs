@@ -462,24 +462,11 @@ namespace LSAnalyzer.Services
             return true;
         }
 
-        public bool ReduceToNecessaryVariables(Analysis analysis, List<string>? additionalVariables = null, string? subsettingExpression = null)
+        public bool ReduceToNecessaryVariables(Analysis analysis, string? subsettingExpression = null)
         {
-            var regexNecessaryVariables = analysis.AnalysisConfiguration.GetRegexNecessaryVariables() ?? new();
-            foreach (var variable in analysis.Vars)
-            {
-                regexNecessaryVariables.Add(variable.Name);
-            }
-            foreach (var variable in analysis.GroupBy)
-            {
-                regexNecessaryVariables.Add(variable.Name);
-            }
-            if (additionalVariables != null)
-            {
-                foreach (var variable in additionalVariables)
-                {
-                    regexNecessaryVariables.Add(variable);
-                }
-            }
+            var regexNecessaryVariables = analysis.AnalysisConfiguration.GetRegexNecessaryVariables();
+            
+            regexNecessaryVariables.AddRange(analysis.AllVariables.Select(v => v.Name));
 
             for (int i = 0; i < regexNecessaryVariables.Count; i++)
             {
@@ -690,11 +677,7 @@ namespace LSAnalyzer.Services
 
         public bool PrepareForAnalysis(Analysis analysis)
         {
-            List<string>? additionalVariables = analysis is AnalysisRegression analysisRegression
-                ? [analysisRegression.Dependent?.Name ?? "insufficient_analysis_definition_"]
-                : null;
-            
-            if (analysis.AnalysisConfiguration.DatasetType == null || !ReduceToNecessaryVariables(analysis, additionalVariables, analysis.SubsettingExpression))
+            if (analysis.AnalysisConfiguration.DatasetType == null || !ReduceToNecessaryVariables(analysis, analysis.SubsettingExpression))
             {
                 return false;
             }

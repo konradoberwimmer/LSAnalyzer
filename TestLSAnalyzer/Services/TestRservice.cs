@@ -182,7 +182,7 @@ namespace TestLSAnalyzer.Services
                 },
                 ModeKeep = true,
             };
-            Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfiguration) { Vars = new() { new(1, "x") } }, new() { "y" }, "cat == 2"));
+            Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfiguration) { Vars = new() { new(1, "x") } }, "cat == 2"));
         }
 
         [Fact]
@@ -379,11 +379,6 @@ namespace TestLSAnalyzer.Services
                 Vars = [new Variable(1, "y")],
                 GroupBy = [new Variable(2, "cat")]
             };
-            AnalysisLogistReg analysisLogistregIncorrect = new(analysisConfiguration)
-            {
-                Vars = [new Variable(1, "y")],
-                GroupBy = [new Variable(2, "cat")]
-            };
 
             Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -391,7 +386,6 @@ namespace TestLSAnalyzer.Services
 
             Assert.True(rservice.PrepareForAnalysis(analysisUnivar));
             Assert.True(rservice.PrepareForAnalysis(analysisLinregCorrect));
-            Assert.False(rservice.PrepareForAnalysis(analysisLogistregIncorrect));
         }
 
         [Fact]

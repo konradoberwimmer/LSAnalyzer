@@ -77,8 +77,7 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
-    public bool ReduceToNecessaryVariables(Analysis analysis, List<string>? additionalVariables = null,
-        string? subsettingExpression = null)
+    public bool ReduceToNecessaryVariables(Analysis analysis, string? subsettingExpression = null)
     {
         throw new System.NotImplementedException();
     }
