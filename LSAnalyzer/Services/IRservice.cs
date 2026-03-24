@@ -69,7 +69,7 @@ public interface IRservice
 
     public List<GenericVector>? CalculateLogistReg(AnalysisLogistReg analysis);
 
-    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false);
+    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable> pvVars, bool forPreview = false);
 
     public (bool success, DataTable? dataTable) GetPreviewData();
     

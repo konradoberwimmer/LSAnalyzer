@@ -195,6 +195,11 @@ public partial class MainWindow : ObservableObject
         });
     }
 
+    public List<VirtualVariable> GetCurrentVirtualVariables()
+    {
+        return _configuration.GetVirtualVariablesFor(AnalysisConfiguration?.FileNameWithoutPath ?? string.Empty, AnalysisConfiguration?.DatasetType ?? new DatasetType { Id = -1 });
+    }
+
     [RelayCommand]
     private void StartAnalysis(AnalysisPresentation? analysisPresentation)
     {

@@ -106,7 +106,7 @@ public class TestBatchAnalyze
 
         batchAnalyzeViewModel.RunBatchCommand.Execute(null);
         
-        batchAnalyzeService.Verify(service => service.RunBatch(It.IsAny<IEnumerable<BatchAnalyze.BatchEntry>>(), It.IsAny<bool>(), It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>()), Times.Once);
+        batchAnalyzeService.Verify(service => service.RunBatch(It.IsAny<IEnumerable<BatchAnalyze.BatchEntry>>(), It.IsAny<bool>(), It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>(), It.IsAny<List<VirtualVariable>>()), Times.Once);
     }
 
     [Fact]
@@ -220,7 +220,7 @@ public class TestBatchAnalyze
         batchAnalyzeViewModel.RunBatchCommand.Execute(null);
         batchAnalyzeViewModel.AbortBatchCommand.Execute(null);
      
-        batchAnalyzeService.Verify(service => service.RunBatch(It.IsAny<IEnumerable<BatchAnalyze.BatchEntry>>(), It.IsAny<bool>(), It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>()), Times.Once);
+        batchAnalyzeService.Verify(service => service.RunBatch(It.IsAny<IEnumerable<BatchAnalyze.BatchEntry>>(), It.IsAny<bool>(), It.IsAny<AnalysisConfiguration>(), It.IsAny<string?>(), It.IsAny<List<VirtualVariable>>()), Times.Once);
         batchAnalyzeService.Verify(service => service.AbortBatch(), Times.Once);
     }
     

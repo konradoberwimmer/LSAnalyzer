@@ -18,7 +18,8 @@ public class BatchAnalyzeService : IBatchAnalyzeService
     
     private bool _useCurrentFile = true;
     private AnalysisConfiguration? _currentConfiguration;
-    private string _currentSubsettingExpression;
+    private string _currentSubsettingExpression = "$$$initialize$$$";
+    private List<VirtualVariable> _currentVirtualVariables = [];
     
     private BackgroundWorker? _worker;
 
@@ -29,13 +30,14 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         _serviceProvider = serviceProvider;
     }
 
-    public void RunBatch(IEnumerable<BatchAnalyze.BatchEntry> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration, string? currentSubsettingExpression)
+    public void RunBatch(IEnumerable<BatchAnalyze.BatchEntry> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration, string? currentSubsettingExpression, List<VirtualVariable> currentVirtualVariables)
     {
         if (_worker?.IsBusy is true) return;
         
         _useCurrentFile = useCurrentFile;
         _currentConfiguration = currentConfiguration;
         _currentSubsettingExpression = currentSubsettingExpression ?? string.Empty;
+        _currentVirtualVariables = currentVirtualVariables;
 
         if (analyses.Any() && !_useCurrentFile)
         {
@@ -73,6 +75,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
 
         AnalysisConfiguration? previousAnalysisConfiguration = null;
         var previousSubsettingExpression = _currentSubsettingExpression;
+        List<string> previousVirtualVariables = [];
 
         foreach (var entry in batchEntries)
         {
@@ -92,7 +95,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             entry.Message = "Working ...";
             WeakReferenceMessenger.Default.Send<BatchAnalyzeProgression>();
             
-            DoSingleAnalysis(entry, ref previousAnalysisConfiguration, ref previousSubsettingExpression);
+            DoSingleAnalysis(entry, ref previousAnalysisConfiguration, ref previousSubsettingExpression, ref previousVirtualVariables);
         }
         
         WeakReferenceMessenger.Default.Send<BatchAnalyzeProgression>();
@@ -100,14 +103,16 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         e.Result = analyses;
     }
 
-    private void DoSingleAnalysis(BatchAnalyze.BatchEntry entry, ref AnalysisConfiguration? previousAnalysisConfiguration, ref string? previousSubsettingExpression)
+    private void DoSingleAnalysis(BatchAnalyze.BatchEntry entry, ref AnalysisConfiguration? previousAnalysisConfiguration, ref string? previousSubsettingExpression, ref List<string> previousVirtualVariables)
     {
         var analysis = entry.Analysis.Analysis;
 
+        var previousVirtualVariablesList = previousVirtualVariables;
         if (!_useCurrentFile && (
                 previousAnalysisConfiguration == null || 
                 !analysis.AnalysisConfiguration.IsEqual(previousAnalysisConfiguration) || 
-                analysis.SubsettingExpression != previousSubsettingExpression))
+                analysis.SubsettingExpression != previousSubsettingExpression ||
+                !analysis.VirtualVariables.Select(vv => vv.Name).All(vvName => previousVirtualVariablesList.Contains(vvName))))
         {
             previousAnalysisConfiguration = null;
             previousSubsettingExpression = "$$$initialize$$$";
@@ -122,6 +127,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
 
         previousSubsettingExpression = analysis.SubsettingExpression;
         previousAnalysisConfiguration = analysis.AnalysisConfiguration;
+        previousVirtualVariables = analysis.VirtualVariables.Select(vv => vv.Name).ToList();
 
         var beforeCalculation = DateTime.Now;
 
@@ -234,7 +240,17 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             return false;
         }
 
-        if (!_rservice.TestAnalysisConfiguration(analysis.AnalysisConfiguration, [], analysis.SubsettingExpression))
+        foreach (var analysisVirtualVariable in analysis.VirtualVariables)
+        {
+            if (!_rservice.CreateVirtualVariable(analysisVirtualVariable, analysis.AnalysisConfiguration.DatasetType!.PVvarsList.ToList()))
+            {
+                entry.Success = false;
+                entry.Message = AbortedOr($"Could not create virtual variable '{analysisVirtualVariable.Name}'!");
+                return false;
+            }
+        }
+
+        if (!_rservice.TestAnalysisConfiguration(analysis.AnalysisConfiguration, analysis.VirtualVariables, analysis.SubsettingExpression))
         {
             entry.Success = false;
             entry.Message = AbortedOr("Could not use file for dataset type '" + analysis.AnalysisConfiguration.DatasetType?.Name + "'!");
@@ -259,7 +275,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         {
             previousSubsettingExpression = "$$$initialize$$$";
             
-            if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, [], analysis.SubsettingExpression))
+            if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, analysis.VirtualVariables, analysis.SubsettingExpression))
             {
                 entry.Success = false;
                 entry.Message = AbortedOr("Could not reapply subsetting '" + analysis.SubsettingExpression + "'!");
@@ -279,6 +295,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         }
 
         analysis.AnalysisConfiguration = _currentConfiguration!;
+        analysis.VirtualVariables = _currentVirtualVariables.Where(vv => analysis.AllVariables.Select(v => v.Name).Contains(vv.Name)).ToList();
         
         return true;
     }

@@ -613,7 +613,7 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
-        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false)
+        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable> pvVars, bool forPreview = false)
         {
             throw new NotImplementedException();
         }

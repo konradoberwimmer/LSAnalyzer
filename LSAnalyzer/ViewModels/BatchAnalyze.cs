@@ -4,6 +4,7 @@ using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -69,6 +70,8 @@ public partial class BatchAnalyze : ObservableObject
     
     [ObservableProperty]
     private string? _currentSubsetting;
+
+    public List<VirtualVariable> CurrentVirtualVariables = [];
 
     [ObservableProperty]
     private ObservableCollection<BatchEntry> _analysesTable = [];
@@ -216,7 +219,7 @@ public partial class BatchAnalyze : ObservableObject
 
         IsBusy = true;
 
-        _batchAnalyzeService.RunBatch(AnalysesTable, UseCurrentFile, CurrentConfiguration, CurrentSubsetting);
+        _batchAnalyzeService.RunBatch(AnalysesTable, UseCurrentFile, CurrentConfiguration, CurrentSubsetting, CurrentVirtualVariables);
     }
 
     [RelayCommand]

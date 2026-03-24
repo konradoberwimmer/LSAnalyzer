@@ -1337,7 +1337,7 @@ namespace LSAnalyzer.Services
             }
         }
         
-        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false)
+        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable> pvVars, bool forPreview = false)
         {
             return virtualVariable switch
             {
@@ -1348,7 +1348,7 @@ namespace LSAnalyzer.Services
             };
         }
 
-        private bool CreateVirtualVariableCombine(VirtualVariableCombine virtualVariableCombine, List<PlausibleValueVariable>? pvVars, bool forPreview)
+        private bool CreateVirtualVariableCombine(VirtualVariableCombine virtualVariableCombine, List<PlausibleValueVariable> pvVars, bool forPreview)
         {
             try
             {
@@ -1441,7 +1441,7 @@ namespace LSAnalyzer.Services
             }
         }
 
-        private bool CreateVirtualVariableScale(VirtualVariableScale virtualVariableScale, List<PlausibleValueVariable>? pvVars, bool forPreview)
+        private bool CreateVirtualVariableScale(VirtualVariableScale virtualVariableScale, List<PlausibleValueVariable> pvVars, bool forPreview)
         {
             try
             {
@@ -1619,7 +1619,7 @@ namespace LSAnalyzer.Services
             }
         }
         
-        private bool CreateVirtualVariableRecode(VirtualVariableRecode virtualVariableRecode, List<PlausibleValueVariable>? pvVars, bool forPreview)
+        private bool CreateVirtualVariableRecode(VirtualVariableRecode virtualVariableRecode, List<PlausibleValueVariable> pvVars, bool forPreview)
         {
             try
             {

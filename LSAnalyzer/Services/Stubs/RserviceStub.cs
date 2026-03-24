@@ -148,7 +148,7 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
-    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false)
+    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable> pvVars, bool forPreview = false)
     {
         throw new System.NotImplementedException();
     }

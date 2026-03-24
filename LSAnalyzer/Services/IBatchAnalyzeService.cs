@@ -6,7 +6,7 @@ namespace LSAnalyzer.Services;
 
 public interface IBatchAnalyzeService
 {
-    public void RunBatch(IEnumerable<BatchAnalyze.BatchEntry> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration, string? currentSubsettingExpression);
+    public void RunBatch(IEnumerable<BatchAnalyze.BatchEntry> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration, string? currentSubsettingExpression, List<VirtualVariable> currentVirtualVariables);
     
     public void AbortBatch();
 

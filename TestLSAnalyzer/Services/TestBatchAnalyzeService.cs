@@ -4,6 +4,7 @@ using LSAnalyzer.Services;
 using System.Reflection;
 using LSAnalyzer.Models.DataProviderConfiguration;
 using LSAnalyzer.Services.DataProvider;
+using LSAnalyzer.Services.Stubs;
 using LSAnalyzer.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -57,7 +58,7 @@ public class TestBatchAnalyzeService
             },
         ];
         
-        batchAnalyze.RunBatch(analyses, true, analysisConfiguration, null);
+        batchAnalyze.RunBatch(analyses, true, analysisConfiguration, null, []);
 
         Policy.Handle<EqualException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
             .Execute(() => Assert.Equal(3, messageCounter));
@@ -165,7 +166,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, false, null, null);
+        batchAnalyze.RunBatch(analyses, false, null, null, []);
 
         Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
@@ -250,7 +251,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, false, null, null);
+        batchAnalyze.RunBatch(analyses, false, null, null, []);
 
         Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null || analysis.WasIgnored)));
@@ -350,7 +351,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5, null);
+        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5, null, []);
 
         Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(10))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
@@ -452,7 +453,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat, null);
+        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat, null, []);
 
         Policy.Handle<TrueException>().WaitAndRetry(1000, _ => TimeSpan.FromMilliseconds(1))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
@@ -505,7 +506,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat, null);
+        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Multicat, null, []);
 
         Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
@@ -592,7 +593,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, false, null, null);
+        batchAnalyze.RunBatch(analyses, false, null, null, []);
         
         Policy.Handle<ContainsException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(10))
             .Execute(() => Assert.Contains(analyses, analysis => analysis.Message == "Working ..."));
@@ -688,7 +689,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, false, null, null);
+        batchAnalyze.RunBatch(analyses, false, null, null, []);
 
         Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
@@ -697,7 +698,7 @@ public class TestBatchAnalyzeService
 
         analyses[0].Success = null;
         
-        batchAnalyze.RunBatch(analyses, false, null, null);
+        batchAnalyze.RunBatch(analyses, false, null, null, []);
 
         Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
@@ -746,7 +747,7 @@ public class TestBatchAnalyzeService
             },
         ];
 
-        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5, "cat == 1");
+        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5, "cat == 1", []);
 
         Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
@@ -783,6 +784,199 @@ public class TestBatchAnalyzeService
         Assert.True(resultSuccess.success);
         Assert.Null(resultSuccess.errorMessage);
         Assert.NotNull(resultSuccess.fileInformation);
+    }
+
+    [Fact]
+    public void TestRunBatchReappliesVirtualVariablesOnReload()
+    {
+        Logging logging = new();
+        Rservice rservice = new(logging)
+        {
+            RLocation = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryService()).GetRLocation() ?? (string.Empty, string.Empty)
+        };
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+
+        AnalysisConfiguration analysisConfigurationNmi10Rep5 = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+            DatasetType = new()
+            {
+                Weight = "wgt",
+                NMI = 10, MIvar = "mi",
+                RepWgts = "repwgt", FayFac = 0.5,
+            },
+            ModeKeep = true,
+        };
+
+        BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+
+        AnalysisPresentation dummyAnalysisPresentation = new();
+
+        List<BatchAnalyze.BatchEntry> analyses =
+        [
+            new()
+            {
+                Id = 1, Selected = true, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
+                    {
+                        Vars = [new Variable(1, "x"), new Variable(3, "zx")],
+                        GroupBy = [new Variable(2, "cat")],
+                        VirtualVariables = [
+                            new VirtualVariableScale
+                            {
+                                Name = "zx",
+                                ForFileName = "test_nmi10_nrep5.sav",
+                                Type = VirtualVariableScale.ScaleType.Linear,
+                                InputVariable = new Variable(1, "x"),
+                                WeightVariable = new Variable(4, "wgt"),
+                                MiVariable = new Variable(5, "mi"),
+                            }
+                        ],
+                    },
+                    ViewSettings = dummyAnalysisPresentation.ViewSettings
+                }
+            },
+            new()
+            {
+                Id = 2, Selected = true, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
+                    {
+                        Vars = [new Variable(1, "x")],
+                        GroupBy = [new Variable(2, "cat")],
+                    },
+                    ViewSettings = dummyAnalysisPresentation.ViewSettings
+                }
+            },
+        ];
+
+        batchAnalyze.RunBatch(analyses, false, null, null, []);
+
+        Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
+            .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
+        
+        Assert.True(analyses[0].Success);
+        Assert.Equal(0, double.Parse(analyses[0].PreparedPresentation!.DataTable.Select("variable = 'zx'")[0]["mean"].ToString()!), 10);
+        Assert.Single(logging.LogEntries.Where(entry => entry.Rcode.Contains("read.spss")));
+    }
+
+    [Fact]
+    public void TestRunBatchUpdatesVirtualVariableDefinitionsFromCurrentFile()
+    {
+        Logging logging = new();
+        Rservice rservice = new(logging)
+        {
+            RLocation = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryService()).GetRLocation() ?? (string.Empty, string.Empty)
+        };
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+
+        AnalysisConfiguration analysisConfigurationNmi10Rep5 = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav"),
+            DatasetType = new()
+            {
+                Weight = "wgt",
+                NMI = 10, MIvar = "mi",
+                RepWgts = "repwgt", FayFac = 0.5,
+            },
+            ModeKeep = true,
+        };
+        
+        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfigurationNmi10Rep5.FileName));
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5, [
+            new VirtualVariableScale
+            {
+                Name = "zx",
+                ForFileName = "test_nmi10_nrep5.sav",
+                Type = VirtualVariableScale.ScaleType.Linear,
+                InputVariable = new Variable(1, "x"),
+                WeightVariable = new Variable(4, "wgt"),
+                MiVariable = new Variable(5, "mi"),
+            }
+        ]));
+
+        BatchAnalyzeService batchAnalyze = new(rservice, Mock.Of<Configuration>(), Mock.Of<IServiceProvider>());
+
+        AnalysisPresentation dummyAnalysisPresentation = new();
+
+        List<BatchAnalyze.BatchEntry> analyses =
+        [
+            new()
+            {
+                Id = 1, Selected = true, Analysis = new AnalysisWithViewSettings
+                {
+                    Analysis = new AnalysisUnivar(analysisConfigurationNmi10Rep5)
+                    {
+                        Vars = [new Variable(1, "x"), new Variable(3, "zx")],
+                        GroupBy = [new Variable(2, "cat")],
+                        VirtualVariables = [
+                            new VirtualVariableScale
+                            {
+                                Name = "zx",
+                                ForFileName = "test_nmi10_nrep5.sav",
+                                Type = VirtualVariableScale.ScaleType.Linear,
+                                InputVariable = new Variable(1, "x"),
+                                WeightVariable = new Variable(4, "wgt"),
+                                MiVariable = new Variable(5, "mi"),
+                            }
+                        ],
+                    },
+                    ViewSettings = dummyAnalysisPresentation.ViewSettings
+                }
+            },
+        ];
+
+        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5, string.Empty, [
+            new VirtualVariableScale
+            {
+                Name = "zx",
+                ForFileName = "test_nmi10_nrep5.sav",
+                Type = VirtualVariableScale.ScaleType.Linear,
+                InputVariable = new Variable(1, "x"),
+                WeightVariable = new Variable(4, "wgt"),
+                MiVariable = new Variable(5, "mi"),
+            }
+        ]);
+
+        Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
+            .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
+        
+        Assert.True(analyses[0].Success);
+        Assert.Equal(0, double.Parse(analyses[0].PreparedPresentation!.DataTable.Select("variable = 'zx'")[0]["mean"].ToString()!), 10);
+        
+        Assert.True(rservice.TestAnalysisConfiguration(analysisConfigurationNmi10Rep5, [
+            new VirtualVariableScale
+            {
+                Name = "zx",
+                ForFileName = "test_nmi10_nrep5.sav",
+                Type = VirtualVariableScale.ScaleType.Linear,
+                InputVariable = new Variable(1, "x"),
+                WeightVariable = new Variable(4, "wgt"),
+                MiVariable = new Variable(5, "mi"),
+                Mean = 500
+            }
+        ]));
+        
+        batchAnalyze.RunBatch(analyses, true, analysisConfigurationNmi10Rep5, string.Empty, [
+            new VirtualVariableScale
+            {
+                Name = "zx",
+                ForFileName = "test_nmi10_nrep5.sav",
+                Type = VirtualVariableScale.ScaleType.Linear,
+                InputVariable = new Variable(1, "x"),
+                WeightVariable = new Variable(4, "wgt"),
+                MiVariable = new Variable(5, "mi"),
+                Mean = 500
+            }
+        ]);
+
+        Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(100))
+            .Execute(() => Assert.True(analyses.All(analysis => analysis.Success is not null)));
+        
+        Assert.True(analyses[0].Success);
+        Assert.Equal(500, double.Parse(analyses[0].PreparedPresentation!.DataTable.Select("variable = 'zx'")[0]["mean"].ToString()!), 10);
+        Assert.Equal(500, (analyses[0].Analysis.Analysis.VirtualVariables.First() as VirtualVariableScale)!.Mean);
     }
 
     public static string AssemblyDirectory

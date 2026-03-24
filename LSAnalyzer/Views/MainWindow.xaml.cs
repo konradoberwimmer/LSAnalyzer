@@ -292,6 +292,7 @@ namespace LSAnalyzer.Views
             batchAnalyzeViewModel.HasCurrentFile = mainWindowViewModel!.AnalysisConfiguration != null;
             batchAnalyzeViewModel.CurrentConfiguration = mainWindowViewModel.AnalysisConfiguration;
             batchAnalyzeViewModel.CurrentSubsetting = mainWindowViewModel.SubsettingExpression;
+            batchAnalyzeViewModel.CurrentVirtualVariables = mainWindowViewModel.GetCurrentVirtualVariables();
 
             if (batchAnalyzeViewModel.FileName != null && !File.Exists(batchAnalyzeViewModel.FileName))
             {
