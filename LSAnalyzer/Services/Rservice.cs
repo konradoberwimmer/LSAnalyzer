@@ -119,7 +119,8 @@ namespace LSAnalyzer.Services
 
             try
             {
-                bool userLibraryFolderConfigured = EvaluateAndLog("nzchar(Sys.getenv('R_LIBS_USER'))").AsLogical().First();
+                EvaluateAndLog("lsanalyzer_user_library_configured <- nzchar(Sys.getenv('R_LIBS_USER'))");
+                var userLibraryFolderConfigured = _engine!.GetSymbol("lsanalyzer_user_library_configured").AsLogical().First();
                 if (!userLibraryFolderConfigured)
                 {
                     return false;
@@ -129,7 +130,7 @@ namespace LSAnalyzer.Services
 
                 foreach (string rPackage in rPackagesToInstall)
                 {
-                    bool available = EvaluateAndLog("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
+                    bool available = _engine.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
                     if (!available)
                     {
                         try
@@ -727,13 +728,13 @@ namespace LSAnalyzer.Services
                 DataFrame? variables = null;
                 if (analysisConfiguration.ModeKeep == true && !fromStoredRaw)
                 {
-                    variables = EvaluateAndLog("lsanalyzer_dat_BO$variables").AsDataFrame();
+                    variables = _engine!.Evaluate("lsanalyzer_dat_BO$variables").AsDataFrame();
                 } else
                 {
-                    variables = EvaluateAndLog("data.frame(variable = colnames(lsanalyzer_dat_raw_stored))").AsDataFrame();
+                    variables = _engine!.Evaluate("data.frame(variable = colnames(lsanalyzer_dat_raw_stored))").AsDataFrame();
                 }
 
-                var variableLabelsExpression = EvaluateAndLog("attr(lsanalyzer_dat_raw_stored, 'variable.labels')");
+                var variableLabelsExpression = _engine.Evaluate("attr(lsanalyzer_dat_raw_stored, 'variable.labels')");
                 Dictionary<string, string> variableLabels = new();
                 if (variableLabelsExpression != null && variableLabelsExpression.AsCharacter() != null)
                 {
@@ -1778,7 +1779,7 @@ namespace LSAnalyzer.Services
                         return new();
                 }
 
-                var variables = EvaluateAndLog("colnames(lsanalyzer_some_file_raw)").AsCharacter();
+                var variables = _engine!.Evaluate("colnames(lsanalyzer_some_file_raw)").AsCharacter();
 
                 List<Variable> variableList = new();
                 int vv = 0;
@@ -1799,7 +1800,7 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                if (EvaluateAndLog("'" + variable + "' %in% colnames(lsanalyzer_dat_raw_stored)").AsLogical().First()) 
+                if (_engine!.Evaluate("'" + variable + "' %in% colnames(lsanalyzer_dat_raw_stored)").AsLogical().First()) 
                 {
                     EvaluateAndLog("lsanalyzer_value_labels <- attr(lsanalyzer_dat_raw_stored[, '" + variable + "'], 'value.labels')");
                 } else
