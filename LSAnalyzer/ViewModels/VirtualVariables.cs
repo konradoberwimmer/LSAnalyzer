@@ -265,8 +265,7 @@ public partial class VirtualVariables : ObservableObject
         
         IsBusy = true;
         
-        if (!_rservice.CreateVirtualVariable(SelectedVirtualVariable,
-                AnalysisConfiguration?.DatasetType?.PVvarsList.ToList(), true))
+        if (!_rservice.CreateVirtualVariable(SelectedVirtualVariable,AnalysisConfiguration?.DatasetType?.PVvarsList.ToList() ?? [], true))
         {
             WeakReferenceMessenger.Default.Send(new PreviewImpossibleMessage());
             

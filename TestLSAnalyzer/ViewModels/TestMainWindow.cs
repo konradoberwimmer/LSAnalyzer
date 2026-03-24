@@ -527,17 +527,18 @@ public class TestMainWindow
     {
         var configuration = new Mock<Configuration>();
         configuration.Setup(conf => conf.GetVirtualVariablesFor(It.IsAny<string>(), It.IsAny<DatasetType>())).Returns([
-            new VirtualVariableCombine { Name = "aVirtualVariable" }
+            new VirtualVariableCombine { Name = "aVirtualVariable" }, new VirtualVariableCombine { Name = "usedVirtualVariable" }
         ]);
         
         MainWindow mainWindow = new(Mock.Of<IRservice>(), Mock.Of<IAnalysisQueue>(), configuration.Object);
         
         Assert.Empty(mainWindow.Analyses);
 
-        WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(new AnalysisCorr(new AnalysisConfiguration())));
+        WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(new AnalysisCorr(new AnalysisConfiguration()) { Vars = [new Variable(1, "x"), new Variable(2, "usedVirtualVariable") { IsVirtual = true }]}));
         
         Assert.Single(mainWindow.Analyses);
         Assert.Single(mainWindow.Analyses.First().Analysis.VirtualVariables);
+        Assert.Equal("usedVirtualVariable", mainWindow.Analyses.First().Analysis.VirtualVariables.First().Name);
     }
     
     public static string AssemblyDirectory

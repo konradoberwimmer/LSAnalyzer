@@ -41,7 +41,7 @@ public interface IRservice
 
     public bool ReduceToNecessaryVariables(List<string> regexNecessaryVariables, string? subsettingExpression = null);
 
-    public bool ReduceToNecessaryVariables(Analysis analysis, List<string>? additionalVariables = null, string? subsettingExpression = null);
+    public bool ReduceToNecessaryVariables(Analysis analysis, string? subsettingExpression = null);
 
     public bool CreateReplicateWeights(string weight, string jkzone, string jkrep, bool jkreverse);
 
@@ -69,7 +69,7 @@ public interface IRservice
 
     public List<GenericVector>? CalculateLogistReg(AnalysisLogistReg analysis);
 
-    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false);
+    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable> pvVars, bool forPreview = false);
 
     public (bool success, DataTable? dataTable) GetPreviewData();
     

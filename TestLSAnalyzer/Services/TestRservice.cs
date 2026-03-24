@@ -182,7 +182,7 @@ namespace TestLSAnalyzer.Services
                 },
                 ModeKeep = true,
             };
-            Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfiguration) { Vars = new() { new(1, "x") } }, new() { "y" }, "cat == 2"));
+            Assert.True(rservice.ReduceToNecessaryVariables(new AnalysisUnivar(analysisConfiguration) { Vars = new() { new(1, "x") } }, "cat == 2"));
         }
 
         [Fact]
@@ -379,11 +379,6 @@ namespace TestLSAnalyzer.Services
                 Vars = [new Variable(1, "y")],
                 GroupBy = [new Variable(2, "cat")]
             };
-            AnalysisLogistReg analysisLogistregIncorrect = new(analysisConfiguration)
-            {
-                Vars = [new Variable(1, "y")],
-                GroupBy = [new Variable(2, "cat")]
-            };
 
             Rservice rservice = new();
             Assert.True(rservice.Connect(), "R must also be available for tests");
@@ -391,7 +386,6 @@ namespace TestLSAnalyzer.Services
 
             Assert.True(rservice.PrepareForAnalysis(analysisUnivar));
             Assert.True(rservice.PrepareForAnalysis(analysisLinregCorrect));
-            Assert.False(rservice.PrepareForAnalysis(analysisLogistregIncorrect));
         }
 
         [Fact]
@@ -1574,7 +1568,7 @@ namespace TestLSAnalyzer.Services
             VirtualVariableCombine virtualVariable = new() { Name = "ASBR01_mean_rmNA" };
             
             // not possible without at least one input variable
-            Assert.False(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable, []));
             
             // not possible to overwrite an existing variable
             virtualVariable.Variables = [
@@ -1584,12 +1578,12 @@ namespace TestLSAnalyzer.Services
             ];
             virtualVariable.Name = "ASBG01";
             
-            Assert.False(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable, []));
             
             // possible with mean (default) and removeNa (default)
             virtualVariable.Name = "ASBR01_mean_rmNA";
             
-            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_mean_rmNA' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("missingValues <- sum(is.na(lsanalyzer_dat_raw_stored$ASBR01_mean_rmNA))"));
@@ -1599,7 +1593,7 @@ namespace TestLSAnalyzer.Services
             virtualVariable.RemoveNa = false;
             virtualVariable.Name = "ASBR01_mean";
             
-            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_mean' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("missingValues <- sum(is.na(lsanalyzer_dat_raw_stored$ASBR01_mean))"));
@@ -1609,7 +1603,7 @@ namespace TestLSAnalyzer.Services
             virtualVariable.Label = "label for new variable";
             virtualVariable.Name = "ASBR01_label";
             
-            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_label' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("hasLabel <- 'label for new variable' == attributes(lsanalyzer_dat_raw_stored)$variable.labels['ASBR01_label']"));
@@ -1619,7 +1613,7 @@ namespace TestLSAnalyzer.Services
             virtualVariable.Type = VirtualVariableCombine.CombinationFunction.Sum;
             virtualVariable.Name = "ASBR01_sum";
             
-            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_sum' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("missingValues <- sum(is.na(lsanalyzer_dat_raw_stored$ASBR01_sum))"));
@@ -1629,7 +1623,7 @@ namespace TestLSAnalyzer.Services
             virtualVariable.Type = VirtualVariableCombine.CombinationFunction.FactorScores;
             virtualVariable.Name = "ASBR01_factor";
             
-            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'ASBR01_factor' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("missingValues <- sum(is.na(lsanalyzer_dat_raw_stored$ASBR01_factor))"));
@@ -1681,7 +1675,7 @@ namespace TestLSAnalyzer.Services
             };
             
             // not possible without passing pv list
-            Assert.False(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.False(rservice.CreateVirtualVariable(virtualVariable, []));
             
             // not possible when not actually pvs
             virtualVariable.Variables = [
@@ -1717,7 +1711,7 @@ namespace TestLSAnalyzer.Services
                 new Variable(2, "ASRINF03"),
             ];
             
-            Assert.True(rservice.CreateVirtualVariable(virtualVariable));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, []));
             Assert.True(rservice.Execute("areEqual <- (TRUE == all.equal(lsanalyzer_dat_raw_stored$mean_of_subdimensions_3, lsanalyzer_dat_raw_stored$verify, check.attributes = FALSE))"));
             Assert.True(rservice.Fetch("areEqual").AsLogical().First());
             
@@ -2007,7 +2001,7 @@ namespace TestLSAnalyzer.Services
                 Sd = 10,
             };
             
-            Assert.True(rservice.CreateVirtualVariable(scaleNoMiPv));
+            Assert.True(rservice.CreateVirtualVariable(scaleNoMiPv, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'scaleNoMiPv' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
@@ -2033,7 +2027,7 @@ namespace TestLSAnalyzer.Services
                 Sd = 100,
             };
             
-            Assert.True(rservice.CreateVirtualVariable(scaleWithMissings));
+            Assert.True(rservice.CreateVirtualVariable(scaleWithMissings, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'scaleWithMissings' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
@@ -2057,7 +2051,7 @@ namespace TestLSAnalyzer.Services
                 Sd = 1,
             };
             
-            Assert.True(rservice.CreateVirtualVariable(scaleMi));
+            Assert.True(rservice.CreateVirtualVariable(scaleMi, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'scaleMi' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
@@ -2114,7 +2108,7 @@ namespace TestLSAnalyzer.Services
                 Center = false,
             };
             
-            Assert.True(rservice.CreateVirtualVariable(scaleNoCentering));
+            Assert.True(rservice.CreateVirtualVariable(scaleNoCentering, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'scaleNoCentering' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
@@ -2135,7 +2129,7 @@ namespace TestLSAnalyzer.Services
                 Center = true,
             };
             
-            Assert.True(rservice.CreateVirtualVariable(scaleCenteringWithoutMi));
+            Assert.True(rservice.CreateVirtualVariable(scaleCenteringWithoutMi, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'scaleCenteringWithoutMi' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
@@ -2157,7 +2151,7 @@ namespace TestLSAnalyzer.Services
                 Center = true,
             };
             
-            Assert.True(rservice.CreateVirtualVariable(scaleCenteringWithMi));
+            Assert.True(rservice.CreateVirtualVariable(scaleCenteringWithMi, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'scaleCenteringWithMi' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored"));
@@ -2211,7 +2205,7 @@ namespace TestLSAnalyzer.Services
                 Else = VirtualVariableRecode.ElseAction.Missing,
             };
             
-            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeElseOnly));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeElseOnly, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'elseNA' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("hasLabel <- 'elseNA - Label' == attributes(lsanalyzer_dat_raw_stored)$variable.labels['elseNA']"));
@@ -2229,7 +2223,7 @@ namespace TestLSAnalyzer.Services
                 Else = VirtualVariableRecode.ElseAction.Copy,
             };
             
-            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeCopyOnly));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeCopyOnly, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'elseCopy' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("anyNA <- any(is.na(lsanalyzer_dat_raw_stored$elseCopy))"));
@@ -2251,7 +2245,7 @@ namespace TestLSAnalyzer.Services
                 ],
             };
             
-            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeSingleVariable));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeSingleVariable, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'combine2' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("anyNA <- any(is.na(lsanalyzer_dat_raw_stored$combine2))"));
@@ -2298,7 +2292,7 @@ namespace TestLSAnalyzer.Services
                 ],
             };
             
-            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeMultipleVariables));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeMultipleVariables, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'combineMultiple' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
             Assert.True(rservice.Execute("anyNA <- any(is.na(lsanalyzer_dat_raw_stored$combineMultiple))"));
@@ -2332,7 +2326,7 @@ namespace TestLSAnalyzer.Services
                 ],
             };
             
-            Assert.False(rservice.CreateVirtualVariable(virtualVariableRecodeOnePv));
+            Assert.False(rservice.CreateVirtualVariable(virtualVariableRecodeOnePv, []));
             Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeOnePv, [ new PlausibleValueVariable { DisplayName = "ASRREA", Regex = "ASRREA", Mandatory = true }], true));
             Assert.True(rservice.Execute("hasNewVariable <- 'topPerformer_5' %in% colnames(lsanalyzer_dat_raw_preview)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());

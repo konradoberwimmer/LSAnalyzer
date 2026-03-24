@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LSAnalyzer.Models
 {
@@ -18,6 +15,8 @@ namespace LSAnalyzer.Models
         public bool CalculateOverall { get; set; } = true;
         
         public bool CalculateCrosswise { get; set; } = true;
+
+        public override List<Variable> AllVariables => Dependent is null ? base.AllVariables : [Dependent, ..Vars, ..GroupBy]; 
 
         protected AnalysisRegression(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
         {

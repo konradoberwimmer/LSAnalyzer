@@ -77,8 +77,7 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
-    public bool ReduceToNecessaryVariables(Analysis analysis, List<string>? additionalVariables = null,
-        string? subsettingExpression = null)
+    public bool ReduceToNecessaryVariables(Analysis analysis, string? subsettingExpression = null)
     {
         throw new System.NotImplementedException();
     }
@@ -149,7 +148,7 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
-    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable>? pvVars = null, bool forPreview = false)
+    public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable> pvVars, bool forPreview = false)
     {
         throw new System.NotImplementedException();
     }
