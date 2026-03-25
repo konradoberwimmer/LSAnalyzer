@@ -207,7 +207,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         }
     }
 
-    private List<IDataProviderConfiguration> _dataProviderConfigurations = new();
+    private List<IDataProviderConfiguration> _dataProviderConfigurations = [];
     public List<IDataProviderConfiguration> DataProviderConfigurations
     {
         get => _dataProviderConfigurations;
@@ -527,17 +527,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         IsBusy = false;
     }
 
-    private RelayCommand<ICloseable?> _useFileForAnalysisCommand;
-    public ICommand UseFileForAnalysisCommand
-    {
-        get
-        {
-            if (_useFileForAnalysisCommand == null)
-                _useFileForAnalysisCommand = new RelayCommand<ICloseable?>(this.UseFileForAnalysis);
-            return _useFileForAnalysisCommand;
-        }
-    }
-
+    [RelayCommand]
     private void UseFileForAnalysis(ICloseable? window)
     {
         if ((string.IsNullOrWhiteSpace(FileName) && !(DataProviderViewModel?.IsConfigurationReady ?? false)) || SelectedDatasetType == null)
@@ -564,6 +554,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
             FileType = IsCsv && UseCsv2 ? "csv2" : null,
             DatasetType = SelectedDatasetType != null ? new(SelectedDatasetType) : null,
             ModeKeep = (SelectedAnalysisMode == AnalysisModes.Keep),
+            ReplaceCharacterVectors = ReplaceCharacterVectors,
         };
         if (analysisConfiguration.DatasetType != null)
         {
@@ -617,7 +608,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
             return;
         }
 
-        if (ReplaceCharacterVectors && !_rservice.ReplaceCharacterVariables())
+        if (analysisConfiguration.ReplaceCharacterVectors && !_rservice.ReplaceCharacterVariables())
         {
             WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
             IsBusy = false;

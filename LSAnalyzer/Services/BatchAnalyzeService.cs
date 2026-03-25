@@ -239,6 +239,13 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             entry.Message = AbortedOr("Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!");
             return false;
         }
+        
+        if (analysis.AnalysisConfiguration.ReplaceCharacterVectors && !_rservice.ReplaceCharacterVariables())
+        {
+            entry.Success = false;
+            entry.Message = AbortedOr("Could not replace character vectors in file '" + analysis.AnalysisConfiguration.FileName + "'!");
+            return false;
+        }
 
         foreach (var analysisVirtualVariable in analysis.VirtualVariables)
         {
