@@ -23,6 +23,7 @@ namespace LSAnalyzer.Models
         public string? FileType { get; set; }
         public DatasetType? DatasetType { get; set; }
         public bool? ModeKeep { get; set; }
+        public bool ReplaceCharacterVectors { get; set; } = true;
 
         public AnalysisConfiguration() { }
 
