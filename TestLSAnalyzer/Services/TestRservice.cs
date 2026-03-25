@@ -2438,6 +2438,36 @@ namespace TestLSAnalyzer.Services
             Assert.Contains("lsanalyzer_dat_BO$varnames[lsanalyzer_dat_BO$varnames == 'y[0-9]+'] <- 'y'", logger.GetRcode());
             Assert.DoesNotContain("lsanalyzer_dat_BO$varnames[lsanalyzer_dat_BO$varnames == 'x'] <- 'x'", logger.GetRcode());
         }
+
+        [Fact]
+        public void TestGetDistinctValues()
+        {
+            Rservice rservice = new();
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(Path.Combine(AssemblyDirectory, "_testData", "test_pv10_nrep5.sav")));
+
+            List<PlausibleValueVariable> plausibleValueVariables = [ 
+                new() { DisplayName = "x", Regex = "x[0-9]+", Mandatory = true },
+                new() { DisplayName = "y", Regex = "y[0-9]+", Mandatory = true },
+            ];
+            
+            var distinctValues = rservice.GetDistinctValues(new Variable(1, "not_actually_here"), plausibleValueVariables);
+            Assert.Null(distinctValues);
+            
+            distinctValues = rservice.GetDistinctValues(new Variable(1, "cat"), plausibleValueVariables);
+            Assert.NotNull(distinctValues);
+            Assert.Equal([1.0, 2.0], distinctValues);
+            
+            distinctValues = rservice.GetDistinctValues(new Variable(1, "repwgt3"), plausibleValueVariables);
+            Assert.NotNull(distinctValues);
+            Assert.Equal([0.0, 0.75, 1.0, 1.25], distinctValues);
+            
+            distinctValues = rservice.GetDistinctValues(new Variable(1, "x") { FromPlausibleValues = true }, plausibleValueVariables);
+            Assert.NotNull(distinctValues);
+            Assert.Equal(27, distinctValues.Count);
+            Assert.True(distinctValues.Index().All(value => value.Index == 0 || value.Item > distinctValues[value.Index - 1]));
+        }
         
         public static string AssemblyDirectory
         {

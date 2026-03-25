@@ -77,6 +77,8 @@ public interface IRservice
 
     public DataFrame? GetValueLabels(string variable);
 
+    public List<double>? GetDistinctValues(Variable variable, List<PlausibleValueVariable> plausibleValueVariables); 
+        
     public bool Execute(string rCode, bool oneLiner = false);
 
     public SymbolicExpression? Fetch(string objectName);

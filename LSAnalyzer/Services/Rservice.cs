@@ -1841,6 +1841,46 @@ namespace LSAnalyzer.Services
             }
         }
 
+        public List<double>? GetDistinctValues(Variable variable, List<PlausibleValueVariable> plausibleValueVariables)
+        {
+            try
+            {
+                List<string> variableNamesInRawData;
+
+                if (!variable.FromPlausibleValues)
+                {
+                    variableNamesInRawData = [variable.Name];
+                }
+                else
+                {
+                    var plausibleValueVariable = plausibleValueVariables.FirstOrDefault(pv => pv.DisplayName == variable.Name);
+                    if (plausibleValueVariable is null)
+                    {
+                        return null;
+                    }
+
+                    variableNamesInRawData = _engine!.Evaluate($"grep('{plausibleValueVariable.Regex}', colnames(lsanalyzer_dat_raw_stored), value = TRUE)").AsCharacter().ToList();
+                }
+
+                EvaluateAndLog("lsanalyzer_tmp_distinct_values <- numeric(0)");
+
+                foreach (var variableName in variableNamesInRawData)
+                {
+                    if (!_engine!.Evaluate($"'{variableName}' %in% colnames(lsanalyzer_dat_raw_stored)").AsLogical().First())
+                    {
+                        return null;
+                    }
+                    EvaluateAndLog($"lsanalyzer_tmp_distinct_values <- sort(unique(c(lsanalyzer_tmp_distinct_values, unique(stats::na.omit(lsanalyzer_dat_raw_stored$`{variableName}`)))))");
+                }
+                
+                return _engine!.GetSymbol("lsanalyzer_tmp_distinct_values").AsNumeric().ToList();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         public virtual bool Execute(string rCode, bool oneLiner = false)
         {
             try

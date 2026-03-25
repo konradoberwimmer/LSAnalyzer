@@ -168,6 +168,16 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
+    public List<double>? GetDistinctValues(Variable variable, List<PlausibleValueVariable> plausibleValueVariables)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public List<double>? GetDistinctValues(Variable variable)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public bool Execute(string rCode, bool oneLiner = false)
     {
         throw new System.NotImplementedException();
