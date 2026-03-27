@@ -98,8 +98,9 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
                 <TextBlock Grid.Column="0" DataContext="{Binding ElementName=ComboBoxSelectedType, Path=SelectedItem}" Text="New ..." Style="{StaticResource ComboBoxSelectOverlay}"/>
-                <ComboBox x:Name="ComboBoxCreate" Grid.Column="1" Margin="5,0,0,0" Width="120" HorizontalAlignment="Left" SelectionChanged="ComboBoxCreate_OnSelectionChanged">
+                <ComboBox x:Name="ComboBoxCreate" Grid.Column="1" Margin="5,0,0,0" Width="160" HorizontalAlignment="Left" SelectionChanged="ComboBoxCreate_OnSelectionChanged">
                     <ComboBoxItem>Dichotomization</ComboBoxItem>
+                    <ComboBoxItem>Equal frequency binning</ComboBoxItem>
                 </ComboBox>
                 <TextBlock Grid.Column="1" Padding="5,0,0,0" DataContext="{Binding ElementName=ComboBoxCreate, Path=SelectedItem}" Text="Create ..." Style="{StaticResource ComboBoxSelectOverlay}"/>
                 <Button Grid.Column="2" Content="Remove" Width="80" Height="22" HorizontalAlignment="Right" IsEnabled="{Binding HasSelectedVirtualVariable}" Click="ButtonRemoveVirtualVariable_OnClick"/>

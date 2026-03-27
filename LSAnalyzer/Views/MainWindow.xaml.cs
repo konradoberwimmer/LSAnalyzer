@@ -382,7 +382,7 @@ namespace LSAnalyzer.Views
             var virtualVariablesViewModel = _serviceProvider.GetRequiredService<ViewModels.VirtualVariables>();
             virtualVariablesViewModel.AnalysisConfiguration = mainWindowViewModel.AnalysisConfiguration;
             
-            VirtualVariables virtualVariablesView = new(virtualVariablesViewModel);
+            VirtualVariables virtualVariablesView = new(virtualVariablesViewModel, _serviceProvider);
             virtualVariablesView.ShowDialog();
         }
     }

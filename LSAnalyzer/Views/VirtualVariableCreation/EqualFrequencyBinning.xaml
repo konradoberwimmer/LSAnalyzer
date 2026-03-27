@@ -1,0 +1,55 @@
+<Window x:Class="LSAnalyzer.Views.VirtualVariableCreation.EqualFrequencyBinning"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:LSAnalyzer.Views.VirtualVariableCreation"
+        xmlns:viewmodels="clr-namespace:LSAnalyzer.ViewModels.VirtualVariableCreation"
+        xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=viewmodels:EqualFrequencyBinning, IsDesignTimeCreatable=True}"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Title="Equal frequency binning" SizeToContent="Height" Width="400" x:Name="WindowEqualFrequencyBinning">
+    <Window.Resources>
+        <converter:DictionaryHasElementToBool x:Key="DictionaryHasElementToBoolConverter"/>
+        <converter:NullToBool x:Key="NullToBoolConverter"/>
+    </Window.Resources>
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">Variable:</TextBlock>
+        <ComboBox Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" ItemsSource="{Binding Variables}" SelectedItem="{Binding SelectedVariable}" DisplayMemberPath="Info"/>
+        <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,5,0,0">Number of bins:</TextBlock>
+        <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" Width="40" Margin="5,5,0,0" Text="{Binding NumberOfBins, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,5,0,0">Name:</TextBlock>
+        <TextBox Grid.Row="2" Grid.Column="1" Margin="5,5,0,0" Height="22" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}">
+            <ToolTipService.ToolTip>
+                <TextBlock Text="{Binding Errors[Name], FallbackValue=...}" Foreground="Red"/>
+            </ToolTipService.ToolTip>
+            <ToolTipService.IsEnabled>
+                <Binding Path="Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Name"/>
+            </ToolTipService.IsEnabled>
+        </TextBox>
+        <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,5,0,0">Label:</TextBlock>
+        <TextBox Grid.Row="3" Grid.Column="1" Margin="5,5,0,0" Height="22" Text="{Binding NewLabel, UpdateSourceTrigger=PropertyChanged}">
+            <ToolTipService.ToolTip>
+                <TextBlock Text="{Binding Errors[NewLabel], FallbackValue=...}" Foreground="Red"/>
+            </ToolTipService.ToolTip>
+            <ToolTipService.IsEnabled>
+                <Binding Path="Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="NewLabel"/>
+            </ToolTipService.IsEnabled>
+        </TextBox>
+        <Button Grid.Row="4" Grid.Column="1" Height="22" Width="80" HorizontalAlignment="Right" Margin="5,5,0,0" Content="Create" IsEnabled="{Binding SelectedVariable, Converter={StaticResource NullToBoolConverter}}" Command="{Binding CreateEqualFrequencyBinningCommand}" CommandParameter="{Binding ElementName=WindowEqualFrequencyBinning}"/>
+    </Grid>
+</Window>

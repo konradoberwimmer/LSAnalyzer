@@ -7,17 +7,23 @@ using System.Windows.Input;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Models;
+using LSAnalyzer.Services;
 using LSAnalyzer.Views.VirtualVariableCreation;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LSAnalyzer.Views;
 
 public partial class VirtualVariables : Window
 {
+    private IServiceProvider _serviceProvider;
+    
     protected bool ShowLabels = true;
     
-    public VirtualVariables(ViewModels.VirtualVariables viewModel)
+    public VirtualVariables(ViewModels.VirtualVariables viewModel, IServiceProvider serviceProvider)
     {
         InitializeComponent();
+        
+        _serviceProvider = serviceProvider;
         
         DataContext = viewModel;
         
@@ -129,6 +135,12 @@ public partial class VirtualVariables : Window
                 ViewModels.VirtualVariableCreation.Dichotomization dichotomizationViewModel = new(viewModel);
                 Dichotomization dichotomization = new(dichotomizationViewModel);
                 dichotomization.ShowDialog();
+                comboBox.SelectedIndex = -1;
+                break;
+            case "Equal frequency binning":
+                ViewModels.VirtualVariableCreation.EqualFrequencyBinning equalFrequencyBinningViewModel = new(viewModel, _serviceProvider.GetRequiredService<IRservice>());
+                EqualFrequencyBinning equalFrequencyBinning = new(equalFrequencyBinningViewModel);
+                equalFrequencyBinning.ShowDialog();
                 comboBox.SelectedIndex = -1;
                 break;
             default:
