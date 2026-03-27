@@ -7,16 +7,23 @@ using System.Windows.Input;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Models;
+using LSAnalyzer.Services;
+using LSAnalyzer.Views.VirtualVariableCreation;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LSAnalyzer.Views;
 
 public partial class VirtualVariables : Window
 {
+    private IServiceProvider _serviceProvider;
+    
     protected bool ShowLabels = true;
     
-    public VirtualVariables(ViewModels.VirtualVariables viewModel)
+    public VirtualVariables(ViewModels.VirtualVariables viewModel, IServiceProvider serviceProvider)
     {
         InitializeComponent();
+        
+        _serviceProvider = serviceProvider;
         
         DataContext = viewModel;
         
@@ -117,4 +124,27 @@ public partial class VirtualVariables : Window
     }
 
     public class ReloadCurrentDatasetMessage;
+
+    private void ComboBoxCreate_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox comboBox || DataContext is not ViewModels.VirtualVariables viewModel || e.AddedItems.Count == 0 || e.AddedItems[0] is not ComboBoxItem item) return;
+
+        switch (item.Content)
+        {
+            case "Dichotomization":
+                ViewModels.VirtualVariableCreation.Dichotomization dichotomizationViewModel = new(viewModel);
+                Dichotomization dichotomization = new(dichotomizationViewModel);
+                dichotomization.ShowDialog();
+                comboBox.SelectedIndex = -1;
+                break;
+            case "Equal frequency binning":
+                ViewModels.VirtualVariableCreation.EqualFrequencyBinning equalFrequencyBinningViewModel = new(viewModel, _serviceProvider.GetRequiredService<IRservice>());
+                EqualFrequencyBinning equalFrequencyBinning = new(equalFrequencyBinningViewModel);
+                equalFrequencyBinning.ShowDialog();
+                comboBox.SelectedIndex = -1;
+                break;
+            default:
+                break;
+        }
+    }
 }

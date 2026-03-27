@@ -87,6 +87,7 @@
             <Grid Grid.Row="2" Margin="0,5,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <ComboBox x:Name="ComboBoxSelectedType" Grid.Column="0" ItemsSource="{Binding VirtualVariableTypes}" SelectedItem="{Binding SelectedVirtualVariableType}" Width="120" HorizontalAlignment="Left" SelectionChanged="ComboBoxSelectedType_OnSelectionChanged">
@@ -97,7 +98,12 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
                 <TextBlock Grid.Column="0" DataContext="{Binding ElementName=ComboBoxSelectedType, Path=SelectedItem}" Text="New ..." Style="{StaticResource ComboBoxSelectOverlay}"/>
-                <Button Grid.Column="1" Content="Remove" Width="80" Height="22" HorizontalAlignment="Right" IsEnabled="{Binding HasSelectedVirtualVariable}" Click="ButtonRemoveVirtualVariable_OnClick"/>
+                <ComboBox x:Name="ComboBoxCreate" Grid.Column="1" Margin="5,0,0,0" Width="160" HorizontalAlignment="Left" SelectionChanged="ComboBoxCreate_OnSelectionChanged">
+                    <ComboBoxItem>Dichotomization</ComboBoxItem>
+                    <ComboBoxItem>Equal frequency binning</ComboBoxItem>
+                </ComboBox>
+                <TextBlock Grid.Column="1" Padding="5,0,0,0" DataContext="{Binding ElementName=ComboBoxCreate, Path=SelectedItem}" Text="Create ..." Style="{StaticResource ComboBoxSelectOverlay}"/>
+                <Button Grid.Column="2" Content="Remove" Width="80" Height="22" HorizontalAlignment="Right" IsEnabled="{Binding HasSelectedVirtualVariable}" Click="ButtonRemoveVirtualVariable_OnClick"/>
             </Grid>
             <Border Grid.Row="3" BorderBrush="Gray" BorderThickness="0,0.5,0,0" Margin="0,5,0,0" MinHeight="350" Padding="0,5,0,0">
                 <Grid Visibility="{Binding HasSelectedVirtualVariable, Converter={StaticResource BoolToVisibilityConverter}}">

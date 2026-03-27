@@ -633,6 +633,16 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
+        public List<double>? GetDistinctValues(Variable variable, List<PlausibleValueVariable> plausibleValueVariables)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<double>? GetDistinctValues(Variable variable)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool Execute(string rCode, bool oneLiner = false)
         {
             throw new NotImplementedException();

@@ -310,6 +310,11 @@ public partial class VirtualVariables : ObservableObject
         virtualVariableRecode.Rules.Remove(rule);
     }
 
+    public List<double> GetDistinctValues(Variable variable)
+    {
+        return _rservice.GetDistinctValues(variable, AnalysisConfiguration?.DatasetType?.PVvarsList.ToList() ?? []) ?? [];
+    }
+
     private DataView DefaultDataView()
     {
         DataTable defaultTable = new("default");
