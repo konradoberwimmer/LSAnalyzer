@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Models;
+using LSAnalyzer.Views.VirtualVariableCreation;
 
 namespace LSAnalyzer.Views;
 
@@ -117,4 +118,21 @@ public partial class VirtualVariables : Window
     }
 
     public class ReloadCurrentDatasetMessage;
+
+    private void ComboBoxCreate_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox comboBox || DataContext is not ViewModels.VirtualVariables viewModel || e.AddedItems.Count == 0 || e.AddedItems[0] is not ComboBoxItem item) return;
+
+        switch (item.Content)
+        {
+            case "Dichotomization":
+                ViewModels.VirtualVariableCreation.Dichotomization dichotomizationViewModel = new(viewModel);
+                Dichotomization dichotomization = new(dichotomizationViewModel);
+                dichotomization.ShowDialog();
+                comboBox.SelectedIndex = -1;
+                break;
+            default:
+                break;
+        }
+    }
 }

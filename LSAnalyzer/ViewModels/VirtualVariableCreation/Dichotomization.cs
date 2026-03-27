@@ -41,18 +41,30 @@ public partial class Dichotomization : ObservableValidatorExtended
         if (distinctValues.Count > 10)
         {
             SelectedVariable = null;
+            ShowCategoryCountError = true;
             WeakReferenceMessenger.Default.Send<RejectsContinuousVariable>();
             return;
         }
         
+        ShowCategoryCountError = false;
         Categories = [..distinctValues];
         SelectedCategory = Categories.Count > 0 ? Categories.First() : 0.0;
     }
+
+    [ObservableProperty]
+    private bool _showCategoryCountError = false;
     
     [ObservableProperty]
     private ReferenceCategoryType _referenceCategory = ReferenceCategoryType.Lowest;
     partial void OnReferenceCategoryChanged(ReferenceCategoryType value)
     {
+        SelectedCategory = value switch
+        {
+            ReferenceCategoryType.Lowest => Categories.Count > 0 ? Categories.First() : 0.0,
+            ReferenceCategoryType.Highest => Categories.Count > 0 ? Categories.Last() : 0.0,
+            _ => SelectedCategory
+        };
+
         OnPropertyChanged(nameof(CategoriesMakesSense));
     }
     
@@ -66,10 +78,11 @@ public partial class Dichotomization : ObservableValidatorExtended
 
     [ObservableProperty]
     [Required]
-    [RegularExpression("[a-zA-Z][a-zA-Z0-9_]{2,}", ErrorMessage = "Name must start with a letter and consist of letters, digits and underscores (at least 3)!")]
+    [RegularExpression("[a-zA-Z][a-zA-Z0-9_]{2,}", ErrorMessage = "Prefix must start with a letter and consist of letters, digits and underscores (at least 3)!")]
     private string _prefix = string.Empty;
 
     [ObservableProperty] 
+    [RegularExpression("^[^\"'`´]*$", ErrorMessage = "The label must not contain any kind of quote character.")]
     private string _newLabel = string.Empty;
     
     public Dichotomization(VirtualVariables virtualVariables)
