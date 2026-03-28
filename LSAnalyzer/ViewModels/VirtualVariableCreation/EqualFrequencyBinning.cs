@@ -89,7 +89,11 @@ public partial class EqualFrequencyBinning : ObservableValidatorExtended
                     new VirtualVariableRecode.Term
                     {
                         VariableIndex = 0,
-                        Type = VirtualVariableRecode.Term.TermType.Between,
+                        Type = i switch
+                        {
+                            0 => VirtualVariableRecode.Term.TermType.AtMost,
+                            _ => i == percentiles.Count ? VirtualVariableRecode.Term.TermType.AtLeast : VirtualVariableRecode.Term.TermType.Between
+                        },
                         Value = i == 0 ? double.MinValue : percentiles[i - 1],
                         MaxValue = i == percentiles.Count ? double.MaxValue : percentiles[i]
                     }

@@ -1704,6 +1704,8 @@ namespace LSAnalyzer.Services
                             VirtualVariableRecode.Term.TermType.Missing => $"is.na({variable})",
                             VirtualVariableRecode.Term.TermType.Exactly => $"{variable} == {value}",
                             VirtualVariableRecode.Term.TermType.Between => $"{variable} >= {value} & {variable} <= {maxValue}",
+                            VirtualVariableRecode.Term.TermType.AtLeast => $"{variable} >= {value}",
+                            VirtualVariableRecode.Term.TermType.AtMost => $"{variable} <= {maxValue}",
                             _ => throw new ArgumentOutOfRangeException()
                         };
                     }).ToList();

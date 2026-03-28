@@ -2265,7 +2265,7 @@ namespace TestLSAnalyzer.Services
                     new VirtualVariableRecode.Rule
                     {
                         Criteria = [ 
-                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 1 },
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.AtMost, MaxValue = 1 },
                             new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 1 },
                         ], 
                         ResultNa = false, 
@@ -2357,7 +2357,7 @@ namespace TestLSAnalyzer.Services
                     {
                         Criteria = [
                             new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 400, MaxValue = 1000 }, 
-                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Between, Value = 400, MaxValue = 1000 }, 
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.AtLeast, Value = 400 }, 
                         ], 
                         ResultNa = false, 
                         ResultValue = 0

@@ -17,6 +17,7 @@
         <customControls:DropHandlerVariable x:Key="DropHandlerVariable"/>
         <sys:Boolean x:Key="BooleanTrue">True</sys:Boolean>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
+        <converter:EnumCamelCase x:Key="EnumCamelCaseConverter"/>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
         <ObjectDataProvider x:Key="EnumElseActionDataSource"
                             ObjectType="{x:Type sys:Enum}"
@@ -123,7 +124,13 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Width="195" Orientation="Horizontal">
-                                        <ComboBox Width="75" Height="22" ItemsSource="{Binding Source={StaticResource EnumTermTypeDataSource}}" SelectedItem="{Binding Type}"/>
+                                        <ComboBox Width="75" Height="22" ItemsSource="{Binding Source={StaticResource EnumTermTypeDataSource}}" SelectedItem="{Binding Type}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Converter={StaticResource EnumCamelCaseConverter}}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
                                         <TextBox Margin="5,0,0,0" Width="50" Height="22" Text="{Binding Value}" Visibility="{Binding ValueMakesSense, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                         <TextBox Margin="5,0,0,0" Width="50" Height="22" Text="{Binding MaxValue}" Visibility="{Binding MaxValueMakesSense, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                     </StackPanel>

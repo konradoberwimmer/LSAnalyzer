@@ -203,6 +203,8 @@ public partial class VirtualVariableRecode : VirtualVariable
             Missing,
             Exactly,
             Between,
+            AtLeast,
+            AtMost,
         }
         
         public int VariableIndex { get; set; } = -1;
@@ -219,13 +221,13 @@ public partial class VirtualVariableRecode : VirtualVariable
         private double _value = 0.0;
 
         [JsonIgnore]
-        public bool ValueMakesSense => Type != TermType.Missing;
+        public bool ValueMakesSense => Type != TermType.Missing && Type != TermType.AtMost;
 
         [ObservableProperty] 
         private double _maxValue = 1.0;
         
         [JsonIgnore]
-        public bool MaxValueMakesSense => Type == TermType.Between;
+        public bool MaxValueMakesSense => Type is TermType.Between or TermType.AtMost;
 
         [JsonIgnore]
         public string Info
@@ -237,6 +239,8 @@ public partial class VirtualVariableRecode : VirtualVariable
                     TermType.Missing => "NA",
                     TermType.Exactly => Value.ToString("0.##", CultureInfo.InvariantCulture),
                     TermType.Between => $"{Value.ToString("0.##", CultureInfo.InvariantCulture)}-{MaxValue.ToString("0.##", CultureInfo.InvariantCulture)}",
+                    TermType.AtLeast => $"\u2265{Value.ToString("0.##", CultureInfo.InvariantCulture)}",
+                    TermType.AtMost => $"\u2264{MaxValue.ToString("0.##", CultureInfo.InvariantCulture)}",
                     _ => throw new ArgumentOutOfRangeException()
                 };
             }
@@ -259,6 +263,14 @@ public partial class VirtualVariableRecode : VirtualVariable
         [ObservableProperty] 
         [MinLength(1)]
         private ItemsChangeObservableCollection<Term> _criteria = [];
+        partial void OnCriteriaChanged(ItemsChangeObservableCollection<Term> value)
+        {
+            Criteria.CollectionChanged += delegate
+            {
+                OnPropertyChanged(nameof(IsChanged)); 
+            };
+            OnPropertyChanged(nameof(IsChanged));
+        }
 
         [ObservableProperty] 
         private bool _resultNa = false;
