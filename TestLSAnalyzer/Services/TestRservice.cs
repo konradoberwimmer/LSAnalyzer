@@ -2385,17 +2385,8 @@ namespace TestLSAnalyzer.Services
                     new VirtualVariableRecode.Rule
                     {
                         Criteria = [ 
-                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 600 },
-                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 10 },
-                        ], 
-                        ResultNa = false, 
-                        ResultValue = 0
-                    },
-                    new VirtualVariableRecode.Rule
-                    {
-                        Criteria = [
-                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 600, MaxValue = 1000 }, 
-                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 2 }, 
+                            new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 0, MaxValue = 1000 },
+                            new VirtualVariableRecode.Term { VariableIndex = 1, Type = VirtualVariableRecode.Term.TermType.Missing },
                         ], 
                         ResultNa = false, 
                         ResultValue = 0
@@ -2410,6 +2401,8 @@ namespace TestLSAnalyzer.Services
                         ResultValue = 1
                     },
                 ],
+                Else = VirtualVariableRecode.ElseAction.Set,
+                ElseValue = 0,
             };
             
             Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeMix, [ new PlausibleValueVariable { DisplayName = "ASRREA", Regex = "ASRREA", Mandatory = true } ]));

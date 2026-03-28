@@ -1687,7 +1687,13 @@ namespace LSAnalyzer.Services
                 if (nameExists) return false;
                 
                 if (virtualVariableRecode is { Else: VirtualVariableRecode.ElseAction.Copy, Variables.Count: 0 }) return false;
-                var elseResult = virtualVariableRecode.Else == VirtualVariableRecode.ElseAction.Missing ? "as.numeric(NA)" : $"{target}$`{virtualVariableRecode.Variables.First().Name}`";
+                var elseResult = virtualVariableRecode.Else switch
+                {
+                    VirtualVariableRecode.ElseAction.Missing => "as.numeric(NA)",
+                    VirtualVariableRecode.ElseAction.Copy => $"{target}$`{virtualVariableRecode.Variables.First().Name}`",
+                    VirtualVariableRecode.ElseAction.Set => $"{virtualVariableRecode.ElseValue.ToString(CultureInfo.InvariantCulture)}",
+                    _ => throw new ArgumentOutOfRangeException(),
+                };
 
                 EvaluateAndLog($"{target}$`{virtualVariableRecode.Name}` <- {elseResult}");
 

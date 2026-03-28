@@ -111,11 +111,10 @@ public partial class Dichotomization : ObservableValidatorExtended
                 Label = string.IsNullOrWhiteSpace(NewLabel) ? string.Empty : $"{NewLabel} - Category {category.ToString("0.####", CultureInfo.InvariantCulture)}",
                 ForFileName = _virtualVariables.CurrentFileName,
                 Variables = [SelectedVariable!.Clone()],
-                Else = VirtualVariableRecode.ElseAction.Missing,
-            };
-
-            virtualVariableRecode.Rules = [
-                ..Categories.Select(cat => 
+                Else = VirtualVariableRecode.ElseAction.Set,
+                ElseValue = 0,
+                Rules =
+                [
                     new VirtualVariableRecode.Rule
                     {
                         Criteria = [
@@ -123,14 +122,25 @@ public partial class Dichotomization : ObservableValidatorExtended
                             {
                                 VariableIndex = 0,
                                 Type = VirtualVariableRecode.Term.TermType.Exactly,
-                                Value = cat,
+                                Value = category,
+                            },
+                        ],
+                        ResultValue = 1,
+                    },
+                    new VirtualVariableRecode.Rule
+                    {
+                        Criteria = [
+                            new VirtualVariableRecode.Term
+                            {
+                                VariableIndex = 0,
+                                Type = VirtualVariableRecode.Term.TermType.Missing,
                             }
                         ],
-                        ResultValue = cat == category ? 1.0 : 0.0
+                        ResultNa = true,
                     }
-                ).ToList()
-            ];
-            
+                ]
+            };
+
             _virtualVariables.CurrentVirtualVariables.Add(virtualVariableRecode);
             _virtualVariables.SelectedVirtualVariable = virtualVariableRecode;
             _virtualVariables.SaveSelectedVirtualVariableCommand.Execute(null);

@@ -15,6 +15,7 @@ public partial class VirtualVariableRecode : VirtualVariable
     {
         Copy,
         Missing,
+        Set,
     }
     
     public override string TypeName => "Recode";
@@ -25,19 +26,19 @@ public partial class VirtualVariableRecode : VirtualVariable
     {
         Variables.CollectionChanged += delegate
         {
-            if (Variables.Count != 1)
+            if (Variables.Count != 1 && Else == ElseAction.Copy)
             {
                 Else = ElseAction.Missing;
             }
             
             OnPropertyChanged(nameof(CanAddRule));
             OnPropertyChanged(nameof(CannotAddRule));
-            OnPropertyChanged(nameof(ElseCopyMakesSense));
+            OnPropertyChanged(nameof(ElseValueMakesSense));
             OnPropertyChanged(nameof(IsChanged)); 
         };
         OnPropertyChanged(nameof(CanAddRule));
         OnPropertyChanged(nameof(CannotAddRule));
-        OnPropertyChanged(nameof(ElseCopyMakesSense));
+        OnPropertyChanged(nameof(ElseValueMakesSense));
         OnPropertyChanged(nameof(IsChanged)); 
     }
     
@@ -62,12 +63,21 @@ public partial class VirtualVariableRecode : VirtualVariable
     private ElseAction _else = ElseAction.Missing;
     partial void OnElseChanged(ElseAction value)
     {
+        if (value == ElseAction.Copy && Variables.Count != 1)
+        {
+            Else = ElseAction.Missing;
+        }
+        
+        OnPropertyChanged(nameof(ElseValueMakesSense));
         OnPropertyChanged(nameof(IsChanged));
     }
 
-    [JsonIgnore]
-    public bool ElseCopyMakesSense => Variables.Count == 1;
+    [ObservableProperty]
+    private double _elseValue = 0.0;
 
+    [JsonIgnore] 
+    public bool ElseValueMakesSense => Else == ElseAction.Set;
+    
     public override bool FromPlausibleValues => Variables.Any(var => var.FromPlausibleValues);
 
     public override string Info
@@ -81,8 +91,16 @@ public partial class VirtualVariableRecode : VirtualVariable
                 >= 2 => $"[{string.Join(",", Variables.Select(var => var.Name).ToList())}], ",
                 _ => throw new ArgumentOutOfRangeException()
             };
+
+            var elseAction = Else switch
+            {
+                ElseAction.Copy => "else=copy",
+                ElseAction.Missing => "else=NA",
+                ElseAction.Set => $"else={ElseValue.ToString(CultureInfo.InvariantCulture)}",
+                _ => throw new ArgumentOutOfRangeException()
+            };
             
-            var recodes = string.Join(";", Rules.Select(rule => rule.Info).ToList().Append($"else={(Else==ElseAction.Copy ? "copy" : "NA")}"));
+            var recodes = string.Join(";", Rules.Select(rule => rule.Info).ToList().Append(elseAction));
             
             return $"recode({variables}'{recodes}')";
         }

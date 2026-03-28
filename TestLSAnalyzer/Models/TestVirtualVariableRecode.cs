@@ -16,7 +16,7 @@ public class TestVirtualVariableRecode
         virtualVariableRecode.AddVariable(new Variable(2, "item2"));
         
         Assert.Equal(VirtualVariableRecode.ElseAction.Missing, virtualVariableRecode.Else);
-        Assert.False(virtualVariableRecode.ElseCopyMakesSense);
+        Assert.False(virtualVariableRecode.ElseValueMakesSense);
         
         virtualVariableRecode.AddRule();
         
@@ -29,7 +29,9 @@ public class TestVirtualVariableRecode
         Assert.Equal([0], virtualVariableRecode.Rules.First().Criteria.Select(crit => crit.VariableIndex));
         
         virtualVariableRecode.AddVariable(new Variable(3, "item3"));
+        virtualVariableRecode.Else = VirtualVariableRecode.ElseAction.Set;
         
+        Assert.True(virtualVariableRecode.ElseValueMakesSense);
         Assert.Equal(2, virtualVariableRecode.Rules.First().Criteria.Count);
         Assert.Equal([0, 1], virtualVariableRecode.Rules.First().Criteria.Select(crit => crit.VariableIndex));
         
@@ -54,7 +56,7 @@ public class TestVirtualVariableRecode
         virtualVariableRecodeDeserialized.AddVariable(new Variable(2, "item2"));
         
         Assert.Equal(VirtualVariableRecode.ElseAction.Missing, virtualVariableRecodeDeserialized.Else);
-        Assert.False(virtualVariableRecodeDeserialized.ElseCopyMakesSense);
+        Assert.False(virtualVariableRecodeDeserialized.ElseValueMakesSense);
         
         virtualVariableRecodeDeserialized.AddRule();
         
@@ -91,10 +93,15 @@ public class TestVirtualVariableRecode
         virtualVariableRecode.AddRule();
         
         Assert.Equal("recode([item1,item2], '[NA,1-2]=NA;[0,0]=0;else=NA')", virtualVariableRecode.Info);
+
+        virtualVariableRecode.Else = VirtualVariableRecode.ElseAction.Set;
+        virtualVariableRecode.ElseValue = -1;
+        
+        Assert.Equal("recode([item1,item2], '[NA,1-2]=NA;[0,0]=0;else=-1')", virtualVariableRecode.Info);
         
         virtualVariableRecode.RemoveLastVariable();
         
-        Assert.Equal("recode(item1, 'NA=NA;0=0;else=NA')", virtualVariableRecode.Info);
+        Assert.Equal("recode(item1, 'NA=NA;0=0;else=-1')", virtualVariableRecode.Info);
     }
 
     [Fact]

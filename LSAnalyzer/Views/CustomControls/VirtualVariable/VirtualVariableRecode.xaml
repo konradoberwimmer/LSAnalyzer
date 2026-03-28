@@ -166,7 +166,10 @@
             </Button>
             <TextBlock Grid.Row="3" Grid.Column="1" Text="add rule" Margin="5,10,0,0" VerticalAlignment="Center"/>
             <TextBlock Grid.Row="3" Grid.Column="1" Margin="5,10,0,0" VerticalAlignment="Center" HorizontalAlignment="Right" Text="Else"/>
-            <ComboBox Grid.Row="3" Grid.Column="2" Margin="5,10,0,0" Width="75" HorizontalAlignment="Left" ItemsSource="{Binding Source={StaticResource EnumElseActionDataSource}}" SelectedItem="{Binding Else}" IsEnabled="{Binding ElseCopyMakesSense}"/>
+            <StackPanel Grid.Row="3" Grid.Column="2" Margin="5,10,0,0" Orientation="Horizontal">
+                <ComboBox  Width="75" HorizontalAlignment="Left" ItemsSource="{Binding Source={StaticResource EnumElseActionDataSource}}" SelectedItem="{Binding Else, Delay=10}"/>
+                <TextBox Margin="5,0,0,0" Width="50" Height="22" Text="{Binding ElseValue}" Visibility="{Binding ElseValueMakesSense, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
+            </StackPanel>
         </Grid>
     </ScrollViewer>
 </UserControl>
