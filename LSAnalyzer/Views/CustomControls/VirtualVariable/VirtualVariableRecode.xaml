@@ -19,6 +19,7 @@
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
         <converter:EnumCamelCase x:Key="EnumCamelCaseConverter"/>
         <converter:InverseBool x:Key="InverseBoolConverter"/>
+        <converter:LastInCollectionToVisibility x:Key="LastInCollectionToVisibilityConverter"/>
         <ObjectDataProvider x:Key="EnumElseActionDataSource"
                             ObjectType="{x:Type sys:Enum}"
                             MethodName="GetValues">
@@ -75,17 +76,23 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Width="195">
+                            <StackPanel Width="195" Orientation="Horizontal">
+                                <Button Background="Transparent" BorderBrush="Transparent" Margin="0,0,5,0" Padding="0" VerticalAlignment="Center" Click="ButtonRemoveLastVariable_Click">
+                                    <Button.Visibility>
+                                        <MultiBinding Converter="{StaticResource LastInCollectionToVisibilityConverter}" ConverterParameter="{StaticResource BooleanTrue}">
+                                            <Binding />
+                                            <Binding RelativeSource="{RelativeSource AncestorType={x:Type UserControl}}" Path="DataContext.Variables"/>
+                                        </MultiBinding>
+                                    </Button.Visibility>
+                                    <Button.Content>
+                                        <fa:IconImage Icon="CircleXmark" Height="15" Foreground="Red"/>
+                                    </Button.Content>
+                                </Button>
                                 <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                            </Border>
+                            </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <Button Background="Transparent" BorderBrush="Transparent" Margin="5,0,0,0" Padding="0" VerticalAlignment="Center" Visibility="{Binding CanAddRule, Converter={StaticResource BoolToVisibilityConverter}}" Click="ButtonRemoveLastVariable_Click">
-                    <Button.Content>
-                        <fa:IconImage Icon="CircleXmark" Height="15" Foreground="Red"/>
-                    </Button.Content>
-                </Button>
             </StackPanel>
             <TextBlock Grid.Row="1" Grid.Column="2" Margin="5,5,0,0" VerticalAlignment="Center" Text="Result"/>
             <Rectangle Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Height="1" Margin="0,5,0,0" Stroke="Gray" VerticalAlignment="Top"/>

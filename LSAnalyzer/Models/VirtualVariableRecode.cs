@@ -31,6 +31,7 @@ public partial class VirtualVariableRecode : VirtualVariable
                 Else = ElseAction.Missing;
             }
             
+            OnPropertyChanged(nameof(Variables));
             OnPropertyChanged(nameof(CanAddRule));
             OnPropertyChanged(nameof(CannotAddRule));
             OnPropertyChanged(nameof(ElseValueMakesSense));
