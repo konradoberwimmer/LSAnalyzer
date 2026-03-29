@@ -62,6 +62,8 @@ public class TestEqualFrequencyBinning
         var newVirtualVariable = (virtualVariables.CurrentVirtualVariables.First() as VirtualVariableRecode)!;
         Assert.Equal("TestEqualFrequencyBinning", newVirtualVariable.Name);
         Assert.Equal(4, newVirtualVariable.Rules.Count);
+        Assert.True(newVirtualVariable.Rules.First().Criteria.First().Type == VirtualVariableRecode.Term.TermType.AtMost);
+        Assert.True(newVirtualVariable.Rules.Last().Criteria.First().Type == VirtualVariableRecode.Term.TermType.AtLeast);
         Assert.True(newVirtualVariable.Rules.Index().All(rule => 
             (rule.Index > 0 && rule.Item.Criteria.First().Value == percentilesResult[rule.Index - 1]) ||
             (rule.Index < 3 && rule.Item.Criteria.First().MaxValue == percentilesResult[rule.Index])

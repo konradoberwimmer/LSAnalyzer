@@ -82,11 +82,11 @@ public class TestDichotomization
         Assert.Equal("itemA - Category 2", virtualVariables.CurrentVirtualVariables[0].Label);
         Assert.Equal("testfile.csv", virtualVariables.CurrentVirtualVariables[0].ForFileName);
         Assert.False(virtualVariables.CurrentVirtualVariables[0].IsChanged);
-        Assert.Equal("recode(itemA, '1=0;2=1;3=0;4=0;else=NA')", virtualVariables.CurrentVirtualVariables[0].Info);
+        Assert.Equal("recode(itemA, '2=1;NA=NA;else=0')", virtualVariables.CurrentVirtualVariables[0].Info);
         Assert.Equal("myDichotomization_c3", virtualVariables.CurrentVirtualVariables[1].Name);
-        Assert.Equal("recode(itemA, '1=0;2=0;3=1;4=0;else=NA')", virtualVariables.CurrentVirtualVariables[1].Info);
+        Assert.Equal("recode(itemA, '3=1;NA=NA;else=0')", virtualVariables.CurrentVirtualVariables[1].Info);
         Assert.Equal("myDichotomization_c4", virtualVariables.CurrentVirtualVariables[2].Name);
-        Assert.Equal("recode(itemA, '1=0;2=0;3=0;4=1;else=NA')", virtualVariables.CurrentVirtualVariables[2].Info);
+        Assert.Equal("recode(itemA, '4=1;NA=NA;else=0')", virtualVariables.CurrentVirtualVariables[2].Info);
         
         virtualVariables.CurrentVirtualVariables.Clear();
         dichotomization.ReferenceCategory = Dichotomization.ReferenceCategoryType.Select;
@@ -101,11 +101,11 @@ public class TestDichotomization
         Assert.Equal("itemA - Category 1", virtualVariables.CurrentVirtualVariables[0].Label);
         Assert.Equal("testfile.csv", virtualVariables.CurrentVirtualVariables[0].ForFileName);
         Assert.False(virtualVariables.CurrentVirtualVariables[0].IsChanged);
-        Assert.Equal("recode(itemA, '1=1;2=0;3=0;4=0;else=NA')", virtualVariables.CurrentVirtualVariables[0].Info);
+        Assert.Equal("recode(itemA, '1=1;NA=NA;else=0')", virtualVariables.CurrentVirtualVariables[0].Info);
         Assert.Equal("myDichotomization_c2", virtualVariables.CurrentVirtualVariables[1].Name);
-        Assert.Equal("recode(itemA, '1=0;2=1;3=0;4=0;else=NA')", virtualVariables.CurrentVirtualVariables[1].Info);
+        Assert.Equal("recode(itemA, '2=1;NA=NA;else=0')", virtualVariables.CurrentVirtualVariables[1].Info);
         Assert.Equal("myDichotomization_c4", virtualVariables.CurrentVirtualVariables[2].Name);
-        Assert.Equal("recode(itemA, '1=0;2=0;3=0;4=1;else=NA')", virtualVariables.CurrentVirtualVariables[2].Info);
+        Assert.Equal("recode(itemA, '4=1;NA=NA;else=0')", virtualVariables.CurrentVirtualVariables[2].Info);
         
         virtualVariables.CurrentVirtualVariables.Clear();
         dichotomization.ReferenceCategory = Dichotomization.ReferenceCategoryType.None;
@@ -119,12 +119,12 @@ public class TestDichotomization
         Assert.Equal("itemA - Category 1", virtualVariables.CurrentVirtualVariables[0].Label);
         Assert.Equal("testfile.csv", virtualVariables.CurrentVirtualVariables[0].ForFileName);
         Assert.False(virtualVariables.CurrentVirtualVariables[0].IsChanged);
-        Assert.Equal("recode(itemA, '1=1;2=0;3=0;4=0;else=NA')", virtualVariables.CurrentVirtualVariables[0].Info);
+        Assert.Equal("recode(itemA, '1=1;NA=NA;else=0')", virtualVariables.CurrentVirtualVariables[0].Info);
         Assert.Equal("myDichotomization_c2", virtualVariables.CurrentVirtualVariables[1].Name);
-        Assert.Equal("recode(itemA, '1=0;2=1;3=0;4=0;else=NA')", virtualVariables.CurrentVirtualVariables[1].Info);
+        Assert.Equal("recode(itemA, '2=1;NA=NA;else=0')", virtualVariables.CurrentVirtualVariables[1].Info);
         Assert.Equal("myDichotomization_c3", virtualVariables.CurrentVirtualVariables[2].Name);
-        Assert.Equal("recode(itemA, '1=0;2=0;3=1;4=0;else=NA')", virtualVariables.CurrentVirtualVariables[2].Info);
+        Assert.Equal("recode(itemA, '3=1;NA=NA;else=0')", virtualVariables.CurrentVirtualVariables[2].Info);
         Assert.Equal("myDichotomization_c4", virtualVariables.CurrentVirtualVariables[3].Name);
-        Assert.Equal("recode(itemA, '1=0;2=0;3=0;4=1;else=NA')", virtualVariables.CurrentVirtualVariables[3].Info);
+        Assert.Equal("recode(itemA, '4=1;NA=NA;else=0')", virtualVariables.CurrentVirtualVariables[3].Info);
     }
 }

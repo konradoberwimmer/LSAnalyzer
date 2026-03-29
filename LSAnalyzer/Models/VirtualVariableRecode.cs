@@ -15,6 +15,7 @@ public partial class VirtualVariableRecode : VirtualVariable
     {
         Copy,
         Missing,
+        Set,
     }
     
     public override string TypeName => "Recode";
@@ -25,19 +26,20 @@ public partial class VirtualVariableRecode : VirtualVariable
     {
         Variables.CollectionChanged += delegate
         {
-            if (Variables.Count != 1)
+            if (Variables.Count != 1 && Else == ElseAction.Copy)
             {
                 Else = ElseAction.Missing;
             }
             
+            OnPropertyChanged(nameof(Variables));
             OnPropertyChanged(nameof(CanAddRule));
             OnPropertyChanged(nameof(CannotAddRule));
-            OnPropertyChanged(nameof(ElseCopyMakesSense));
+            OnPropertyChanged(nameof(ElseValueMakesSense));
             OnPropertyChanged(nameof(IsChanged)); 
         };
         OnPropertyChanged(nameof(CanAddRule));
         OnPropertyChanged(nameof(CannotAddRule));
-        OnPropertyChanged(nameof(ElseCopyMakesSense));
+        OnPropertyChanged(nameof(ElseValueMakesSense));
         OnPropertyChanged(nameof(IsChanged)); 
     }
     
@@ -62,12 +64,21 @@ public partial class VirtualVariableRecode : VirtualVariable
     private ElseAction _else = ElseAction.Missing;
     partial void OnElseChanged(ElseAction value)
     {
+        if (value == ElseAction.Copy && Variables.Count != 1)
+        {
+            Else = ElseAction.Missing;
+        }
+        
+        OnPropertyChanged(nameof(ElseValueMakesSense));
         OnPropertyChanged(nameof(IsChanged));
     }
 
-    [JsonIgnore]
-    public bool ElseCopyMakesSense => Variables.Count == 1;
+    [ObservableProperty]
+    private double _elseValue = 0.0;
 
+    [JsonIgnore] 
+    public bool ElseValueMakesSense => Else == ElseAction.Set;
+    
     public override bool FromPlausibleValues => Variables.Any(var => var.FromPlausibleValues);
 
     public override string Info
@@ -81,8 +92,16 @@ public partial class VirtualVariableRecode : VirtualVariable
                 >= 2 => $"[{string.Join(",", Variables.Select(var => var.Name).ToList())}], ",
                 _ => throw new ArgumentOutOfRangeException()
             };
+
+            var elseAction = Else switch
+            {
+                ElseAction.Copy => "else=copy",
+                ElseAction.Missing => "else=NA",
+                ElseAction.Set => $"else={ElseValue.ToString(CultureInfo.InvariantCulture)}",
+                _ => throw new ArgumentOutOfRangeException()
+            };
             
-            var recodes = string.Join(";", Rules.Select(rule => rule.Info).ToList().Append($"else={(Else==ElseAction.Copy ? "copy" : "NA")}"));
+            var recodes = string.Join(";", Rules.Select(rule => rule.Info).ToList().Append(elseAction));
             
             return $"recode({variables}'{recodes}')";
         }
@@ -203,6 +222,8 @@ public partial class VirtualVariableRecode : VirtualVariable
             Missing,
             Exactly,
             Between,
+            AtLeast,
+            AtMost,
         }
         
         public int VariableIndex { get; set; } = -1;
@@ -219,13 +240,13 @@ public partial class VirtualVariableRecode : VirtualVariable
         private double _value = 0.0;
 
         [JsonIgnore]
-        public bool ValueMakesSense => Type != TermType.Missing;
+        public bool ValueMakesSense => Type != TermType.Missing && Type != TermType.AtMost;
 
         [ObservableProperty] 
         private double _maxValue = 1.0;
         
         [JsonIgnore]
-        public bool MaxValueMakesSense => Type == TermType.Between;
+        public bool MaxValueMakesSense => Type is TermType.Between or TermType.AtMost;
 
         [JsonIgnore]
         public string Info
@@ -237,6 +258,8 @@ public partial class VirtualVariableRecode : VirtualVariable
                     TermType.Missing => "NA",
                     TermType.Exactly => Value.ToString("0.##", CultureInfo.InvariantCulture),
                     TermType.Between => $"{Value.ToString("0.##", CultureInfo.InvariantCulture)}-{MaxValue.ToString("0.##", CultureInfo.InvariantCulture)}",
+                    TermType.AtLeast => $"\u2265{Value.ToString("0.##", CultureInfo.InvariantCulture)}",
+                    TermType.AtMost => $"\u2264{MaxValue.ToString("0.##", CultureInfo.InvariantCulture)}",
                     _ => throw new ArgumentOutOfRangeException()
                 };
             }
@@ -259,6 +282,14 @@ public partial class VirtualVariableRecode : VirtualVariable
         [ObservableProperty] 
         [MinLength(1)]
         private ItemsChangeObservableCollection<Term> _criteria = [];
+        partial void OnCriteriaChanged(ItemsChangeObservableCollection<Term> value)
+        {
+            Criteria.CollectionChanged += delegate
+            {
+                OnPropertyChanged(nameof(IsChanged)); 
+            };
+            OnPropertyChanged(nameof(IsChanged));
+        }
 
         [ObservableProperty] 
         private bool _resultNa = false;
