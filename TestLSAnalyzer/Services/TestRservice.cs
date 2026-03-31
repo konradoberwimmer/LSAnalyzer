@@ -287,7 +287,7 @@ namespace TestLSAnalyzer.Services
                 {
                     Weight = "wgt",
                     NMI = 10,
-                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Mandatory = true } },
+                    PVvarsList = new() { new() { Regex = "x", DisplayName = "x", Mandatory = true }, new() { Regex = "y[0-9]+", DisplayName = "y", Label = "PV Mathematics", Mandatory = true } },
                     RepWgts = "repwgt",
                     FayFac = 0.5,
                 },
@@ -300,7 +300,7 @@ namespace TestLSAnalyzer.Services
             Assert.NotNull(variablesListKeepPV);
             Assert.True(variablesListKeepPV.Count == 11);
             Assert.Single(variablesListKeepPV.Where(var => var.Name == "y").ToList());
-            Assert.Equal("PV Mathematics 1", variablesListKeepPV.Where(var => var.Name == "y").First().Label);
+            Assert.Equal("PV Mathematics", variablesListKeepPV.Where(var => var.Name == "y").First().Label);
             Assert.Contains(variablesListKeepPV, variable => variable.FromPlausibleValues);
             Assert.True(variablesListKeepPV.Where(var => var.Name == "y").First().FromPlausibleValues);
 
