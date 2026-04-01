@@ -65,31 +65,24 @@ namespace LSAnalyzer.Views
 
                     if (result == MessageBoxResult.Yes)
                     {
-                        DispatcherHelper.CheckBeginInvokeOnUI(() =>
-                        {
-                            InstallOpenXlsx();
-                        });
+                        InstallOpenXlsx();
                     }
                 }
 
-                if (m.PackageName == "dataverse" && m.DataProvider != null)
+                if (m is { PackageName: "dataverse", DataProvider: not null })
                 {
                     var result = MessageBox.Show("Using dataverse requires package 'dataverse' (>= 0.3.0). Do you want to install it now?", "Info", MessageBoxButton.YesNo, MessageBoxImage.Information);
 
-                    if (result == MessageBoxResult.Yes)
+                    if (result != MessageBoxResult.Yes) return;
+                    
+                    var successfulInstall = m.DataProvider.InstallDependencies();
+                    if (successfulInstall)
                     {
-                        DispatcherHelper.CheckBeginInvokeOnUI(() =>
-                        {
-                            var successfulInstall = m.DataProvider.InstallDependencies();
-                            if (successfulInstall)
-                            {
-                                MessageBox.Show("R package installation successful. Please restart LSAnalyzer!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                            }
-                            else
-                            {
-                                MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart LSAnalyzer afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            }
-                        });
+                        MessageBox.Show("R package installation successful. Please restart LSAnalyzer!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart LSAnalyzer afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             });

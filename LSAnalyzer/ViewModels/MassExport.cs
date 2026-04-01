@@ -101,6 +101,13 @@ public partial class MassExport : ObservableObject
         massExportWorker.WorkerReportsProgress = false;
         massExportWorker.WorkerSupportsCancellation = false;
         massExportWorker.DoWork += MassExportWorker;
+        massExportWorker.RunWorkerCompleted += (_, e) =>
+        {
+            if (e.Result is true)
+            {
+                window?.Close();
+            }
+        };
         massExportWorker.RunWorkerAsync(window);
     }
 
@@ -161,16 +168,9 @@ public partial class MassExport : ObservableObject
             
             currentFileNameIndex++;
         }
-        
+
+        e.Result = true;
         IsBusy = false;
-        
-        if (window != null)
-        {
-            DispatcherHelper.CheckBeginInvokeOnUI(() =>
-            {
-                window.Close();
-            });
-        }
     }
     
     public class FileInUseMessage

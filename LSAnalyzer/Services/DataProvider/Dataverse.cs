@@ -138,8 +138,7 @@ namespace LSAnalyzer.Services.DataProvider
 
             if (!_rservice.CheckNecessaryRPackages("dataverse"))
             {
-                WeakReferenceMessenger.Default.Send(new MissingRPackageMessage("dataverse") { DataProvider = this });
-                return new() { IsSuccess = false, Message = "Missing R package 'dataverse'" };
+                return new() { IsSuccess = false, Message = "Missing R package 'dataverse'", MessageObject = new MissingRPackageMessage("dataverse") { DataProvider = this } };
             }
 
             var success = FetchFile(dataverseConfiguration, "lsanalyzer_test_file_raw", values.File, values.Dataset, values.FileFormat);

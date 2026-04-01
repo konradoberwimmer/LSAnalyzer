@@ -2,6 +2,7 @@
 using LSAnalyzer.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -78,6 +79,12 @@ namespace LSAnalyzer.Views
         private void ListBoxVariables_OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
+        }
+
+
+        private void Window_Closing(object? sender, CancelEventArgs e)
+        {
+            WeakReferenceMessenger.Default.UnregisterAll(this);
         }
     }
 }
