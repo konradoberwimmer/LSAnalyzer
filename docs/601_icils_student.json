@@ -13,12 +13,14 @@
       "Regex": "PV[0-9]+CIL",
       "DisplayName": "PVCIL",
       "Mandatory": true,
+      "Label": "Computer and Information Literacy - PV",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+CT",
       "DisplayName": "PVCT",
       "Mandatory": false,
+      "Label": "Computational Thinking - PV",
       "HasErrors": false
     }
   ],

@@ -758,6 +758,9 @@ namespace LSAnalyzer.Services
                     if (variableLabels.Keys.Contains(newVariable.Name))
                     {
                         newVariable.Label = variableLabels[newVariable.Name];
+                    } else if (!string.IsNullOrWhiteSpace(analysisConfiguration.DatasetType.PVvarsList.FirstOrDefault(pvVar => pvVar.DisplayName == newVariable.Name)?.Label))
+                    {
+                        newVariable.Label = analysisConfiguration.DatasetType.PVvarsList.First(pvVar => pvVar.DisplayName == newVariable.Name).Label;
                     } else
                     {
                         for (int ll = 0; ll < variableLabels.Count; ll++)
@@ -804,7 +807,7 @@ namespace LSAnalyzer.Services
                             variableList.RemoveAll(var => Regex.IsMatch(var.Name, pvVarRegex));
                             Variable newVariable = new(maxPosition++, pvVar.DisplayName);
                             newVariable.FromPlausibleValues = true;
-                            newVariable.Label = firstMatch?.Label;
+                            newVariable.Label = string.IsNullOrWhiteSpace(pvVar.Label) ? firstMatch?.Label : pvVar.Label;
                             variableList.Add(newVariable);
                         }
                     }

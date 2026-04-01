@@ -13,102 +13,175 @@
       "Regex": "PV[0-9]+MATH",
       "DisplayName": "PVMATH",
       "Mandatory": true,
+      "Label": "Plausible Value in Mathematics",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+READ",
       "DisplayName": "PVREAD",
       "Mandatory": true,
+      "Label": "Plausible Value in Reading",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+SCIE",
       "DisplayName": "PVSCIE",
       "Mandatory": true,
+      "Label": "Plausible Value in Science",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+GLCM",
       "DisplayName": "PVGLCM",
       "Mandatory": false,
+      "Label": "Plausible Value in Global Competency",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+RCLI",
       "DisplayName": "PVRCLI",
       "Mandatory": false,
+      "Label": "Plausible Value in Cognitive Process Subscale of Reading - Locate Information",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+RCUN",
       "DisplayName": "PVRCUN",
       "Mandatory": false,
+      "Label": "Plausible Value in Cognitive Process Subscale of Reading - Understand",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+RCER",
       "DisplayName": "PVRCER",
       "Mandatory": false,
+      "Label": "Plausible Value in Cognitive Process Subscale of Reading - Evaluate and Reflect",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+RTSN",
       "DisplayName": "PVRTSN",
       "Mandatory": false,
+      "Label": "Plausible Value in Text Structure Subscale of Reading - Single",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+RTML",
       "DisplayName": "PVRTML",
       "Mandatory": false,
+      "Label": "Plausible Value in Text Structure Subscale of Reading - Multiple",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+SCEP",
       "DisplayName": "PVSCEP",
       "Mandatory": false,
+      "Label": "Plausible Value in Competency Subscale of Science - Explain Phenomena Scientifically",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+SCED",
       "DisplayName": "PVSCED",
       "Mandatory": false,
+      "Label": "Plausible Value in Competency Subscale of Science - Evaluate and Design Scientific Enquiry",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+SCID",
       "DisplayName": "PVSCID",
       "Mandatory": false,
+      "Label": "Plausible Value in Competency Subscale of Science - Interpret Data and Evidence Scientifically",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+SKCO",
       "DisplayName": "PVSKCO",
       "Mandatory": false,
+      "Label": "Plausible Value in Knowledge Subscale of Science - Content",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+SKPE",
       "DisplayName": "PVSKPE",
       "Mandatory": false,
+      "Label": "Plausible Value in Knowledge Subscale of Science - Procedural & Epistemic",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+SSPH",
       "DisplayName": "PVSSPH",
       "Mandatory": false,
+      "Label": "Plausible Value in System Subscale of Science - Physical",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+SSLI",
       "DisplayName": "PVSSLI",
       "Mandatory": false,
+      "Label": "Plausible Value in System Subscale of Science - Living",
       "HasErrors": false
     },
     {
       "Regex": "PV[0-9]+SSES",
       "DisplayName": "PVSSES",
       "Mandatory": false,
+      "Label": "Plausible Value in System Subscale of Science - Earth & Science",
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MCCR",
+      "DisplayName": "PVMCCR",
+      "Mandatory": false,
+      "Label": "Plausible Value in Content Subscale of Mathematics - Change and Relationships",
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MCQN",
+      "DisplayName": "PVMCQN",
+      "Mandatory": false,
+      "Label": "Plausible Value in Content Subscale of Mathematics - Quantity",
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MCSS",
+      "DisplayName": "PVMCSS",
+      "Mandatory": false,
+      "Label": "Plausible Value in Content Subscale of Mathematics - Space and Shape",
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MCUD",
+      "DisplayName": "PVMCUD",
+      "Mandatory": false,
+      "Label": "Plausible Value in Content Subscale of Mathematics - Uncertainty and Data",
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MPEM",
+      "DisplayName": "PVMPEM",
+      "Mandatory": false,
+      "Label": "Plausible Value in Process Subscale of Mathematics - Employing Mathematical Concepts, Facts, and Procedures",
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MPFS",
+      "DisplayName": "PVMPFS",
+      "Mandatory": false,
+      "Label": "Plausible Value in Process Subscale of Mathematics - Formulating Situations Mathematically",
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MPIN",
+      "DisplayName": "PVMPIN",
+      "Mandatory": false,
+      "Label": "Plausible Value in Process Subscale of Mathematics - Interpreting, Applying, and Evaluating Mathematical Outcomes",
+      "HasErrors": false
+    },
+    {
+      "Regex": "PV[0-9]+MPRE",
+      "DisplayName": "PVMPRE",
+      "Mandatory": false,
+      "Label": "Plausible Value in Process Subscale of Mathematics - Reasoning",
       "HasErrors": false
     }
   ],

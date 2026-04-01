@@ -13,18 +13,28 @@
       "Regex": "PVLIT",
       "DisplayName": "PVLIT",
       "Mandatory": true,
+      "Label": "Literacy scale score - Plausible value",
       "HasErrors": false
     },
     {
       "Regex": "PVNUM",
       "DisplayName": "PVNUM",
       "Mandatory": true,
+      "Label": "Numeracy scale score - Plausible value",
       "HasErrors": false
     },
     {
       "Regex": "PVPSL",
       "DisplayName": "PVPSL",
-      "Mandatory": true,
+      "Mandatory": false,
+      "Label": "Problem-solving scale score - Plausible value",
+      "HasErrors": false
+    },
+    {
+      "Regex": "PVAPS",
+      "DisplayName": "PVAPS",
+      "Mandatory": false,
+      "Label": "Adaptive Problem Solving scale score - Plausible value",
       "HasErrors": false
     }
   ],

@@ -101,6 +101,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Regex" Binding="{Binding Regex}" Width="150"/>
                             <DataGridTextColumn Header="Display name" Binding="{Binding DisplayName}" Width="150"/>
+                            <DataGridTextColumn Header="Label" Binding="{Binding Label}" Width="150"/>
                             <DataGridCheckBoxColumn Header="Mandatory" Binding="{Binding Mandatory}" Width="75"/>
                         </DataGrid.Columns>
                         <ToolTipService.ToolTip>
