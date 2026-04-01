@@ -28,8 +28,6 @@ namespace LSAnalyzer
             ConfigureServices(services);
             _serviceProvider = services.BuildServiceProvider();
 
-            DispatcherHelper.Initialize();
-
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
         }
 

@@ -8,7 +8,7 @@
         xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
         xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
-        mc:Ignorable="d" x:Name="windowSubsetting" Title="Subsetting" MinHeight="450" MinWidth="800" WindowStartupLocation="CenterScreen">
+        mc:Ignorable="d" x:Name="windowSubsetting" Title="Subsetting" MinHeight="450" MinWidth="800" WindowStartupLocation="CenterScreen" Closing="Window_Closing">
     <Window.DataContext>
         <ViewModels:Subsetting/>
     </Window.DataContext>
@@ -79,7 +79,7 @@
                     <TextBox  Margin="0,27,0,5" x:Name="textBoxSubsettingExpression" Text="{Binding SubsetExpression, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" Width="{Binding ActualWidth, ElementName=WidthHelperTextBoxSubset}"/>
                 </Border>
             </Grid>
-            <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom" Text="{Binding SubsettingInformation.Stringify}" Foreground="{Binding SubsettingInformation.ValidSubset, Converter={StaticResource BoolToRedGreenConverter}}"/>
+            <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom" Text="{Binding CurrentSubsettingInformation.Stringify}" Foreground="{Binding CurrentSubsettingInformation.ValidSubset, Converter={StaticResource BoolToRedGreenConverter}}"/>
         </Grid>
         <Button Grid.Row="2" Content="Clear" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,10" Width="80" Height="22" Command="{Binding ClearSubsettingCommand}" CommandParameter="{Binding ElementName=windowSubsetting}" IsEnabled="{Binding IsCurrentlySubsetting}"/>
         <StackPanel Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,10,10" Orientation="Horizontal">

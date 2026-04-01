@@ -415,6 +415,24 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         guessDatasetTypeWorker.WorkerReportsProgress = false;
         guessDatasetTypeWorker.WorkerSupportsCancellation = false;
         guessDatasetTypeWorker.DoWork += GuessDatasetTypeWorker_DoWork;
+        guessDatasetTypeWorker.RunWorkerCompleted += (_, e) =>
+        {
+            switch (e.Result)
+            {
+                case FailureAnalysisFileMessage failureAnalysisFileMessage:
+                    WeakReferenceMessenger.Default.Send(failureAnalysisFileMessage);
+                    break;
+                case FailureDataProviderMessage failureDataProviderMessage:
+                    WeakReferenceMessenger.Default.Send(failureDataProviderMessage);
+                    break;
+                case MissingRPackageMessage missingRPackageMessage:
+                    WeakReferenceMessenger.Default.Send(missingRPackageMessage);
+                    break;
+                case MultiplePossibleDatasetTypesMessage multiplePossibleDatasetTypesMessage:
+                    WeakReferenceMessenger.Default.Send(multiplePossibleDatasetTypesMessage);
+                    break;
+            }
+        };
         guessDatasetTypeWorker.RunWorkerAsync();
     }
 
@@ -427,7 +445,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
             variables = DataProviderViewModel.LoadDataTemporarilyAndGetVariables();
             if (variables.Count == 0)
             {
-                WeakReferenceMessenger.Default.Send(new FailureDataProviderMessage());
+                e.Result = new FailureDataProviderMessage();
                 IsBusy = false;
                 return;
             }
@@ -436,7 +454,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
             var fileTypeFromFile = FileName!.Substring(FileName!.LastIndexOf('.') + 1);
             if (fileTypeFromFile.ToLower() == "xlsx" && !_rservice.CheckNecessaryRPackages("openxlsx"))
             {
-                WeakReferenceMessenger.Default.Send(new MissingRPackageMessage("openxlsx"));
+                e.Result = new MissingRPackageMessage("openxlsx");
                 IsBusy = false;
                 return;
             }
@@ -444,7 +462,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
             variables = _rservice.GetDatasetVariables(FileName!, IsCsv && UseCsv2 ? "csv2" : null) ?? new();
             if (variables.Count == 0)
             {
-                WeakReferenceMessenger.Default.Send(new FailureAnalysisFileMessage(FileName!));
+                e.Result = new FailureAnalysisFileMessage(FileName!);
                 IsBusy = false;
                 return;
             }
@@ -521,7 +539,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         else
         {
             SelectedDatasetType = null;
-            WeakReferenceMessenger.Default.Send(new MultiplePossibleDatasetTypesMessage(possibleDatasetTypes));
+            e.Result = new MultiplePossibleDatasetTypesMessage(possibleDatasetTypes);
         }
 
         IsBusy = false;
@@ -541,8 +559,26 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         useFileForAnalysisWorker.WorkerReportsProgress = false;
         useFileForAnalysisWorker.WorkerSupportsCancellation = false;
         useFileForAnalysisWorker.DoWork += UseFileForAnalysisWorker_DoWork;
-        useFileForAnalysisWorker.RunWorkerCompleted += UseFileForAnalysisWorker_Completed;
-        useFileForAnalysisWorker.RunWorkerAsync(window);
+        useFileForAnalysisWorker.RunWorkerCompleted += (_, e) =>
+        {
+            switch (e.Result)
+            {
+                case FailureAnalysisConfigurationMessage failureAnalysisConfigurationMessage:
+                    WeakReferenceMessenger.Default.Send(failureAnalysisConfigurationMessage);
+                    break;
+                case FailureDataProviderMessage failureDataProviderMessage:
+                    WeakReferenceMessenger.Default.Send(failureDataProviderMessage);
+                    break;
+                case MissingRPackageMessage missingRPackageMessage:
+                    WeakReferenceMessenger.Default.Send(missingRPackageMessage);
+                    break;
+                case SetAnalysisConfigurationMessage setAnalysisConfigurationMessage:
+                    WeakReferenceMessenger.Default.Send(setAnalysisConfigurationMessage);
+                    window?.Close();
+                    break;
+            }
+        };
+        useFileForAnalysisWorker.RunWorkerAsync();
     }
 
     private void UseFileForAnalysisWorker_DoWork(object? sender, DoWorkEventArgs e)
@@ -576,7 +612,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
             
             if (!DataProviderViewModel.LoadDataForUsage())
             {
-                WeakReferenceMessenger.Default.Send(new FailureDataProviderMessage());
+                e.Result = new FailureDataProviderMessage();
                 IsBusy = false;
                 return;
             }
@@ -595,7 +631,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
 
             if (!_rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName ?? string.Empty, analysisConfiguration.FileType))
             {
-                WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
+                e.Result = new FailureAnalysisConfigurationMessage(analysisConfiguration);
                 IsBusy = false;
                 return;
             }
@@ -603,14 +639,14 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
 
         if (!string.IsNullOrWhiteSpace(analysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysisConfiguration.DatasetType.IDvar))
         {
-            WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
+            e.Result = new FailureAnalysisConfigurationMessage(analysisConfiguration);
             IsBusy = false;
             return;
         }
 
         if (analysisConfiguration.ReplaceCharacterVectors && !_rservice.ReplaceCharacterVariables())
         {
-            WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
+            e.Result = new FailureAnalysisConfigurationMessage(analysisConfiguration);
             IsBusy = false;
             return;
         }
@@ -621,7 +657,7 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
 
         if (!testAnalysisConfiguration)
         {
-            WeakReferenceMessenger.Default.Send(new FailureAnalysisConfigurationMessage(analysisConfiguration));
+            e.Result = new FailureAnalysisConfigurationMessage(analysisConfiguration);
             IsBusy = false;
             return;
         }
@@ -630,30 +666,14 @@ public partial class SelectAnalysisFile : ObservableObject, INotifyPropertyChang
         {
             _configuration.StoreRecentFile(TabControlValue == "File system" ? 0 : SelectedDataProviderConfiguration?.Id ?? -1, recentFileForAnalysis);
         }
-        
-        WeakReferenceMessenger.Default.Send(new SetAnalysisConfigurationMessage(analysisConfiguration));
+
+        e.Result = new SetAnalysisConfigurationMessage(analysisConfiguration);
         IsBusy = false;
         if (Application.Current != null)
         {
             Application.Current.Properties["SelectAnalysisFile_TabControlIndex"] = TabControlIndex;
             Application.Current.Properties["SelectAnalysisFile_SelectedDataProviderConfiguration_id"] =
                 SelectedDataProviderConfiguration?.Id ?? -1;
-        }
-
-        if (e.Argument is ICloseable window)
-        {
-            DispatcherHelper.CheckBeginInvokeOnUI(() =>
-            {
-                window.Close();
-            });
-        }
-    }
-
-    private void UseFileForAnalysisWorker_Completed(object? sender, RunWorkerCompletedEventArgs e)
-    {
-        if (e.Result is MissingRPackageMessage)
-        {
-            WeakReferenceMessenger.Default.Send(e.Result);
         }
     }
 

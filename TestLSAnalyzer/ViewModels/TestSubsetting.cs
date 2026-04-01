@@ -61,16 +61,16 @@ public class TestSubsetting
         subsettingViewModel.TestSubsettingCommand.Execute(null);
         
         Policy.Handle<NotNullException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.NotNull(subsettingViewModel.SubsettingInformation));
-        Assert.False(subsettingViewModel.SubsettingInformation!.ValidSubset);
+            .Execute(() => Assert.NotNull(subsettingViewModel.CurrentSubsettingInformation));
+        Assert.False(subsettingViewModel.CurrentSubsettingInformation!.ValidSubset);
 
         subsettingViewModel.SubsetExpression = "valid";
-        Assert.Null(subsettingViewModel.SubsettingInformation);
+        Assert.Null(subsettingViewModel.CurrentSubsettingInformation);
         subsettingViewModel.TestSubsettingCommand.Execute(null);
         
         Policy.Handle<NotNullException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.NotNull(subsettingViewModel.SubsettingInformation));
-        Assert.True(subsettingViewModel.SubsettingInformation!.ValidSubset);
+            .Execute(() => Assert.NotNull(subsettingViewModel.CurrentSubsettingInformation));
+        Assert.True(subsettingViewModel.CurrentSubsettingInformation!.ValidSubset);
     }
 
     [Fact]
@@ -95,16 +95,16 @@ public class TestSubsetting
 
         subsettingViewModel.UseSubsettingCommand.Execute(null);
         Assert.Null(message);
-        Assert.Null(subsettingViewModel.SubsettingInformation);
+        Assert.Null(subsettingViewModel.CurrentSubsettingInformation);
 
-        subsettingViewModel.SubsettingInformation = new SubsettingInformation { ValidSubset = true };
+        subsettingViewModel.CurrentSubsettingInformation = new SubsettingInformation { ValidSubset = true };
         subsettingViewModel.SubsetExpression = "invalid";
         subsettingViewModel.UseSubsettingCommand.Execute(null);
         
         Policy.Handle<FalseException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.False(subsettingViewModel.SubsettingInformation?.ValidSubset));
+            .Execute(() => Assert.False(subsettingViewModel.CurrentSubsettingInformation?.ValidSubset));
         Assert.Null(message);
-        Assert.NotNull(subsettingViewModel.SubsettingInformation);
+        Assert.NotNull(subsettingViewModel.CurrentSubsettingInformation);
         
         subsettingViewModel.SubsetExpression = "valid";
         subsettingViewModel.UseSubsettingCommand.Execute(null);
@@ -148,7 +148,7 @@ public class TestSubsetting
         subsettingViewModel.SubsetExpression = "valid";
         subsettingViewModel.UseSubsettingCommand.Execute(null);
         
-        Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+        Policy.Handle<TrueException>().WaitAndRetry(10, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(messageReceived));
         Assert.NotNull(message);
         Assert.Equal("valid", message);
@@ -157,7 +157,7 @@ public class TestSubsetting
         message = null;
         subsettingViewModel.ClearSubsettingCommand.Execute(null);
         
-        Policy.Handle<TrueException>().WaitAndRetry(100, _ => TimeSpan.FromMilliseconds(1))
+        Policy.Handle<TrueException>().WaitAndRetry(10, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(messageReceived));
         Assert.Null(message);
         

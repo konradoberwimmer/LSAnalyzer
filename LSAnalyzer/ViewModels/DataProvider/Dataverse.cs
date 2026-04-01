@@ -197,6 +197,13 @@ public partial class Dataverse : ObservableObject, IDataProviderViewModel
         testFileAccessWorker.WorkerReportsProgress = false;
         testFileAccessWorker.WorkerSupportsCancellation = false;
         testFileAccessWorker.DoWork += TestFileAccessWorker_DoWork;
+        testFileAccessWorker.RunWorkerCompleted += (_, _) =>
+        {
+            if (TestResults.MessageObject is MissingRPackageMessage missingRPackageMessage)
+            {
+                WeakReferenceMessenger.Default.Send(missingRPackageMessage);
+            }
+        };
         testFileAccessWorker.RunWorkerAsync();
     }
 

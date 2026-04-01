@@ -4,22 +4,16 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using LSAnalyzer.Services.Stubs;
 
 namespace LSAnalyzer.ViewModels;
 
-public partial class Subsetting : ObservableObject, INotifyPropertyChanged
+public partial class Subsetting : ObservableObject
 {
     private readonly IRservice _rservice;
     
@@ -32,7 +26,7 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
         set
         {
             _analysisConfiguration = value;
-            NotifyPropertyChanged(nameof(AnalysisConfiguration));
+            OnPropertyChanged();
 
             if (AnalysisConfiguration == null)
             {
@@ -52,21 +46,12 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
                 AvailableVariables = newAvailableVariables;
             }
 
-            RecentSubsettingExpressions =
-                new(_configuration.GetStoredRecentSubsettingExpressions(AnalysisConfiguration.DatasetType?.Id ?? -1));
+            RecentSubsettingExpressions = new ObservableCollection<string>(_configuration.GetStoredRecentSubsettingExpressions(AnalysisConfiguration.DatasetType?.Id ?? -1));
         }
     }
 
-    private ObservableCollection<Variable> _availableVariables;
-    public ObservableCollection<Variable> AvailableVariables
-    {
-        get => _availableVariables;
-        set
-        {
-            _availableVariables = value;
-            NotifyPropertyChanged(nameof(AvailableVariables));
-        }
-    }
+    [ObservableProperty] 
+    private ObservableCollection<Variable> _availableVariables = [];
     
     private bool _sortAlphabetically = false;
     public bool SortAlphabetically
@@ -82,26 +67,15 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
             }
             
             _sortAlphabetically = value;
-            NotifyPropertyChanged();
+            OnPropertyChanged();
         }
     }
 
     private bool _isCurrentlySubsetting = false;
-    public bool IsCurrentlySubsetting
-    {
-        get => _isCurrentlySubsetting;
-    }
+    public bool IsCurrentlySubsetting => _isCurrentlySubsetting;
 
-    private ObservableCollection<string> _recentSubsettingExpressions;
-    public ObservableCollection<string> RecentSubsettingExpressions
-    {
-        get => _recentSubsettingExpressions;
-        set
-        {
-            _recentSubsettingExpressions = value;
-            NotifyPropertyChanged();
-        }
-    }
+    [ObservableProperty]
+    private ObservableCollection<string> _recentSubsettingExpressions = [];
     
     [ObservableProperty]
     private string? _selectedRecentSubsettingExpression;
@@ -123,38 +97,24 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
         set
         {
             _subsetExpression = value;
-            SubsettingInformation = null;
-            NotifyPropertyChanged(nameof(SubsetExpression));
+            CurrentSubsettingInformation = null;
+            OnPropertyChanged();
         }
     }
 
-    private SubsettingInformation? _subsettingInformation = null;
-    public SubsettingInformation? SubsettingInformation
-    {
-        get => _subsettingInformation;
-        set
-        {
-            _subsettingInformation = value;
-            NotifyPropertyChanged(nameof(SubsettingInformation));
-        }
-    }
+    [ObservableProperty]
+    private SubsettingInformation? _currentSubsettingInformation = null;
 
+    [ObservableProperty]
     private bool _isBusy = false;
-    public bool IsBusy
-    {
-        get => _isBusy;
-        set
-        {
-            _isBusy = value;
-            NotifyPropertyChanged(nameof(IsBusy));
-        }
-    }
 
     [ExcludeFromCodeCoverage]
     public Subsetting()
     {
         // design-time-only constructor
-        SubsettingInformation = new() { ValidSubset = true, NCases = 100, NSubset = 57 };
+        _rservice = new RserviceStub();
+        _configuration = new Configuration();
+        CurrentSubsettingInformation = new() { ValidSubset = true, NCases = 100, NSubset = 57 };
         RecentSubsettingExpressions = ["x == 1", "y == 2"];
     }
 
@@ -166,32 +126,13 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
         RecentSubsettingExpressions = [];
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-    private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
-    {
-        if (PropertyChanged != null)
-        {
-            PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        }
-    }
-
     public void SetCurrentSubsetting(string subsettingExpression)
     {
         SubsetExpression = subsettingExpression;
         _isCurrentlySubsetting = true;
     }
 
-    private RelayCommand<ICloseable?> _clearSubsettingCommand;
-    public ICommand ClearSubsettingCommand
-    {
-        get
-        {
-            if (_clearSubsettingCommand == null)
-                _clearSubsettingCommand = new RelayCommand<ICloseable?>(this.ClearSubsetting);
-            return _clearSubsettingCommand;
-        }
-    }
-
+    [RelayCommand]
     private void ClearSubsetting(ICloseable? window)
     {
         if (AnalysisConfiguration == null)
@@ -205,42 +146,29 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
         clearSubsettingWorker.WorkerReportsProgress = false;
         clearSubsettingWorker.WorkerSupportsCancellation = false;
         clearSubsettingWorker.DoWork += ClearSubsettingWorker_DoWork;
+        clearSubsettingWorker.RunWorkerCompleted += (_, _) =>
+        {
+            WeakReferenceMessenger.Default.Send(new SetSubsettingExpressionMessage(SubsetExpression));
+            window?.Close();
+        };
         clearSubsettingWorker.RunWorkerAsync(window);
     }
 
     private void ClearSubsettingWorker_DoWork(object? sender, DoWorkEventArgs e)
     {
         IsBusy = true;
+        
         if (AnalysisConfiguration?.ModeKeep == true)
         {
             var virtualVariables = _configuration.GetVirtualVariablesFor(AnalysisConfiguration.FileNameWithoutPath ?? string.Empty, AnalysisConfiguration.DatasetType ?? new DatasetType { Id = -1 });
             _rservice.TestAnalysisConfiguration(AnalysisConfiguration, virtualVariables);
         }
-
-        WeakReferenceMessenger.Default.Send(new SetSubsettingExpressionMessage(SubsetExpression));
+        
         IsBusy = false;
-
-        if (e.Argument is ICloseable window)
-        {
-            DispatcherHelper.CheckBeginInvokeOnUI(() =>
-            {
-                window.Close();
-            });
-        }
     }
 
-    private RelayCommand<object?> _testSubsettingCommand;
-    public ICommand TestSubsettingCommand
-    {
-        get
-        {
-            if (_testSubsettingCommand == null)
-                _testSubsettingCommand = new RelayCommand<object?>(this.TestSubsetting);
-            return _testSubsettingCommand;
-        }
-    }
-
-    private void TestSubsetting(object? dummy)
+    [RelayCommand]
+    private void TestSubsetting()
     {
         if (SubsetExpression != null)
         {
@@ -255,21 +183,11 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
     private void TestSubsettingWorker_DoWork(object? sender, DoWorkEventArgs e)
     {
         IsBusy = true;
-        SubsettingInformation = _rservice.TestSubsetting(SubsetExpression!, AnalysisConfiguration?.DatasetType?.MIvar);
+        CurrentSubsettingInformation = _rservice.TestSubsetting(SubsetExpression!, AnalysisConfiguration?.DatasetType?.MIvar);
         IsBusy = false;
     }
 
-    private RelayCommand<ICloseable?> _useSubsettingCommand;
-    public ICommand UseSubsettingCommand
-    {
-        get
-        {
-            if (_useSubsettingCommand == null)
-                _useSubsettingCommand = new RelayCommand<ICloseable?>(this.UseSubsetting);
-            return _useSubsettingCommand;
-        }
-    }
-
+    [RelayCommand]
     private void UseSubsetting(ICloseable? window)
     {
         if (SubsetExpression == null || AnalysisConfiguration == null)
@@ -281,6 +199,14 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
         useSubsettingWorker.WorkerReportsProgress = false;
         useSubsettingWorker.WorkerSupportsCancellation = false;
         useSubsettingWorker.DoWork += UseSubsettingWorker_DoWork;
+        useSubsettingWorker.RunWorkerCompleted += (_, e) =>
+        {
+            if (e.Result is SetSubsettingExpressionMessage setSubsettingExpressionMessage)
+            {
+                WeakReferenceMessenger.Default.Send(setSubsettingExpressionMessage);
+                window?.Close();
+            }
+        };
         useSubsettingWorker.RunWorkerAsync(window);
     }
 
@@ -291,7 +217,7 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
         var testResult = _rservice.TestSubsetting(SubsetExpression!);
         if (!testResult.ValidSubset)
         {
-            SubsettingInformation = testResult;
+            CurrentSubsettingInformation = testResult;
             IsBusy = false;
             return;
         }
@@ -304,7 +230,7 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
             
             if (!_rservice.TestAnalysisConfiguration(AnalysisConfiguration!, virtualVariables, SubsetExpression))
             {
-                SubsettingInformation = new()
+                CurrentSubsettingInformation = new()
                 {
                     ValidSubset = false,
                     NCases = 0,
@@ -315,16 +241,8 @@ public partial class Subsetting : ObservableObject, INotifyPropertyChanged
             }
         }
 
-        WeakReferenceMessenger.Default.Send(new SetSubsettingExpressionMessage(SubsetExpression));
+        e.Result = new SetSubsettingExpressionMessage(SubsetExpression);
         IsBusy = false;
-
-        if (e.Argument is ICloseable window)
-        {
-            DispatcherHelper.CheckBeginInvokeOnUI(() =>
-            {
-                window.Close();
-            });
-        }
     }
 }
 

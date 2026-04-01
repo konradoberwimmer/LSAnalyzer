@@ -198,8 +198,6 @@ public class TestSelectAnalysisFile
     [Fact]
     public void TestUseFileForAnalysisSendsMessageOnFailure()
     {
-        DispatcherHelper.Initialize();
-
         Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
@@ -251,8 +249,6 @@ public class TestSelectAnalysisFile
     [Fact]
     public void TestUseFileForAnalysisSendsMessageOnSuccess()
     {
-        DispatcherHelper.Initialize();
-
         Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
         {
@@ -386,8 +382,6 @@ public class TestSelectAnalysisFile
     [Fact]
     public void TestUseFileForAnalysisAddsVirtualVariables()
     {
-        DispatcherHelper.Initialize();
-
         var configuration = new Mock<Configuration>();
         configuration.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
         configuration.Setup(conf => conf.GetDataProviderConfigurations()).Returns([]);
@@ -425,8 +419,6 @@ public class TestSelectAnalysisFile
     [Fact]
     public void TestUseFileForAnalysisConvertsCharacterVectors()
     {
-        DispatcherHelper.Initialize();
-
         var configuration = new Mock<Configuration>();
         configuration.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
         configuration.Setup(conf => conf.GetDataProviderConfigurations()).Returns([]);
