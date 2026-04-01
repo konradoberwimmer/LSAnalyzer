@@ -4,25 +4,25 @@
 
 ### PIRLS/TIMSS
 
-- 102 - PIRLS since 2016 - student level ([102_pirls_since_2016_student.json](102_pirls_since_2016_student.json), #9B3E1CC0688091B85C86F78CD79AAD0E)
+- 102 - PIRLS since 2016 - student level ([102_pirls_since_2016_student.json](102_pirls_since_2016_student.json), #5B562E4FF9D4D68392907F4106BA9AE2)
 
-- 112 - PIRLS since 2016 - teacher data on student level ([112_pirls_since_2016_teacher.json](112_pirls_since_2016_teacher.json), #48279E550A69F769B2ACD5E5CBE68B63)
+- 112 - PIRLS since 2016 - teacher data on student level ([112_pirls_since_2016_teacher.json](112_pirls_since_2016_teacher.json), #80025435977DB8C387464E4102FC2D44)
 
 - 122 - PIRLS since 2016 - principal level ([122_pirls_since_2016_principal.json](122_pirls_since_2016_principal.json), #A5FE679B7E4FBB5CDF17304CE029BB41)
 
-- 205 - TIMSS since 2015 - 4th grade student level ([205_timss_since_2015_student_4.json](205_timss_since_2015_student_4.json), #DB04E2C821176F6E90CF29423FFEE270)
+- 205 - TIMSS since 2015 - 4th grade student level ([205_timss_since_2015_student_4.json](205_timss_since_2015_student_4.json), #6B360E53FBA05B9ACF8F42A09E9C7B6D)
 
-- 206 - TIMSS since 2015 - 8th grade student level ([206_timss_since_2015_student_8.json](206_timss_since_2015_student_8.json), #2562F07CCCD2CD32AA38F4193DD49629)
+- 206 - TIMSS since 2015 - 8th grade student level ([206_timss_since_2015_student_8.json](206_timss_since_2015_student_8.json), #F16179EEBC8BDE3CC8C53AFEADCBF1EC)
 
-- 215 - TIMSS since 2015 - 4th grade teacher data on student level ([215_timss_since_2015_teacher_4.json](215_timss_since_2015_teacher_4.json), #68E2E8C78E577EB94CA6197BB1979807)
+- 215 - TIMSS since 2015 - 4th grade teacher data on student level ([215_timss_since_2015_teacher_4.json](215_timss_since_2015_teacher_4.json), #7271EFB1AF54D4E876C80105DB6A7F4B)
 
-- 216 - TIMSS since 2015 - 8th grade teacher data on student level ([216_timss_since_2015_teacher_8.json](216_timss_since_2015_teacher_8.json), #4FCAC0768D56BB97D0AB9E6909EFAA8E)
+- 216 - TIMSS since 2015 - 8th grade teacher data on student level ([216_timss_since_2015_teacher_8.json](216_timss_since_2015_teacher_8.json), #29D2501DDC684F363A4CA87EDAE660B4)
 
 - 225 - TIMSS since 2015 - principal level ([225_timss_since_2015_principal.json](225_timss_since_2015_principal.json), #B347EC11C59D1C73B49598A5CB953924)
 
 ### PISA
 
-- 302 - PISA since 2015 - student level ([302_pisa_since_2015.json](302_pisa_since_2015.json), #50D808B3ED4CC306DF41C5FD8EA2A920)
+- 302 - PISA since 2015 - student level ([302_pisa_since_2015.json](302_pisa_since_2015.json), #111343A57FA5AE565A9AEF6A89806189)
 
 ### TALIS
 
@@ -32,11 +32,11 @@
 
 ### PIAAC
 
-- 501 - PIAAC ([501_piaac.json](501_piaac.json), #6CAFDFD36575A089E16CA070A8F48BD9)
+- 501 - PIAAC ([501_piaac.json](501_piaac.json), #B3F1C228B210CA829C8329A72D17250B)
 
 ### ICILS
 
-- 601 - ICILS - student level ([601_icils_student.json](601_icils_student.json), #5107A0A25A3FAE77880B689C90329370)
+- 601 - ICILS - student level ([601_icils_student.json](601_icils_student.json), #C26DC762DE02665E02335FA5B390A00E)
 
 - 611 - ICILS - teacher level ([611_icils_teacher.json](611_icils_teacher.json), #C3C832582A0A0E0D1C6653BC6F4098CA)
 

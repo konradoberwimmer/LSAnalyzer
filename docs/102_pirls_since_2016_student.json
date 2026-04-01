@@ -13,36 +13,42 @@
       "Regex": "ASRREA",
       "DisplayName": "ASRREA",
       "Mandatory": true,
+      "Label": "PLAUSIBLE VALUE: OVERALL READING",
       "HasErrors": false
     },
     {
       "Regex": "ASRLIT",
       "DisplayName": "ASRLIT",
       "Mandatory": true,
+      "Label": "PLAUSIBLE VALUE: LITERARY PURPOSE",
       "HasErrors": false
     },
     {
       "Regex": "ASRINF",
       "DisplayName": "ASRINF",
       "Mandatory": true,
+      "Label": "PLAUSIBLE VALUE: INFORMATIONAL PURPOSE",
       "HasErrors": false
     },
     {
       "Regex": "ASRIIE",
       "DisplayName": "ASRIIE",
       "Mandatory": true,
+      "Label": "PLAUSIBLE VALUE: INTERPRETING PROCESS",
       "HasErrors": false
     },
     {
       "Regex": "ASRRSI",
       "DisplayName": "ASRRSI",
       "Mandatory": true,
+      "Label": "PLAUSIBLE VALUE: STRAIGHTFORWARD PROCESS",
       "HasErrors": false
     },
     {
       "Regex": "ASRIBM",
       "DisplayName": "ASRIBM",
       "Mandatory": true,
+      "Label": "INT. READING SCALE BENCHMARK REACHED",
       "HasErrors": false
     }
   ],

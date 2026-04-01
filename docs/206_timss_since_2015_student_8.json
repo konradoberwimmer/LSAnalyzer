@@ -13,114 +13,133 @@
       "Regex": "BSMMAT",
       "DisplayName": "BSMMAT",
       "Mandatory": true,
+      "Label": "PLAUSIBLE VALUE MATHEMATICS",
       "HasErrors": false
     },
     {
       "Regex": "BSSSCI",
       "DisplayName": "BSSSCI",
       "Mandatory": true,
+      "Label": "PLAUSIBLE VALUE SCIENCE",
       "HasErrors": false
     },
     {
       "Regex": "BSMALG",
       "DisplayName": "BSMALG",
       "Mandatory": true,
+      "Label": "PV ALGEBRA",
       "HasErrors": false
     },
     {
       "Regex": "BSMAPP",
       "DisplayName": "BSMAPP",
       "Mandatory": true,
+      "Label": "PV MATH APPLYING",
       "HasErrors": false
     },
     {
       "Regex": "BSMDAT",
       "DisplayName": "BSMDAT",
       "Mandatory": true,
+      "Label": "PV DATA AND PROBABILITY",
       "HasErrors": false
     },
     {
       "Regex": "BSMGEO",
       "DisplayName": "BSMGEO",
       "Mandatory": true,
+      "Label": "PV GEOMETRY",
       "HasErrors": false
     },
     {
       "Regex": "BSMKNO",
       "DisplayName": "BSMKNO",
       "Mandatory": true,
+      "Label": "PV MATH KNOWING",
       "HasErrors": false
     },
     {
       "Regex": "BSMNUM",
       "DisplayName": "BSMNUM",
       "Mandatory": true,
+      "Label": "PV NUMBER",
       "HasErrors": false
     },
     {
       "Regex": "BSMREA",
       "DisplayName": "BSMREA",
       "Mandatory": true,
+      "Label": "PV MATH REASONING",
       "HasErrors": false
     },
     {
       "Regex": "BSSAPP",
       "DisplayName": "BSSAPP",
       "Mandatory": true,
+      "Label": "PV SCIENCE APPLYING",
       "HasErrors": false
     },
     {
       "Regex": "BSSBIO",
       "DisplayName": "BSSBIO",
       "Mandatory": true,
+      "Label": "PV BIOLOGY",
       "HasErrors": false
     },
     {
       "Regex": "BSSCHE",
       "DisplayName": "BSSCHE",
       "Mandatory": true,
+      "Label": "PV CHEMISTRY",
       "HasErrors": false
     },
     {
       "Regex": "BSSEAR",
       "DisplayName": "BSSEAR",
       "Mandatory": true,
+      "Label": "PV EARTH SCIENCE",
       "HasErrors": false
     },
     {
       "Regex": "BSSKNO",
       "DisplayName": "BSSKNO",
       "Mandatory": true,
+      "Label": "PV SCIENCE KNOWING",
       "HasErrors": false
     },
     {
       "Regex": "BSSPHY",
       "DisplayName": "BSSPHY",
       "Mandatory": true,
+      "Label": "PV PHYSICS",
       "HasErrors": false
     },
     {
       "Regex": "BSSREA",
       "DisplayName": "BSSREA",
       "Mandatory": true,
+      "Label": "PV SCIENCE REASONING",
       "HasErrors": false
     },
     {
       "Regex": "BSSENV",
       "DisplayName": "BSSENV",
       "Mandatory": false,
+      "Label": "PLAUSIBLE VALUE ENVIRONMENTAL AWARENESS",
       "HasErrors": false
     },
     {
       "Regex": "BSMIBM",
       "DisplayName": "BSMIBM",
       "Mandatory": true,
+      "Label": "INTERN. MATH BENCH REACHED WITH PV",
       "HasErrors": false
     },
     {
       "Regex": "BSSIBM",
       "DisplayName": "BSSIBM",
       "Mandatory": true,
+      "Label": "INTERN. SCI BENCH REACHED WITH PV",
       "HasErrors": false
     }
   ],

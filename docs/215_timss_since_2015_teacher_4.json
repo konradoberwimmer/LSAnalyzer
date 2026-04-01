@@ -13,102 +13,119 @@
       "Regex": "ASMMAT",
       "DisplayName": "ASMMAT",
       "Mandatory": false,
+      "Label": "PLAUSIBLE VALUE MATHEMATICS",
       "HasErrors": false
     },
     {
       "Regex": "ASSSCI",
       "DisplayName": "ASSSCI",
       "Mandatory": false,
+      "Label": "PLAUSIBLE VALUE SCIENCE",
       "HasErrors": false
     },
     {
       "Regex": "ASMNUM",
       "DisplayName": "ASMNUM",
       "Mandatory": false,
+      "Label": "PV NUMBER",
       "HasErrors": false
     },
     {
       "Regex": "ASMGEO",
       "DisplayName": "ASMGEO",
       "Mandatory": false,
+      "Label": "PV GEOMETRY",
       "HasErrors": false
     },
     {
       "Regex": "ASMDAT",
       "DisplayName": "ASMDAT",
       "Mandatory": false,
+      "Label": "PV DATA DISPLAY",
       "HasErrors": false
     },
     {
       "Regex": "ASMKNO",
       "DisplayName": "ASMKNO",
       "Mandatory": false,
+      "Label": "PV MATH KNOWING",
       "HasErrors": false
     },
     {
       "Regex": "ASMAPP",
       "DisplayName": "ASMAPP",
       "Mandatory": false,
+      "Label": "PV MATH APPLYING",
       "HasErrors": false
     },
     {
       "Regex": "ASMREA",
       "DisplayName": "ASMREA",
       "Mandatory": false,
+      "Label": "PV MATH REASONING",
       "HasErrors": false
     },
     {
       "Regex": "ASSLIF",
       "DisplayName": "ASSLIF",
       "Mandatory": false,
+      "Label": "PV LIFE SCIENCE",
       "HasErrors": false
     },
     {
       "Regex": "ASSPHY",
       "DisplayName": "ASSPHY",
       "Mandatory": false,
+      "Label": "PV PHYSICS",
       "HasErrors": false
     },
     {
       "Regex": "ASSEAR",
       "DisplayName": "ASSEAR",
       "Mandatory": false,
+      "Label": "PV EARTH SCIENCE",
       "HasErrors": false
     },
     {
       "Regex": "ASSKNO",
       "DisplayName": "ASSKNO",
       "Mandatory": false,
+      "Label": "PV SCIENCE KNOWING",
       "HasErrors": false
     },
     {
       "Regex": "ASSAPP",
       "DisplayName": "ASSAPP",
       "Mandatory": false,
+      "Label": "PV SCIENCE APPLYING",
       "HasErrors": false
     },
     {
       "Regex": "ASSREA",
       "DisplayName": "ASSREA",
       "Mandatory": false,
+      "Label": "PV SCIENCE REASONING",
       "HasErrors": false
     },
     {
       "Regex": "ASSENV",
       "DisplayName": "ASSENV",
       "Mandatory": false,
+      "Label": "PLAUSIBLE VALUE ENVIRONMENTAL AWARENESS",
       "HasErrors": false
     },
     {
       "Regex": "ASMIBM",
       "DisplayName": "ASMIBM",
       "Mandatory": false,
+      "Label": "INTERN. MATH BENCH REACHED WITH PV",
       "HasErrors": false
     },
     {
       "Regex": "ASSIBM",
       "DisplayName": "ASSIBM",
       "Mandatory": false,
+      "Label": "INTERN. SCI BENCH REACHED WITH PV",
       "HasErrors": false
     }
   ],
