@@ -364,7 +364,7 @@ public class TestSystemSettings
             .Returns((IDatasetTypeRepository.FetchResult.Success, new DatasetType()));
         
         var settingsService = new Mock<ISettingsService>();
-        settingsService.Setup(service => service.DatasetTypeHashes).Returns(new Dictionary<int, string>());
+        settingsService.SetupGet(service => service.DatasetTypeHashes).Returns(new Dictionary<int, string> { { 101, "ABCD" } });
         
         SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, settingsService.Object)
         {

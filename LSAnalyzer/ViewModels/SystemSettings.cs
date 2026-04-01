@@ -180,7 +180,7 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
             _configuration.RemoveRecentSubsettingExpressions(datasetType.Id);
             _configuration.StoreDatasetType(datasetType);
             
-            datasetTypeHashes.TryAdd(entry.DatasetTypeId, entry.Hash);
+            datasetTypeHashes[entry.DatasetTypeId] = entry.Hash;
 
             count++;
         }
