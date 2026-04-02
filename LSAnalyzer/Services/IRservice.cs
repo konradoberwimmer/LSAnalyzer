@@ -15,6 +15,8 @@ public interface IRservice
 
     public string? GetRVersion();
 
+    public string? GetUserLibrary();
+
     public bool CheckNecessaryRPackages(string? packageName = null);
 
     public bool InstallNecessaryRPackages(string? packageName = null);
@@ -26,6 +28,8 @@ public interface IRservice
     public enum UpdateResult { Unavailable, Success, Failure }
 
     public UpdateResult UpdateBifieSurvey();
+    
+    public bool TestLoadingBifieSurvey();
 
     public bool InjectAppFunctions();
 

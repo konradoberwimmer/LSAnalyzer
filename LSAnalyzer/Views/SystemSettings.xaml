@@ -71,6 +71,7 @@
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -92,9 +93,10 @@
                     </Button>
                     <Button Height="22" Width="80" Margin="5,0,0,0" Content="Select ..." Click="ButtonSelectRLocation_OnClick"/>
                 </StackPanel>
-                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,5,0,5" Text="{Binding RVersion}"/>
-                <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{Binding BifieSurveyVersion, StringFormat={}BIFIEsuvey version: {0}}" Margin="0,5,5,0"/>
-                <Button Grid.Row="2" Grid.Column="2" HorizontalAlignment="Right" Content="{Binding BIFIEsurveyButtonTitle}" Height="22" Width="80" Command="{Binding UpdateBifieSurveyCommand}" IsEnabled="{Binding ConnectedToR}"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,5,0,0" Text="{Binding RVersion}"/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,5,0,0" Text="{Binding UserLibrary, StringFormat={}User library: {0}}"/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{Binding BifieSurveyVersion, StringFormat={}BIFIEsuvey version: {0}}" Margin="0,5,0,0"/>
+                <Button Grid.Row="3" Grid.Column="2" HorizontalAlignment="Right" Content="{Binding BIFIEsurveyButtonTitle}" Height="22" Width="80" Margin="5,5,0,0" Command="{Binding UpdateBifieSurveyCommand}" IsEnabled="{Binding ConnectedToR}"/>
             </Grid>
         </GroupBox>
         <GroupBox Grid.Row="1" Margin="10,0,10,10" Padding="5">

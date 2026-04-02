@@ -82,8 +82,19 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                EvaluateAndLog("lsanalyzer_full_version_string <- paste(R.Version()$version.string, R.Version()$nickname, R.Version()$platform, sep = ' - ')");
-                return _engine!.GetSymbol("lsanalyzer_full_version_string").AsCharacter().First();
+                return _engine!.Evaluate("paste(R.Version()$version.string, R.Version()$nickname, R.Version()$platform, sep = ' - ')").AsCharacter().First();
+            } catch
+            {
+                return null;
+            }
+        }
+
+        [ExcludeFromCodeCoverage]
+        public string? GetUserLibrary()
+        {
+            try
+            {
+                return _engine!.Evaluate(".libPaths()[1]").AsCharacter().First();
             } catch
             {
                 return null;
@@ -156,8 +167,7 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                EvaluateAndLog("lsanalyzer_bifiesurvey_version <- paste(utils::packageVersion('BIFIEsurvey'), sep = '.')");
-                return _engine!.GetSymbol("lsanalyzer_bifiesurvey_version").AsCharacter().First();
+                return _engine!.Evaluate("paste(utils::packageVersion('BIFIEsurvey'), sep = '.')").AsCharacter().First();
             } catch
             {
                 return null;
@@ -182,6 +192,19 @@ namespace LSAnalyzer.Services
             } catch
             {
                 return IRservice.UpdateResult.Failure;
+            }
+        }
+
+        [ExcludeFromCodeCoverage]
+        public bool TestLoadingBifieSurvey()
+        {
+            try
+            {
+                return _engine!.Evaluate("library(BIFIEsurvey, logical.return = TRUE)").AsLogical().First();
+            }
+            catch
+            {
+                return false;
             }
         }
 

@@ -22,6 +22,12 @@ public class RserviceStub : IRservice
     {
         return null;
     }
+
+    public string? GetUserLibrary()
+    {
+        throw new System.NotImplementedException();
+    }
+
     public bool CheckNecessaryRPackages(string? packageName = null)
     {
         throw new System.NotImplementedException();
@@ -38,6 +44,11 @@ public class RserviceStub : IRservice
     }
 
     public IRservice.UpdateResult UpdateBifieSurvey()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public bool TestLoadingBifieSurvey()
     {
         throw new System.NotImplementedException();
     }
