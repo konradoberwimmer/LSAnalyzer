@@ -26,7 +26,7 @@ namespace TestLSAnalyzer.ViewModels.ValueConverter
                 foreach (var testCase in testCases)
                 {
                     TabItemToHeaderString converter = new();
-                    Assert.Equal(testCase[1], converter.ConvertBack(testCase[0], typeof(string), string.Empty, CultureInfo.InvariantCulture));
+                    Assert.Equal(testCase[1], converter.ConvertBack(testCase[0]!, typeof(string), string.Empty, CultureInfo.InvariantCulture));
                 }
             });
         }

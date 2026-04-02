@@ -1630,7 +1630,7 @@ namespace TestLSAnalyzer.Services
             Assert.Equal(65, rservice.Fetch("missingValues").AsInteger().First());
             
             // as preview (preview is possible even though virtual variable now exists in raw data)
-            Assert.True(rservice.CreateVirtualVariable(virtualVariable, null, true));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, [], true));
             var previewDataSet = rservice.Fetch("lsanalyzer_dat_raw_preview").AsDataFrame();
             Assert.NotNull(previewDataSet);
             Assert.Equal(4, previewDataSet.ColumnCount);
@@ -1772,7 +1772,7 @@ namespace TestLSAnalyzer.Services
                 Name = "ASBG05sum",
             };
             
-            Assert.True(rservice.CreateVirtualVariable(virtualVariable, null, true));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariable, [], true));
 
             var (success, previewData) = rservice.GetPreviewData();
             Assert.True(success);
@@ -1793,7 +1793,7 @@ namespace TestLSAnalyzer.Services
                 Name = "ASRLITnaive",
             };
             
-            Assert.True(rservice.CreateVirtualVariable(virtualVariableContinuous, null, true));
+            Assert.True(rservice.CreateVirtualVariable(virtualVariableContinuous, [], true));
 
             var (successContinuous, previewDataContinuous) = rservice.GetPreviewData();
             Assert.True(successContinuous);
