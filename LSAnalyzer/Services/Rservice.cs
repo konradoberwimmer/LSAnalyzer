@@ -103,7 +103,7 @@ namespace LSAnalyzer.Services
 
         public virtual bool CheckNecessaryRPackages(string? packageName = null)
         {
-            string[] rPackagesToCheck = (packageName == null ? _rPackagesNecessary : new string[] { packageName });
+            string[] rPackagesToCheck = (packageName == null ? _rPackagesNecessary : [packageName]);
 
             try
             {
@@ -126,7 +126,7 @@ namespace LSAnalyzer.Services
 
         public bool InstallNecessaryRPackages(string? packageName = null)
         {
-            string[] rPackagesToInstall = (packageName == null ? _rPackagesNecessary : new string[] { packageName });
+            string[] rPackagesToInstall = (packageName == null ? _rPackagesNecessary : [packageName]);
 
             try
             {
@@ -180,7 +180,7 @@ namespace LSAnalyzer.Services
             try
             {
                 EvaluateAndLog("lsanalyzer_old_packages <- data.frame(utils::old.packages(repos = 'https://cloud.r-project.org'))");
-                DataFrame? oldPackages = _engine.GetSymbol("lsanalyzer_old_packages").AsDataFrame();
+                DataFrame? oldPackages = _engine!.GetSymbol("lsanalyzer_old_packages").AsDataFrame();
                 if (oldPackages == null || !oldPackages["Package"].AsCharacter().Contains("BIFIEsurvey"))
                 {
                     return IRservice.UpdateResult.Unavailable;
@@ -303,12 +303,9 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                if (fileType  == null)
-                {
-                    fileType = fileName.Substring(fileName.LastIndexOf('.') + 1);
-                }
+                fileType ??= fileName.Substring(fileName.LastIndexOf('.') + 1);
 
-                switch (fileType!.ToLower())
+                switch (fileType.ToLower())
                 {
                     case "sav":
                         EvaluateAndLog("lsanalyzer_dat_raw_stored <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
@@ -401,7 +398,7 @@ namespace LSAnalyzer.Services
                 if (string.IsNullOrWhiteSpace(MIvar))
                 {
                     EvaluateAndLog("lsanalyzer_dat_raw_stored_ncases <- nrow(lsanalyzer_dat_raw_stored)");
-                    nCases = _engine.GetSymbol("lsanalyzer_dat_raw_stored_ncases").AsInteger().First();
+                    nCases = _engine!.GetSymbol("lsanalyzer_dat_raw_stored_ncases").AsInteger().First();
 
                     EvaluateAndLog("lsanalyzer_dat_raw_stored_nsubset <- nrow(lsanalyzer_dat_raw_stored_subset)");
                     nSubset = _engine.GetSymbol("lsanalyzer_dat_raw_stored_nsubset").AsInteger().First();
@@ -410,7 +407,7 @@ namespace LSAnalyzer.Services
                     EvaluateAndLog("lsanalyzer_cnt_subset_mi <- table(lsanalyzer_dat_raw_stored_subset$" + MIvar + ")");
                     EvaluateAndLog("lsanalyzer_cnt_subset_mi_max <- max(lsanalyzer_cnt_subset_mi)");
                     EvaluateAndLog("lsanalyzer_cnt_subset_mi_all_equal <- all(lsanalyzer_cnt_subset_mi == lsanalyzer_cnt_subset_mi_max)");
-                    var allMIEqual = _engine.GetSymbol("lsanalyzer_cnt_subset_mi_all_equal").AsLogical().First();
+                    var allMIEqual = _engine!.GetSymbol("lsanalyzer_cnt_subset_mi_all_equal").AsLogical().First();
                     if (!allMIEqual)
                     {
                         return new SubsettingInformation() { ValidSubset = false, MIvariance = true };
@@ -433,7 +430,7 @@ namespace LSAnalyzer.Services
                 return new SubsettingInformation() { ValidSubset = true, NCases = nCases, NSubset = nSubset };
             } catch (Exception)
             {
-                return new SubsettingInformation() { ValidSubset = false }; ;
+                return new SubsettingInformation() { ValidSubset = false }; 
             }
         }
 
@@ -472,7 +469,7 @@ namespace LSAnalyzer.Services
                 }
 
                 EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw[, lsanalyzer_necessary_variables]");
-                var rawData = _engine.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
+                var rawData = _engine!.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
                 if (rawData == null)
                 {
                     return false;
@@ -495,7 +492,7 @@ namespace LSAnalyzer.Services
             for (int i = 0; i < regexNecessaryVariables.Count; i++)
             {
                 var necessaryVariable = regexNecessaryVariables[i];
-                var potentialPvVariable = analysis.AnalysisConfiguration.DatasetType!.PVvarsList.Where(pvvar => pvvar.DisplayName == necessaryVariable).FirstOrDefault();
+                var potentialPvVariable = analysis.AnalysisConfiguration.DatasetType!.PVvarsList.FirstOrDefault(pvvar => pvvar.DisplayName == necessaryVariable);
                 if (potentialPvVariable != null)
                 {
                     regexNecessaryVariables[i] = potentialPvVariable.Regex;
@@ -538,7 +535,7 @@ namespace LSAnalyzer.Services
             try
             {
                 string rawDataVariableName = "lsanalyzer_dat_raw";
-                if (mivar != null && mivar.Length > 0 && nmi > 1)
+                if (mivar is { Length: > 0 } && nmi > 1)
                 {
                     EvaluateAndLog("lsanalyzer_dat_raw_list <- split(lsanalyzer_dat_raw, lsanalyzer_dat_raw[, '" + mivar + "'])");
                     rawDataVariableName = "lsanalyzer_dat_raw_list";
@@ -547,10 +544,10 @@ namespace LSAnalyzer.Services
                 string baseCall = "lsanalyzer_dat_BO <- BIFIEsurvey::BIFIE.data(" + rawDataVariableName + ", wgt = '" + weight + "'";
 
                 string repwgtArg = "";
-                if (repwgts != null && repwgts.Length > 0)
+                if (repwgts is { Length: > 0 })
                 {
                     string repWgtsDataset = "lsanalyzer_dat_raw";
-                    if (mivar != null && mivar.Length > 0)
+                    if (mivar is { Length: > 0 })
                     {
                         repWgtsDataset = "lsanalyzer_dat_raw_list[[1]]";
                     }
@@ -564,7 +561,7 @@ namespace LSAnalyzer.Services
                 }
 
                 string pvvarsArg = "";
-                if (pvvars != null && pvvars.Count > 0)
+                if (pvvars is { Count: > 0 })
                 {
                     List<string> pvvarsList = new();
 
@@ -596,9 +593,8 @@ namespace LSAnalyzer.Services
                 string finalCall = baseCall + repwgtArg + fayfacArg + pvvarsArg + ", cdata = TRUE)";
                 EvaluateAndLog(finalCall);
 
-                var bifieDataObject = _engine.GetSymbol("lsanalyzer_dat_BO").AsList();
+                var bifieDataObject = _engine!.GetSymbol("lsanalyzer_dat_BO").AsList();
                 var nmiReported = (int)bifieDataObject["Nimp"].AsNumeric().First();
-                var nrepReported = (int)bifieDataObject["RR"].AsNumeric().First();
                 if (nmi != nmiReported)
                 {
                     return false;
@@ -672,7 +668,7 @@ namespace LSAnalyzer.Services
             }
 
             var repWgtsRegex = StringFormats.EncapsulateRegex(analysisConfiguration.DatasetType.RepWgts, analysisConfiguration.DatasetType.AutoEncapsulateRegex);
-            if (analysisConfiguration.DatasetType.JKzone != null && analysisConfiguration.DatasetType.JKzone.Length != 0)
+            if (!string.IsNullOrEmpty(analysisConfiguration.DatasetType.JKzone))
             {
                 if (analysisConfiguration.DatasetType.Weight.Length == 0 || 
                     analysisConfiguration.DatasetType.JKrep == null || 
@@ -681,7 +677,7 @@ namespace LSAnalyzer.Services
                     return false;
                 }
 
-                if (!CreateReplicateWeights(analysisConfiguration.DatasetType.Weight, analysisConfiguration.DatasetType.JKzone, analysisConfiguration.DatasetType.JKrep, (bool)analysisConfiguration.DatasetType.JKreverse))
+                if (!CreateReplicateWeights(analysisConfiguration.DatasetType.Weight, analysisConfiguration.DatasetType.JKzone, analysisConfiguration.DatasetType.JKrep, analysisConfiguration.DatasetType.JKreverse))
                 {
                     return false;
                 }
@@ -707,7 +703,7 @@ namespace LSAnalyzer.Services
             }
 
             var repWgtsRegex = StringFormats.EncapsulateRegex(analysis.AnalysisConfiguration.DatasetType.RepWgts, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex);
-            if (analysis.AnalysisConfiguration.DatasetType.JKzone != null && analysis.AnalysisConfiguration.DatasetType.JKzone.Length != 0)
+            if (!string.IsNullOrEmpty(analysis.AnalysisConfiguration.DatasetType.JKzone))
             {
                 if (analysis.AnalysisConfiguration.DatasetType.Weight.Length == 0 ||
                     analysis.AnalysisConfiguration.DatasetType.JKrep == null ||
@@ -716,7 +712,7 @@ namespace LSAnalyzer.Services
                     return false;
                 }
 
-                if (!CreateReplicateWeights(analysis.AnalysisConfiguration.DatasetType.Weight, analysis.AnalysisConfiguration.DatasetType.JKzone, analysis.AnalysisConfiguration.DatasetType.JKrep, (bool)analysis.AnalysisConfiguration.DatasetType.JKreverse))
+                if (!CreateReplicateWeights(analysis.AnalysisConfiguration.DatasetType.Weight, analysis.AnalysisConfiguration.DatasetType.JKzone, analysis.AnalysisConfiguration.DatasetType.JKrep, analysis.AnalysisConfiguration.DatasetType.JKreverse))
                 {
                     return false;
                 }
@@ -731,7 +727,7 @@ namespace LSAnalyzer.Services
             }
             plausibleValueVariables.AddRange(analysis.AnalysisConfiguration.DatasetType.PVvarsList);
 
-            if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI, analysis.AnalysisConfiguration.DatasetType.MIvar, plausibleValueVariables, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex))
+            if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI!, analysis.AnalysisConfiguration.DatasetType.MIvar, plausibleValueVariables, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex))
             {
                 return false;
             }
@@ -748,7 +744,7 @@ namespace LSAnalyzer.Services
 
             try
             {
-                DataFrame? variables = null;
+                DataFrame? variables;
                 if (analysisConfiguration.ModeKeep == true && !fromStoredRaw)
                 {
                     variables = _engine!.Evaluate("lsanalyzer_dat_BO$variables").AsDataFrame();
@@ -823,19 +819,19 @@ namespace LSAnalyzer.Services
                     {
                         var pvVarRegex = StringFormats.EncapsulateRegex(pvVar.Regex, analysisConfiguration.DatasetType.AutoEncapsulateRegex)!;
 
-                        var firstMatch = variableList.Where(var => Regex.IsMatch(var.Name, pvVarRegex)).FirstOrDefault();
+                        var firstMatch = variableList.FirstOrDefault(var => Regex.IsMatch(var.Name, pvVarRegex));
 
                         if (firstMatch != null)
                         {
                             variableList.RemoveAll(var => Regex.IsMatch(var.Name, pvVarRegex));
                             Variable newVariable = new(maxPosition++, pvVar.DisplayName);
                             newVariable.FromPlausibleValues = true;
-                            newVariable.Label = string.IsNullOrWhiteSpace(pvVar.Label) ? firstMatch?.Label : pvVar.Label;
+                            newVariable.Label = string.IsNullOrWhiteSpace(pvVar.Label) ? firstMatch.Label : pvVar.Label;
                             variableList.Add(newVariable);
                         }
                     }
                                         
-                    variableList.Add(new(maxPosition++, "one"));
+                    variableList.Add(new(maxPosition + 1, "one"));
                 }
 
                 return variableList;
@@ -864,13 +860,13 @@ namespace LSAnalyzer.Services
                 if (analysis.GroupBy.Count == 0)
                 {
                     EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar").AsList());
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
                 } else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
                 {
                     groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
                     EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                     EvaluateAndLog("lsanalyzer_result_univar$stat$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_univar$stat$M, factor(lsanalyzer_result_univar$stat$var, levels = unique(lsanalyzer_result_univar$stat$var))), rank, ties.method = 'min'))");
-                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar").AsList());
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
                 } else
                 {
                     var groupByCombinations = Combinations.GetCombinations(analysis.GroupBy);
@@ -883,7 +879,7 @@ namespace LSAnalyzer.Services
                         {
                             groupByArg = "";
                             EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                            resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar").AsList());
+                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
                         } else
                         {
                             var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
@@ -892,7 +888,7 @@ namespace LSAnalyzer.Services
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
                                 EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
                                 EvaluateAndLog("lsanalyzer_result_univar$stat$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_univar$stat$M, factor(lsanalyzer_result_univar$stat$var, levels = unique(lsanalyzer_result_univar$stat$var))), rank, ties.method = 'min'))");
-                                resultList.Add(_engine.GetSymbol("lsanalyzer_result_univar").AsList());
+                                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
                             }
                         }
                     }
@@ -965,7 +961,7 @@ namespace LSAnalyzer.Services
                 if (analysis.GroupBy.Count == 0)
                 {
                     EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_freq").AsList());
                 }
                 else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
                 {
@@ -974,7 +970,7 @@ namespace LSAnalyzer.Services
                     EvaluateAndLog("lsanalyzer_result_freq$stat$lsanalyzer_rank <- as.numeric(NA)");
                     EvaluateAndLog("ff <- lsanalyzer_result_freq$stat$varval == min(lsanalyzer_result_freq$stat$varval)");
                     EvaluateAndLog("lsanalyzer_result_freq$stat[ff,]$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_freq$stat[ff,]$perc, factor(lsanalyzer_result_freq$stat[ff,]$var, levels = unique(lsanalyzer_result_freq$stat[ff,]$var))), rank, ties.method = 'min'))");
-                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_freq").AsList());
                 }
                 else
                 {
@@ -988,7 +984,7 @@ namespace LSAnalyzer.Services
                         {
                             groupByArg = "";
                             EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                            resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
+                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_freq").AsList());
                         }
                         else
                         {
@@ -1000,7 +996,7 @@ namespace LSAnalyzer.Services
                                 EvaluateAndLog("lsanalyzer_result_freq$stat$lsanalyzer_rank <- as.numeric(NA)");
                                 EvaluateAndLog("ff <- lsanalyzer_result_freq$stat$varval == min(lsanalyzer_result_freq$stat$varval)");
                                 EvaluateAndLog("lsanalyzer_result_freq$stat[ff,]$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_freq$stat[ff,]$perc, factor(lsanalyzer_result_freq$stat[ff,]$var, levels = unique(lsanalyzer_result_freq$stat[ff,]$var))), rank, ties.method = 'min'))");
-                                resultList.Add(_engine.GetSymbol("lsanalyzer_result_freq").AsList());
+                                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_freq").AsList());
                             }
                         }
                     }
@@ -1037,7 +1033,7 @@ namespace LSAnalyzer.Services
                         string finalCall = baseCall + vars1arg + vars2arg + ");";
 
                         EvaluateAndLog(finalCall, analysis.AnalysisName);
-                        resultList.Add(_engine.GetSymbol("lsanalyzer_result_crosstab").AsList());
+                        resultList.Add(_engine!.GetSymbol("lsanalyzer_result_crosstab").AsList());
                     }
                 }
 
@@ -1061,7 +1057,7 @@ namespace LSAnalyzer.Services
 
                 List<GenericVector> resultList = new();
 
-                string baseCall = string.Empty;
+                string baseCall;
                 string varsArg = ", vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
                 string breaksArg = ", breaks = c(" + string.Join(", ", analysis.Percentiles.OrderBy(val => val).Select(val => val.ToString(CultureInfo.InvariantCulture))) + ")";
 
@@ -1090,13 +1086,13 @@ namespace LSAnalyzer.Services
                 if (analysis.GroupBy.Count == 0)
                 {
                     EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_ecdf").AsList());
                 }
                 else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
                 {
                     groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
                     EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_ecdf").AsList());
                 }
                 else
                 {
@@ -1110,7 +1106,7 @@ namespace LSAnalyzer.Services
                         {
                             groupByArg = "";
                             EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                            resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
+                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_ecdf").AsList());
                         }
                         else
                         {
@@ -1119,7 +1115,7 @@ namespace LSAnalyzer.Services
                             {
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
                                 EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                                resultList.Add(_engine.GetSymbol("lsanalyzer_result_ecdf").AsList());
+                                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_ecdf").AsList());
                             }
                         }
                     }
@@ -1150,13 +1146,13 @@ namespace LSAnalyzer.Services
                 if (analysis.GroupBy.Count == 0)
                 {
                     EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_corr").AsList());
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_corr").AsList());
                 }
                 else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
                 {
                     groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
                     EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_corr").AsList());
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_corr").AsList());
                 }
                 else
                 {
@@ -1170,7 +1166,7 @@ namespace LSAnalyzer.Services
                         {
                             groupByArg = "";
                             EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                            resultList.Add(_engine.GetSymbol("lsanalyzer_result_corr").AsList());
+                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_corr").AsList());
                         }
                         else
                         {
@@ -1179,7 +1175,7 @@ namespace LSAnalyzer.Services
                             {
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
                                 EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                                resultList.Add(_engine.GetSymbol("lsanalyzer_result_corr").AsList());
+                                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_corr").AsList());
                             }
                         }
                     }
@@ -1245,7 +1241,7 @@ namespace LSAnalyzer.Services
                         }
 
                         var stats = result[0]["stat"].AsDataFrame();
-                        double R2 = (double)stats.GetRows().Where(row => (string)row["parameter"] == r2parameter).First()["est"];
+                        double R2 = (double)stats.GetRows().First(row => (string)row["parameter"] == r2parameter)["est"];
 
                         if (R2 > maxR2)
                         {
@@ -1272,7 +1268,7 @@ namespace LSAnalyzer.Services
                 }
 
                 List<Variable> usedPredictors = new(analysis.Vars);
-                List<GenericVector> resultList = new() { result[0] };
+                List<GenericVector> resultList = [result[0]];
 
                 while (usedPredictors.Count > 1)
                 {
@@ -1289,7 +1285,7 @@ namespace LSAnalyzer.Services
                         }
 
                         var stats = result[0]["stat"].AsDataFrame();
-                        double R2 = (double)stats.GetRows().Where(row => (string)row["parameter"] == r2parameter).First()["est"];
+                        double R2 = (double)stats.GetRows().First(row => (string)row["parameter"] == r2parameter)["est"];
 
                         if (R2 < minR2)
                         {
@@ -1321,13 +1317,13 @@ namespace LSAnalyzer.Services
                 if (groups.Count == 0)
                 {
                     EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
-                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_regression").AsList());
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_regression").AsList());
                 }
                 else if (groups.Count > 0 && !calcualteOverall)
                 {
                     groupByArg = ", group = c(" + string.Join(", ", groups.ConvertAll(var => "'" + var.Name + "'")) + ")";
                     EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
-                    resultList.Add(_engine.GetSymbol("lsanalyzer_result_regression").AsList());
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_regression").AsList());
                 }
                 else
                 {
@@ -1341,7 +1337,7 @@ namespace LSAnalyzer.Services
                         {
                             groupByArg = "";
                             EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
-                            resultList.Add(_engine.GetSymbol("lsanalyzer_result_regression").AsList());
+                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_regression").AsList());
                         }
                         else
                         {
@@ -1350,7 +1346,7 @@ namespace LSAnalyzer.Services
                             {
                                 groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
                                 EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
-                                resultList.Add(_engine.GetSymbol("lsanalyzer_result_regression").AsList());
+                                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_regression").AsList());
                             }
                         }
                     }
@@ -1383,8 +1379,6 @@ namespace LSAnalyzer.Services
                 {
                     return ComputeVirtualVariableCombine(virtualVariableCombine, forPreview);
                 }
-
-                if (pvVars is null) return false;
                 
                 Dictionary<string, List<string>> pvVarsNames = [];
                 
@@ -1479,7 +1473,7 @@ namespace LSAnalyzer.Services
                     return ComputeVirtualVariableScale(virtualVariableScale, forPreview);
                 }
 
-                var pvVar = pvVars?.FirstOrDefault(pvVar => pvVar.DisplayName == virtualVariableScale.InputVariable.Name);
+                var pvVar = pvVars.FirstOrDefault(pvVar => pvVar.DisplayName == virtualVariableScale.InputVariable.Name);
                 if (pvVar is null) return false;
                 
                 var baseVariableNames = _engine?.Evaluate($"""grep("{pvVar.Regex}", colnames(lsanalyzer_dat_raw_stored), value = TRUE)""").AsCharacter().Order().ToList();
@@ -1654,8 +1648,6 @@ namespace LSAnalyzer.Services
                 {
                     return ComputeVirtualVariableRecode(virtualVariableRecode, forPreview);
                 }
-
-                if (pvVars is null) return false;
                 
                 Dictionary<string, List<string>> pvVarsNames = [];
                 
@@ -1787,12 +1779,9 @@ namespace LSAnalyzer.Services
         {
             try
             {
-                if (fileType == null)
-                {
-                    fileType = fileName.Substring(fileName.LastIndexOf('.') + 1);
-                }
+                fileType ??= fileName.Substring(fileName.LastIndexOf('.') + 1);
 
-                switch (fileType!.ToLower())
+                switch (fileType.ToLower())
                 {
                     case "sav":
                         EvaluateAndLog("lsanalyzer_some_file_raw <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
@@ -1983,11 +1972,9 @@ namespace LSAnalyzer.Services
         public int NCases { get; set; }
         public int NSubset { get; set; }
 
-        public string Stringify
-        {
-            get => ValidSubset ? "Subset has " + NSubset + " cases, data has " + NCases + " cases." : 
+        public string Stringify =>
+            ValidSubset ? "Subset has " + NSubset + " cases, data has " + NCases + " cases." : 
                 (MIvariance ? "Subsetting is not supported for variables with MI variance." : 
-                (EmptySubset ? "Empty subset." : "Invalid subsetting expression."));
-        }
+                    (EmptySubset ? "Empty subset." : "Invalid subsetting expression."));
     }
 }
