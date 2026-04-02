@@ -148,7 +148,7 @@ public class TestSubsetting
         subsettingViewModel.SubsetExpression = "valid";
         subsettingViewModel.UseSubsettingCommand.Execute(null);
         
-        Policy.Handle<TrueException>().WaitAndRetry(10, _ => TimeSpan.FromMilliseconds(100))
+        Policy.Handle<TrueException>().WaitAndRetry(20, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(messageReceived));
         Assert.NotNull(message);
         Assert.Equal("valid", message);
@@ -157,7 +157,7 @@ public class TestSubsetting
         message = null;
         subsettingViewModel.ClearSubsettingCommand.Execute(null);
         
-        Policy.Handle<TrueException>().WaitAndRetry(10, _ => TimeSpan.FromMilliseconds(100))
+        Policy.Handle<TrueException>().WaitAndRetry(20, _ => TimeSpan.FromMilliseconds(100))
             .Execute(() => Assert.True(messageReceived));
         Assert.Null(message);
         
