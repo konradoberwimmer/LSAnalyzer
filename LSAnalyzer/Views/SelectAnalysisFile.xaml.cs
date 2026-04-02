@@ -34,21 +34,21 @@ namespace LSAnalyzer.Views
             DataContext = selectAnalysisFileViewModel;
 
             WeakReferenceMessenger.Default.Register<RecentFileInvalidMessage>(this, (_, m) => 
-                MessageBox.Show($"File '{ m.FileName }' is no longer available (or dataset type/weight have changed).", "Error", MessageBoxButton.OK, MessageBoxImage.Error));
+                MessageBox.Show($"File '{ m.FileName }' is no longer available (or dataset type/weights have changed).", "File unavailable", MessageBoxButton.OK, MessageBoxImage.Warning));
             
             WeakReferenceMessenger.Default.Register<FailureAnalysisFileMessage>(this, (r, m) =>
             {
-                MessageBox.Show("Unable to read column names from data file '" + m.Value + "'.\n\nTake note:\n- Supported file types are R data frames (.rds), SPSS (.sav), CSV (.csv) and Excel (.xlsx)\n- File ending must match file type\n- All formats have to provide column headers (in first row for Excel and CSV)\n-With SPSS (.sav), make sure there are no non-ASCII characters in path and filename (eg. no German umlauts)\n- With Excel (.xlsx), package openxlsx has to be installed\n- With Excel (.xlsx), data has to be on the first worksheet", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Unable to read column names from data file '" + m.Value + "'.\n\nTake note:\n- Supported file types are R data frames (.rds), SPSS (.sav), CSV (.csv) and Excel (.xlsx)\n- File ending must match file type\n- All formats have to provide column headers (in first row for Excel and CSV)\n-With SPSS (.sav), make sure there are no non-ASCII characters in path and filename (eg. no German umlauts)\n- With Excel (.xlsx), package openxlsx has to be installed\n- With Excel (.xlsx), data has to be on the first worksheet", "Unsupported file type", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
 
             WeakReferenceMessenger.Default.Register<FailureDataProviderMessage>(this, (r, m) =>
             {
-                MessageBox.Show("Unable to read from data provider.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Unable to read from data provider.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
 
             WeakReferenceMessenger.Default.Register<FailureAnalysisConfigurationMessage>(this, (r, m) =>
             {
-                MessageBox.Show("Unable to create BIFIEdata object from file '" + m.Value.FileName + "' when applying dataset type '" + m.Value.DatasetType?.Name + "'.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Unable to create BIFIEdata object from file '" + m.Value.FileName + "' when applying dataset type '" + m.Value.DatasetType?.Name + "'.", "Dataset type mismatch", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
 
             WeakReferenceMessenger.Default.Register<MultiplePossibleDatasetTypesMessage>(this, (r, m) =>
@@ -82,7 +82,7 @@ namespace LSAnalyzer.Views
                     }
                     else
                     {
-                        MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart LSAnalyzer afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart LSAnalyzer afterwards!", "Installation failed", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             });
@@ -102,7 +102,7 @@ namespace LSAnalyzer.Views
             }
             else
             {
-                MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart app afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart app afterwards!", "Installation failed", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

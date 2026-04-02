@@ -34,12 +34,12 @@ namespace LSAnalyzer.Views
             {
                 if (DataContext is not ViewModels.MainWindow mainWindowViewModel || mainWindowViewModel.Analyses.All(presentation => presentation.Analysis != m.Value)) return;
                 
-                MessageBox.Show("Something went wrong with analysis '" + m.Value.AnalysisName + "'!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Something went wrong with analysis '" + m.Value.AnalysisName + "'!", "Analysis failed", MessageBoxButton.OK, MessageBoxImage.Error);
             });
             
             WeakReferenceMessenger.Default.Register<AnalysisPresentation.FileInUseMessage>(this, (r, m) =>
             {
-                MessageBox.Show("File '" + m.FileName + "' is currently in use by another process. Please close the file and start export again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("File '" + m.FileName + "' is currently in use by another process. Please close the file and start export again.", "File in use", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
             
             WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.RequestRestartMessage>(this, (_, _) =>
@@ -63,7 +63,7 @@ namespace LSAnalyzer.Views
             });
             
             WeakReferenceMessenger.Default.Register<ViewModels.MainWindow.ReloadErrorMessage>(this, (_, _) => 
-                MessageBox.Show("Error while reloading the current dataset!", "Error", MessageBoxButton.OK, MessageBoxImage.Error));
+                MessageBox.Show("Error while reloading the current dataset!", "Reload failure", MessageBoxButton.OK, MessageBoxImage.Warning));
             
             SetHandleVirtualVariableErrorMessage(true);
         }

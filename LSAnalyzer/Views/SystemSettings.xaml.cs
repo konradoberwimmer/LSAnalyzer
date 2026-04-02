@@ -37,17 +37,17 @@ namespace LSAnalyzer.Views
             
             WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.DatasetTypeRepositoryUrlInvalidMessage>(this, (_, m) =>
             {
-                    MessageBox.Show($"Cannot reach {m.Url} or it is not a valid repository!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Cannot reach {m.Url} or it is not a valid repository!", "Unreachable", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
             
             WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.CollectionNotInDatasetTypeRepositoryMessage>(this, (_, m) =>
             {
-                MessageBox.Show($"Collection not found! Available collections in repository: {string.Join(", ", m.ValidNames)}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Collection not found! Available collections in repository: {string.Join(", ", m.ValidNames)}", "Collection not found", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
             
             WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.DatasetTypeUrlInvalidMessage>(this, (_, m) =>
             {
-                MessageBox.Show($"Invalid file encountered in repository: {m.Url}! Aborting ... please inform the repository owner!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Invalid file encountered in repository: {m.Url}! Aborting ... please inform the repository owner!", "Invalid file in repository", MessageBoxButton.OK, MessageBoxImage.Error);
             });
             
             WeakReferenceMessenger.Default.Register<ViewModels.SystemSettings.FetchDatasetTypeCollectionSuccessfulMessage>(this, (_, m) =>

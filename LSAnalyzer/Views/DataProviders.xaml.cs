@@ -43,7 +43,7 @@ namespace LSAnalyzer.Views
                     }
                     else
                     {
-                        MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart LSAnalyzer afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart LSAnalyzer afterwards!", "Installation failed", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             });

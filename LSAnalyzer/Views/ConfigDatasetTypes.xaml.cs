@@ -36,7 +36,7 @@ namespace LSAnalyzer.Views
 
             WeakReferenceMessenger.Default.Register<FailureImportDatasetTypeMessage>(this, (r, m) =>
             {
-                MessageBox.Show("Import failed: " + m.Value, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Import failed: " + m.Value, "Import failure", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
         }
 

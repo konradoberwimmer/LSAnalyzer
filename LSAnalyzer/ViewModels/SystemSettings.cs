@@ -277,7 +277,7 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
                 MessageBox.Show("Already at latest version.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
                 break;
             case IRservice.UpdateResult.Failure:
-                MessageBox.Show("Something went wrong trying to update BIFIEsurvey!", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Something went wrong trying to update BIFIEsurvey!", "Update failed", MessageBoxButton.OK, MessageBoxImage.Error);
                 break;
             case IRservice.UpdateResult.Success:
                 BifieSurveyVersion = _rservice.GetBifieSurveyVersion();

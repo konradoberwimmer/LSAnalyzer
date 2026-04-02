@@ -22,7 +22,7 @@ namespace LSAnalyzer.Views
             DataContext = batchAnalyzeViewModel;
 
             WeakReferenceMessenger.Default.Register<RecentFileInvalidMessage>(this, (_, m) => 
-                MessageBox.Show($"File '{ m.FileName }' is no longer available.", "Error", MessageBoxButton.OK, MessageBoxImage.Error));
+                MessageBox.Show($"File '{ m.FileName }' is no longer available.", "File unavailable", MessageBoxButton.OK, MessageBoxImage.Warning));
             
             WeakReferenceMessenger.Default.Register<ViewModels.BatchAnalyze.BatchAnalyzeFailureMessage>(this, (r, m) =>
             {

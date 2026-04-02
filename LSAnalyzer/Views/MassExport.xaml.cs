@@ -17,7 +17,7 @@ public partial class MassExport : Window, ICloseable
         
         WeakReferenceMessenger.Default.Register<ViewModels.MassExport.FileInUseMessage>(this, (r, m) =>
         {
-            MessageBox.Show("File '" + m.FileName + "' is currently in use by another process. Please close the file and start export again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show("File '" + m.FileName + "' is currently in use by another process. Please close the file and start export again.", "File in use", MessageBoxButton.OK, MessageBoxImage.Warning);
         });
     }
 

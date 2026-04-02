@@ -141,18 +141,19 @@ namespace LSAnalyzer
                         return;
                     } else
                     {
-                        MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart LSAnalyzer afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart LSAnalyzer afterwards!", "Installation failed", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
             else if (!rService.TestLoadingBifieSurvey())
             {
-                MessageBox.Show("BIFIEsurvey was found but cannot be loaded. Thus, LSAnalyzer is not fully functioning. Please check your R installation!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                var rLibrary = rService.GetUserLibrary() ?? "undefined";
+                MessageBox.Show($"BIFIEsurvey was found ({rLibrary}) but cannot be loaded. Thus, LSAnalyzer is not fully functioning. Please check your R installation!", "BIFIEsurvey error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             if (rService.IsConnected && !rService.InjectAppFunctions())
             {
-                MessageBox.Show("There was a problem putting specific functions for LSAnalyzer into the global environment!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("There was a problem putting specific functions for LSAnalyzer into the global environment!", "R session error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             var configurationService = _serviceProvider.GetRequiredService<Configuration>();
