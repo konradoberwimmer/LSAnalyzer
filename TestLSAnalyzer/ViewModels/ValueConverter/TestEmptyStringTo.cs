@@ -15,7 +15,7 @@ public class TestEmptyStringTo
     public void TestConvert(string? value, string? parameter, string expected)
     {
         EmptyStringTo emptyStringToConverter = new();
-        Assert.Equal(expected, emptyStringToConverter.Convert(value, Type.GetType("string")!, parameter, CultureInfo.InvariantCulture));
+        Assert.Equal(expected, emptyStringToConverter.Convert(value!, Type.GetType("string")!, parameter!, CultureInfo.InvariantCulture));
     }
 
     public static IEnumerable<object?[]> ConvertTestCases =>

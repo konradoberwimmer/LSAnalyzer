@@ -121,6 +121,7 @@ public partial class Dataverse : ObservableObject, IDataProviderViewModel
         // design-time only parameterless constructor
         FileFormats = new() { new("tsv", "Archive (TSV)"), new("spss", "SPSS Original") };
         SelectedFileFormat = FileFormats.First();
+        RecentFilesForAnalyses = [];
     }
 
     public Dataverse(Services.DataProvider.Dataverse dataverseService, Configuration configuration)

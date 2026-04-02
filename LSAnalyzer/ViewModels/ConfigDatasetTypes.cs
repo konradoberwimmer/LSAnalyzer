@@ -6,269 +6,183 @@ using LSAnalyzer.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Unicode;
-using System.Threading.Tasks;
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace LSAnalyzer.ViewModels
+namespace LSAnalyzer.ViewModels;
+
+public partial class ConfigDatasetTypes : ObservableObject
 {
-    public class ConfigDatasetTypes : INotifyPropertyChanged
+    private readonly Configuration _configuration;
+
+    [ObservableProperty]
+    private ObservableCollection<DatasetType> _datasetTypes = [];
+
+    [ObservableProperty]
+    private DatasetType? _selectedDatasetType;
+
+    public List<string> UnsavedDatasetTypeNames => DatasetTypes.Where(dst => dst.IsChanged).Select(dst => dst.Name).ToList();
+
+    [ExcludeFromCodeCoverage]
+    public ConfigDatasetTypes()
     {
-        private Configuration _configuration;
+        // design-time only parameter-less constructor
+        _configuration = new Configuration();
+    }
 
-        private ObservableCollection<DatasetType> _datasetTypes;
-        public ObservableCollection<DatasetType> DatasetTypes
+    public ConfigDatasetTypes(Configuration configuration)
+    {
+        _configuration = configuration;
+        DatasetTypes = [];
+        try
         {
-            get => _datasetTypes;
-            set
+            var storedDatasetTypes = _configuration.GetStoredDatasetTypes();
+            if (storedDatasetTypes != null)
             {
-                _datasetTypes = value;
-                NotifyPropertyChanged(nameof(DatasetTypes));
+                storedDatasetTypes.OrderBy(d => d.Name).ToList().ForEach(d => {
+                    d.AcceptChanges();
+                    DatasetTypes.Add(d);
+                });
             }
         }
-
-        private DatasetType? _selectedDatasetType;
-        public DatasetType? SelectedDatasetType
+        catch
         {
-            get => _selectedDatasetType;
-            set
-            {
-                _selectedDatasetType = value;
-                NotifyPropertyChanged(nameof(SelectedDatasetType));
-            }
+            // ignored
+        }
+    }
+
+    [RelayCommand]
+    private void NewDatasetType()
+    {
+        int minAvailableDatasetTypeId = 1;
+        while (DatasetTypes.Where(dst => dst.Id == minAvailableDatasetTypeId).Any())
+        {
+            minAvailableDatasetTypeId++;
         }
 
-        public List<string> UnsavedDatasetTypeNames
+        DatasetType newDatasetType = new() { Id = minAvailableDatasetTypeId, Name = "New dataset type", JKreverse = false };
+
+        DatasetTypes.Add(newDatasetType);
+        SelectedDatasetType = newDatasetType;
+    }
+
+    [RelayCommand]
+    private void SaveSelectedDatasetType()
+    {
+        if (SelectedDatasetType == null || !SelectedDatasetType.Validate())
         {
-            get
-            {
-                return _datasetTypes.Where(dst => dst.IsChanged).Select(dst => dst.Name).ToList();
-            }
+            return;
         }
 
-        [ExcludeFromCodeCoverage]
-        public ConfigDatasetTypes()
+        _configuration.StoreDatasetType(SelectedDatasetType);
+        SelectedDatasetType.AcceptChanges();
+    }
+
+    [RelayCommand]
+    private void RemoveDatasetType()
+    {
+        if (SelectedDatasetType == null)
         {
-            // design-time only parameter-less constructor
+            return;
         }
 
-        public ConfigDatasetTypes(Configuration configuration)
-        {
-            _configuration = configuration;
-            DatasetTypes = new ObservableCollection<DatasetType>();
-            try
-            {
-                var storedDatasetTypes = _configuration.GetStoredDatasetTypes();
-                if (storedDatasetTypes != null)
-                {
-                    storedDatasetTypes.OrderBy(d => d.Name).ToList().ForEach(d => {
-                        d.AcceptChanges();
-                        DatasetTypes.Add(d);
-                    });
-                }
-            }
-            catch
-            {
+        _configuration.RemoveDatasetType(SelectedDatasetType);
+        _configuration.RemoveRecentSubsettingExpressions(SelectedDatasetType.Id);
+        _configuration.RemoveRecentFilesByDatasetTypeId(SelectedDatasetType.Id);
 
-            }
+        DatasetTypes.Remove(SelectedDatasetType);
+        SelectedDatasetType = null;
+    }
+
+    [RelayCommand]
+    private void ImportDatasetType(string? filename)
+    {
+        if (filename == null)
+        {
+            return;
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        try
         {
-            if (PropertyChanged != null)
+            var fileContent = File.ReadAllText(filename);
+            var newDatasetType = JsonSerializer.Deserialize<DatasetType>(fileContent);
+            
+            if (newDatasetType == null)
             {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                WeakReferenceMessenger.Default.Send(new FailureImportDatasetTypeMessage("invalid file"));
+                return;
             }
-        }
 
-        private RelayCommand<object?> _newDatasetTypeCommand;
-        public ICommand NewDatasetTypeCommand
-        {
-            get
-            {
-                if (_newDatasetTypeCommand == null)
-                    _newDatasetTypeCommand = new RelayCommand<object?>(this.NewDatasetType);
-                return _newDatasetTypeCommand;
-            }
-        }
-
-        private void NewDatasetType(object? dummy)
-        {
             int minAvailableDatasetTypeId = 1;
-            while (DatasetTypes.Where(dst => dst.Id == minAvailableDatasetTypeId).Any())
+            while (DatasetTypes.Any(dst => dst.Id == minAvailableDatasetTypeId))
             {
                 minAvailableDatasetTypeId++;
             }
 
-            DatasetType newDatasetType = new() { Id = minAvailableDatasetTypeId, Name = "New dataset type", JKreverse = false };
+            newDatasetType.Id = minAvailableDatasetTypeId;
+
+            string newDatasetTypeOriginalName = newDatasetType.Name;
+            int newDatasetTypeNameCounter = 1;
+            while (DatasetTypes.Any(dst => dst.Name == newDatasetType.Name))
+            {
+                newDatasetType.Name = newDatasetTypeOriginalName + " (" + newDatasetTypeNameCounter + ")";
+                newDatasetTypeNameCounter++;
+            }
+
+            if (!newDatasetType.Validate())
+            {
+                WeakReferenceMessenger.Default.Send(new FailureImportDatasetTypeMessage("invalid dataset type"));
+                return;
+            }
+
+            _configuration.StoreDatasetType(newDatasetType);
 
             DatasetTypes.Add(newDatasetType);
+            newDatasetType.AcceptChanges();
             SelectedDatasetType = newDatasetType;
+
+            WeakReferenceMessenger.Default.Send(new SuccessImportDatasetTypeMessage(newDatasetType.Name));
         }
-
-        private RelayCommand<object?> _saveSelectedDatasetTypeCommand;
-        public ICommand SaveSelectedDatasetTypeCommand
+        catch (Exception)
         {
-            get
-            {
-                if (_saveSelectedDatasetTypeCommand == null)
-                    _saveSelectedDatasetTypeCommand = new RelayCommand<object?>(this.SaveSelectedDatasetType);
-                return _saveSelectedDatasetTypeCommand;
-            }
-        }
-
-        private void SaveSelectedDatasetType(object? dummy)
-        {
-            if (SelectedDatasetType == null || !SelectedDatasetType.Validate())
-            {
-                return;
-            }
-
-            _configuration.StoreDatasetType(SelectedDatasetType);
-            SelectedDatasetType.AcceptChanges();
-        }
-
-        private RelayCommand<object?> _removeDatasetTypeCommand;
-        public ICommand RemoveDatasetTypeCommand
-        {
-            get
-            {
-                if (_removeDatasetTypeCommand == null)
-                    _removeDatasetTypeCommand = new RelayCommand<object?>(this.RemoveDatasetType);
-                return _removeDatasetTypeCommand;
-            }
-        }
-
-        private void RemoveDatasetType(object? dummy)
-        {
-            if (SelectedDatasetType == null)
-            {
-                return;
-            }
-
-            _configuration.RemoveDatasetType(SelectedDatasetType);
-            _configuration.RemoveRecentSubsettingExpressions(SelectedDatasetType.Id);
-            _configuration.RemoveRecentFilesByDatasetTypeId(SelectedDatasetType.Id);
-
-            DatasetTypes.Remove(SelectedDatasetType);
-            SelectedDatasetType = null;
-        }
-
-        private RelayCommand<string?> _importDatasetTypeCommand;
-        public ICommand ImportDatasetTypeCommand
-        {
-            get
-            {
-                if (_importDatasetTypeCommand == null)
-                    _importDatasetTypeCommand = new RelayCommand<string?>(this.ImportDatasetType);
-                return _importDatasetTypeCommand;
-            }
-        }
-
-        private void ImportDatasetType(string? filename)
-        {
-            if (filename == null)
-            {
-                return;
-            }
-
-            try
-            {
-                var fileContent = File.ReadAllText(filename);
-                var newDatasetType = JsonSerializer.Deserialize<DatasetType>(fileContent);
-                
-                if (newDatasetType == null)
-                {
-                    WeakReferenceMessenger.Default.Send(new FailureImportDatasetTypeMessage("invalid file"));
-                    return;
-                }
-
-                int minAvailableDatasetTypeId = 1;
-                while (DatasetTypes.Where(dst => dst.Id == minAvailableDatasetTypeId).Any())
-                {
-                    minAvailableDatasetTypeId++;
-                }
-
-                newDatasetType.Id = minAvailableDatasetTypeId;
-
-                string newDatasetTypeOriginalName = newDatasetType.Name;
-                int newDatasetTypeNameCounter = 1;
-                while (DatasetTypes.Any(dst => dst.Name == newDatasetType.Name))
-                {
-                    newDatasetType.Name = newDatasetTypeOriginalName + " (" + newDatasetTypeNameCounter + ")";
-                    newDatasetTypeNameCounter++;
-                }
-
-                if (!newDatasetType.Validate())
-                {
-                    WeakReferenceMessenger.Default.Send(new FailureImportDatasetTypeMessage("invalid dataset type"));
-                    return;
-                }
-
-                _configuration.StoreDatasetType(newDatasetType);
-
-                DatasetTypes.Add(newDatasetType);
-                newDatasetType.AcceptChanges();
-                SelectedDatasetType = newDatasetType;
-
-                WeakReferenceMessenger.Default.Send(new SuccessImportDatasetTypeMessage(newDatasetType.Name));
-            }
-            catch (Exception)
-            {
-                WeakReferenceMessenger.Default.Send(new FailureImportDatasetTypeMessage("invalid file"));
-            }
-        }
-
-        private RelayCommand<string?> _exportDatasetTypeCommand;
-        public ICommand ExportDatasetTypeCommand
-        {
-            get
-            {
-                if (_exportDatasetTypeCommand == null)
-                    _exportDatasetTypeCommand = new RelayCommand<string?>(this.ExportDatasetType);
-                return _exportDatasetTypeCommand;
-            }
-        }
-
-        private void ExportDatasetType(string? filename)
-        {
-            if (SelectedDatasetType == null || !SelectedDatasetType.Validate() || filename == null)
-            {
-                return;
-            }
-
-            JsonSerializerOptions jsonSerializerOptions = new(JsonSerializerOptions.Default)
-            {
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                WriteIndented = true
-            };
-
-            File.WriteAllText(filename, JsonSerializer.Serialize(SelectedDatasetType, jsonSerializerOptions));
+            WeakReferenceMessenger.Default.Send(new FailureImportDatasetTypeMessage("invalid file"));
         }
     }
 
-    internal class FailureImportDatasetTypeMessage : ValueChangedMessage<string>
+    [RelayCommand]
+    private void ExportDatasetType(string? filename)
     {
-        public FailureImportDatasetTypeMessage(string message) : base(message)
+        if (SelectedDatasetType == null || !SelectedDatasetType.Validate() || filename == null)
         {
-
+            return;
         }
+
+        JsonSerializerOptions jsonSerializerOptions = new(JsonSerializerOptions.Default)
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            WriteIndented = true
+        };
+
+        File.WriteAllText(filename, JsonSerializer.Serialize(SelectedDatasetType, jsonSerializerOptions));
     }
+}
 
-    internal class SuccessImportDatasetTypeMessage : ValueChangedMessage<string>
+internal class FailureImportDatasetTypeMessage : ValueChangedMessage<string>
+{
+    public FailureImportDatasetTypeMessage(string message) : base(message)
     {
-        public SuccessImportDatasetTypeMessage(string message) : base(message)
-        {
 
-        }
+    }
+}
+
+internal class SuccessImportDatasetTypeMessage : ValueChangedMessage<string>
+{
+    public SuccessImportDatasetTypeMessage(string message) : base(message)
+    {
+
     }
 }

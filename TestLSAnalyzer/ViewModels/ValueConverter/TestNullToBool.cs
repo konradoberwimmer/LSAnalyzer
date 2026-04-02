@@ -17,7 +17,7 @@ namespace TestLSAnalyzer.ViewModels.ValueConverter
         public void TestConvert(object? value, bool expected) 
         {
             NullToBool converter = new();
-            Assert.Equal(expected, converter.Convert(value, Type.GetType("Boolean")!, "", CultureInfo.InvariantCulture));
+            Assert.Equal(expected, converter.Convert(value!, Type.GetType("Boolean")!, "", CultureInfo.InvariantCulture));
         }
     }
 }

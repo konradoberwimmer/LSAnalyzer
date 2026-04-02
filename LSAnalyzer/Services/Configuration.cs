@@ -16,29 +16,25 @@ namespace LSAnalyzer.Services;
 
 public class Configuration
 {
-    private IConfigurationRoot? _config;
+    private readonly IConfigurationRoot? _config;
     private readonly IConfigurationBuilder? _configurationBuilder;
     private readonly ISettingsService _settingsService;
     private readonly IRegistryService _registryService;
 
-    private string _datasetTypesConfigFile;
-    public string DatasetTypesConfigFile
-    {
-        get => _datasetTypesConfigFile;
-    }
+    public string DatasetTypesConfigFile { get; }
 
     [ExcludeFromCodeCoverage]
     public Configuration()
     {
         // parameter-less constructor for testing only
-        _datasetTypesConfigFile = string.Empty;
+        DatasetTypesConfigFile = string.Empty;
         _settingsService = new SettingsServiceStub();
         _registryService = new RegistryServiceStub();
     }
 
     public Configuration(string datasetTypesConfigFile, IConfigurationBuilder? configurationBuilder, ISettingsService settingsService, IRegistryService registryService) 
     { 
-        _datasetTypesConfigFile = datasetTypesConfigFile;
+        DatasetTypesConfigFile = datasetTypesConfigFile;
         try
         {
             _config = configurationBuilder?.Build() ?? new ConfigurationBuilder().Build();
@@ -77,17 +73,17 @@ public class Configuration
 
     public virtual List<IDataProviderConfiguration> GetDataProviderConfigurations()
     {
-        if (_config == null || !_config.GetSection("DataProviders").Exists() || _configurationBuilder?.Sources.Where(source => source.GetType() == typeof(JsonConfigurationSource)).LastOrDefault() is not JsonConfigurationSource configurationSource)
+        if (_config == null || !_config.GetSection("DataProviders").Exists() || _configurationBuilder?.Sources.LastOrDefault(source => source.GetType() == typeof(JsonConfigurationSource)) is not JsonConfigurationSource configurationSource)
         {
-            return new();
+            return [];
         }
 
-        var fileInfo = configurationSource.FileProvider.GetFileInfo(configurationSource.Path);
+        var fileInfo = configurationSource.FileProvider!.GetFileInfo(configurationSource.Path!);
 
         var fileContent = string.Empty;
         try
         {
-            fileContent = File.ReadAllText(fileInfo.PhysicalPath);
+            fileContent = File.ReadAllText(fileInfo.PhysicalPath!);
         } catch
         {
             dynamic configuration = new { DataProviders = new List<IDataProviderConfiguration>() };
@@ -107,7 +103,7 @@ public class Configuration
 
     public void StoreDataProviderConfiguration(IDataProviderConfiguration dataProviderConfiguration)
     {
-        if (_configurationBuilder?.Sources.Where(source => source.GetType() == typeof(JsonConfigurationSource)).LastOrDefault() is not JsonConfigurationSource configurationSource)
+        if (_configurationBuilder?.Sources.LastOrDefault(source => source.GetType() == typeof(JsonConfigurationSource)) is not JsonConfigurationSource configurationSource)
         {
             return;
         }
@@ -117,7 +113,7 @@ public class Configuration
         currentDataProviderConfigurations.Add(dataProviderConfiguration);
         dynamic configuration = new { DataProviders = currentDataProviderConfigurations };
 
-        var fileInfo = configurationSource.FileProvider.GetFileInfo(configurationSource.Path);
+        var fileInfo = configurationSource.FileProvider!.GetFileInfo(configurationSource.Path!);
         if (!File.Exists(fileInfo.PhysicalPath))
         {
             var fs = File.Create(fileInfo.PhysicalPath!);
@@ -130,7 +126,7 @@ public class Configuration
 
     public void DeleteDataProviderConfiguration(IDataProviderConfiguration dataProviderConfiguration)
     {
-        if (_configurationBuilder?.Sources.Where(source => source.GetType() == typeof(JsonConfigurationSource)).LastOrDefault() is not JsonConfigurationSource configurationSource)
+        if (_configurationBuilder?.Sources.LastOrDefault(source => source.GetType() == typeof(JsonConfigurationSource)) is not JsonConfigurationSource configurationSource)
         {
             return;
         }
@@ -139,7 +135,7 @@ public class Configuration
         currentDataProviderConfigurations.RemoveAll(dpc => dpc.Id == dataProviderConfiguration.Id);
         dynamic configuration = new { DataProviders = currentDataProviderConfigurations };
 
-        var fileInfo = configurationSource.FileProvider.GetFileInfo(configurationSource.Path);
+        var fileInfo = configurationSource.FileProvider!.GetFileInfo(configurationSource.Path!);
         File.WriteAllText(fileInfo.PhysicalPath, JsonSerializer.Serialize(configuration));
 
         _config?.Reload();
@@ -147,53 +143,60 @@ public class Configuration
 
     public List<DatasetType>? GetStoredDatasetTypes()
     {
-        if (!File.Exists(_datasetTypesConfigFile))
+        if (!File.Exists(DatasetTypesConfigFile))
         {
             return new List<DatasetType>();
         }
 
-        var fileContent = File.ReadAllText(_datasetTypesConfigFile);
+        var fileContent = File.ReadAllText(DatasetTypesConfigFile);
         return JsonSerializer.Deserialize<List<DatasetType>>(fileContent);
     }
 
     public virtual void StoreDatasetType(DatasetType datasetType)
     {
-        if (!File.Exists(_datasetTypesConfigFile))
+        if (!File.Exists(DatasetTypesConfigFile))
         {
             return;
         }
 
-        var fileContent = File.ReadAllText(_datasetTypesConfigFile);
+        var fileContent = File.ReadAllText(DatasetTypesConfigFile);
         List<DatasetType> storedDatasetTypes = new();
         try
         {
             storedDatasetTypes = JsonSerializer.Deserialize<List<DatasetType>>(fileContent) ?? storedDatasetTypes;
-        } catch { }
+        }
+        catch
+        {
+            // ignored
+        }
 
         storedDatasetTypes.RemoveAll(dst => dst.Id == datasetType.Id);
         storedDatasetTypes.Add(datasetType);
 
-        File.WriteAllText(_datasetTypesConfigFile, JsonSerializer.Serialize(storedDatasetTypes));
+        File.WriteAllText(DatasetTypesConfigFile, JsonSerializer.Serialize(storedDatasetTypes));
     }
 
     public void RemoveDatasetType(DatasetType datasetType)
     {
-        if (!File.Exists(_datasetTypesConfigFile))
+        if (!File.Exists(DatasetTypesConfigFile))
         {
             return;
         }
 
-        var fileContent = File.ReadAllText(_datasetTypesConfigFile);
+        var fileContent = File.ReadAllText(DatasetTypesConfigFile);
         List<DatasetType> storedDatasetTypes = new();
         try
         {
             storedDatasetTypes = JsonSerializer.Deserialize<List<DatasetType>>(fileContent) ?? storedDatasetTypes;
         }
-        catch { }
+        catch
+        {
+            // ignored
+        }
 
         storedDatasetTypes.RemoveAll(dst => dst.Id == datasetType.Id);
 
-        File.WriteAllText(_datasetTypesConfigFile, JsonSerializer.Serialize(storedDatasetTypes));
+        File.WriteAllText(DatasetTypesConfigFile, JsonSerializer.Serialize(storedDatasetTypes));
     }
 
     public List<string> GetStoredRecentSubsettingExpressions(int datasetTypeId)
@@ -274,7 +277,11 @@ public class Configuration
             Properties.Settings.Default.recentSubsettingExpressions =
                 JsonSerializer.Serialize(storedRecentSubsettingExpressions);
             Properties.Settings.Default.Save();
-        } catch { }
+        }
+        catch
+        {
+            // ignored
+        }
     }
 
     public virtual void TrimRecentSubsettingExpressions(int numberOfRecentSubsettingExpressions)
@@ -305,7 +312,11 @@ public class Configuration
             Properties.Settings.Default.recentSubsettingExpressions =
                 JsonSerializer.Serialize(storedRecentSubsettingExpressions);
             Properties.Settings.Default.Save();
-        } catch { }
+        }
+        catch
+        {
+            // ignored
+        }
     }
     
     public virtual List<RecentFileForAnalysis> GetStoredRecentFiles(int dataProviderId)
@@ -387,7 +398,11 @@ public class Configuration
             Properties.Settings.Default.recentFiles =
                 JsonSerializer.Serialize(storedRecentFiles);
             Properties.Settings.Default.Save();
-        } catch { }
+        }
+        catch
+        {
+            // ignored
+        }
     }
     
     public void RemoveRecentFilesByDatasetTypeId(int datasetTypeId)
@@ -407,7 +422,11 @@ public class Configuration
             Properties.Settings.Default.recentFiles =
                 JsonSerializer.Serialize(storedRecentFiles);
             Properties.Settings.Default.Save();
-        } catch { }
+        }
+        catch
+        {
+            // ignored
+        }
     }
     
     public void RemoveRecentFile(RecentFileForAnalysis recentFileForAnalysis)
@@ -427,7 +446,11 @@ public class Configuration
             Properties.Settings.Default.recentFiles =
                 JsonSerializer.Serialize(storedRecentFiles);
             Properties.Settings.Default.Save();
-        } catch { }
+        }
+        catch
+        {
+            // ignored
+        }
     }
 
     public virtual void TrimRecentFiles(int numberOfRecentFiles)
@@ -458,7 +481,11 @@ public class Configuration
             Properties.Settings.Default.recentFiles =
                 JsonSerializer.Serialize(storedRecentFiles);
             Properties.Settings.Default.Save();
-        } catch { }
+        }
+        catch
+        {
+            // ignored
+        }
     }
 
     public List<string> GetStoredRecentBatchAnalyzeFiles()

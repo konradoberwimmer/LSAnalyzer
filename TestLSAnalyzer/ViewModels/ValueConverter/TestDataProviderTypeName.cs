@@ -16,7 +16,7 @@ namespace TestLSAnalyzer.ViewModels.ValueConverter
         public void TestConvert(object? value, string expected)
         {
             DataProviderTypeName converter = new();
-            Assert.Equal(expected, converter.Convert(value, typeof(string), string.Empty, CultureInfo.InvariantCulture));
+            Assert.Equal(expected, converter.Convert(value!, typeof(string), string.Empty, CultureInfo.InvariantCulture));
         }
 
         public static IEnumerable<object?[]> TestCases =>

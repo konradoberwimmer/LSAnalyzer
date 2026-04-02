@@ -198,7 +198,7 @@ namespace LSAnalyzer.Services.DataProvider
             {
                 fileRetrievalObject = JsonSerializer.Deserialize<JsonObject>(fileRetrieval);
             }
-            catch (Exception _)
+            catch (Exception)
             {
                 return null;
             }

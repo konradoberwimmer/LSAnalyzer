@@ -18,7 +18,7 @@ namespace TestLSAnalyzer.ViewModels.ValueConverter
         {
             var converter = new BoolToRedGreen();
 
-            Assert.Equal(expected, converter.Convert(boolVal, Type.GetType("Boolean")!, "", CultureInfo.InvariantCulture));
+            Assert.Equal(expected, converter.Convert(boolVal!, Type.GetType("Boolean")!, "", CultureInfo.InvariantCulture));
         }
 
         public static IEnumerable<object?[]> ConvertTestData =>

@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LSAnalyzer.Helper;
 
@@ -15,7 +10,7 @@ namespace LSAnalyzer.Helper;
 ///     This class adds the ability to refresh the list when any property of
 ///     the objects changes in the list which implements the INotifyPropertyChanged. 
 /// </summary>
-/// <typeparam name="T">
+/// <typeparam name="T"/>
 public class ItemsChangeObservableCollection<T> :
        ObservableCollection<T> where T : INotifyPropertyChanged
 {
@@ -23,16 +18,16 @@ public class ItemsChangeObservableCollection<T> :
     {
         if (e.Action == NotifyCollectionChangedAction.Add)
         {
-            RegisterPropertyChanged(e.NewItems);
+            RegisterPropertyChanged(e.NewItems!);
         }
         else if (e.Action == NotifyCollectionChangedAction.Remove)
         {
-            UnRegisterPropertyChanged(e.OldItems);
+            UnRegisterPropertyChanged(e.OldItems!);
         }
         else if (e.Action == NotifyCollectionChangedAction.Replace)
         {
-            UnRegisterPropertyChanged(e.OldItems);
-            RegisterPropertyChanged(e.NewItems);
+            UnRegisterPropertyChanged(e.OldItems!);
+            RegisterPropertyChanged(e.NewItems!);
         }
 
         base.OnCollectionChanged(e);
@@ -50,7 +45,7 @@ public class ItemsChangeObservableCollection<T> :
         {
             if (item != null)
             {
-                item.PropertyChanged += new PropertyChangedEventHandler(item_PropertyChanged);
+                item.PropertyChanged += item_PropertyChanged;
             }
         }
     }
@@ -61,12 +56,12 @@ public class ItemsChangeObservableCollection<T> :
         {
             if (item != null)
             {
-                item.PropertyChanged -= new PropertyChangedEventHandler(item_PropertyChanged);
+                item.PropertyChanged -= item_PropertyChanged;
             }
         }
     }
 
-    private void item_PropertyChanged(object sender, PropertyChangedEventArgs e)
+    private void item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         base.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
     }

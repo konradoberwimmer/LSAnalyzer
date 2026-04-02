@@ -128,7 +128,7 @@ namespace LSAnalyzer.Views.CustomControls
 
         private void ButtonRemoveAnalysis_OnClick(object sender, RoutedEventArgs e)
         {
-            if (DataContext is not ViewModels.AnalysisPresentation analysisPresentationViewModel)
+            if (DataContext is not ViewModels.AnalysisPresentation analysisPresentationViewModel || analysisPresentationViewModel.MainWindowViewModel is null)
             {
                 return;
             }

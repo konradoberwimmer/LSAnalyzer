@@ -14,7 +14,7 @@ namespace TestLSAnalyzer.ViewModels.ValueConverter
     public class TestNullToVisibilityCollapsed
     {
         [Theory, MemberData(nameof(ConvertTestData))]
-        public void TestConvert(object? testObject, Visibility expected)
+        public void TestConvert(object testObject, Visibility expected)
         {
             NullToVisibilityCollapsed nullToVisibilityCollapsedConverter = new();
 
