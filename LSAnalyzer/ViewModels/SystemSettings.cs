@@ -82,6 +82,8 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
     
     [ObservableProperty] private string? _rVersion;
 
+    [ObservableProperty] private string _userLibrary;
+
     [ObservableProperty] private string? _bifieSurveyVersion;
 
     private ObservableCollection<LogEntry> _sessionLog;
@@ -108,6 +110,7 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
         _datasetTypeRepository = new DatasetTypeRepositoryStub();
         AlternativeRLocation = string.Empty;
         RVersion = "R version 4.3.1";
+        UserLibrary = """C:\my\R\library""";
         BifieSurveyVersion = "3.4-15";
         CountConfiguredDatasetTypes = 12;
         _logger = new LoggingStub();
@@ -121,6 +124,7 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
     {
         _rservice = rservice;
         RVersion = _rservice.IsConnected ? _rservice.GetRVersion() : "---";
+        UserLibrary = _rservice.IsConnected ? _rservice.GetUserLibrary() ?? "undefined" : "---";
         BifieSurveyVersion = _rservice.IsConnected ?_rservice.GetBifieSurveyVersion() : "---";
         _configuration = configuration;
         _datasetTypeRepository = datasetTypeRepository;

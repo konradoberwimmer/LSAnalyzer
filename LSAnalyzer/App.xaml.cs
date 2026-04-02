@@ -110,6 +110,7 @@ namespace LSAnalyzer
             if (rService.IsConnected && !rService.CheckNecessaryRPackages())
             {
                 var rVersion = rService.GetRVersion()!;
+                var rLibrary = rService.GetUserLibrary() ?? "undefined";
                 
                 var wantsInstall = MessageBox.Show($"""
                                                    It seems that not all necessary R packages (BIFIEsurvey, foreign) are available. 
@@ -119,7 +120,7 @@ namespace LSAnalyzer
                                                    
                                                    Otherwise, you can do this manually (restart LSAnalyzer!) or via Config -> System.
                                                    
-                                                   (Using {rVersion} with library "{rService.RLocation.rPath}".)
+                                                   (Using {rVersion} with library "{rLibrary}".)
                                                    """, "R packages not available", MessageBoxButton.YesNo, MessageBoxImage.Error);
                 if (wantsInstall == MessageBoxResult.Yes)
                 {
@@ -143,6 +144,10 @@ namespace LSAnalyzer
                         MessageBox.Show("R package installation did not succeed. Please handle this manually in your R installation and restart LSAnalyzer afterwards!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
+            }
+            else if (!rService.TestLoadingBifieSurvey())
+            {
+                MessageBox.Show("BIFIEsurvey was found but cannot be loaded. Thus, LSAnalyzer is not fully functioning. Please check your R installation!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             if (rService.IsConnected && !rService.InjectAppFunctions())

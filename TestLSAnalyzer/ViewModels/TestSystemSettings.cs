@@ -477,6 +477,11 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
+        public string? GetUserLibrary()
+        {
+            throw new NotImplementedException();
+        }
+
         public bool CheckNecessaryRPackages(string? packageName = null)
         {
             throw new NotImplementedException();
@@ -495,6 +500,11 @@ public class TestSystemSettings
         }
 
         public IRservice.UpdateResult UpdateBifieSurvey()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TestLoadingBifieSurvey()
         {
             throw new NotImplementedException();
         }
