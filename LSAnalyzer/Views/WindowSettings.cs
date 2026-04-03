@@ -16,6 +16,7 @@ public class WindowSettings
         { "BatchAnalyze", (width: 800, height: 600) },
         { "Subsetting", (width: 800, height: 450) },
         { "VirtualVariables", (width: 1200, height: 600) },
+        { "ConfigDatasetTypes", (width: 900, height: 550) },
     };
 
     public static int WidthUnivar
@@ -235,6 +236,28 @@ public class WindowSettings
             var currentSettings = _settings["VirtualVariables"];
             currentSettings.height = value;
             _settings["VirtualVariables"] = currentSettings;
+        }
+    }
+    
+    public static int WidthConfigDatasetTypes
+    {
+        get => _settings["ConfigDatasetTypes"].width;
+        set
+        {
+            var currentSettings = _settings["ConfigDatasetTypes"];
+            currentSettings.width = value;
+            _settings["ConfigDatasetTypes"] = currentSettings;
+        }
+    }
+    
+    public static int HeightConfigDatasetTypes
+    {
+        get => _settings["ConfigDatasetTypes"].height;
+        set
+        {
+            var currentSettings = _settings["ConfigDatasetTypes"];
+            currentSettings.height = value;
+            _settings["ConfigDatasetTypes"] = currentSettings;
         }
     }
 }
