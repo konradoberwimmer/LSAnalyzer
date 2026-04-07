@@ -1447,6 +1447,8 @@ namespace LSAnalyzer.Services
                 
                 EvaluateAndLog(fullCall);
 
+                EvaluateAndLog($"{assignment}[is.nan({assignment})] <- as.numeric(NA)");
+
                 if (!string.IsNullOrWhiteSpace(virtualVariableCombine.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
                 {
                     EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableCombine.Name}'] = '{virtualVariableCombine.Label}'");

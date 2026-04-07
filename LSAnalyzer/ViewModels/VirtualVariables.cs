@@ -261,6 +261,19 @@ public partial class VirtualVariables : ObservableObject
     {
         if (SelectedVirtualVariable is null) return;
         
+        switch (SelectedVirtualVariable)
+        {
+            case VirtualVariableCombine:
+            case VirtualVariableScale:
+                if (!SelectedVirtualVariable.Validate()) return;
+                break;
+            case VirtualVariableRecode virtualVariableRecode:
+                if (!virtualVariableRecode.ValidateDeep()) return;
+                break;
+            default:
+                return;
+        }
+        
         Preview = DefaultDataView();
         
         IsBusy = true;
