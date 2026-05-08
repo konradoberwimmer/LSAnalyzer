@@ -50,14 +50,26 @@ public class TestVirtualVariableCompute
     ];
 
     [Theory, MemberData(nameof(TestVirtualVariableComputeParserData))]
-    public void TestIsValid(string text, bool rootCorrect, bool termStructureCorrect, int expectedChildren, int firstTerminalNodeLexerType)
+    public void TestValidExpression(string text, bool rootCorrect, bool termStructureCorrect, int expectedChildren, int firstTerminalNodeLexerType)
     {
         VirtualVariableCompute virtualVariableCompute = new()
         {
             Expression = text
         };
 
-        Assert.Equal(rootCorrect && termStructureCorrect, virtualVariableCompute.IsValid);
+        Assert.Equal(rootCorrect && termStructureCorrect, virtualVariableCompute.ValidExpression);
+    }
+
+    [Theory, MemberData(nameof(TestVirtualVariableComputeParserData))]
+    public void TestValidate(string text, bool rootCorrect, bool termStructureCorrect, int expectedChildren, int firstTerminalNodeLexerType)
+    {
+        VirtualVariableCompute virtualVariableCompute = new()
+        {
+            Name = "computed",
+            Expression = text
+        };
+
+        Assert.Equal(rootCorrect && termStructureCorrect, virtualVariableCompute.Validate());
     }
 
     [Theory, MemberData(nameof(TestFromPlausibleValuesData))]

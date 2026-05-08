@@ -6,6 +6,7 @@ using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LSAnalyzer.Helper;
+using LSAnalyzer.Models.ValidationAttributes;
 
 namespace LSAnalyzer.Models;
 
@@ -17,10 +18,11 @@ public partial class VirtualVariableCompute : VirtualVariable
     public override string TypeName => "Compute";
     
     [ObservableProperty]
+    [ValidComputeExpression("Not a valid expression.")]
     private string _expression = string.Empty;
     partial void OnExpressionChanged(string value)
     {
-        OnPropertyChanged(nameof(IsValid));
+        OnPropertyChanged(nameof(ValidExpression));
         OnPropertyChanged(nameof(IsChanged));
     }
 
@@ -28,7 +30,7 @@ public partial class VirtualVariableCompute : VirtualVariable
     {
         get
         {
-            if (!IsValid) return false;
+            if (!ValidExpression) return false;
 
             var expression = GetParser().expression();
             var rootNode = (expression.GetChild(0) as VirtualVariableComputeParser.TermContext)!;
@@ -54,7 +56,7 @@ public partial class VirtualVariableCompute : VirtualVariable
     public override string Info => Expression;
 
     [JsonIgnore]
-    public bool IsValid
+    public bool ValidExpression
     {
         get
         {
@@ -86,6 +88,7 @@ public partial class VirtualVariableCompute : VirtualVariable
     public override void AcceptChanges()
     {
         _savedState = Clone() as VirtualVariableCompute;
+        _savedState!.Id = Id;
         OnPropertyChanged(nameof(IsChanged));
     }
 
@@ -98,7 +101,7 @@ public partial class VirtualVariableCompute : VirtualVariable
             
             if (_savedState is null) return true;
             
-            return !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, [ "Info", "IsChanged", "Errors", "Variables" ]);
+            return !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, [ "Info", "IsChanged", "Errors" ]);
         }
     }
     

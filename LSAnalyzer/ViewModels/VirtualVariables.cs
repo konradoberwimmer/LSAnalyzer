@@ -67,6 +67,7 @@ public partial class VirtualVariables : ObservableObject
     [ObservableProperty] 
     private List<Type> _virtualVariableTypes = [
         typeof(VirtualVariableCombine),
+        typeof(VirtualVariableCompute),
         typeof(VirtualVariableRecode),
         typeof(VirtualVariableScale)
     ];
@@ -165,6 +166,11 @@ public partial class VirtualVariables : ObservableObject
 
         switch (newVirtualVariable)
         {
+            case VirtualVariableCompute virtualVariableCompute:
+                if (AnalysisConfiguration?.DatasetType is null) break;
+                
+                virtualVariableCompute.PossiblePlausibleValueVariables = new List<PlausibleValueVariable>(AnalysisConfiguration.DatasetType.PVvarsList);
+                break;
             case VirtualVariableScale virtualVariableScale:
                 if (AnalysisConfiguration?.DatasetType is null) break;
                 
@@ -195,6 +201,9 @@ public partial class VirtualVariables : ObservableObject
                     virtualVariableCombine.Variables.Add(selectedVariable.Clone());
                 }
                 break;
+            case VirtualVariableCompute virtualVariableCompute:
+                virtualVariableCompute.Expression += selectedAvailableVariables.First().Name;
+                break;
             case VirtualVariableScale virtualVariableScale:
                 virtualVariableScale.InputVariable = selectedAvailableVariables.First().Clone();
                 break;
@@ -214,6 +223,7 @@ public partial class VirtualVariables : ObservableObject
         switch (SelectedVirtualVariable)
         {
             case VirtualVariableCombine:
+            case VirtualVariableCompute:
             case VirtualVariableScale:
                 if (!SelectedVirtualVariable.Validate()) return;
                 break;

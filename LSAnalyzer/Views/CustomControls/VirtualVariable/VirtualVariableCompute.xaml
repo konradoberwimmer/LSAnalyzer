@@ -1,0 +1,35 @@
+<UserControl x:Class="LSAnalyzer.Views.CustomControls.VirtualVariable.VirtualVariableCompute"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:LSAnalyzer.Views.CustomControls.VirtualVariable"
+             xmlns:models="clr-namespace:LSAnalyzer.Models"
+             xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
+             xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop"
+             xmlns:customControls="clr-namespace:LSAnalyzer.Views.CustomControls"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance models:VirtualVariableCompute, IsDesignTimeCreatable=True}"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <converter:DictionaryHasElementToBool x:Key="DictionaryHasElementToBoolConverter"/>
+        <customControls:DropHandlerVariable x:Key="DropHandlerVariable"/>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Expression:" HorizontalAlignment="Left"/>
+        <ContentControl Grid.Row="1" Grid.Column="0" Margin="0,5,0,0" dd:DragDrop.IsDropTarget="True" dd:DragDrop.DropHandler="{StaticResource DropHandlerVariable}">
+            <TextBox TextWrapping="WrapWithOverflow" Text="{Binding Expression, UpdateSourceTrigger=PropertyChanged}">
+                <ToolTipService.ToolTip>
+                    <TextBlock Text="{Binding Errors[Expression], FallbackValue=...}" Foreground="Red"/>
+                </ToolTipService.ToolTip>
+                <ToolTipService.IsEnabled>
+                    <Binding Path="Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Expression"/>
+                </ToolTipService.IsEnabled>
+            </TextBox>
+        </ContentControl>
+    </Grid>
+</UserControl>
