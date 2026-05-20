@@ -33,27 +33,27 @@ namespace LSAnalyzer.Views
 
             DataContext = selectAnalysisFileViewModel;
 
-            WeakReferenceMessenger.Default.Register<RecentFileInvalidMessage>(this, (_, m) => 
+            WeakReferenceMessenger.Default.Register<ViewModels.SelectAnalysisFile.RecentFileInvalidMessage>(this, (_, m) => 
                 MessageBox.Show($"File '{ m.FileName }' is no longer available (or dataset type/weights have changed).", "File unavailable", MessageBoxButton.OK, MessageBoxImage.Warning));
             
-            WeakReferenceMessenger.Default.Register<FailureAnalysisFileMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.SelectAnalysisFile.FailureAnalysisFileMessage>(this, (r, m) =>
             {
-                MessageBox.Show("Unable to read column names from data file '" + m.Value + "'.\n\nTake note:\n- Supported file types are R data frames (.rds), SPSS (.sav), CSV (.csv) and Excel (.xlsx)\n- File ending must match file type\n- All formats have to provide column headers (in first row for Excel and CSV)\n-With SPSS (.sav), make sure there are no non-ASCII characters in path and filename (eg. no German umlauts)\n- With Excel (.xlsx), package openxlsx has to be installed\n- With Excel (.xlsx), data has to be on the first worksheet", "Unsupported file type", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Unable to read column names from data file '" + m.FileName + "'.\n\nTake note:\n- Supported file types are R data frames (.rds), SPSS (.sav), CSV (.csv) and Excel (.xlsx)\n- File ending must match file type\n- All formats have to provide column headers (in first row for Excel and CSV)\n-With SPSS (.sav), make sure there are no non-ASCII characters in path and filename (eg. no German umlauts)\n- With Excel (.xlsx), package openxlsx has to be installed\n- With Excel (.xlsx), data has to be on the first worksheet", "Unsupported file type", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
 
-            WeakReferenceMessenger.Default.Register<FailureDataProviderMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.SelectAnalysisFile.FailureDataProviderMessage>(this, (r, m) =>
             {
                 MessageBox.Show("Unable to read from data provider.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
 
-            WeakReferenceMessenger.Default.Register<FailureAnalysisConfigurationMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.SelectAnalysisFile.FailureAnalysisConfigurationMessage>(this, (r, m) =>
             {
-                MessageBox.Show("Unable to create BIFIEdata object from file '" + m.Value.FileName + "' when applying dataset type '" + m.Value.DatasetType?.Name + "'.", "Dataset type mismatch", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Unable to create BIFIEdata object from file '" + m.AnalysisConfiguration.FileName + "' when applying dataset type '" + m.AnalysisConfiguration.DatasetType?.Name + "'.", "Dataset type mismatch", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
 
-            WeakReferenceMessenger.Default.Register<MultiplePossibleDatasetTypesMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.SelectAnalysisFile.MultiplePossibleDatasetTypesMessage>(this, (_, m) =>
             {
-                var listPossibleDatasetTypeNames = m.Value.ConvertAll(datasetType => (string.IsNullOrWhiteSpace(datasetType.Group) ? "[no grpup]" : datasetType.Group) + " - " + datasetType.Name).ToArray();
+                var listPossibleDatasetTypeNames = m.PossibleDatasetTypes.ConvertAll(datasetType => (string.IsNullOrWhiteSpace(datasetType.Group) ? "[no grpup]" : datasetType.Group) + " - " + datasetType.Name).ToArray();
                 MessageBox.Show("Unable to determine dataset type exactly. Might be one of:\n\n" + String.Join("\n", listPossibleDatasetTypeNames), "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             });
 

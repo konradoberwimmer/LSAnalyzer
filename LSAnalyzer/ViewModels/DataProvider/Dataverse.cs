@@ -163,7 +163,7 @@ public partial class Dataverse : ObservableObject, IDataProviderViewModel
             recentFilesForAnalyses.ForEach(rfa => rfa.FormatFileName = FormatRecentFileName);
             RecentFilesForAnalyses = new ObservableCollection<Configuration.RecentFileForAnalysis>(recentFilesForAnalyses);
             
-            WeakReferenceMessenger.Default.Send(new RecentFileInvalidMessage(recentFileForAnalysis.FileName));
+            WeakReferenceMessenger.Default.Send(new SelectAnalysisFile.RecentFileInvalidMessage(recentFileForAnalysis.FileName));
             
             return;
         }

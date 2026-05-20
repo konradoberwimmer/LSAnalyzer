@@ -353,7 +353,7 @@ public partial class SelectAnalysisFile : ObservableObject
             variables = _rservice.GetDatasetVariables(FileName!, IsCsv && UseCsv2 ? "csv2" : null) ?? new();
             if (variables.Count == 0)
             {
-                e.Result = new FailureAnalysisFileMessage(FileName!);
+                e.Result = new FailureAnalysisFileMessage { FileName = FileName! };
                 IsBusy = false;
                 return;
             }
@@ -421,7 +421,7 @@ public partial class SelectAnalysisFile : ObservableObject
         else
         {
             SelectedDatasetType = null;
-            e.Result = new MultiplePossibleDatasetTypesMessage(possibleDatasetTypes);
+            e.Result = new MultiplePossibleDatasetTypesMessage { PossibleDatasetTypes = possibleDatasetTypes};
         }
 
         IsBusy = false;
@@ -513,7 +513,7 @@ public partial class SelectAnalysisFile : ObservableObject
 
             if (!_rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName ?? string.Empty, analysisConfiguration.FileType))
             {
-                e.Result = new FailureAnalysisConfigurationMessage(analysisConfiguration);
+                e.Result = new FailureAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration };
                 IsBusy = false;
                 return;
             }
@@ -521,14 +521,14 @@ public partial class SelectAnalysisFile : ObservableObject
 
         if (!string.IsNullOrWhiteSpace(analysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysisConfiguration.DatasetType.IDvar))
         {
-            e.Result = new FailureAnalysisConfigurationMessage(analysisConfiguration);
+            e.Result = new FailureAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration };
             IsBusy = false;
             return;
         }
 
         if (analysisConfiguration.ReplaceCharacterVectors && !_rservice.ReplaceCharacterVariables())
         {
-            e.Result = new FailureAnalysisConfigurationMessage(analysisConfiguration);
+            e.Result = new FailureAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration };
             IsBusy = false;
             return;
         }
@@ -539,7 +539,7 @@ public partial class SelectAnalysisFile : ObservableObject
 
         if (!testAnalysisConfiguration)
         {
-            e.Result = new FailureAnalysisConfigurationMessage(analysisConfiguration);
+            e.Result = new FailureAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration };
             IsBusy = false;
             return;
         }
@@ -549,7 +549,7 @@ public partial class SelectAnalysisFile : ObservableObject
             _configuration.StoreRecentFile(TabControlValue == "File system" ? 0 : SelectedDataProviderConfiguration?.Id ?? -1, recentFileForAnalysis);
         }
 
-        e.Result = new SetAnalysisConfigurationMessage(analysisConfiguration);
+        e.Result = new SetAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration };
         IsBusy = false;
         if (Application.Current != null)
         {
@@ -563,47 +563,31 @@ public partial class SelectAnalysisFile : ObservableObject
     {
         return _rservice.InstallNecessaryRPackages("openxlsx");
     }
-}
-
-
-internal class MultiplePossibleDatasetTypesMessage : ValueChangedMessage<List<DatasetType>>
-{
-    public MultiplePossibleDatasetTypesMessage(List<DatasetType> possibleDatasetTypes) : base(possibleDatasetTypes)
+    
+    public class MultiplePossibleDatasetTypesMessage
     {
+        public required List<DatasetType> PossibleDatasetTypes { get; init; }
+    }
 
+    public class SetAnalysisConfigurationMessage
+    {
+        public required AnalysisConfiguration AnalysisConfiguration { get; init; }
+    }
+
+    public class FailureAnalysisFileMessage
+    {
+        public required string FileName { get; init; }
+    }
+
+    public class FailureDataProviderMessage;
+
+    public class FailureAnalysisConfigurationMessage
+    {
+        public required AnalysisConfiguration AnalysisConfiguration { get; init; }
+    }
+
+    public class RecentFileInvalidMessage(string fileName)
+    {
+        public string FileName => fileName;
     }
 }
-
-internal class SetAnalysisConfigurationMessage : ValueChangedMessage<AnalysisConfiguration>
-{
-    public SetAnalysisConfigurationMessage(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
-    {
-
-    }
-}
-
-internal class FailureAnalysisFileMessage : ValueChangedMessage<string>
-{
-    public FailureAnalysisFileMessage(string fileName) : base(fileName)
-    {
-
-    }
-}
-
-internal class FailureDataProviderMessage
-{
-
-}
-
-internal class FailureAnalysisConfigurationMessage : ValueChangedMessage<AnalysisConfiguration>
-{
-    public FailureAnalysisConfigurationMessage(AnalysisConfiguration analysisConfiguration) : base(analysisConfiguration)
-    {
-
-    }
-}
-
-internal class RecentFileInvalidMessage(string fileName)
-{
-    public string FileName => fileName;
-};

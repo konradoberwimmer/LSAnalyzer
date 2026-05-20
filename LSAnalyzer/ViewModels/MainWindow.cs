@@ -140,9 +140,9 @@ public partial class MainWindow : ObservableObject
         
         BifieSurveyVersion = rservice.GetBifieSurveyVersion() ?? string.Empty;
 
-        WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (_, m) =>
+        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.SetAnalysisConfigurationMessage>(this, (_, m) =>
         {
-            AnalysisConfiguration = m.Value;
+            AnalysisConfiguration = m.AnalysisConfiguration;
 
             var virtualVariables = _configuration.GetVirtualVariablesFor(AnalysisConfiguration.FileNameWithoutPath ?? string.Empty, AnalysisConfiguration.DatasetType ?? new DatasetType { Id = -1 });
 

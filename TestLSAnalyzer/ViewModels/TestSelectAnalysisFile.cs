@@ -38,7 +38,7 @@ public class TestSelectAnalysisFile
         selectAnalysisFileViewModel.SelectedDatasetType = selectAnalysisFileViewModel.DatasetTypes.First();
         
         bool messageSent = false;
-        WeakReferenceMessenger.Default.Register<MultiplePossibleDatasetTypesMessage>(this, (r, m) =>
+        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.MultiplePossibleDatasetTypesMessage>(this, (r, m) =>
         {
             messageSent = true;
         });
@@ -183,7 +183,7 @@ public class TestSelectAnalysisFile
         selectAnalysisFileViewModel.UseCsv2 = false;
 
         bool messageSent = false;
-        WeakReferenceMessenger.Default.Register<FailureAnalysisFileMessage>(this, (r, m) =>
+        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.FailureAnalysisFileMessage>(this, (r, m) =>
         {
             messageSent = true;
         });
@@ -211,7 +211,7 @@ public class TestSelectAnalysisFile
         selectAnalysisFileViewModel.SelectedDatasetType = selectAnalysisFileViewModel.DatasetTypes.First();
 
         bool messageSent = false;
-        WeakReferenceMessenger.Default.Register<FailureAnalysisConfigurationMessage>(this, (r, m) =>
+        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.FailureAnalysisConfigurationMessage>(this, (r, m) =>
         {
             messageSent = true;
         });
@@ -270,7 +270,7 @@ public class TestSelectAnalysisFile
         };
 
         bool messageSent = false;
-        WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (r, m) =>
+        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.SetAnalysisConfigurationMessage>(this, (r, m) =>
         {
             messageSent = true;
         });
@@ -305,16 +305,16 @@ public class TestSelectAnalysisFile
         };
 
         var failureMessageSent = false;
-        WeakReferenceMessenger.Default.Register<FailureAnalysisConfigurationMessage>(this, (r, m) =>
+        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.FailureAnalysisConfigurationMessage>(this, (r, m) =>
         {
             failureMessageSent = true;
         });
         AnalysisConfiguration? analysisConfiguration = null;
         var successMessageSent = false;
-        WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (r, m) =>
+        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.SetAnalysisConfigurationMessage>(this, (r, m) =>
         {
             successMessageSent = true;
-            analysisConfiguration = m.Value;
+            analysisConfiguration = m.AnalysisConfiguration;
         });
 
         selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
@@ -406,7 +406,7 @@ public class TestSelectAnalysisFile
         };
 
         var messageSent = false;
-        WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (_, _) => messageSent = true);
+        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.SetAnalysisConfigurationMessage>(this, (_, _) => messageSent = true);
 
         selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
         
@@ -442,7 +442,7 @@ public class TestSelectAnalysisFile
         selectAnalysisFileViewModel.SelectedAnalysisMode = SelectAnalysisFile.AnalysisModes.Keep;
 
         var messageSent = false;
-        WeakReferenceMessenger.Default.Register<SetAnalysisConfigurationMessage>(this, (_, _) => messageSent = true);
+        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.SetAnalysisConfigurationMessage>(this, (_, _) => messageSent = true);
 
         selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
         

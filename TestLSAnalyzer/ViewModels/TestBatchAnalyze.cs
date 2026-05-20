@@ -27,7 +27,7 @@ public class TestBatchAnalyze
         Assert.Equal(@"C:\anywhere.json", batchAnalyzeViewModel.FileName);
 
         var sentMessage = false;
-        WeakReferenceMessenger.Default.Register<RecentFileInvalidMessage>(this, (_,_) => sentMessage = true);
+        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.RecentFileInvalidMessage>(this, (_,_) => sentMessage = true);
 
         batchAnalyzeViewModel.SelectedRecentBatchAnalyzeFile = @"F:\surely_not_here.json";
         

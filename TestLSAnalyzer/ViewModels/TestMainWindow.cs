@@ -57,7 +57,7 @@ public class TestMainWindow
         Assert.Null(mainWindowViewModel.AnalysisConfiguration);
         Assert.Empty(mainWindowViewModel.CurrentDatasetVariables);
         
-        WeakReferenceMessenger.Default.Send(new SetAnalysisConfigurationMessage(analysisConfiguration));
+        WeakReferenceMessenger.Default.Send(new SelectAnalysisFile.SetAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration });
         
         Assert.NotNull(mainWindowViewModel.AnalysisConfiguration);
         Assert.NotEmpty(mainWindowViewModel.CurrentDatasetVariables);
