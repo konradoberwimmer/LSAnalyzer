@@ -1305,6 +1305,16 @@ namespace TestLSAnalyzer.Services
             Assert.NotNull(variables);
             Assert.Equal(10, variables.Count);
             Assert.Single(variables.Where(var => var.Name == "repwgt3"));
+
+            var variablesWhenNoStoredRaw = rservice.GetDatasetVariables(filename, null, true);
+            Assert.Null(variablesWhenNoStoredRaw);
+            
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(filename));
+            
+            var variablesFromStoredRaw = rservice.GetDatasetVariables(filename, null, true);
+            Assert.NotNull(variablesFromStoredRaw);
+            Assert.Equal(10, variablesFromStoredRaw.Count);
+            Assert.Single(variablesFromStoredRaw.Where(var => var.Name == "repwgt3"));
         }
 
         [Fact]

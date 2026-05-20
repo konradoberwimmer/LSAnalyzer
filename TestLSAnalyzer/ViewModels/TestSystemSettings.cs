@@ -633,7 +633,7 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
-        public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null)
+        public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null, bool fromStoredRaw = false)
         {
             throw new NotImplementedException();
         }

@@ -169,7 +169,7 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
-    public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null)
+    public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null, bool fromStoredRaw = false)
     {
         throw new System.NotImplementedException();
     }
