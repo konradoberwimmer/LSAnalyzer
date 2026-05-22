@@ -77,7 +77,7 @@ public interface IRservice
 
     public (bool success, DataTable? dataTable) GetPreviewData();
     
-    public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null);
+    public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null, bool fromStoredRaw = false);
 
     public DataFrame? GetValueLabels(string variable);
 

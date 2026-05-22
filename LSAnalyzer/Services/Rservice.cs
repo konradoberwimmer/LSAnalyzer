@@ -1777,43 +1777,49 @@ namespace LSAnalyzer.Services
             }
         }
 
-        public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null)
+        public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null, bool fromStoredRaw = false)
         {
             try
             {
-                fileType ??= fileName.Substring(fileName.LastIndexOf('.') + 1);
-
-                switch (fileType.ToLower())
+                if (!fromStoredRaw)
                 {
-                    case "sav":
-                        EvaluateAndLog("lsanalyzer_some_file_raw <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
-                        break;
-                    case "rds":
-                        EvaluateAndLog("lsanalyzer_some_file_raw <- readRDS('" + fileName.Replace("\\", "/") + "')");
-                        break;
-                    case "csv":
-                        EvaluateAndLog("lsanalyzer_some_file_raw <- utils::read.csv('" + fileName.Replace("\\", "/") + "')");
-                        break;
-                    case "csv2":
-                        EvaluateAndLog("lsanalyzer_some_file_raw <- utils::read.csv2('" + fileName.Replace("\\", "/") + "')");
-                        break;
-                    case "xlsx":
-                        EvaluateAndLog("lsanalyzer_some_file_raw <- openxlsx::read.xlsx('" + fileName.Replace("\\", "/") + "', sheet = 1)");
-                        break;
-                    default:
-                        return new();
+                    fileType ??= fileName.Substring(fileName.LastIndexOf('.') + 1);
+
+                    switch (fileType.ToLower())
+                    {
+                        case "sav":
+                            EvaluateAndLog("lsanalyzer_some_file_raw <- foreign::read.spss('" +
+                                           fileName.Replace("\\", "/") +
+                                           "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                            break;
+                        case "rds":
+                            EvaluateAndLog("lsanalyzer_some_file_raw <- readRDS('" + fileName.Replace("\\", "/") +
+                                           "')");
+                            break;
+                        case "csv":
+                            EvaluateAndLog("lsanalyzer_some_file_raw <- utils::read.csv('" +
+                                           fileName.Replace("\\", "/") + "')");
+                            break;
+                        case "csv2":
+                            EvaluateAndLog("lsanalyzer_some_file_raw <- utils::read.csv2('" +
+                                           fileName.Replace("\\", "/") + "')");
+                            break;
+                        case "xlsx":
+                            EvaluateAndLog("lsanalyzer_some_file_raw <- openxlsx::read.xlsx('" +
+                                           fileName.Replace("\\", "/") + "', sheet = 1)");
+                            break;
+                        default:
+                            return new();
+                    }
                 }
 
-                var variables = _engine!.Evaluate("colnames(lsanalyzer_some_file_raw)").AsCharacter();
+                var target = fromStoredRaw ? "lsanalyzer_dat_raw_stored" : "lsanalyzer_some_file_raw";
 
-                List<Variable> variableList = new();
-                int vv = 0;
-                foreach (var variable in variables)
-                {
-                    variableList.Add(new(++vv, variable));
-                }
+                var variables = _engine!.Evaluate($"colnames({target})").AsCharacter();
 
-                return variableList;
+                var vv = 0;
+
+                return variables.Select(variable => new Variable(++vv, variable)).ToList();
             }
             catch
             {
