@@ -7,7 +7,7 @@
   "Weight": "SCHWGTC",
   "NMI": 1,
   "MIvar": null,
-  "IDvar": "IDSCHOOL",
+  "IDvar": null,
   "PVvarsList": [],
   "RepWgts": "CRWGT",
   "FayFac": 0.04,

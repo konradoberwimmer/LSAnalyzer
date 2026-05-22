@@ -7,7 +7,7 @@
   "Weight": "TCHWGT",
   "NMI": 1,
   "MIvar": null,
-  "IDvar": "IDTEACH",
+  "IDvar": null,
   "PVvarsList": [],
   "RepWgts": "TRWGT",
   "FayFac": 0.04,

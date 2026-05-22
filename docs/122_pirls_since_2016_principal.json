@@ -7,7 +7,7 @@
   "Weight": "SCHWGT;STOTWGTU",
   "NMI": 1,
   "MIvar": null,
-  "IDvar": "IDSCHOOL",
+  "IDvar": null,
   "PVvarsList": [],
   "RepWgts": null,
   "FayFac": 0.5,
