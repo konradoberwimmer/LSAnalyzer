@@ -29,7 +29,10 @@ public partial class DataProviders : ObservableObject
     partial void OnSelectedConfigurationChanged(IDataProviderConfiguration? value)
     {
         TestResults = new();
+        OnPropertyChanged(nameof(CanTest));
     }
+
+    public bool CanTest => SelectedConfiguration is not null; 
 
     [ObservableProperty]
     private List<Type> _types = GetInstalledDataProviderConfigurationTypes();
