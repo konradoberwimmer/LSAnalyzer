@@ -42,6 +42,14 @@
 
 - 621 - ICILS - school level ([621_icils_school.json](621_icils_school.json), #05288D2A16721F636951B3A3D136D650)
 
+### ICCS
+
+- 701 - ICCS - student level ([701_iccs_student.json](701_iccs_student.json), #28CD390235441246A71CE784D135EC9A)
+
+- 711 - ICCS - teacher level ([711_iccs_teacher.json](711_iccs_teacher.json), #0FDF2D6236A62EF64621BFE241FAA5A9)
+
+- 721 - ICCS - school level ([721_iccs_school.json](721_iccs_school.json), #1943CD7E57747F4C3EFA45BC13E729EA)
+
 ## historic
 
 ### PIRLS/TIMSS

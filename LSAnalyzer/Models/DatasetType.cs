@@ -430,6 +430,29 @@ namespace LSAnalyzer.Models
                     NMI = 1, PVvarsList = new() { },
                     RepWgts = "CRWGT[0-9]+", FayFac = 1, JKreverse = false,
                 },
+                new DatasetType
+                {
+                    Id = 701, Name = "ICCS - student level", Group = "ICCS", Description = "ICCS - student level",
+                    Weight = "TOTWGTS",
+                    NMI = 5, PVvarsList = [
+                        new() { Regex = "PV[0-9]+CIV", DisplayName = "PVCIV", Label = "Civic knowledge - PV", Mandatory = true },
+                    ],
+                    FayFac = 1, JKzone = "JKZONES", JKrep = "JKREPS", JKreverse = false,
+                },
+                new DatasetType
+                {
+                    Id = 711, Name = "ICCS - teacher level", Group = "ICCS", Description = "ICCS - teacher level",
+                    Weight = "TOTWGTT",
+                    NMI = 1, PVvarsList = [],
+                    FayFac = 1, JKzone = "JKZONET", JKrep = "JKREPT", JKreverse = false,
+                },
+                new DatasetType
+                {
+                    Id = 721, Name = "ICCS - school level", Group = "ICCS", Description = "ICCS - school level",
+                    Weight = "TOTWGTC",
+                    NMI = 1, PVvarsList = [],
+                    FayFac = 1, JKzone = "JKZONEC", JKrep = "JKREPC", JKreverse = false,
+                }
             };
         }
     }

@@ -1,0 +1,26 @@
+{
+  "Id": 701,
+  "Name": "ICCS - student level",
+  "Group": "ICCS",
+  "Description": "ICCS - student level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "TOTWGTS",
+  "NMI": 5,
+  "MIvar": null,
+  "IDvar": null,
+  "PVvarsList": [
+    {
+      "Regex": "PV[0-9]+CIV",
+      "DisplayName": "PVCIV",
+      "Mandatory": true,
+      "Label": "Civic knowledge - PV",
+      "HasErrors": false
+    }
+  ],
+  "RepWgts": null,
+  "FayFac": 1,
+  "JKzone": "JKZONES",
+  "JKrep": "JKREPS",
+  "JKreverse": false,
+  "HasErrors": false
+}
