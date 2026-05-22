@@ -60,7 +60,7 @@
                     </DataTemplate>
                 </ContentControl.Resources>
             </ContentControl>
-            <Button Grid.Row="2" Grid.Column="0" Content="Test" Width="80" Height="22" HorizontalAlignment="Left" IsEnabled="{Binding SelectedConfiguration.IsChanged, Converter={StaticResource InverseBoolConverter}, FallbackValue=false}" Command="{Binding TestDataProviderCommand}" Margin="0,0,10,0"/>
+            <Button Grid.Row="2" Grid.Column="0" Content="Test" Width="80" Height="22" HorizontalAlignment="Left" IsEnabled="{Binding CanTest}" Command="{Binding TestDataProviderCommand}" Margin="0,0,10,0"/>
             <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{Binding TestResults.Message}" Foreground="{Binding TestResults.IsSuccess, Converter={StaticResource BoolToRedGreenConverter}}"/>
             <Button Grid.Row="2" Grid.Column="3" Content="Save" Width="80" Height="22" IsEnabled="{Binding SelectedConfiguration.IsChanged, FallbackValue=false}" Command="{Binding SaveDataProviderCommand}"/>
         </Grid>
