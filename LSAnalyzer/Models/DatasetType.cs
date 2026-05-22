@@ -382,10 +382,17 @@ namespace LSAnalyzer.Models
                 },
                 new DatasetType
                 {
-                    Id = 401, Name = "TALIS - principal level", Group = "TALIS", Description = "TALIS - principal level",
+                    Id = 401, Name = "TALIS until 2018 - principal level", Group = "TALIS", Description = "TALIS until 2018 - principal level",
                     Weight = "SCHWGT", IDvar = "IDSCHOOL",
                     NMI = 1,
                     RepWgts = "SRWGT", FayFac = 0.04, JKreverse = false,
+                },
+                new DatasetType
+                {
+                    Id = 411, Name = "TALIS since 2024 - principal level", Group = "TALIS", Description = "TALIS since 2024 - principal level",
+                    Weight = "SCHWGTC", IDvar = "IDSCHOOL",
+                    NMI = 1,
+                    RepWgts = "CRWGT", FayFac = 0.04, JKreverse = false,
                 },
                 new DatasetType
                 {

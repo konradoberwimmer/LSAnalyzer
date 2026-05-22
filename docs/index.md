@@ -26,9 +26,11 @@
 
 ### TALIS
 
-- 401 - TALIS - principal level ([401_talis_principal.json](401_talis_principal.json), #5A368909EB1E83E37638F5CD8F74B49B)
+- 401 - TALIS until 2018 - principal level ([401_talis_principal.json](401_talis_principal.json), #5A7F89C462FBA65F69D4C1A28DF0B47A)
 
 - 402 - TALIS - teacher level ([402_talis_teacher.json](402_talis_teacher.json), #C9CDE76B23090484558213A888E4222C)
+
+- 411 - TALIS since 2024 - principal level ([411_talis_since_2024_principal.json](411_talis_since_2024_principal.json), #019052DAFACFD02085DEA1AA3310BA86)
 
 ### PIAAC
 
