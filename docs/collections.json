@@ -43,6 +43,10 @@
         "FileName": "401_talis_principal.json"
       },
       {
+        "DatasetTypeId": 411,
+        "FileName": "411_talis_since_2024_principal.json"
+      },
+      {
         "DatasetTypeId": 402,
         "FileName": "402_talis_teacher.json"
       },
@@ -61,6 +65,18 @@
       {
         "DatasetTypeId": 621,
         "FileName": "621_icils_school.json"
+      },
+      {
+        "DatasetTypeId": 701,
+        "FileName": "701_iccs_student.json"
+      },
+      {
+        "DatasetTypeId": 711,
+        "FileName": "711_iccs_teacher.json"
+      },
+      {
+        "DatasetTypeId": 721,
+        "FileName": "721_iccs_school.json"
       }
     ]
   },

@@ -1,0 +1,18 @@
+{
+  "Id": 711,
+  "Name": "ICCS - teacher level",
+  "Group": "ICCS",
+  "Description": "ICCS - teacher level",
+  "AutoEncapsulateRegex": false,
+  "Weight": "TOTWGTT",
+  "NMI": 1,
+  "MIvar": null,
+  "IDvar": null,
+  "PVvarsList": [],
+  "RepWgts": null,
+  "FayFac": 1,
+  "JKzone": "JKZONET",
+  "JKrep": "JKREPT",
+  "JKreverse": false,
+  "HasErrors": false
+}

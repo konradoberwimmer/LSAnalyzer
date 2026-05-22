@@ -7,7 +7,7 @@
   "Weight": "TOTWGT;SENWGT",
   "NMI": 5,
   "MIvar": null,
-  "IDvar": "IDSTUD",
+  "IDvar": null,
   "PVvarsList": [
     {
       "Regex": "ASMMAT",
