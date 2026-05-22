@@ -141,7 +141,7 @@ public class Configuration
         _config?.Reload();
     }
 
-    public List<DatasetType>? GetStoredDatasetTypes()
+    public virtual List<DatasetType>? GetStoredDatasetTypes()
     {
         if (!File.Exists(DatasetTypesConfigFile))
         {

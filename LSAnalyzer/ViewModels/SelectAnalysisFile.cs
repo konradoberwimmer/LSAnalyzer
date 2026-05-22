@@ -445,6 +445,9 @@ public partial class SelectAnalysisFile : ObservableObject
         {
             switch (e.Result)
             {
+                case FailureAnalysisFileMessage failureAnalysisFileMessage:
+                    WeakReferenceMessenger.Default.Send(failureAnalysisFileMessage);
+                    break;
                 case FailureAnalysisConfigurationMessage failureAnalysisConfigurationMessage:
                     WeakReferenceMessenger.Default.Send(failureAnalysisConfigurationMessage);
                     break;
@@ -513,22 +516,47 @@ public partial class SelectAnalysisFile : ObservableObject
 
             if (!_rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName ?? string.Empty, analysisConfiguration.FileType))
             {
-                e.Result = new FailureAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration };
+                e.Result = new FailureAnalysisFileMessage { FileName = analysisConfiguration.FileName ?? string.Empty };
                 IsBusy = false;
                 return;
             }
         }
 
+        var rawDataVariables = _rservice.GetDatasetVariables(string.Empty, null, true);
+        
+        if (rawDataVariables is null)
+        {
+            e.Result = new FailureAnalysisFileMessage { FileName = analysisConfiguration.FileName ?? string.Empty };
+            IsBusy = false;
+            return;
+        }
+
+        var necessaryVariables = analysisConfiguration.DatasetType.GetRegexNecessaryVariables();
+        var missingVariables = necessaryVariables.Where(var => rawDataVariables.All(raw => !Regex.IsMatch(raw.Name, var))).ToList();
+        
+        if (missingVariables.Count != 0)
+        {
+            missingVariables = missingVariables.Select(var =>
+            {
+                if (var.StartsWith('^')) var = var[1..];
+                if (var.EndsWith('$')) var = var[..^1];
+                return $"'{var}'";
+            }).ToList();
+            e.Result = new FailureAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration, Cause = $"could not find variable(s) {string.Join(", ", missingVariables)} in file" };
+            IsBusy = false;
+            return;
+        }
+        
         if (!string.IsNullOrWhiteSpace(analysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysisConfiguration.DatasetType.IDvar))
         {
-            e.Result = new FailureAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration };
+            e.Result = new FailureAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration, Cause = $"could not sort by ID variable '{analysisConfiguration.DatasetType.IDvar}'" };
             IsBusy = false;
             return;
         }
 
         if (analysisConfiguration.ReplaceCharacterVectors && !_rservice.ReplaceCharacterVariables())
         {
-            e.Result = new FailureAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration };
+            e.Result = new FailureAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration, Cause = "could not replace character variables" };
             IsBusy = false;
             return;
         }
@@ -539,7 +567,7 @@ public partial class SelectAnalysisFile : ObservableObject
 
         if (!testAnalysisConfiguration)
         {
-            e.Result = new FailureAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration };
+            e.Result = new FailureAnalysisConfigurationMessage { AnalysisConfiguration = analysisConfiguration, Cause = "unknown" };
             IsBusy = false;
             return;
         }
@@ -584,6 +612,8 @@ public partial class SelectAnalysisFile : ObservableObject
     public class FailureAnalysisConfigurationMessage
     {
         public required AnalysisConfiguration AnalysisConfiguration { get; init; }
+        
+        public required string Cause { get; init; }
     }
 
     public class RecentFileInvalidMessage(string fileName)

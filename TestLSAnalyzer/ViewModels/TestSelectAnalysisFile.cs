@@ -194,9 +194,39 @@ public class TestSelectAnalysisFile
             .Execute(() => Assert.True(messageSent));
         Assert.Null(selectAnalysisFileViewModel.SelectedDatasetType);
     }
+    
+    [Fact]
+    public void TestUseFileForAnalysisSendsFileTypeError()
+    {
+        var datasetTypesConfiguration = new Mock<Configuration>();
+        datasetTypesConfiguration.Setup(conf => conf.GetStoredDatasetTypes())
+            .Returns(DatasetType.CreateDefaultDatasetTypes());
+        datasetTypesConfiguration.Setup(conf => conf.GetStoredRecentFiles(It.IsAny<int>())).Returns([]);
+        datasetTypesConfiguration.Setup(conf => conf.GetDataProviderConfigurations()).Returns([]);
+        
+        Rservice rservice = new();
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+
+        SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration.Object, rservice, new ServiceCollection().BuildServiceProvider());
+        selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_asgautr4.csv");
+        selectAnalysisFileViewModel.UseCsv2 = false;
+        selectAnalysisFileViewModel.SelectedDatasetType = selectAnalysisFileViewModel.DatasetTypes.First();
+        selectAnalysisFileViewModel.SelectedWeightVariable = selectAnalysisFileViewModel.PossibleWeightVariables.First();
+
+        bool messageSent = false;
+        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.FailureAnalysisFileMessage>(this, (r, m) =>
+        {
+            messageSent = true;
+        });
+
+        selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
+        
+        Policy.Handle<TrueException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.True(messageSent));
+    }
 
     [Fact]
-    public void TestUseFileForAnalysisSendsMessageOnFailure()
+    public void TestUseFileForAnalysisSendsConcreteMessageOnFailure()
     {
         Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
         foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
@@ -207,29 +237,16 @@ public class TestSelectAnalysisFile
         Assert.True(rservice.Connect(), "R must also be available for tests");
 
         SelectAnalysisFile selectAnalysisFileViewModel = new(datasetTypesConfiguration, rservice, new ServiceCollection().BuildServiceProvider());
-        selectAnalysisFileViewModel.FileName = "C:\\dummy.sav";
-        selectAnalysisFileViewModel.SelectedDatasetType = selectAnalysisFileViewModel.DatasetTypes.First();
-
-        bool messageSent = false;
-        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.FailureAnalysisConfigurationMessage>(this, (r, m) =>
+        
+        var messageSent = false;
+        SelectAnalysisFile.FailureAnalysisConfigurationMessage? failureAnalysisConfiguration = null;
+        WeakReferenceMessenger.Default.Register<SelectAnalysisFile.FailureAnalysisConfigurationMessage>(this, (_, m) =>
         {
             messageSent = true;
+            failureAnalysisConfiguration = m;
         });
 
-        selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
-        
-        Policy.Handle<TrueException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.True(messageSent));
-
-        messageSent = false;
         selectAnalysisFileViewModel.FileName = Path.Combine(TestRservice.AssemblyDirectory, "_testData", "test_nmi10_nrep5.sav");
-
-        selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
-        
-        Policy.Handle<TrueException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
-            .Execute(() => Assert.True(messageSent));
-
-        messageSent = false;
         selectAnalysisFileViewModel.SelectedDatasetType = new()
         {
             Id = 999991,
@@ -244,6 +261,29 @@ public class TestSelectAnalysisFile
 
         Policy.Handle<TrueException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
             .Execute(() => Assert.True(messageSent));
+        Assert.Contains("could not find", failureAnalysisConfiguration?.Cause ?? string.Empty);
+        Assert.Contains("wgtstud", failureAnalysisConfiguration?.Cause ?? string.Empty);
+        
+        messageSent = false;
+        failureAnalysisConfiguration = null;
+        
+        selectAnalysisFileViewModel.SelectedDatasetType = new()
+        {
+            Id = 999991,
+            Name = "Test with NMI 10 and NREP 5",
+            Weight = "wgt",
+            NMI = 10,
+            MIvar = "mi",
+            RepWgts = "repwgt",
+            IDvar = "myidvar"
+        };
+
+        selectAnalysisFileViewModel.UseFileForAnalysisCommand.Execute(null);
+        
+        Policy.Handle<TrueException>().WaitAndRetry(500, _ => TimeSpan.FromMilliseconds(1))
+            .Execute(() => Assert.True(messageSent));
+        Assert.Contains("could not find", failureAnalysisConfiguration?.Cause ?? string.Empty);
+        Assert.Contains("myidvar", failureAnalysisConfiguration?.Cause ?? string.Empty);
     }
 
     [Fact]

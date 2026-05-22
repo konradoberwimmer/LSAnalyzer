@@ -48,7 +48,7 @@ namespace LSAnalyzer.Views
 
             WeakReferenceMessenger.Default.Register<ViewModels.SelectAnalysisFile.FailureAnalysisConfigurationMessage>(this, (r, m) =>
             {
-                MessageBox.Show("Unable to create BIFIEdata object from file '" + m.AnalysisConfiguration.FileName + "' when applying dataset type '" + m.AnalysisConfiguration.DatasetType?.Name + "'.", "Dataset type mismatch", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Unable to create BIFIEdata object from file '" + m.AnalysisConfiguration.FileName + "' when applying dataset type '" + m.AnalysisConfiguration.DatasetType?.Name + "'.\n\nCause: " + m.Cause, "Dataset type mismatch", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
 
             WeakReferenceMessenger.Default.Register<ViewModels.SelectAnalysisFile.MultiplePossibleDatasetTypesMessage>(this, (_, m) =>
