@@ -189,5 +189,17 @@ namespace LSAnalyzer.Properties {
                 this["virtualVariables"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool fetchUserSettings {
+            get {
+                return ((bool)(this["fetchUserSettings"]));
+            }
+            set {
+                this["fetchUserSettings"] = value;
+            }
+        }
     }
 }
