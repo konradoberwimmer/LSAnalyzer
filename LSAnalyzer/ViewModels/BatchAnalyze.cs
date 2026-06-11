@@ -37,7 +37,7 @@ public partial class BatchAnalyze : ObservableObject
             _configuration.RemoveRecentBatchAnalyzeFile(value);
             RecentBatchAnalyzeFiles = new ObservableCollection<string>(_configuration.GetStoredRecentBatchAnalyzeFiles());
                 
-            WeakReferenceMessenger.Default.Send(new RecentFileInvalidMessage(value));
+            WeakReferenceMessenger.Default.Send(new SelectAnalysisFile.RecentFileInvalidMessage(value));
 
             return;
         }

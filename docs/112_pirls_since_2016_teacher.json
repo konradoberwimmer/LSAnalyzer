@@ -7,7 +7,7 @@
   "Weight": "TCHWGT",
   "NMI": 5,
   "MIvar": null,
-  "IDvar": "IDSTUD",
+  "IDvar": null,
   "PVvarsList": [
     {
       "Regex": "ASRREA",

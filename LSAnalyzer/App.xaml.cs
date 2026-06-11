@@ -87,6 +87,13 @@ namespace LSAnalyzer
 
         private void OnStartup(object sender, StartupEventArgs e)
         {
+            if (LSAnalyzer.Properties.Settings.Default.fetchUserSettings)
+            {
+                LSAnalyzer.Properties.Settings.Default.Upgrade();
+                LSAnalyzer.Properties.Settings.Default.fetchUserSettings = false;
+                LSAnalyzer.Properties.Settings.Default.Save();
+            }
+            
             LSAnalyzer.Properties.Settings.Default.Reload();
             
             var configuration = _serviceProvider.GetService<Configuration>()!;

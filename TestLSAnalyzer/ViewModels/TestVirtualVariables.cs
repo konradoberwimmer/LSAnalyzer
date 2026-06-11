@@ -279,6 +279,13 @@ public class TestVirtualVariables
         
         viewModel.NewVirtualVariableCommand.Execute(null);
         
+        Assert.False(viewModel.SelectedVirtualVariable!.HasErrors);
+        viewModel.FetchPreviewDataCommand.Execute(null);
+        Assert.True(viewModel.SelectedVirtualVariable!.HasErrors);
+        
+        viewModel.SelectedVirtualVariable.Name = "new_variable";
+        (viewModel.SelectedVirtualVariable as VirtualVariableCombine)!.Variables = [new Variable(1, "x"), new Variable(2, "y")];
+        
         var messageSent = false;
         WeakReferenceMessenger.Default.Register<VirtualVariables.PreviewImpossibleMessage>(this, (_,_) => messageSent = true);
         
