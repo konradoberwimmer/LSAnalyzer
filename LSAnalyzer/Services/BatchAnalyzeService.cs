@@ -233,10 +233,10 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             return false;
         }
 
-        if (!string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysis.AnalysisConfiguration.DatasetType!.IDvar))
+        if (!string.IsNullOrWhiteSpace(analysis.AnalysisConfiguration.DatasetType?.IDvar) && !_rservice.SortRawDataStored(analysis.AnalysisConfiguration.DatasetType.IDvar))
         {
             entry.Success = false;
-            entry.Message = AbortedOr("Could not load file '" + analysis.AnalysisConfiguration.FileName + "'!");
+            entry.Message = AbortedOr("Could not sort file '" + analysis.AnalysisConfiguration.FileName + $"' by ID variable '{analysis.AnalysisConfiguration.DatasetType.IDvar}'!");
             return false;
         }
         
