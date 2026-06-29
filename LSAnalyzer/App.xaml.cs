@@ -152,7 +152,7 @@ namespace LSAnalyzer
                     }
                 }
             }
-            else if (!rService.TestLoadingBifieSurvey())
+            else if (rService.IsConnected && !rService.TestLoadingBifieSurvey())
             {
                 var rLibrary = rService.GetUserLibrary() ?? "undefined";
                 MessageBox.Show($"BIFIEsurvey was found ({rLibrary}) but cannot be loaded. Thus, LSAnalyzer is not fully functioning. Please check your R installation!", "BIFIEsurvey error", MessageBoxButton.OK, MessageBoxImage.Error);
