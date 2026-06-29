@@ -97,9 +97,13 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
         }
     }
 
-    public bool ConnectedToR => _rservice.IsConnected;
+    private readonly bool _rIsBusy = false;
+    
+    public bool CanUpdateBIFIEsurvey => _rservice.IsConnected && !_rIsBusy;
 
     public string BIFIEsurveyButtonTitle => _rservice.NecessaryPackagesConfirmed ? "Update" : "Install";
+
+    [ObservableProperty] private bool _isBusy = false;
     
     [ExcludeFromCodeCoverage]
     public SystemSettings() 
@@ -120,7 +124,7 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
         _settingsService = new SettingsServiceStub();
     }
 
-    public SystemSettings(IRservice rservice, Configuration configuration, ILogging logger, IDatasetTypeRepository datasetTypeRepository, ISettingsService settingsService)
+    public SystemSettings(IRservice rservice, Configuration configuration, ILogging logger, IDatasetTypeRepository datasetTypeRepository, ISettingsService settingsService, IAnalysisQueue analysisQueue)
     {
         _rservice = rservice;
         RVersion = _rservice.IsConnected ? _rservice.GetRVersion() : "---";
@@ -133,12 +137,17 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
         _logger = logger;
         _sessionLog = new(_logger.LogEntries);
         _settingsService = settingsService;
+        _rIsBusy = analysisQueue.Count > 0;
     }
 
     [RelayCommand]
     private void FetchDatasetTypes()
     {
+        if (IsBusy) return;
+        
         if (string.IsNullOrEmpty(RepositoryUrl) || string.IsNullOrEmpty(CollectionName)) return;
+
+        IsBusy = true;
 
         var datasetTypeHashes = _settingsService.DatasetTypeHashes;
 
@@ -147,12 +156,14 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
         if (fetchResult is IDatasetTypeRepository.FetchResult.NotFound or IDatasetTypeRepository.FetchResult.Malformed)
         {
             WeakReferenceMessenger.Default.Send(new DatasetTypeRepositoryUrlInvalidMessage { Url = RepositoryUrl });
+            IsBusy = false;
             return;
         }
 
         if (datasetTypeCollections.All(collection => collection.Name != CollectionName))
         {
             WeakReferenceMessenger.Default.Send(new CollectionNotInDatasetTypeRepositoryMessage { ValidNames = datasetTypeCollections.Select(collection => collection.Name).ToList() });
+            IsBusy = false;
             return;
         }
 
@@ -175,6 +186,7 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
                 or IDatasetTypeRepository.FetchResult.Malformed)
             {
                 WeakReferenceMessenger.Default.Send(new DatasetTypeUrlInvalidMessage { Url = new Uri(new Uri(baseUrl), entry.FileName).ToString() });
+                IsBusy = false;
                 return;
             }
 
@@ -194,6 +206,8 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
         CountConfiguredDatasetTypes = _configuration.GetStoredDatasetTypes()?.Count ?? 0;
 
         WeakReferenceMessenger.Default.Send(new FetchDatasetTypeCollectionSuccessfulMessage { Count = count, Ignored = ignored});
+        
+        IsBusy = false;
     }
     
     [RelayCommand]
@@ -259,6 +273,10 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
     [RelayCommand]
     private void UpdateBifieSurvey(object? dummy)
     {
+        if (IsBusy) return;
+        
+        IsBusy = true;
+        
         if (!_rservice.NecessaryPackagesConfirmed)
         {
             if (_rservice.InstallNecessaryRPackages())
@@ -266,6 +284,7 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
                 WeakReferenceMessenger.Default.Send(new RequestRestartMessage());
             }
             
+            IsBusy = false;
             return;
         }
         
@@ -284,6 +303,8 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
                 MessageBox.Show("Update successful, now at version '" + BifieSurveyVersion + "'.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
                 break;
         }
+
+        IsBusy = false;
     }
 
     [RelayCommand]

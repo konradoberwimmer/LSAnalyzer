@@ -20,7 +20,7 @@ public class TestSystemSettings
         rservice.Connect();
         rservice.InjectAppFunctions();
 
-        SystemSettings systemSettingsViewModel = new(rservice, new Mock<Configuration>().Object, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
+        SystemSettings systemSettingsViewModel = new(rservice, new Mock<Configuration>().Object, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub(), new AnalysisQueueStub());
 
         var filename = Path.GetTempFileName();
         systemSettingsViewModel.SaveSessionRcodeCommand.Execute(filename);
@@ -39,7 +39,7 @@ public class TestSystemSettings
         rservice.Connect();
         rservice.InjectAppFunctions();
 
-        SystemSettings systemSettingsViewModel = new(rservice, new Mock<Configuration>().Object, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
+        SystemSettings systemSettingsViewModel = new(rservice, new Mock<Configuration>().Object, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub(), new AnalysisQueueStub());
 
         var filename = Path.GetTempFileName();
         systemSettingsViewModel.SaveSessionLogCommand.Execute(filename);
@@ -56,7 +56,7 @@ public class TestSystemSettings
 
         configuration.StoreDatasetType(new() { Id = 33 });
 
-        SystemSettings systemSettingsViewModel = new(new Mock<IRservice>().Object, configuration, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub());
+        SystemSettings systemSettingsViewModel = new(new Mock<IRservice>().Object, configuration, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub(), new AnalysisQueueStub());
         systemSettingsViewModel.LoadDefaultDatasetTypesCommand.Execute(null);
 
         Assert.Equal(DatasetType.CreateDefaultDatasetTypes().Count + 1, configuration.GetStoredDatasetTypes()!.Count);
@@ -90,7 +90,7 @@ public class TestSystemSettings
     {
         var configuration = new Mock<Configuration>();
         
-        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), new DatasetTypeRepositoryStub(), new SettingsServiceStub());
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), new DatasetTypeRepositoryStub(), new SettingsServiceStub(), new AnalysisQueueStub());
 
         systemSettingsViewModel.SaveSettingsCommand.Execute(null);
         
@@ -165,7 +165,7 @@ public class TestSystemSettings
             .Setup(service => service.FetchDatasetTypeCollections(It.Is<string>(url => url == wrongUrl)))
             .Returns((IDatasetTypeRepository.FetchResult.NotFound, []));
         
-        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, new SettingsServiceStub())
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, new SettingsServiceStub(), new AnalysisQueueStub())
         {
             RepositoryUrl = wrongUrl,
             CollectionName = "default"
@@ -196,7 +196,7 @@ public class TestSystemSettings
                 }
             ]));
         
-        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, new SettingsServiceStub())
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, new SettingsServiceStub(), new AnalysisQueueStub())
         {
             RepositoryUrl = correctUrl,
             CollectionName = "indisputable"
@@ -247,7 +247,7 @@ public class TestSystemSettings
             .Setup(service => service.FetchDatasetType(It.Is<string>(baseUrl => correctUrl.StartsWith(baseUrl)),It.Is<string>(fileName => fileName == wrongFile)))
             .Returns((IDatasetTypeRepository.FetchResult.Malformed, null));
         
-        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, new SettingsServiceStub())
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, new SettingsServiceStub(), new AnalysisQueueStub())
         {
             RepositoryUrl = correctUrl,
             CollectionName = "default"
@@ -307,7 +307,7 @@ public class TestSystemSettings
             .Setup(service => service.FetchDatasetType(It.Is<string>(baseUrl => correctUrl.StartsWith(baseUrl)),It.IsAny<string>()))
             .Returns((IDatasetTypeRepository.FetchResult.Success, new DatasetType()));
         
-        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, new SettingsServiceStub())
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, new SettingsServiceStub(), new AnalysisQueueStub())
         {
             RepositoryUrl = correctUrl,
             CollectionName = "default"
@@ -366,7 +366,7 @@ public class TestSystemSettings
         var settingsService = new Mock<ISettingsService>();
         settingsService.SetupGet(service => service.DatasetTypeHashes).Returns(new Dictionary<int, string> { { 101, "ABCD" } });
         
-        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, settingsService.Object)
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, settingsService.Object, new AnalysisQueueStub())
         {
             RepositoryUrl = correctUrl,
             CollectionName = "default"
@@ -428,7 +428,7 @@ public class TestSystemSettings
         var settingsService = new Mock<ISettingsService>();
         settingsService.Setup(service => service.DatasetTypeHashes).Returns(new Dictionary<int, string> { { 102, "4EE1" } });
         
-        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, settingsService.Object)
+        SystemSettings systemSettingsViewModel = new(new RserviceStub(), configuration.Object, new LoggingStub(), datasetTypeRepository.Object, settingsService.Object, new AnalysisQueueStub())
         {
             RepositoryUrl = correctUrl,
             CollectionName = "default"
