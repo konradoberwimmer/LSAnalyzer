@@ -88,6 +88,8 @@ public interface IRservice
     public SymbolicExpression? Fetch(string objectName);
 
     public void SendUserInterrupt();
+
+    public void ClearUserInterrupt();
     
     public void Dispose();
 }

@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 
@@ -30,18 +31,10 @@ public partial class AnalysisPresentation : ObservableObject
     public MainWindow? MainWindowViewModel { get; set; }
 
     private IResultService? _resultService;
-    public IResultService ResultService
-    {
-        get => _resultService ??= (App.Current as App)?.ServiceProvider.GetService<IResultService>() ?? new ResultService();
-        set => _resultService ??= value;
-    }
+    private IResultService ResultService => _resultService ??= (Application.Current as App)?.ServiceProvider.GetService<IResultService>() ?? new ResultService();
 
     private IExportService? _exportService;
-    public IExportService ExportService
-    {
-        get => _exportService ??= (App.Current as App)?.ServiceProvider.GetService<IExportService>() ?? new ExportService();
-        set => _exportService ??= value;
-    }
+    private IExportService ExportService => _exportService ??= (Application.Current as App)?.ServiceProvider.GetService<IExportService>() ?? new ExportService();
 
     [ObservableProperty]
     private Analysis _analysis;
@@ -131,14 +124,13 @@ public partial class AnalysisPresentation : ObservableObject
     [ObservableProperty]
     private bool _hasColumnTooltips = false;
 
-    private Dictionary<string, string> _columnTooltips = new();
-    public Dictionary<string, string> ColumnTooltips
-    {
-        get => _columnTooltips;
-    }
-    
+    public Dictionary<string, string> ColumnTooltips { get; } = new();
+
     [ObservableProperty]
     private bool _isBusy = false;
+
+    private volatile bool _requestCancellation = false;
+    public bool CancellationRequested =>  _requestCancellation;
 
     [ExcludeFromCodeCoverage]
     public AnalysisPresentation()
@@ -161,16 +153,16 @@ public partial class AnalysisPresentation : ObservableObject
 
         Analysis = new AnalysisUnivar(dummyConfiguration)
         {
-            Vars = new()
-                    {
-                        new(1, "x1"),
-                        new(2, "x2"),
-                        new(3, "x3"),
-                    },
-            GroupBy = new()
-                    {
-                        new(4, "y1"),
-                    },
+            Vars =
+            [
+                new(1, "x1"),
+                new(2, "x2"),
+                new(3, "x3")
+            ],
+            GroupBy =
+            [
+                new(4, "y1")
+            ],
             SubsettingExpression = "cat == 1 & val < 0.5",
         };
 
@@ -213,6 +205,11 @@ public partial class AnalysisPresentation : ObservableObject
         MainWindowViewModel = mainWindowViewModel;
     }
 
+    public void RequestCancellation()
+    {
+        _requestCancellation = true;
+    }
+
     public void SetAnalysisResult(List<GenericVector> result)
     {
         IsBusy = true;
@@ -250,22 +247,20 @@ public partial class AnalysisPresentation : ObservableObject
             case AnalysisRegression analysisRegression:
                 DataTable = CreateDataTableFromResultRegression(analysisRegression);
                 break;
-            default:
-                break;
         }
         ResetDataView();
 
         IsBusy = false;
     }
 
-    public DataTable CreateDataTableFromResultUnivar(AnalysisUnivar analysisUnivar)
+    private DataTable CreateDataTableFromResultUnivar(AnalysisUnivar analysisUnivar)
     {
         if (analysisUnivar.Result.Count == 0)
         {
             return new();
         }
 
-        ResultService.Analysis = analysisUnivar;
+        ResultService.AnalysisPresentation = this;
         DataTable table = ResultService.CreatePrimaryTable()!;
 
         if (analysisUnivar.VariableLabels.Count > 0)
@@ -280,8 +275,8 @@ public partial class AnalysisPresentation : ObservableObject
             var valuesSE = relevantRows.Select(row => row.Field<double>("mean - standard error")).ToList();
             var rowCount = relevantRows.ToList().Count;
 
-            double average = values.Sum() / rowCount;
-            double averageSE = Math.Sqrt(valuesSE.ConvertAll(se => Math.Pow(se, 2.0)).Sum() / Math.Pow(rowCount, 2.0));
+            var average = values.Sum() / rowCount;
+            var averageSE = Math.Sqrt(valuesSE.ConvertAll(se => Math.Pow(se, 2.0)).Sum() / Math.Pow(rowCount, 2.0));
 
             var newRow = table.NewRow();
             newRow["variable"] = "- TABLE AVERAGE:";
@@ -297,13 +292,13 @@ public partial class AnalysisPresentation : ObservableObject
             HasRank = true;
         }
 
-        string[] sortBy = { "variable" };
+        string[] sortBy = ["variable"];
         table.DefaultView.Sort = String.Join(", ", sortBy.Concat(analysisUnivar.GroupBy.ConvertAll(var => var.Name)).ToArray());
 
         return table;
     }
 
-    public DataTable CreateDataTableFromResultMeanDiff(AnalysisMeanDiff analysisMeanDiff)
+    private DataTable CreateDataTableFromResultMeanDiff(AnalysisMeanDiff analysisMeanDiff)
     {
         if (analysisMeanDiff.Result.Count == 0)
         {
@@ -355,16 +350,15 @@ public partial class AnalysisPresentation : ObservableObject
             table.Columns.Add(column);
         }
 
-        for (int cntResult = 0; cntResult < Analysis.Result.Count; cntResult++)
+        foreach (var result in Analysis.Result)
         {
-
-            var result = Analysis.Result[cntResult];
-
             var dataFrame = result["stat.dstat"].AsDataFrame();
             var univarDataFrame = result["stat_M"].AsDataFrame();
 
             foreach (var dataFrameRow in dataFrame.GetRows())
             {
+                if (CancellationRequested) return DataTable;
+                
                 DataRow tableRow = table.NewRow();
 
                 List<object?> cellValues = new();
@@ -396,7 +390,7 @@ public partial class AnalysisPresentation : ObservableObject
                         var groupVarsSplit = groupVars.Split("#");
                         var groupVar = groupVarsSplit[groupPosition - 1];
                         
-                        if (analysisMeanDiff.ValueLabels.ContainsKey(groupVar))
+                        if (analysisMeanDiff.ValueLabels.TryGetValue(groupVar, out var valueLabels))
                         {
                             var groupvalColumn = Regex.Replace(Regex.Replace(column, "\\$label_", ""), "_[0-9]+$", "");
 
@@ -412,7 +406,6 @@ public partial class AnalysisPresentation : ObservableObject
                                 groupVal = Convert.ToDouble(groupValsSplit[groupPosition - 1]);
                             }
 
-                            var valueLabels = analysisMeanDiff.ValueLabels[groupVar];
                             var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf(groupVal);
 
                             if (posValueLabel != -1)
@@ -470,9 +463,9 @@ public partial class AnalysisPresentation : ObservableObject
                     }
                     else if (Regex.IsMatch(column, "^\\$varlabel_"))
                     {
-                        if (dataFrameRow["var"] is string varName && analysisMeanDiff.VariableLabels.ContainsKey(varName))
+                        if (dataFrameRow["var"] is string varName && analysisMeanDiff.VariableLabels.TryGetValue(varName, out var variableLabel))
                         {
-                            cellValues.Add(analysisMeanDiff.VariableLabels[varName]);
+                            cellValues.Add(variableLabel);
                         }
                         else
                         {
@@ -496,20 +489,20 @@ public partial class AnalysisPresentation : ObservableObject
         return table;
     }
 
-    public DataTable CreateTableEtaFromResultMeanDiff(AnalysisMeanDiff analysisMeanDiff)
+    private DataTable CreateTableEtaFromResultMeanDiff(AnalysisMeanDiff analysisMeanDiff)
     {
         if (analysisMeanDiff.Result.Count == 0)
         {
             return new();
         }
 
-        ResultService.Analysis = analysisMeanDiff;
+        ResultService.AnalysisPresentation = this;
         DataTable table = ResultService.CreateSecondaryTable()!;
 
         return table;
     }
 
-    public DataTable CreateDataTableFromResultFreq(AnalysisFreq analysisFreq)
+    private DataTable CreateDataTableFromResultFreq(AnalysisFreq analysisFreq)
     {
         if (analysisFreq.Result.Count == 0)
         {
@@ -585,7 +578,9 @@ public partial class AnalysisPresentation : ObservableObject
 
             foreach (var dataFrameRow in dataFrame.GetRows())
             {
-                bool repeat = true;
+                if (CancellationRequested) return DataTable;
+                
+                var repeat = true;
                 while (repeat)
                 {
                     var existingTableRow = GetExistingDataRowByGroups(table, dataFrameRow, groupColumns);
@@ -609,19 +604,14 @@ public partial class AnalysisPresentation : ObservableObject
                     {
                         DataRow tableRow = table.NewRow();
 
-                        List<object?> cellValues = new();
+                        List<object?> cellValues = [];
                         foreach (var column in columns.Keys)
                         {
                             if (Regex.IsMatch(column, "^groupval[0-9]*$"))
                             {
-                                if (groupColumns.ContainsKey(columns[column].ColumnName))
-                                {
-                                    cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
-                                }
-                                else
-                                {
-                                    cellValues.Add(null);
-                                }
+                                cellValues.Add(groupColumns.TryGetValue(columns[column].ColumnName, out var value)
+                                    ? dataFrameRow[value]
+                                    : null);
                             }
                             else if (Regex.IsMatch(column, "^\\$label_"))
                             {
@@ -631,7 +621,7 @@ public partial class AnalysisPresentation : ObservableObject
                                     continue;
                                 }
 
-                                var groupByVariable = column.Substring(column.IndexOf("_") + 1);
+                                var groupByVariable = column[(column.IndexOf('_') + 1)..];
                                 var valueLabels = analysisFreq.ValueLabels[groupByVariable];
                                 // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
                                 var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)cellValues.Last()!);
@@ -648,9 +638,9 @@ public partial class AnalysisPresentation : ObservableObject
                             }
                             else if (Regex.IsMatch(column, "^\\$varlabel_"))
                             {
-                                if (dataFrameRow["var"] is string varName && analysisFreq.VariableLabels.ContainsKey(varName))
+                                if (dataFrameRow["var"] is string varName && analysisFreq.VariableLabels.TryGetValue(varName, out var variableLabel))
                                 {
-                                    cellValues.Add(analysisFreq.VariableLabels[varName]);
+                                    cellValues.Add(variableLabel);
                                 }
                                 else
                                 {
@@ -676,18 +666,18 @@ public partial class AnalysisPresentation : ObservableObject
 
         foreach (DataRow row in table.Rows)
         {
-            int Ncases = 0;
-            double Nweight = 0;
+            var ncases = 0;
+            var nweight = 0.0;
             foreach (var category in categories) 
             {
-                Ncases += row["Cat " + category + " - cases"] != DBNull.Value ? (int)row["Cat " + category + " - cases"] : 0;
-                Nweight += row["Cat " + category + " - weighted"] != DBNull.Value ? (double)row["Cat " + category + " - weighted"] : 0.0;
+                ncases += row["Cat " + category + " - cases"] != DBNull.Value ? (int)row["Cat " + category + " - cases"] : 0;
+                nweight += row["Cat " + category + " - weighted"] != DBNull.Value ? (double)row["Cat " + category + " - weighted"] : 0.0;
             }
-            row["N - cases unweighted"] = Ncases;
-            row["N - weighted"] = Nweight;
+            row["N - cases unweighted"] = ncases;
+            row["N - weighted"] = nweight;
         }
 
-        if (Analysis.GroupBy.Count > 0 && !table.AsEnumerable().Select(row => row.Field<double?>("Cat " + categories.First())).ToArray().Where(val => val == null).Any())
+        if (Analysis.GroupBy.Count > 0 && table.AsEnumerable().Select(row => row.Field<double?>("Cat " + categories.First())).ToArray().All(val => val != null))
         {
             HasRank = true;
         }
@@ -696,13 +686,13 @@ public partial class AnalysisPresentation : ObservableObject
         HasNcases = true;
         HasNweight = true;
 
-        string[] sortBy = { "variable" };
+        string[] sortBy = ["variable"];
         table.DefaultView.Sort = String.Join(", ", sortBy.Concat(analysisFreq.GroupBy.ConvertAll(var => var.Name)).ToArray());
 
         return table;
     }
 
-    public DataTable? CreateTableBivariateFromResultFreq(AnalysisFreq analysisFreq)
+    private DataTable? CreateTableBivariateFromResultFreq(AnalysisFreq analysisFreq)
     {
         if (analysisFreq.BivariateResult == null || analysisFreq.BivariateResult.Count == 0)
         {
@@ -733,6 +723,8 @@ public partial class AnalysisPresentation : ObservableObject
 
             foreach (var dataFrameRow in dataFrame.GetRows())
             {
+                if (CancellationRequested) return SecondaryTable;
+                
                 DataRow tableRow = table.NewRow();
 
                 List<object?> cellValues = new();
@@ -748,10 +740,10 @@ public partial class AnalysisPresentation : ObservableObject
                     }
                     else if (Regex.IsMatch(column, "^\\$varlabel_"))
                     {
-                        string varVariable = column == "$varlabel_$varname_X" ? "var1" : "var2";
-                        if (dataFrameProbs[varVariable].AsCharacter().First() is string varName && analysisFreq.VariableLabels.ContainsKey(varName))
+                        var varVariable = column == "$varlabel_$varname_X" ? "var1" : "var2";
+                        if (dataFrameProbs[varVariable].AsCharacter().First() is { } varName && analysisFreq.VariableLabels.TryGetValue(varName, out var value))
                         {
-                            cellValues.Add(analysisFreq.VariableLabels[varName]);
+                            cellValues.Add(value);
                         }
                         else
                         {
@@ -776,7 +768,7 @@ public partial class AnalysisPresentation : ObservableObject
         return table;
     }
 
-    public DataTable CreateDataTableFromResultPercentiles(AnalysisPercentiles analysisPercentiles)
+    private DataTable CreateDataTableFromResultPercentiles(AnalysisPercentiles analysisPercentiles)
     {
         if (analysisPercentiles.Result.Count == 0)
         {
@@ -823,6 +815,8 @@ public partial class AnalysisPresentation : ObservableObject
 
             foreach (var dataFrameRow in dataFrame.GetRows())
             {
+                if (CancellationRequested) return DataTable;
+                
                 bool repeat = true;
                 while (repeat)
                 {
@@ -849,14 +843,9 @@ public partial class AnalysisPresentation : ObservableObject
                         {
                             if (Regex.IsMatch(column, "^groupval[0-9]*$"))
                             {
-                                if (groupColumns.ContainsKey(columns[column].ColumnName))
-                                {
-                                    cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
-                                }
-                                else
-                                {
-                                    cellValues.Add(null);
-                                }
+                                cellValues.Add(groupColumns.TryGetValue(columns[column].ColumnName, out var value)
+                                    ? dataFrameRow[value]
+                                    : null);
                             }
                             else if (Regex.IsMatch(column, "^\\$label_"))
                             {
@@ -866,7 +855,7 @@ public partial class AnalysisPresentation : ObservableObject
                                     continue;
                                 }
 
-                                var groupByVariable = column.Substring(column.IndexOf("_") + 1);
+                                var groupByVariable = column[(column.IndexOf('_') + 1)..];
                                 var valueLabels = analysisPercentiles.ValueLabels[groupByVariable];
                                 // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
                                 var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)cellValues.Last()!);
@@ -883,9 +872,9 @@ public partial class AnalysisPresentation : ObservableObject
                             }
                             else if (Regex.IsMatch(column, "^\\$varlabel_"))
                             {
-                                if (dataFrameRow["var"] is string varName && analysisPercentiles.VariableLabels.ContainsKey(varName))
+                                if (dataFrameRow["var"] is string varName && analysisPercentiles.VariableLabels.TryGetValue(varName, out var variableLabel))
                                 {
-                                    cellValues.Add(analysisPercentiles.VariableLabels[varName]);
+                                    cellValues.Add(variableLabel);
                                 }
                                 else
                                 {
@@ -912,20 +901,20 @@ public partial class AnalysisPresentation : ObservableObject
         HasPValues = false;
         HasFMI = false;
 
-        string[] sortBy = { "variable" };
+        string[] sortBy = ["variable"];
         table.DefaultView.Sort = String.Join(", ", sortBy.Concat(analysisPercentiles.GroupBy.ConvertAll(var => var.Name)).ToArray());
 
         return table;
     }
 
-    public DataTable CreateDataTableFromResultCorr(AnalysisCorr analysisCorr)
+    private DataTable CreateDataTableFromResultCorr(AnalysisCorr analysisCorr)
     {
         if (analysisCorr.Result.Count == 0)
         {
-            return new();
+            return new DataTable();
         }
 
-        ResultService.Analysis = analysisCorr;
+        ResultService.AnalysisPresentation = this;
         DataTable table = ResultService.CreatePrimaryTable()!;
         
         if (analysisCorr.VariableLabels.Count > 0)
@@ -933,29 +922,29 @@ public partial class AnalysisPresentation : ObservableObject
             HasVariableLabels = true;
         }
 
-        string[] sortBy = { "variable A", "variable B" };
-        table.DefaultView.Sort = String.Join(", ", analysisCorr.GroupBy.ConvertAll(var => var.Name).ToArray().Concat(sortBy));
+        string[] sortBy = ["variable A", "variable B"];
+        table.DefaultView.Sort = string.Join(", ", analysisCorr.GroupBy.ConvertAll(var => var.Name).ToArray().Concat(sortBy));
 
         return table;
     }
 
-    public DataTable CreateTableCovarianceFromResultCorr(AnalysisCorr analysisCorr)
+    private DataTable CreateTableCovarianceFromResultCorr(AnalysisCorr analysisCorr)
     {
         if (analysisCorr.Result.Count == 0)
         {
             return new();
         }
 
-        ResultService.Analysis = analysisCorr;
+        ResultService.AnalysisPresentation = this;
         DataTable table = ResultService.CreateSecondaryTable()!;
 
-        string[] sortBy = { "variable A", "variable B" };
+        string[] sortBy = ["variable A", "variable B"];
         table.DefaultView.Sort = String.Join(", ", analysisCorr.GroupBy.ConvertAll(var => var.Name).ToArray().Concat(sortBy));
 
         return table;
     }
 
-    public DataTable CreateDataTableFromResultRegression(AnalysisRegression analysisRegression)
+    private DataTable CreateDataTableFromResultRegression(AnalysisRegression analysisRegression)
     {
         if (analysisRegression.Result.Count == 0)
         {
@@ -1019,6 +1008,8 @@ public partial class AnalysisPresentation : ObservableObject
 
             foreach (var dataFrameRow in fullDataFrame.GetRows())
             {                    
+                if (CancellationRequested) return DataTable;
+                
                 DataRow tableRow = table.NewRow();
 
                 List<object?> cellValues = new();
@@ -1044,6 +1035,8 @@ public partial class AnalysisPresentation : ObservableObject
 
             foreach (var dataFrameRow in dataFrame.GetRows())
             {
+                if (CancellationRequested) return DataTable;
+                
                 var existingTableRow = analysisRegression.Sequence == AnalysisRegression.RegressionSequence.AllIn ? null : GetExistingDataRowByCoefficient(table, dataFrameRow);
 
                 if (existingTableRow != null) 
@@ -1054,7 +1047,7 @@ public partial class AnalysisPresentation : ObservableObject
                     {
                         if (Regex.IsMatch(column, "^\\$model_" + (resultIndex+1) + "_"))
                         {
-                            var content = column.Substring(column.LastIndexOf("_") + 1);
+                            var content = column[(column.LastIndexOf('_') + 1)..];
                             if (content != "expest" && dataFrame.ColumnNames.Contains(content))
                             {
                                 existingTableRow[columns[column]] = (double)dataFrameRow[content];
@@ -1066,21 +1059,16 @@ public partial class AnalysisPresentation : ObservableObject
                     }
                 } else
                 {
-                    DataRow tableRow = table.NewRow();
+                    var tableRow = table.NewRow();
 
-                    List<object?> cellValues = new();
+                    List<object?> cellValues = [];
                     foreach (var column in columns.Keys)
                     {
                         if (Regex.IsMatch(column, "^groupval[0-9]*$"))
                         {
-                            if (groupColumns.ContainsKey(columns[column].ColumnName))
-                            {
-                                cellValues.Add(dataFrameRow[groupColumns[columns[column].ColumnName]]);
-                            }
-                            else
-                            {
-                                cellValues.Add(null);
-                            }
+                            cellValues.Add(groupColumns.TryGetValue(columns[column].ColumnName, out var value)
+                                ? dataFrameRow[value]
+                                : null);
                         }
                         else if (Regex.IsMatch(column, "^\\$label_"))
                         {
@@ -1090,7 +1078,7 @@ public partial class AnalysisPresentation : ObservableObject
                                 continue;
                             }
 
-                            var groupByVariable = column.Substring(column.IndexOf("_") + 1);
+                            var groupByVariable = column[(column.IndexOf('_') + 1)..];
                             var valueLabels = analysisRegression.ValueLabels[groupByVariable];
                             // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
                             var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)cellValues.Last()!);
@@ -1107,9 +1095,9 @@ public partial class AnalysisPresentation : ObservableObject
                         }
                         else if (Regex.IsMatch(column, "^\\$varlabel_"))
                         {
-                            if (dataFrameRow["var"] is string varName && analysisRegression.VariableLabels.ContainsKey(varName))
+                            if (dataFrameRow["var"] is string varName && analysisRegression.VariableLabels.TryGetValue(varName, out var variableLabel))
                             {
-                                cellValues.Add(analysisRegression.VariableLabels[varName]);
+                                cellValues.Add(variableLabel);
                             }
                             else
                             {
@@ -1168,22 +1156,20 @@ public partial class AnalysisPresentation : ObservableObject
         {
             foreach (var variable in analysisFreq.Vars)
             {
-                if (!analysisFreq.ValueLabels.ContainsKey(variable.Name))
+                if (!analysisFreq.ValueLabels.TryGetValue(variable.Name, out var valueLabels))
                 {
                     commonValueLabels.Remove(category);
                     break;
                 }
 
-                var valueLabels = analysisFreq.ValueLabels[variable.Name];
                 var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf(category);
 
                 if (posValueLabel != -1)
                 {
                     var valueLabel = valueLabels["label"].AsCharacter()[posValueLabel];
                     
-                    if (!commonValueLabels.ContainsKey(category)) 
+                    if (commonValueLabels.TryAdd(category, valueLabel)) 
                     {
-                        commonValueLabels.Add(category, valueLabel);
                     } else if (commonValueLabels[category] != valueLabel)
                     {
                         commonValueLabels.Remove(category);
@@ -1592,8 +1578,7 @@ public partial class AnalysisPresentation : ObservableObject
 
     public void ApplyDeserializedViewSettings(Dictionary<string, object> viewSettings)
     {
-        object? value;
-        if (HasFMI && viewSettings.TryGetValue("ShowFMI", out value) && value is JsonElement showFMI && showFMI.ValueKind is JsonValueKind.True != ShowFMI)
+        if (HasFMI && viewSettings.TryGetValue("ShowFMI", out var value) && value is JsonElement showFMI && showFMI.ValueKind is JsonValueKind.True != ShowFMI)
         {
             ShowFMI = !ShowFMI;
         }

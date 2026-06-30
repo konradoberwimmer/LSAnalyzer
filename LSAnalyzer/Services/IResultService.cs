@@ -1,16 +1,11 @@
-﻿using LSAnalyzer.Models;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Data;
+using LSAnalyzer.ViewModels;
 
 namespace LSAnalyzer.Services;
 
 public interface IResultService
 {
-    Analysis? Analysis { get; set; }
+    AnalysisPresentation? AnalysisPresentation { get; set; }
 
     DataTable? CreatePrimaryTable();
 

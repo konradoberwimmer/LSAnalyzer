@@ -668,6 +668,11 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
+        public void ClearUserInterrupt()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Dispose()
         {
             throw new NotImplementedException();

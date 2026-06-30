@@ -38,6 +38,7 @@ public class AnalysisQueue : IAnalysisQueue
         if (analysisPresentation != _analysisQueue.FirstOrDefault()) return;
 
         _rservice.SendUserInterrupt();
+        analysisPresentation.RequestCancellation();
     }
 
     private void StartNextAnalysis()
@@ -52,6 +53,8 @@ public class AnalysisQueue : IAnalysisQueue
         analysisWorker.DoWork += AnalysisWorker_DoWork;
         analysisWorker.RunWorkerCompleted += (_, e) =>
         {
+            _rservice.ClearUserInterrupt();
+            
             _analysisQueue.Dequeue();
 
             if (e is { Cancelled: false, Result: null })
