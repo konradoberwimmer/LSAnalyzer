@@ -1,47 +1,42 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Vml.Office;
-using DocumentFormat.OpenXml.Wordprocessing;
-using LSAnalyzer.Models;
-using RDotNet;
-using System;
+﻿using RDotNet;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows;
+using LSAnalyzer.ViewModels;
 
 namespace LSAnalyzer.Services;
 
 public class ResultService : IResultService
 {
-    public Analysis? Analysis { get; set; }
+    public AnalysisPresentation? AnalysisPresentation { get; set; }
 
     public DataTable? CreatePrimaryTable()
     {
-        if (Analysis == null)
+        if (AnalysisPresentation?.Analysis == null)
         {
             return null;
         }
 
-        DataTable table = new(Analysis.AnalysisName);
-        foreach (var column in Analysis.TableColumns.Values)
+        DataTable table = new(AnalysisPresentation.Analysis.AnalysisName);
+        foreach (var column in AnalysisPresentation.Analysis.TableColumns.Values)
         {
             table.Columns.Add(column);
         }
 
-        foreach (var result in Analysis.Result)
+        foreach (var result in AnalysisPresentation.Analysis.Result)
         {
-            var dataFrame = result[Analysis.PrimaryDataFrameName].AsDataFrame();
+            var dataFrame = result[AnalysisPresentation.Analysis.PrimaryDataFrameName].AsDataFrame();
             var groupColumns = GetGroupColumns(dataFrame);
 
             foreach (var dataFrameRow in dataFrame.GetRows())
             {
+                if (AnalysisPresentation.CancellationRequested) return null;
+                
                 DataRow tableRow = table.NewRow();
 
                 List<object?> cellValues = new();
-                foreach (var column in Analysis.TableColumns.Keys)
+                foreach (var column in AnalysisPresentation.Analysis.TableColumns.Keys)
                 {
                     cellValues.Add(GetValueFromDataFrameRow(dataFrameRow, column, groupColumns, cellValues.LastOrDefault()));
                 }
@@ -56,28 +51,30 @@ public class ResultService : IResultService
 
     public DataTable? CreateSecondaryTable()
     {
-        if (Analysis == null || Analysis.SecondaryTableName == null || Analysis.SecondaryDataFrameName == null || Analysis.SecondaryTableColumns == null)
+        if (AnalysisPresentation?.Analysis == null || AnalysisPresentation.Analysis.SecondaryTableName == null || AnalysisPresentation.Analysis.SecondaryDataFrameName == null || AnalysisPresentation.Analysis.SecondaryTableColumns == null)
         {
             return null;
         }
 
-        DataTable table = new(Analysis.SecondaryTableName);
-        foreach (var column in Analysis.SecondaryTableColumns.Values)
+        DataTable table = new(AnalysisPresentation.Analysis.SecondaryTableName);
+        foreach (var column in AnalysisPresentation.Analysis.SecondaryTableColumns.Values)
         {
             table.Columns.Add(column);
         }
 
-        foreach (var result in Analysis.Result)
+        foreach (var result in AnalysisPresentation.Analysis.Result)
         {
-            var dataFrame = result[Analysis.SecondaryDataFrameName].AsDataFrame();
+            var dataFrame = result[AnalysisPresentation.Analysis.SecondaryDataFrameName].AsDataFrame();
             var groupColumns = GetGroupColumns(dataFrame);
 
             foreach (var dataFrameRow in dataFrame.GetRows())
             {
+                if (AnalysisPresentation.CancellationRequested) return null;
+                
                 DataRow tableRow = table.NewRow();
 
                 List<object?> cellValues = new();
-                foreach (var column in Analysis.SecondaryTableColumns.Keys)
+                foreach (var column in AnalysisPresentation.Analysis.SecondaryTableColumns.Keys)
                 {
                     cellValues.Add(GetValueFromDataFrameRow(dataFrameRow, column, groupColumns, cellValues.LastOrDefault()));
                 }
@@ -94,9 +91,9 @@ public class ResultService : IResultService
     {
         if (Regex.IsMatch(value, "^groupval[0-9]*$"))
         {
-            if (groupColumns.ContainsKey(Analysis!.TableColumns[value].ColumnName))
+            if (groupColumns.ContainsKey(AnalysisPresentation!.Analysis.TableColumns[value].ColumnName))
             {
-                return row[groupColumns[Analysis!.TableColumns[value].ColumnName]];
+                return row[groupColumns[AnalysisPresentation!.Analysis.TableColumns[value].ColumnName]];
             }
             else
             {
@@ -111,7 +108,7 @@ public class ResultService : IResultService
             }
 
             var groupByVariable = value.Substring(value.IndexOf("_") + 1);
-            var valueLabels = Analysis!.ValueLabels[groupByVariable];
+            var valueLabels = AnalysisPresentation!.Analysis.ValueLabels[groupByVariable];
             // TODO this is a rather ugly shortcut of getting the value that we need the label for!!!
             var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf((double)lastValue);
 
@@ -128,9 +125,9 @@ public class ResultService : IResultService
         else if (Regex.IsMatch(value, "^\\$varlabel_var(1|2)"))
         {
             string varVariable = value == "$varlabel_var1" ? "var1" : "var2";
-            if (row[varVariable] is string varName && Analysis!.VariableLabels.ContainsKey(varName))
+            if (row[varVariable] is string varName && AnalysisPresentation!.Analysis.VariableLabels.ContainsKey(varName))
             {
-                return Analysis.VariableLabels[varName];
+                return AnalysisPresentation.Analysis.VariableLabels[varName];
             }
             else
             {
@@ -139,9 +136,9 @@ public class ResultService : IResultService
         }
         else if (Regex.IsMatch(value, "^\\$varlabel_"))
         {
-            if (row["var"] is string varName && Analysis!.VariableLabels.ContainsKey(varName))
+            if (row["var"] is string varName && AnalysisPresentation!.Analysis.VariableLabels.ContainsKey(varName))
             {
-                return Analysis.VariableLabels[varName];
+                return AnalysisPresentation.Analysis.VariableLabels[varName];
             }
             else
             {

@@ -34,7 +34,7 @@ namespace LSAnalyzer.Views
             {
                 if (DataContext is not ViewModels.MainWindow mainWindowViewModel || mainWindowViewModel.Analyses.All(presentation => presentation.Analysis != m.Value)) return;
                 
-                MessageBox.Show("Something went wrong with analysis '" + m.Value.AnalysisName + "'!", "Analysis failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Something went wrong with an analysis: {m.Value.ShortInfo}!", "Analysis failed", MessageBoxButton.OK, MessageBoxImage.Error);
             });
             
             WeakReferenceMessenger.Default.Register<AnalysisPresentation.FileInUseMessage>(this, (r, m) =>
