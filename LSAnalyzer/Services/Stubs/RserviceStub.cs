@@ -204,6 +204,11 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
+    public void ClearUserInterrupt()
+    {
+        throw new System.NotImplementedException();
+    }
+
     public void Dispose()
     {
         throw new System.NotImplementedException();

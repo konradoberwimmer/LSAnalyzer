@@ -1960,6 +1960,11 @@ namespace LSAnalyzer.Services
             _engine?.UserInterrupt();
         }
 
+        public void ClearUserInterrupt()
+        {
+            _engine?.ClearUserInterrupt();
+        }
+
         public void Dispose()
         {
             _engine?.Dispose();
