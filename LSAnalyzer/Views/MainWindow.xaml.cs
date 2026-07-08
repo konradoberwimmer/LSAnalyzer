@@ -183,6 +183,26 @@ namespace LSAnalyzer.Views
             requestAnalysisMeanDiffView.ShowDialog();
         }
 
+        private void MenuItemAnalysisPercDiff_Click(object sender, RoutedEventArgs e)
+        {
+            var mainWindowViewModel = DataContext as ViewModels.MainWindow;
+
+            if (mainWindowViewModel!.AnalysisConfiguration == null)
+            {
+                return;
+            }
+
+            var requestAnalysisViewModel = CreateRequestAnalysisViewModel();
+            
+            if (mainWindowViewModel.RecentAnalyses.ContainsKey(typeof(AnalysisPercDiff)))
+            {
+                requestAnalysisViewModel.InitializeWithAnalysis(mainWindowViewModel.RecentAnalyses[typeof(AnalysisPercDiff)]);
+            }
+
+            RequestAnalysisPercDiff requestAnalysisPercDiffView = new(requestAnalysisViewModel);
+            requestAnalysisPercDiffView.ShowDialog();
+        }
+
         private void MenuItemAnalysisFreq_Click(object sender, RoutedEventArgs e)
         {
             var mainWindowViewModel = DataContext as ViewModels.MainWindow;
