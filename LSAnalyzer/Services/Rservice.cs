@@ -279,6 +279,51 @@ namespace LSAnalyzer.Services
                     """, null, true);
 
                 EvaluateAndLog("""
+                    lsanalyzer_func_cohensH <- function(res) {
+                      if (!"BIFIE.freq" %in% class(res)) return(NULL)
+                      if (nrow(res$stat) < 2) return(NULL)
+
+                      rowsH <- list()
+                      derivedParams <- list()
+
+                      for (ii in 1:(nrow(res$stat) - 1)) {
+                        for (jj in (ii+1):nrow(res$stat)) {
+                          if (res$stat$var[ii] != res$stat$var[jj]) next
+                          if (res$stat$varval[ii] != res$stat$varval[jj]) next
+
+                          rowsH[[length(rowsH) + 1]] <- data.frame(
+                            "var" = res$stat$var[ii], "varval" = res$stat$varval[ii],
+                            "lineA" = ii, "lineB" = jj,
+                            "percA" = res$stat$perc[ii], "percB" = res$stat$perc[jj],
+                            "diff" = res$stat$perc[jj] - res$stat$perc[ii]
+                          )
+
+                          derivedParams[[paste0("c", length(derivedParams) + 1)]] <- stats::as.formula(paste0(
+                            "~I(2*asin(sqrt(", res$parnames[jj], "))-2*asin(sqrt(", res$parnames[ii], ")))"
+                          ))
+                        }
+                      }
+
+                      statH <- do.call(rbind, rowsH)
+
+                      groupA <- res$stat[statH$lineA, grep("groupva(r|l)", colnames(res$stat), value = TRUE)]
+                      colnames(groupA) <- paste0("A_", colnames(groupA))
+                      statH <- cbind(statH, groupA)
+                      groupB <- res$stat[statH$lineB, grep("groupva(r|l)", colnames(res$stat), value = TRUE)]
+                      colnames(groupB) <- paste0("B_", colnames(groupB))
+                      statH <- cbind(statH, groupB)
+                      statH <- statH[,c("var", "varval", colnames(groupA), colnames(groupB), "percA", "percB", "diff")]
+
+                      resDerived <- BIFIEsurvey::BIFIE.derivedParameters(res, derivedParams)
+                      statH <- cbind(statH, resDerived$stat[, c("coef", "se")])
+                     
+                      statH <- statH[order(statH$var, statH$varval), ]
+                     
+                      return(list('stat' = statH))
+                    }
+                    """, null, true);
+                
+                EvaluateAndLog("""
                     lsanalyzer_func_factorScores <- function(x, na.rm)
                     {
                       rownames(x) <- 1:nrow(x)
@@ -932,6 +977,46 @@ namespace LSAnalyzer.Services
                         EvaluateAndLog("lsanalyzer_result_univar_test <- BIFIEsurvey::BIFIE.univar.test(lsanalyzer_result_univar)", analysis.AnalysisName);
                         EvaluateAndLog("lsanalyzer_result_univar <- c(lsanalyzer_result_univar, lsanalyzer_result_univar_test)");
                         resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
+                    }
+                }
+
+                return resultList;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public List<GenericVector>? CalculatePercDiff(AnalysisPercDiff analysis)
+        {
+            try
+            {
+                if (analysis.Vars.Count == 0 || analysis.GroupBy.Count == 0 ||
+                    analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
+                {
+                        return null;
+                }
+
+                List<GenericVector> resultList = [];
+
+                var baseCall = "lsanalyzer_result_freq <- BIFIEsurvey::BIFIE.freq(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                var skipSE = analysis.CalculateSE ? string.Empty : ", se = FALSE";
+                
+                if (!analysis.CalculateSeparately)
+                {
+                    var groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                    EvaluateAndLog(baseCall + groupByArg + skipSE + ")", analysis.AnalysisName);
+                    EvaluateAndLog("lsanalyzer_result_cohens <- lsanalyzer_func_cohensH(lsanalyzer_result_freq)", analysis.AnalysisName);
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_cohens").AsList());
+                } else
+                {
+                    foreach (var groupByVar in analysis.GroupBy)
+                    {
+                        var groupByArg = ", group = '" + groupByVar.Name + "'";
+                        EvaluateAndLog(baseCall + groupByArg + skipSE + ")", analysis.AnalysisName);
+                        EvaluateAndLog("lsanalyzer_result_cohens <- lsanalyzer_func_cohensH(lsanalyzer_result_freq)", analysis.AnalysisName);
+                        resultList.Add(_engine!.GetSymbol("lsanalyzer_result_cohens").AsList());
                     }
                 }
 

@@ -60,6 +60,8 @@ public interface IRservice
     public List<GenericVector>? CalculateUnivar(AnalysisUnivar analysis);
 
     public List<GenericVector>? CalculateMeanDiff(AnalysisMeanDiff analysis);
+    
+    public List<GenericVector>? CalculatePercDiff(AnalysisPercDiff analysis);
 
     public List<GenericVector>? CalculateFreq(AnalysisFreq analysis);
 

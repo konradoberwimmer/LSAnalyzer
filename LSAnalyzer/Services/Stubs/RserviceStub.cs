@@ -129,6 +129,11 @@ public class RserviceStub : IRservice
         throw new System.NotImplementedException();
     }
 
+    public List<GenericVector>? CalculatePercDiff(AnalysisPercDiff analysis)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public List<GenericVector>? CalculateFreq(AnalysisFreq analysis)
     {
         throw new System.NotImplementedException();

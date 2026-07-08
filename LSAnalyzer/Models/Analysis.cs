@@ -16,6 +16,7 @@ namespace LSAnalyzer.Models
     [JsonDerivedType(typeof(AnalysisPercentiles), typeDiscriminator: "perc")]
     [JsonDerivedType(typeof(AnalysisCorr), typeDiscriminator: "corr")]
     [JsonDerivedType(typeof(AnalysisMeanDiff), typeDiscriminator: "meandiff")]
+    [JsonDerivedType(typeof(AnalysisPercDiff), typeDiscriminator: "percdiff")]
     [JsonDerivedType(typeof(AnalysisLinreg), typeDiscriminator: "linreg")]
     [JsonDerivedType(typeof(AnalysisLogistReg), typeDiscriminator: "logistreg")]
     public abstract class Analysis

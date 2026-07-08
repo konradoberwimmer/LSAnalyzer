@@ -593,6 +593,11 @@ public class TestSystemSettings
             throw new NotImplementedException();
         }
 
+        public List<GenericVector>? CalculatePercDiff(AnalysisPercDiff analysis)
+        {
+            throw new NotImplementedException();
+        }
+
         public List<GenericVector>? CalculateFreq(AnalysisFreq analysis)
         {
             throw new NotImplementedException();
