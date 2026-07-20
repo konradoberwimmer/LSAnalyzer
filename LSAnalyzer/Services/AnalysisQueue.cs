@@ -83,6 +83,7 @@ public class AnalysisQueue : IAnalysisQueue
         {
             AnalysisUnivar analysisUnivar => _rservice.CalculateUnivar(analysisUnivar),
             AnalysisMeanDiff analysisMeanDiff => _rservice.CalculateMeanDiff(analysisMeanDiff),
+            AnalysisPercDiff analysisPercDiff => _rservice.CalculatePercDiff(analysisPercDiff),
             AnalysisFreq analysisFreq => _rservice.CalculateFreq(analysisFreq),
             AnalysisPercentiles analysisPercentiles => _rservice.CalculatePercentiles(analysisPercentiles),
             AnalysisCorr analysisCorr => _rservice.CalculateCorr(analysisCorr),
@@ -115,7 +116,7 @@ public class AnalysisQueue : IAnalysisQueue
         }
 
         var variablesToConsiderForValueLabels = new List<Variable>(analysisPresentation.Analysis.GroupBy);
-        if (analysisPresentation.Analysis is AnalysisFreq)
+        if (analysisPresentation.Analysis is AnalysisFreq or AnalysisPercDiff)
         {
             variablesToConsiderForValueLabels.AddRange(analysisPresentation.Analysis.Vars);
         }

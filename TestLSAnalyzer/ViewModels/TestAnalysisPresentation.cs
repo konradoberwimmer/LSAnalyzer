@@ -293,6 +293,117 @@ namespace TestLSAnalyzer.ViewModels
             Assert.True(Math.Abs(analysisPresentationViewModel.SecondaryTable.AsEnumerable().Where(row => row.Field<string>("variable") == "ASRLIT" && row.Field<string>("groups by") == "ITSEX").Select(row => row.Field<double>("eta - standard error")).First() - 0.01758326) < 0.0001);
         }
 
+
+        [Fact]
+        public void TestSetAnalysisResultPercDiff()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvarsList = new() { new() { Regex = "ASRIBM", DisplayName = "ASRIBM", Mandatory = true } },
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.InjectAppFunctions());
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+            
+            AnalysisPercDiff analysisPercDiff = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "ASRIBM") },
+                GroupBy = new() { new(3, "ITSEX"), new(3, "ASBG05C") },
+                CalculateSeparately = false,
+            };
+
+            analysisPercDiff.ValueLabels.Add("ITSEX", rservice.GetValueLabels("ITSEX")!);
+            analysisPercDiff.ValueLabels.Add("ASBG05C", rservice.GetValueLabels("ASBG05C")!);
+            var result = rservice.CalculatePercDiff(analysisPercDiff);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisPercDiff);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(30, analysisPresentationViewModel.DataTable.Rows.Count);
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("category"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("group A - ITSEX"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("percentage - group A"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("percentage difference"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Cohens h"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("group B - ASBG05C (label)"));
+            Assert.Equal(20, analysisPresentationViewModel.DataTable.Select("[group A - ITSEX (label)] = 'Girl'").Length);
+            Assert.Equal(25, analysisPresentationViewModel.DataTable.Select("[group B - ASBG05C] = 2").Length);
+            Assert.True(Math.Abs(analysisPresentationViewModel.DataTable.AsEnumerable().Select(row => row.Field<double>("Cohens h")).Last() - 0.036318892689374105) < 0.0001);
+            Assert.True(Math.Abs(analysisPresentationViewModel.DataTable.AsEnumerable().Select(row => row.Field<double>("Cohens h - standard error")).Last() - 0.07816918348789334) < 0.0001);
+            Assert.Null(analysisPresentationViewModel.SecondaryTable);
+        }
+
+        [Fact]
+        public void TestSetAnalysisResultPercDiffSeparately()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new()
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvarsList = new() { new() { Regex = "ASRIBM", DisplayName = "ASRIBM", Mandatory = true } },
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.InjectAppFunctions());
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            AnalysisPercDiff analysisPercDiff = new(analysisConfiguration)
+            {
+                Vars = new() { new(1, "ASRIBM") },
+                GroupBy = new() { new(3, "ITSEX"), new(3, "ASBG05C") },
+                CalculateSeparately = true,
+                CalculateSE = false,
+            };
+
+            analysisPercDiff.ValueLabels.Add("ITSEX", rservice.GetValueLabels("ITSEX")!);
+            analysisPercDiff.ValueLabels.Add("ASBG05C", rservice.GetValueLabels("ASBG05C")!);
+            var result = rservice.CalculatePercDiff(analysisPercDiff);
+
+            AnalysisPresentation analysisPresentationViewModel = new(analysisPercDiff);
+            analysisPresentationViewModel.SetAnalysisResult(result!);
+
+            Assert.NotNull(analysisPresentationViewModel.DataTable);
+            Assert.Equal(10, analysisPresentationViewModel.DataTable.Rows.Count);
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("variable"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("category"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("groups by"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("group A - value"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("percentage - group A"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("percentage difference"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("Cohens h"));
+            Assert.False(analysisPresentationViewModel.DataTable.Columns.Contains("Cohens h - standard error"));
+            Assert.True(analysisPresentationViewModel.DataTable.Columns.Contains("group B - value"));
+            Assert.Equal(5, analysisPresentationViewModel.DataTable.Select("[group A - label] = 'Girl'").Length);
+            Assert.Equal(10, analysisPresentationViewModel.DataTable.Select("[group B - value] = 2").Length);
+            Assert.True(Math.Abs(analysisPresentationViewModel.DataTable.AsEnumerable().Select(row => row.Field<double>("Cohens h")).Last() - -0.18488607063031881) < 0.0001);
+            Assert.Null(analysisPresentationViewModel.SecondaryTable);
+        }
+        
         [Fact]
         public void TestSetAnalysisResultFreq()
         {

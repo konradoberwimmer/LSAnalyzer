@@ -5,9 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace LSAnalyzer.Models
 {
@@ -23,16 +21,12 @@ namespace LSAnalyzer.Models
     {
         public abstract string AnalysisName { get; }
 
-        protected AnalysisConfiguration _analysisConfiguration;
-        public AnalysisConfiguration AnalysisConfiguration 
-        { 
-            get => _analysisConfiguration; 
-            set => _analysisConfiguration = value;
-        }
-        public List<Variable> Vars { get; set; } = new();
-        public List<Variable> GroupBy { get; set; } = new();
+        public AnalysisConfiguration AnalysisConfiguration { get; set; }
+
+        public List<Variable> Vars { get; set; } = [];
+        public List<Variable> GroupBy { get; set; } = [];
         [JsonIgnore]
-        public List<GenericVector> Result { get; set; } = new();
+        public List<GenericVector> Result { get; set; } = [];
         public DateTime? ResultAt { get; set; }
         public double? ResultDuration { get; set; }
         [JsonIgnore]
@@ -42,9 +36,9 @@ namespace LSAnalyzer.Models
 
         public virtual List<Variable> AllVariables => [..Vars, ..GroupBy];
 
-        public Analysis(AnalysisConfiguration analysisConfiguration) 
+        protected Analysis(AnalysisConfiguration analysisConfiguration) 
         {
-            _analysisConfiguration = analysisConfiguration;
+            AnalysisConfiguration = analysisConfiguration;
         }
 
         [JsonIgnore]
@@ -58,9 +52,8 @@ namespace LSAnalyzer.Models
         }
 
         [JsonIgnore]
-        public Dictionary<string, object?> MetaInformation
-        {
-            get => new()
+        public Dictionary<string, object?> MetaInformation =>
+            new()
             {
                 { "Analysis:", AnalysisName },
                 { "Dependent variable:", this is AnalysisRegression analysisRegression ? analysisRegression.Dependent?.Name : null },
@@ -73,7 +66,6 @@ namespace LSAnalyzer.Models
                 { "Calculation finished:", ResultAt?.ToString() },
                 { "Duration in seconds:", ResultDuration },
             };
-        }
 
         [JsonIgnore]
         public Dictionary<string, string> VariableLabels
@@ -82,12 +74,9 @@ namespace LSAnalyzer.Models
             {
                 Dictionary<string, string> variableLabels = new();
 
-                if (this is AnalysisRegression analysisRegression)
+                if (this is AnalysisRegression { Dependent.Label: not null } analysisRegression)
                 {
-                    if (analysisRegression?.Dependent?.Label != null)
-                    {
-                        variableLabels.Add(analysisRegression.Dependent.Name, analysisRegression.Dependent.Label);
-                    }
+                    variableLabels.Add(analysisRegression.Dependent.Name, analysisRegression.Dependent.Label);
                 }
 
                 foreach (var variable in Vars)
@@ -111,18 +100,29 @@ namespace LSAnalyzer.Models
         }
 
         [JsonIgnore]
-        public virtual string PrimaryDataFrameName { get => "stat"; }
+        public virtual string PrimaryDataFrameName => "stat";
 
         [JsonIgnore]
         public abstract Dictionary<string, DataColumn> TableColumns { get; }
 
         [JsonIgnore]
-        public virtual string? SecondaryTableName { get => null;  }
+        public virtual string? SecondaryTableName => null;
 
         [JsonIgnore]
-        public virtual string? SecondaryDataFrameName { get => null; }
+        public virtual string? SecondaryDataFrameName => null;
 
         [JsonIgnore]
-        public virtual Dictionary<string, DataColumn>? SecondaryTableColumns { get => null; }
+        public virtual Dictionary<string, DataColumn>? SecondaryTableColumns => null;
+
+        public string? GetValueLabel(string? variable, double value)
+        {
+            if (variable is null || !ValueLabels.TryGetValue(variable, out var valueLabels))
+            {
+                return null;
+            }
+            
+            var posValueLabel = valueLabels["value"].AsNumeric().ToList().IndexOf(value);
+            return posValueLabel != -1 ? valueLabels["label"].AsCharacter()[posValueLabel] : null;
+        }
     }
 }

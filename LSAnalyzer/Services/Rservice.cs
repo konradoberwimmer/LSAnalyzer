@@ -315,7 +315,7 @@ namespace LSAnalyzer.Services
                       statH <- statH[,c("var", "varval", colnames(groupA), colnames(groupB), "percA", "percB", "diff")]
 
                       resDerived <- BIFIEsurvey::BIFIE.derivedParameters(res, derivedParams)
-                      statH <- cbind(statH, resDerived$stat[, c("coef", "se")])
+                      statH <- cbind(statH, resDerived$stat[, c("coef", "se", "fmi")])
                      
                       statH <- statH[order(statH$var, statH$varval), ]
                      
