@@ -73,6 +73,13 @@ namespace TestLSAnalyzer.Services
             Assert.True(rservice.Connect(), "R must also be available for tests");
 
             Assert.True(rservice.InjectAppFunctions());
+            
+            Assert.True(rservice.Execute("hasQuantiles <- exists('lsanalyzer_func_quantile')"));
+            Assert.True(rservice.Fetch("hasQuantiles").AsLogical().First());
+            Assert.True(rservice.Execute("hasCohensH <- exists('lsanalyzer_func_cohensH')"));
+            Assert.True(rservice.Fetch("hasCohensH").AsLogical().First());
+            Assert.True(rservice.Execute("hasFactorScores <- exists('lsanalyzer_func_factorScores')"));
+            Assert.True(rservice.Fetch("hasFactorScores").AsLogical().First());
         }
 
         [Fact]
@@ -633,6 +640,96 @@ namespace TestLSAnalyzer.Services
 
             var secondResult = result[1];
             Assert.Contains("stat_M", secondResult.AsList().Names);
+        }
+        
+        [Fact]
+        public void TestCalculatePercDiffAllGroups()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new DatasetType
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvarsList = new() { new() { Regex = "ASRIBM", DisplayName = "ASRIBM", Mandatory = true } },
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.InjectAppFunctions());
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            AnalysisPercDiff analysisPercDiff = new(analysisConfiguration)
+            {
+                Vars = [new Variable(1, "ASRIBM")],
+                GroupBy = [],
+                CalculateSeparately = false,
+            };
+
+            Assert.Null(rservice.CalculatePercDiff(analysisPercDiff));
+
+            analysisPercDiff.GroupBy = [new Variable(2, "ITSEX"), new Variable(3, "ASBG05C")];
+
+            var result = rservice.CalculatePercDiff(analysisPercDiff);
+            Assert.NotNull(result);
+            Assert.Single(result);
+
+            var firstResult = result.First();
+            var stat = firstResult["stat"].AsDataFrame();
+            Assert.True(Math.Abs((double)stat["coef"][0] - 0.06229602) < 0.0001);
+            Assert.True(Math.Abs((double)stat["se"][0] - 0.03896206) < 0.0001);
+            Assert.Equal(30, stat.RowCount);
+        }
+
+        [Fact]
+        public void TestCalculatePercDiffSeparate()
+        {
+            AnalysisConfiguration analysisConfiguration = new()
+            {
+                FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+                DatasetType = new DatasetType
+                {
+                    Weight = "TOTWGT",
+                    NMI = 5,
+                    PVvarsList = [new PlausibleValueVariable { Regex = "ASRIBM", DisplayName = "ASRIBM", Mandatory = true }],
+                    FayFac = 0.5,
+                    JKzone = "JKZONE",
+                    JKrep = "JKREP",
+                    JKreverse = true,
+                },
+                ModeKeep = false,
+            };
+
+            Rservice rservice = new();
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.InjectAppFunctions());
+            Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+            AnalysisPercDiff analysisPercDiff = new(analysisConfiguration)
+            {
+                Vars = [new Variable(1, "ASRIBM")],
+                GroupBy = [new Variable(2, "ITSEX"), new Variable(3, "ASBG05C")],
+                CalculateSeparately = true,
+            };
+
+            var result = rservice.CalculatePercDiff(analysisPercDiff);
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count);
+
+            var firstResult = result[0];
+            var statEta = firstResult["stat"].AsDataFrame();
+            Assert.True(Math.Abs((double)statEta["coef"][0] - 0.06419135) < 0.0001);
+            Assert.True(Math.Abs((double)statEta["se"][0] - 0.03381513) < 0.0001);
+
+            var secondResult = result[1];
+            Assert.Contains("stat", secondResult.AsList().Names);
         }
 
         [Fact]

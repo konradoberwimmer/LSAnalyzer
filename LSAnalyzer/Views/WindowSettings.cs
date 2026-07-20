@@ -10,6 +10,7 @@ public class WindowSettings
         { "Freq", (width: 800, height: 600) },
         { "Percentiles", (width: 800, height: 600) },
         { "MeanDiff", (width: 800, height: 600) },
+        { "PercDiff", (width: 800, height: 600) },
         { "Corr" , (width: 800, height: 600) },
         { "Linreg", (width: 800, height: 600) },
         { "LogistReg", (width: 800, height: 600) },
@@ -104,6 +105,28 @@ public class WindowSettings
             var currentSettings = _settings["MeanDiff"];
             currentSettings.height = value;
             _settings["MeanDiff"] = currentSettings;
+        }
+    }
+    
+    public static int WidthPercDiff
+    {
+        get => _settings["PercDiff"].width;
+        set
+        {
+            var currentSettings = _settings["PercDiff"];
+            currentSettings.width = value;
+            _settings["PercDiff"] = currentSettings;
+        }
+    }
+    
+    public static int HeightPercDiff
+    {
+        get => _settings["PercDiff"].height;
+        set
+        {
+            var currentSettings = _settings["PercDiff"];
+            currentSettings.height = value;
+            _settings["PercDiff"] = currentSettings;
         }
     }
 

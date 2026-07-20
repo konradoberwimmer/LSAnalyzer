@@ -133,6 +133,10 @@ public partial class RequestAnalysis : ObservableValidatorExtended
             case AnalysisMeanDiff analysisMeanDiff:
                 CalculateSeparately = analysisMeanDiff.CalculateSeparately;
                 break;
+            case AnalysisPercDiff analysisPercDiff:
+                CalculateSeparately = analysisPercDiff.CalculateSeparately;
+                CalculateSE = analysisPercDiff.CalculateSE;
+                break;
             case AnalysisFreq analysisFreq:
                 CalculateOverall = analysisFreq.CalculateOverall;
                 CalculateCrosswise = analysisFreq.CalculateCrosswise;
@@ -323,6 +327,13 @@ public partial class RequestAnalysis : ObservableValidatorExtended
                 analysisMeanDiff.GroupBy = new(GroupByVariables);
                 analysisMeanDiff.CalculateSeparately = this.CalculateSeparately;
                 WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisMeanDiff));
+                break;
+            case AnalysisPercDiff analysisPercDiff:
+                analysisPercDiff.Vars = new List<Variable>(AnalysisVariables);
+                analysisPercDiff.GroupBy = new List<Variable>(GroupByVariables);
+                analysisPercDiff.CalculateSeparately = this.CalculateSeparately;
+                analysisPercDiff.CalculateSE = this.CalculateSE;
+                WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisPercDiff));
                 break;
             case AnalysisFreq analysisFreq:
                 analysisFreq.Vars = new(AnalysisVariables);

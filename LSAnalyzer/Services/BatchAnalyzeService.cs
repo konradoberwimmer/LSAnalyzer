@@ -139,6 +139,9 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             case AnalysisMeanDiff analysisMeanDiff:
                 analysisMeanDiff.Result = _rservice.CalculateMeanDiff(analysisMeanDiff) ?? [];
                 break;
+            case AnalysisPercDiff analysisPercDiff:
+                analysisPercDiff.Result = _rservice.CalculatePercDiff(analysisPercDiff) ?? [];
+                break;
             case AnalysisFreq analysisFreq:
                 analysisFreq.Result = _rservice.CalculateFreq(analysisFreq) ?? [];
                 if (analysisFreq.CalculateBivariate)
