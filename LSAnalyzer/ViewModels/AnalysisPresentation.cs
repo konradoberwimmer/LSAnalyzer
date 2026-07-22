@@ -230,6 +230,9 @@ public partial class AnalysisPresentation : ObservableObject
                 SecondaryTable = CreateTableEtaFromResultMeanDiff(analysisMeanDiff);
                 ShowPValues = true;
                 break;
+            case AnalysisPercDiff analysisPercDiff:
+                DataTable = CreateDataTableFromResultPercDiff(analysisPercDiff);
+                break;
             case AnalysisFreq analysisFreq:
                 DataTable = CreateDataTableFromResultFreq(analysisFreq);
                 if (analysisFreq.CalculateBivariate)
@@ -498,6 +501,137 @@ public partial class AnalysisPresentation : ObservableObject
 
         ResultService.AnalysisPresentation = this;
         DataTable table = ResultService.CreateSecondaryTable()!;
+
+        return table;
+    }
+    
+    private DataTable CreateDataTableFromResultPercDiff(AnalysisPercDiff analysisPercDiff)
+    {
+        if (analysisPercDiff.Result.Count == 0)
+        {
+            return new DataTable();
+        }
+
+        DataTable table = new(analysisPercDiff.AnalysisName);
+        Dictionary<string, DataColumn> columns = new();
+
+        AddVariableLabelColumn(analysisPercDiff, columns, "var", "variable");
+        
+        columns.Add("varval", new DataColumn("category", typeof(double)));
+        if (analysisPercDiff.Vars.Any(v => analysisPercDiff.ValueLabels.ContainsKey(v.Name)))
+        {
+            columns.Add("$label_varval", new DataColumn("category (label)", typeof(string)));
+        }
+        
+        if (analysisPercDiff.CalculateSeparately)
+        {
+            columns.Add("group", new DataColumn("groups by", typeof(string)));
+            columns.Add("A_groupval", new DataColumn("group A - value", typeof(double)));
+            if (analysisPercDiff.GroupBy.Any(v => analysisPercDiff.ValueLabels.ContainsKey(v.Name)))
+            {
+                columns.Add("$label_A_groupval1", new DataColumn("group A - label", typeof(string)));
+            }
+            columns.Add("B_groupval", new DataColumn("group B - value", typeof(double)));
+            if (analysisPercDiff.GroupBy.Any(v => analysisPercDiff.ValueLabels.ContainsKey(v.Name)))
+            {
+                columns.Add("$label_B_groupval1", new DataColumn("group B - label", typeof(string)));
+            }
+        }
+        else
+        {
+            for (var cntGroupyBy = 0; cntGroupyBy < analysisPercDiff.GroupBy.Count; cntGroupyBy++)
+            {
+                columns.Add("A_groupval" + (analysisPercDiff.GroupBy.Count > 1 ? cntGroupyBy + 1 : ""), new DataColumn("group A - " + analysisPercDiff.GroupBy[cntGroupyBy].Name, typeof(double)));
+                if (analysisPercDiff.ValueLabels.ContainsKey(analysisPercDiff.GroupBy[cntGroupyBy].Name))
+                {
+                    columns.Add("$label_A_groupval" + (cntGroupyBy + 1), new DataColumn("group A - " + analysisPercDiff.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
+                }
+                columns.Add("B_groupval" + (analysisPercDiff.GroupBy.Count > 1 ? cntGroupyBy + 1 : ""), new DataColumn("group B - " + analysisPercDiff.GroupBy[cntGroupyBy].Name, typeof(double)));
+                if (analysisPercDiff.ValueLabels.ContainsKey(analysisPercDiff.GroupBy[cntGroupyBy].Name))
+                {
+                    columns.Add("$label_B_groupval" + (cntGroupyBy + 1), new DataColumn("group B - " + analysisPercDiff.GroupBy[cntGroupyBy].Name + " (label)", typeof(string)));
+                }
+            }
+        }
+
+        columns.Add("percA", new DataColumn("percentage - group A", typeof(double)));
+        columns.Add("percB", new DataColumn("percentage - group B", typeof(double)));
+        columns.Add("diff", new DataColumn("percentage difference", typeof(double)));
+        columns.Add("coef", new DataColumn("Cohens h", typeof(double)));
+
+        if (analysisPercDiff.CalculateSE)
+        {
+            columns.Add("se", new DataColumn("Cohens h - standard error", typeof(double)));
+            columns.Add("fmi", new DataColumn("Cohens h - FMI", typeof(double)));
+        }
+
+        foreach (var column in columns.Values)
+        {
+            table.Columns.Add(column);
+        }
+
+        foreach (var result in Analysis.Result)
+        {
+            var dataFrame = result["stat"].AsDataFrame();
+
+            foreach (var dataFrameRow in dataFrame.GetRows())
+            {
+                if (CancellationRequested) return DataTable;
+                
+                var tableRow = table.NewRow();
+                List<object?> cellValues = [];
+                
+                foreach (var column in columns.Keys)
+                {
+                    if (column == "group")
+                    {
+                        cellValues.Add(dataFrameRow["A_groupvar"]);
+                    }
+                    else if (Regex.IsMatch(column, "^\\$label_(A|B)_groupval"))
+                    {
+                        var groupPosition = Convert.ToInt32(Regex.Replace(column, "\\$label_(A|B)_groupval", ""));
+                        var variable = analysisPercDiff.CalculateSeparately ? dataFrameRow["A_groupvar"] as string : analysisPercDiff.GroupBy[groupPosition - 1].Name;
+                        
+                        var groupvalColumn = Regex.Replace(column, "\\$label_", "");
+                        if (analysisPercDiff.CalculateSeparately || analysisPercDiff.GroupBy.Count == 1)
+                        {
+                            groupvalColumn = Regex.Replace(groupvalColumn, "groupval1", "groupval");
+                        }
+                        
+                        cellValues.Add(analysisPercDiff.GetValueLabel(variable, (double)dataFrameRow[groupvalColumn]));
+                    }
+                    else if (Regex.IsMatch(column, "^\\$varlabel_"))
+                    {
+                        if (dataFrameRow["var"] is string varName && analysisPercDiff.VariableLabels.TryGetValue(varName, out var variableLabel))
+                        {
+                            cellValues.Add(variableLabel);
+                        }
+                        else
+                        {
+                            cellValues.Add(null);
+                        }
+                    } 
+                    else if (column == "$label_varval")
+                    {
+                        cellValues.Add(analysisPercDiff.GetValueLabel(dataFrameRow["var"] as string, (double)dataFrameRow["varval"]));
+                    } 
+                    else if (dataFrame.ColumnNames.Contains(column))
+                    {
+                        cellValues.Add(dataFrameRow[column]);
+                    }
+                    else
+                    {
+                        cellValues.Add(null);
+                    }
+                }
+
+                tableRow.ItemArray = cellValues.ToArray();
+                table.Rows.Add(tableRow);
+            }
+        }
+
+        HasPValues = false;
+        HasFMI = analysisPercDiff.CalculateSE;
 
         return table;
     }
@@ -1341,6 +1475,19 @@ public partial class AnalysisPresentation : ObservableObject
             SecondaryDataView = PreserveCurrentSorting(secondaryDataView, SecondaryDataView);
         }
     }
+    
+    private void SetDataTableViewPercDiff()
+    {
+        DataView dataView = new(DataTable.Copy());
+
+        if (HasVariableLabels && !ShowVariableLabels)
+        {
+            RemoveLabelColumns(dataView);
+        }
+        if (HasFMI && !ShowFMI) dataView.Table!.Columns.Remove("Cohens h - FMI");
+
+        DataView = PreserveCurrentSorting(dataView, DataView);
+    }
 
     private void SetDataTableViewFreq()
     {
@@ -1503,6 +1650,9 @@ public partial class AnalysisPresentation : ObservableObject
                 break;
             case AnalysisMeanDiff:
                 SetDataTableViewMeanDiff();
+                break;
+            case AnalysisPercDiff:
+                SetDataTableViewPercDiff();
                 break;
             case AnalysisFreq:
                 SetDataTableViewFreq();

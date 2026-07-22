@@ -74,7 +74,7 @@
         </Button>
         <TextBlock Grid.Row="3" Grid.Column="0" Text="Target:" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top"/>
         <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Vertical" Margin="10,10,0,0" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
-            <RadioButton x:Name="radioButtonTargetReload" Content="Reload files specified in file" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="Target" IsChecked="{Binding UseCurrentFile, Converter={StaticResource InverseBoolConverter}}"/>
+            <RadioButton x:Name="radioButtonTargetReload" Content="Reload files specified in json" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="Target" IsChecked="{Binding UseCurrentFile, Converter={StaticResource InverseBoolConverter}}"/>
             <RadioButton x:Name="radioButtonTargetCurrent" Content="Current file for analyses" HorizontalAlignment="Left" Height="15" GroupName="Target" IsChecked="{Binding UseCurrentFile}" IsEnabled="{Binding HasCurrentFile}"/>
         </StackPanel>
         <Button Grid.Row="3" Grid.Column="1" HorizontalAlignment="Right" Height="22" VerticalAlignment="Top" Margin="0,10,0,0" IsEnabled="{Binding IsBusy}" Command="{Binding AbortBatchCommand}">

@@ -67,12 +67,34 @@ public partial class RequestAnalysis : ObservableValidatorExtended
 
     [ObservableProperty]
     private bool _calculateSE = true;
+    partial void OnCalculateSEChanged(bool value)
+    {
+        if (!value)
+        {
+            MimicIdbAnalyzer = false;
+        }
+    }
 
     [ObservableProperty]
     private bool _useInterpolation = true;
+    partial void OnUseInterpolationChanged(bool value)
+    {
+        if (value)
+        {
+            MimicIdbAnalyzer = false;
+        }
+    }
 
     [ObservableProperty]
     private bool _mimicIdbAnalyzer = false;
+    partial void OnMimicIdbAnalyzerChanged(bool value)
+    {
+        if (value)
+        {
+            CalculateSE = true;
+            UseInterpolation = false;
+        }
+    }
 
     [ObservableProperty]
     private bool _withIntercept = true;
@@ -132,6 +154,10 @@ public partial class RequestAnalysis : ObservableValidatorExtended
                 break;
             case AnalysisMeanDiff analysisMeanDiff:
                 CalculateSeparately = analysisMeanDiff.CalculateSeparately;
+                break;
+            case AnalysisPercDiff analysisPercDiff:
+                CalculateSeparately = analysisPercDiff.CalculateSeparately;
+                CalculateSE = analysisPercDiff.CalculateSE;
                 break;
             case AnalysisFreq analysisFreq:
                 CalculateOverall = analysisFreq.CalculateOverall;
@@ -323,6 +349,13 @@ public partial class RequestAnalysis : ObservableValidatorExtended
                 analysisMeanDiff.GroupBy = new(GroupByVariables);
                 analysisMeanDiff.CalculateSeparately = this.CalculateSeparately;
                 WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisMeanDiff));
+                break;
+            case AnalysisPercDiff analysisPercDiff:
+                analysisPercDiff.Vars = new List<Variable>(AnalysisVariables);
+                analysisPercDiff.GroupBy = new List<Variable>(GroupByVariables);
+                analysisPercDiff.CalculateSeparately = this.CalculateSeparately;
+                analysisPercDiff.CalculateSE = this.CalculateSE;
+                WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(analysisPercDiff));
                 break;
             case AnalysisFreq analysisFreq:
                 analysisFreq.Vars = new(AnalysisVariables);
