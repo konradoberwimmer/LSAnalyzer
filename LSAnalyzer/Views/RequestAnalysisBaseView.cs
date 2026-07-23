@@ -76,28 +76,6 @@ namespace LSAnalyzer.Views
             }
         }
 
-        internal void AvailableVariablesCollectionView_FilterSystemVariables(object sender, FilterEventArgs e)
-        {
-            e.Accepted = true;
-            if (e.Item is Variable variable && variable.IsSystemVariable)
-            {
-                e.Accepted = false;
-            }
-        }
-
-        internal void CheckBoxIncludeSystemVariables_Checked(object sender, RoutedEventArgs e)
-        {
-            var availableVariablesCollectionView = Resources["AvailableVariablesCollectionView"] as CollectionViewSource;
-            if (((CheckBox)sender).IsChecked == true)
-            {
-                availableVariablesCollectionView!.Filter -= AvailableVariablesCollectionView_FilterSystemVariables;
-            }
-            else
-            {
-                availableVariablesCollectionView!.Filter += AvailableVariablesCollectionView_FilterSystemVariables;
-            }
-        }
-
         internal void ButtonMoveToAndFromAnalysisVariables_Click(object sender, RoutedEventArgs e)
         {
             var listBoxVariablesDataset = (ListBox)this.FindName("listBoxVariablesDataset");
@@ -153,6 +131,14 @@ namespace LSAnalyzer.Views
         internal void ListBoxVariables_OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
+        }
+        
+        internal void SearchField_OnKeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape && sender is TextBox textBox)
+            {
+                textBox.Text = string.Empty;
+            }
         }
     }
 }
