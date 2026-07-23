@@ -23,7 +23,6 @@
         <converter:EnumToBoolean x:Key="EnumToBooleanConverter"/>
         <converter:LeftSideFileName x:Key="LeftSideFileNameConverter"/>
         <converter:BoolToVisibility x:Key="BoolToVisibilityConverter"/>
-        <CollectionViewSource x:Key="AvailableVariablesCollectionView" Source="{Binding AvailableVariables}" Filter="AvailableVariablesCollectionView_FilterSystemVariables"/>
         <local:WindowSettings x:Key="WindowSettings"/>
     </Window.Resources>
     <Window.Width>
@@ -76,10 +75,12 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Content="Variables in dataset:" Margin="10,0,0,0"/>
-            <Border x:Name="HeightHelperPanelVariablesDataset" Grid.Column="0" Margin="10,27,10,22">
-                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDataset}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesDataset}" ItemsSource="{Binding Source={StaticResource AvailableVariablesCollectionView}}" DisplayMemberPath="Info" SelectionMode="Extended" MouseDoubleClick="ListBoxVariables_MouseDoubleClick" ScrollViewer.CanContentScroll="False" PreviewMouseRightButtonDown="ListBoxVariables_OnPreviewMouseRightButtonDown" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True"/>
+            <TextBox Grid.Column="0" Margin="10,27,10,22" Height="22" VerticalAlignment="Top" HorizontalAlignment="Stretch" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" KeyUp="SearchField_OnKeyUp"/>
+            <Label Grid.Column="0" Margin="10,24,10,22" Content="Search ..." Opacity="0.5" Background="Transparent" IsHitTestVisible="False" Visibility="{Binding HasNoSearchText, Converter={StaticResource BoolToVisibilityConverter}}"/>
+            <Border x:Name="HeightHelperPanelVariablesDataset" Grid.Column="0" Margin="10,52,10,22">
+                <ListBox x:Name="listBoxVariablesDataset" Height="{Binding Path=ActualHeight, ElementName=HeightHelperPanelVariablesDataset}" Width="{Binding Path=ActualWidth, ElementName=HeightHelperPanelVariablesDataset}" ItemsSource="{Binding AvailableVariablesView.View}" DisplayMemberPath="Info" SelectionMode="Extended" MouseDoubleClick="ListBoxVariables_MouseDoubleClick" ScrollViewer.CanContentScroll="False" PreviewMouseRightButtonDown="ListBoxVariables_OnPreviewMouseRightButtonDown" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True"/>
             </Border>
-            <CheckBox x:Name="checkBoxIncludeSystemVariables" Grid.Column="0" Margin="10,0,10,0" VerticalAlignment="Bottom" IsChecked="False" Content="Include system variables (weights, ...)" Checked="CheckBoxIncludeSystemVariables_Checked" Unchecked="CheckBoxIncludeSystemVariables_Checked"/>
+            <CheckBox x:Name="checkBoxIncludeSystemVariables" Grid.Column="0" Margin="10,0,10,0" VerticalAlignment="Bottom" IsChecked="{Binding IncludeSystemVariables}" Content="Include system variables (weights, ...)"/>
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
@@ -112,8 +113,8 @@
                     </Border>
                 </Grid>
                 <StackPanel Grid.Row="2" Margin="10,0,10,0" Orientation="Horizontal">
-                    <TextBlock Text="Group by:"/>
-                    <ContentControl ContentTemplate="{StaticResource StatusWarningOutline}" ToolTip="Beware that BIFIEsurvey below version 3.6-6 reports incorrect values when using grouping variables." VerticalAlignment="Top" Visibility="{Binding BIFIEsurveyVersionWarning, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <Label Content="Group by:"/>
+                    <ContentControl ContentTemplate="{StaticResource StatusWarningOutline}" ToolTip="Beware that BIFIEsurvey below version 3.6-6 reports incorrect values when using grouping variables." Margin="0,5,0,0" VerticalAlignment="Top" Visibility="{Binding BIFIEsurveyVersionWarning, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 </StackPanel>
                 <Grid Grid.Row="2" Margin="0,27,0,0">
                     <Grid.ColumnDefinitions>
