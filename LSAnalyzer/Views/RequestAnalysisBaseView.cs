@@ -54,7 +54,7 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            if (new string[] { "listBoxVariablesDataset", "listBoxVariablesAnalyze" }.Contains(listBox.Name)  && FindName("buttonMoveToAndFromAnalysisVariables") is Button moveToAndFromAnalysisButton)
+            if (new string[] { "listBoxVariablesDataset", "listBoxVariablesAnalyze" }.Contains(listBox.Name) && FindName("buttonMoveToAndFromAnalysisVariables") is Button moveToAndFromAnalysisButton)
             {
                 ButtonAutomationPeer peer = new(moveToAndFromAnalysisButton);
                 IInvokeProvider? invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
@@ -70,6 +70,38 @@ namespace LSAnalyzer.Views
 
             if (listBox.Name == "listBoxVariablesDependent" && FindName("buttonMoveToAndFromDependentVariable") is Button moveToAndFromDependentButton)
             {
+                ButtonAutomationPeer peer = new(moveToAndFromDependentButton);
+                IInvokeProvider? invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+                invokeProv?.Invoke();
+            }
+        }
+
+        internal void ListBoxVariables_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Delete || sender is not ListBox listBox || FindName("listBoxVariablesDataset") is not ListBox listBoxVariablesDataset)
+            {
+                return;
+            }
+            
+            if (listBox.Name == "listBoxVariablesAnalyze" && FindName("buttonMoveToAndFromAnalysisVariables") is Button moveToAndFromAnalysisButton)
+            {
+                listBoxVariablesDataset.UnselectAll();
+                ButtonAutomationPeer peer = new(moveToAndFromAnalysisButton);
+                IInvokeProvider? invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+                invokeProv?.Invoke();
+            }
+
+            if (listBox.Name == "listBoxVariablesGroupBy" && FindName("buttonMoveToAndFromGroupByVariables") is Button moveToAndFromGroupByButton)
+            {
+                listBoxVariablesDataset.UnselectAll();
+                ButtonAutomationPeer peer = new(moveToAndFromGroupByButton);
+                IInvokeProvider? invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+                invokeProv?.Invoke();
+            }
+
+            if (listBox.Name == "listBoxVariablesDependent" && FindName("buttonMoveToAndFromDependentVariable") is Button moveToAndFromDependentButton)
+            {
+                listBoxVariablesDataset.UnselectAll();
                 ButtonAutomationPeer peer = new(moveToAndFromDependentButton);
                 IInvokeProvider? invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
                 invokeProv?.Invoke();
