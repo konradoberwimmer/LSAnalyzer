@@ -326,4 +326,138 @@ public class TestVirtualVariables
         
         Assert.Equal(77, viewModel.SelectedVirtualVariable.ForDatasetTypeId);
     }
+
+    [Fact]
+    public void TestExportVirtualVariables()
+    {
+        var filename = Path.GetTempFileName();
+
+        VirtualVariables viewModel = new()
+        {
+            SelectedVirtualVariable = new VirtualVariableCombine
+            {
+                Type = VirtualVariableCombine.CombinationFunction.Mean,
+                Variables = [ new Variable(1, "item1"), new Variable(2, "item2") ],
+                RemoveNa = false,
+                Name = "combination",
+            },
+            AnalysisConfiguration = new AnalysisConfiguration { DatasetType = new DatasetType { Id = 77 } }
+        };
+        viewModel.SelectedIsForDatasetType = true;
+        viewModel.SaveSelectedVirtualVariableCommand.Execute(null);
+        Assert.False(viewModel.SelectedVirtualVariable.IsChanged);
+        
+        viewModel.ExportVirtualVariablesCommand.Execute(new VirtualVariables.ExportVirtualVariablesParameters { VirtualVariables = [], FileName = filename });
+        Assert.Empty(File.ReadAllLines(filename));
+        
+        viewModel.ExportVirtualVariablesCommand.Execute(new VirtualVariables.ExportVirtualVariablesParameters { VirtualVariables = [ viewModel.SelectedVirtualVariable ], FileName = filename });
+        Assert.NotEmpty(File.ReadAllLines(filename));
+    }
+
+    [Fact]
+    public void TestImportVirtualVariablesIgnoresWrongOrEmptyFiles()
+    {
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.Setup(service => service.VirtualVariables).Returns([
+            new VirtualVariableCombine { ForFileName = "some_file.csv", ForDatasetTypeId = 12 },
+            new VirtualVariableCombine { ForFileName = "other_file.csv", ForDatasetTypeId = null }
+        ]);
+        
+        Configuration configuration = new(String.Empty, null, settingsService.Object, new RegistryServiceStub());
+        
+        var rservice = new Mock<IRservice>();
+        rservice.Setup(service => service.GetCurrentDatasetVariables(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(), false)).Returns(
+        [
+            new Variable(1, "item1") { Label = "correct label"},
+            new Variable(2, "TOTWGT") { IsSystemVariable = true },
+        ]);
+
+        VirtualVariables viewModel = new(configuration, rservice.Object);
+        viewModel.AnalysisConfiguration = new AnalysisConfiguration { FileName = @"C:\path\to\other_file.csv", DatasetType = new DatasetType { Id = 12, Name = "myDatasetType" }};
+        
+        var wrongFilename = Path.GetTempFileName();
+        File.WriteAllText(wrongFilename, "something_not_json");
+        
+        var invalidFileMessageSent = false;
+        WeakReferenceMessenger.Default.Register<VirtualVariables.VirtualVariablesFileInvalidMessage>(this, (_, _) => invalidFileMessageSent = true);
+        
+        viewModel.ImportVirtualVariablesCommand.Execute(wrongFilename);
+        Assert.True(invalidFileMessageSent);
+        
+        var emptyFileName = Path.GetTempFileName();
+        File.WriteAllText(emptyFileName, "[]");
+        
+        invalidFileMessageSent = false;
+        
+        viewModel.ImportVirtualVariablesCommand.Execute(emptyFileName);
+        
+        Assert.True(invalidFileMessageSent);
+    }
+
+    [Fact]
+    public void TestImportVirtualVariablesModifiesRelevantData()
+    {
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.Setup(service => service.VirtualVariables).Returns([
+            new VirtualVariableCombine { ForFileName = "some_file.csv", ForDatasetTypeId = 12 },
+            new VirtualVariableCombine { ForFileName = "other_file.csv", ForDatasetTypeId = null }
+        ]);
+        
+        Configuration configuration = new(String.Empty, null, settingsService.Object, new RegistryServiceStub());
+        
+        var rservice = new Mock<IRservice>();
+        rservice.Setup(service => service.GetCurrentDatasetVariables(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(), false)).Returns(
+        [
+            new Variable(1, "item1") { Label = "correct label"},
+            new Variable(2, "TOTWGT") { IsSystemVariable = true },
+        ]);
+
+        VirtualVariables viewModel = new(configuration, rservice.Object);
+        viewModel.AnalysisConfiguration = new AnalysisConfiguration { FileName = @"C:\path\to\other_file.csv", DatasetType = new DatasetType { Id = 12, Name = "myDatasetType" }};
+        Assert.Equal(2, viewModel.CurrentVirtualVariables.Count);
+
+        VirtualVariableScale virtualVariableScale = new()
+        {
+            Id = 2178,
+            Name = "myScale",
+            InputVariable = new Variable(877, "item1") { Label = "corrupt label" },
+            WeightVariable = new Variable(999, "totwgt") { IsSystemVariable = true },
+            ForFileName = "old_file.csv",
+            ForDatasetTypeId = 99
+        };
+        
+        VirtualVariableScale virtualVariableScaleImpossible = new()
+        {
+            Id = 2179,
+            Name = "impossibleScale",
+            InputVariable = new Variable(877, "not_existing_item") { Label = "corrupt label" },
+            WeightVariable = new Variable(999, "totwgt") { IsSystemVariable = true },
+            ForFileName = "old_file.csv",
+            ForDatasetTypeId = 99
+        };
+        
+        List<VirtualVariable> virtualVariables = [virtualVariableScale, virtualVariableScaleImpossible, virtualVariableScale];
+        
+        var fileName = Path.GetTempFileName();
+        viewModel.ExportVirtualVariablesCommand.Execute(new VirtualVariables.ExportVirtualVariablesParameters { VirtualVariables = virtualVariables, FileName = fileName });
+        Assert.NotEmpty(File.ReadAllLines(fileName));
+
+        var duplicatedVirtualVariableMessageSent = false;
+        WeakReferenceMessenger.Default.Register<VirtualVariables.DuplicatedVirtualVariablesAtImportMessage>(this, (_, _) => duplicatedVirtualVariableMessageSent = true);
+        
+        var ignoredVirtualVariableMessageSent = false;
+        WeakReferenceMessenger.Default.Register<VirtualVariables.IgnoredVirtualVariablesAtImportMessage>(this, (_, _) => ignoredVirtualVariableMessageSent = true);
+        
+        viewModel.ImportVirtualVariablesCommand.Execute(fileName);
+        Assert.Equal(3, viewModel.CurrentVirtualVariables.Count);
+        Assert.True(duplicatedVirtualVariableMessageSent);
+        Assert.True(ignoredVirtualVariableMessageSent);
+        
+        var newVirtualVariable = viewModel.CurrentVirtualVariables.Last() as VirtualVariableScale;
+        Assert.NotEqual(2178, newVirtualVariable!.Id);
+        Assert.Equal("other_file.csv", newVirtualVariable.ForFileName);
+        Assert.Equal(12, newVirtualVariable.ForDatasetTypeId);
+        Assert.Equal("correct label", newVirtualVariable.InputVariable!.Label);
+        Assert.Equal("TOTWGT", newVirtualVariable.WeightVariable!.Name);
+    }
 }

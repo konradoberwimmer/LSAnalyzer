@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
@@ -178,6 +179,11 @@ public partial class VirtualVariableRecode : VirtualVariable
                    !Rules.ElementObjectsEqual(_savedState.Rules, ["Errors", "Criteria"]) ||
                    !Rules.Index().All(tupleRule => tupleRule.Item.Criteria.ElementObjectsEqual(_savedState.Rules[tupleRule.Index].Criteria, ["Errors"]));
         }
+    }
+
+    public override bool InputVariableNamesExistIn(IEnumerable<Variable> variables)
+    {
+        return Variables.All(v => variables.Select(variable => variable.Name.ToLowerInvariant()).Contains(v.Name.ToLowerInvariant()));
     }
 
     public void AddVariable(Variable variable)
