@@ -143,6 +143,18 @@ public partial class VirtualVariables : Window
                 equalFrequencyBinning.ShowDialog();
                 comboBox.SelectedIndex = -1;
                 break;
+            case "Mass recoding":
+                if (viewModel.SelectedVirtualVariable is not VirtualVariableRecode { IsChanged: false, Variables.Count: 1 })
+                {
+                    MessageBox.Show(this, "Mass recoding is only possible with a single input variable.", "Not possible", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    comboBox.SelectedIndex = -1;
+                    break;
+                }
+                ViewModels.VirtualVariableCreation.MassRecoding massRecodingViewModel = new(viewModel);
+                MassRecoding massRecoding = new(massRecodingViewModel);
+                massRecoding.ShowDialog();
+                comboBox.SelectedIndex = -1;
+                break;
             default:
                 break;
         }
