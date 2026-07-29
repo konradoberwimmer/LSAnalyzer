@@ -81,9 +81,12 @@ public partial class VirtualVariables : ObservableObject
         SelectedIsForDatasetType = value?.ForDatasetTypeId is not null;
         Preview = DefaultDataView();
         OnPropertyChanged(nameof(HasSelectedVirtualVariable));
+        OnPropertyChanged(nameof(CanCreateMassRecoding));
     }
 
     public bool HasSelectedVirtualVariable => SelectedVirtualVariable != null;
+
+    public bool CanCreateMassRecoding => SelectedVirtualVariable is VirtualVariableRecode { IsChanged: false, Variables.Count: 1 };
 
     [ObservableProperty]
     private bool _selectedIsForDatasetType = false;

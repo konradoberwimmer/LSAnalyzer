@@ -105,7 +105,26 @@ public partial class VirtualVariableRecode : VirtualVariable
             
             return $"recode({variables}'{recodes}')";
         }
-    } 
+    }
+
+    [JsonIgnore]
+    public string RecodeInfo
+    {
+        get
+        {
+            var elseAction = Else switch
+            {
+                ElseAction.Copy => "else=copy",
+                ElseAction.Missing => "else=NA",
+                ElseAction.Set => $"else={ElseValue.ToString(CultureInfo.InvariantCulture)}",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+            
+            var recodes = string.Join(";", Rules.Select(rule => rule.Info).ToList().Append(elseAction));
+            
+            return $"'{recodes}'";
+        }
+    }
 
     private VirtualVariableRecode? _savedState = null;
 
