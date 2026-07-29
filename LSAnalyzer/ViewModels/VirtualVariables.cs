@@ -346,6 +346,98 @@ public partial class VirtualVariables : ObservableObject
         File.WriteAllText(parameters.FileName, JsonSerializer.Serialize(parameters.VirtualVariables, jsonSerializerOptions));
     }
 
+    [RelayCommand]
+    private void ImportVirtualVariables(string fileName)
+    {
+        if (AnalysisConfiguration is null) return;
+        
+        var existingVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, []);
+        if (existingVariables is null) return;
+        existingVariables = existingVariables.Where(variable => variable is { IsVirtual: false }).ToList();
+        
+        List<VirtualVariable>? virtualVariables;
+        try
+        {
+            virtualVariables = JsonSerializer.Deserialize<List<VirtualVariable>>(File.ReadAllText(fileName));
+        }
+        catch
+        {
+            WeakReferenceMessenger.Default.Send(new VirtualVariablesFileInvalidMessage { FileName = fileName });
+            return;
+        }
+
+        if (virtualVariables is null || virtualVariables.Count == 0)
+        {
+            WeakReferenceMessenger.Default.Send(new VirtualVariablesFileInvalidMessage { FileName = fileName });
+            return;
+        }
+        
+        List<VirtualVariable> ignoredVirtualVariables = [];
+        List<VirtualVariable> duplicatedVirtualVariables = [];
+        
+        foreach (var virtualVariable in virtualVariables)
+        {
+            if (!virtualVariable.InputVariableNamesExistIn(existingVariables))
+            {
+                ignoredVirtualVariables.Add(virtualVariable);
+                continue;
+            }
+
+            if (CurrentVirtualVariables.Select(vv => vv.Name.ToLowerInvariant()).Contains(virtualVariable.Name.ToLowerInvariant()) ||
+                existingVariables.Select(v => v.Name.ToLowerInvariant()).Contains(virtualVariable.Name.ToLowerInvariant()))
+            {
+                duplicatedVirtualVariables.Add(virtualVariable);
+                continue;
+            }
+
+            virtualVariable.Id = _configuration.GetNextVirtualVariableId();
+            virtualVariable.ForFileName = CurrentFileName;
+            if (virtualVariable.ForDatasetTypeId is not null)
+            {
+                virtualVariable.ForDatasetTypeId = AnalysisConfiguration?.DatasetType?.Id;
+            }
+
+            switch (virtualVariable)
+            {
+                case VirtualVariableCombine virtualVariableCombine:
+                    virtualVariableCombine.Variables = [..virtualVariableCombine.Variables.Select(v => existingVariables.First(av => string.Equals(av.Name, v.Name, StringComparison.InvariantCultureIgnoreCase))).ToList()];
+                    break;
+                case VirtualVariableRecode virtualVariableRecode:
+                    virtualVariableRecode.Variables = [..virtualVariableRecode.Variables.Select(v => existingVariables.First(av => string.Equals(av.Name, v.Name, StringComparison.InvariantCultureIgnoreCase))).ToList()];
+                    break;
+                case VirtualVariableScale virtualVariableScale:
+                    virtualVariableScale.InputVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableScale.InputVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
+                    if (virtualVariableScale.WeightVariable is not null)
+                    {
+                        virtualVariableScale.WeightVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableScale.WeightVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
+                    }
+                    if (virtualVariableScale.MiVariable is not null)
+                    {
+                        virtualVariableScale.MiVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableScale.MiVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
+                    }
+                    break;
+            }
+            
+            virtualVariable.AcceptChanges();
+            
+            CurrentVirtualVariables.Add(virtualVariable);
+            
+            _configuration.StoreVirtualVariable(virtualVariable);
+            
+            HasChangedVirtualVariables = true;
+        }
+
+        if (ignoredVirtualVariables.Count != 0)
+        {
+            WeakReferenceMessenger.Default.Send(new IgnoredVirtualVariablesAtImportMessage { VirtualVariables = ignoredVirtualVariables });
+        }
+        
+        if (duplicatedVirtualVariables.Count != 0)
+        {
+            WeakReferenceMessenger.Default.Send(new DuplicatedVirtualVariablesAtImportMessage { VirtualVariables = duplicatedVirtualVariables });
+        }
+    }
+
     public List<double> GetDistinctValues(Variable variable)
     {
         return _rservice.GetDistinctValues(variable, AnalysisConfiguration?.DatasetType?.PVvarsList.ToList() ?? []) ?? [];
@@ -368,4 +460,10 @@ public partial class VirtualVariables : ObservableObject
     public class VariableNameNotAvailableMessage;
 
     public class PreviewImpossibleMessage;
+
+    public class VirtualVariablesFileInvalidMessage { public required string FileName { get; init; } }
+    
+    public class IgnoredVirtualVariablesAtImportMessage { public required List<VirtualVariable> VirtualVariables { get; init; } }
+    
+    public class DuplicatedVirtualVariablesAtImportMessage { public required List<VirtualVariable> VirtualVariables { get; init; } }
 }

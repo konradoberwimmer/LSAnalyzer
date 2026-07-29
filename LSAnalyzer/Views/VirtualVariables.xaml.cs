@@ -31,12 +31,25 @@ public partial class VirtualVariables : Window
         
         WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.VariableNameNotAvailableMessage>(this, (_, _) =>
         {
-            MessageBox.Show($"Cannot save: Variable name '{viewModel.SelectedVirtualVariable?.Name ?? string.Empty}' is already in use.", "Saving not possible",  MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, $"Cannot save: Variable name '{viewModel.SelectedVirtualVariable?.Name ?? string.Empty}' is already in use.", "Saving not possible",  MessageBoxButton.OK, MessageBoxImage.Information);
         });
         
         WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.PreviewImpossibleMessage>(this, (_, _) =>
         {
-            MessageBox.Show("Preview not possible - check your virtual variable definition!", "Preview not possible", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, "Preview not possible - check your virtual variable definition!", "Preview not possible", MessageBoxButton.OK, MessageBoxImage.Information);
+        });
+        
+        WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.VirtualVariablesFileInvalidMessage>(this, (_, message) =>
+        {
+            MessageBox.Show(this, $"File '{message.FileName}' does not contain virtual variable definitions.", "File not valid", MessageBoxButton.OK, MessageBoxImage.Warning);
+        });
+        
+        WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.IgnoredVirtualVariablesAtImportMessage>(this, (_, message) => {
+            MessageBox.Show(this, $"Ignored the following virtual variables because of missing variables in the current data file:\n{string.Join('\n', message.VirtualVariables.Select(vv => $"- {vv.Info}"))}", "Ignored virtual variables", MessageBoxButton.OK, MessageBoxImage.Information);
+        });
+        
+        WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.DuplicatedVirtualVariablesAtImportMessage>(this, (_, message) => {
+            MessageBox.Show(this, $"Ignored the following virtual variables because name already exists in the current data file:\n{string.Join('\n', message.VirtualVariables.Select(vv => $"- {vv.Info}"))}", "Ignored virtual variables", MessageBoxButton.OK, MessageBoxImage.Information);
         });
     }
     
@@ -190,5 +203,20 @@ public partial class VirtualVariables : Window
             VirtualVariables = DataGridVirtualVariables.SelectedItems.Cast<VirtualVariable>().ToList(),
             FileName = saveFileDialog.FileName
         });
+    }
+
+    private void ButtonImportVirtualVariables_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ViewModels.VirtualVariables viewModel) return;
+        
+        OpenFileDialog openFileDialog = new();
+        openFileDialog.Filter = "JSON File (*.json)|*.json";
+        openFileDialog.InitialDirectory = Properties.Settings.Default.lastResultOutFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        var result = openFileDialog.ShowDialog(this);
+
+        if (result == true)
+        {
+            viewModel.ImportVirtualVariablesCommand.Execute(openFileDialog.FileName);
+        }
     }
 }

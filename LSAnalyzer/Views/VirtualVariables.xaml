@@ -77,9 +77,9 @@
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="" CellTemplate="{StaticResource ModifiedTemplate}" IsReadOnly="True"/>
                         <DataGridTextColumn Binding="{Binding TypeName}" Header="Type" MinWidth="100"/>
-                        <DataGridTextColumn Binding="{Binding Name}" Header="Variable name(s)" MinWidth="120"/>
+                        <DataGridTextColumn Binding="{Binding Name}" Header="Name" MinWidth="120"/>
                         <DataGridTextColumn Binding="{Binding Info}" Header="Info" Width="300"/>
-                        <DataGridTextColumn Binding="{Binding ForFileName}" Header="For file name" MinWidth="100"/>
+                        <DataGridTextColumn Binding="{Binding ForFileName}" Header="For file" MinWidth="100"/>
                         <DataGridCheckBoxColumn Binding="{Binding ForDatasetTypeId, Converter={StaticResource NullToBoolConverter}}" Header="For dataset type" MinWidth="100"/>
                     </DataGrid.Columns>
                 </DataGrid>
@@ -89,6 +89,7 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <ComboBox x:Name="ComboBoxSelectedType" Grid.Column="0" ItemsSource="{Binding VirtualVariableTypes}" SelectedItem="{Binding SelectedVirtualVariableType}" Width="120" HorizontalAlignment="Left" SelectionChanged="ComboBoxSelectedType_OnSelectionChanged">
@@ -105,8 +106,9 @@
                     <ComboBoxItem IsEnabled="{Binding CanCreateMassRecoding}">Mass recoding</ComboBoxItem>
                 </ComboBox>
                 <TextBlock Grid.Column="1" Padding="5,0,0,0" DataContext="{Binding ElementName=ComboBoxCreate, Path=SelectedItem}" Text="Create ..." Style="{StaticResource ComboBoxSelectOverlay}"/>
-                <Button Grid.Column="2" Content="Export" Width="80" Height="22" HorizontalAlignment="Right" IsEnabled="{Binding HasSelectedVirtualVariable}" Click="ButtonExportVirtualVariables_OnClick"/>
-                <Button Grid.Column="3" Content="Remove" Width="80" Height="22" Margin="5,0,0,0" HorizontalAlignment="Right" IsEnabled="{Binding HasSelectedVirtualVariable}" Click="ButtonRemoveVirtualVariable_OnClick"/>
+                <Button Grid.Column="2" Content="Import ..." Width="80" Height="22" HorizontalAlignment="Right" Click="ButtonImportVirtualVariables_OnClick"/>
+                <Button Grid.Column="3" Content="Export ..." Width="80" Height="22" Margin="5,0,0,0" HorizontalAlignment="Right" IsEnabled="{Binding HasSelectedVirtualVariable}" Click="ButtonExportVirtualVariables_OnClick"/>
+                <Button Grid.Column="4" Content="Remove" Width="80" Height="22" Margin="5,0,0,0" HorizontalAlignment="Right" IsEnabled="{Binding HasSelectedVirtualVariable}" Click="ButtonRemoveVirtualVariable_OnClick"/>
             </Grid>
             <Border Grid.Row="3" BorderBrush="Gray" BorderThickness="0,0.5,0,0" Margin="0,5,0,0" MinHeight="350" Padding="0,5,0,0">
                 <Grid Visibility="{Binding HasSelectedVirtualVariable, Converter={StaticResource BoolToVisibilityConverter}}">

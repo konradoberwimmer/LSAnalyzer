@@ -1,4 +1,5 @@
 
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel.DataAnnotations;
@@ -70,7 +71,12 @@ public partial class VirtualVariableCombine : VirtualVariable
                    !Variables.ElementObjectsEqual(_savedState.Variables);
         }
     }
-    
+
+    public override bool InputVariableNamesExistIn(IEnumerable<Variable> variables)
+    {
+        return Variables.All(v => variables.Select(variable => variable.Name.ToLowerInvariant()).Contains(v.Name.ToLowerInvariant()));
+    }
+
     public override VirtualVariable Clone()
     {
         ItemsChangeObservableCollection<Variable> variables = [];

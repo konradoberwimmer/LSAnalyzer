@@ -265,4 +265,16 @@ public class TestVirtualVariableRecode
         
         Assert.True(virtualVariableRecodeClone.ValidateDeep());
     }
+
+    [Fact]
+    public void TestInputVariableNamesExistIn()
+    {
+        VirtualVariableRecode virtualVariable = new()
+        {
+            Variables = [ new Variable(1, "x1"), new Variable(2, "X2") ]
+        };
+        
+        Assert.True(virtualVariable.InputVariableNamesExistIn(new List<Variable> { new Variable(14, "X1"), new Variable(15, "X2") }));
+        Assert.False(virtualVariable.InputVariableNamesExistIn(new List<Variable> { new Variable(2, "X2") }));
+    }
 }
