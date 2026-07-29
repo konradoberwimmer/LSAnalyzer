@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -326,6 +329,23 @@ public partial class VirtualVariables : ObservableObject
         virtualVariableRecode.Rules.Remove(rule);
     }
 
+    [RelayCommand]
+    private void ExportVirtualVariables(ExportVirtualVariablesParameters parameters)
+    {
+        if (parameters.VirtualVariables.Count == 0)
+        {
+            return;
+        }
+        
+        JsonSerializerOptions jsonSerializerOptions = new(JsonSerializerOptions.Default)
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            WriteIndented = true
+        };
+        
+        File.WriteAllText(parameters.FileName, JsonSerializer.Serialize(parameters.VirtualVariables, jsonSerializerOptions));
+    }
+
     public List<double> GetDistinctValues(Variable variable)
     {
         return _rservice.GetDistinctValues(variable, AnalysisConfiguration?.DatasetType?.PVvarsList.ToList() ?? []) ?? [];
@@ -337,6 +357,12 @@ public partial class VirtualVariables : ObservableObject
         defaultTable.Columns.Add("Input", typeof(double));
         defaultTable.Columns.Add("Output", typeof(double));
         return new DataView(defaultTable);
+    }
+
+    public class ExportVirtualVariablesParameters
+    {
+        public required List<VirtualVariable> VirtualVariables { get; init; }
+        public required string FileName { get; init; }
     }
 
     public class VariableNameNotAvailableMessage;

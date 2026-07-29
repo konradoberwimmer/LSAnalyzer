@@ -326,4 +326,31 @@ public class TestVirtualVariables
         
         Assert.Equal(77, viewModel.SelectedVirtualVariable.ForDatasetTypeId);
     }
+
+    [Fact]
+    public void TestExportVirtualVariables()
+    {
+        var filename = Path.GetTempFileName();
+
+        VirtualVariables viewModel = new()
+        {
+            SelectedVirtualVariable = new VirtualVariableCombine
+            {
+                Type = VirtualVariableCombine.CombinationFunction.Mean,
+                Variables = [ new Variable(1, "item1"), new Variable(2, "item2") ],
+                RemoveNa = false,
+                Name = "combination",
+            },
+            AnalysisConfiguration = new AnalysisConfiguration { DatasetType = new DatasetType { Id = 77 } }
+        };
+        viewModel.SelectedIsForDatasetType = true;
+        viewModel.SaveSelectedVirtualVariableCommand.Execute(null);
+        Assert.False(viewModel.SelectedVirtualVariable.IsChanged);
+        
+        viewModel.ExportVirtualVariablesCommand.Execute(new VirtualVariables.ExportVirtualVariablesParameters { VirtualVariables = [], FileName = filename });
+        Assert.Empty(File.ReadAllLines(filename));
+        
+        viewModel.ExportVirtualVariablesCommand.Execute(new VirtualVariables.ExportVirtualVariablesParameters { VirtualVariables = [ viewModel.SelectedVirtualVariable ], FileName = filename });
+        Assert.NotEmpty(File.ReadAllLines(filename));
+    }
 }
