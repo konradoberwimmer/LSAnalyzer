@@ -54,7 +54,7 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            if (new string[] { "listBoxVariablesDataset", "listBoxVariablesAnalyze" }.Contains(listBox.Name)  && FindName("buttonMoveToAndFromAnalysisVariables") is Button moveToAndFromAnalysisButton)
+            if (new string[] { "listBoxVariablesDataset", "listBoxVariablesAnalyze" }.Contains(listBox.Name) && FindName("buttonMoveToAndFromAnalysisVariables") is Button moveToAndFromAnalysisButton)
             {
                 ButtonAutomationPeer peer = new(moveToAndFromAnalysisButton);
                 IInvokeProvider? invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
@@ -76,25 +76,35 @@ namespace LSAnalyzer.Views
             }
         }
 
-        internal void AvailableVariablesCollectionView_FilterSystemVariables(object sender, FilterEventArgs e)
+        internal void ListBoxVariables_KeyUp(object sender, KeyEventArgs e)
         {
-            e.Accepted = true;
-            if (e.Item is Variable variable && variable.IsSystemVariable)
+            if (e.Key != Key.Delete || sender is not ListBox listBox || FindName("listBoxVariablesDataset") is not ListBox listBoxVariablesDataset)
             {
-                e.Accepted = false;
+                return;
             }
-        }
+            
+            if (listBox.Name == "listBoxVariablesAnalyze" && FindName("buttonMoveToAndFromAnalysisVariables") is Button moveToAndFromAnalysisButton)
+            {
+                listBoxVariablesDataset.UnselectAll();
+                ButtonAutomationPeer peer = new(moveToAndFromAnalysisButton);
+                IInvokeProvider? invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+                invokeProv?.Invoke();
+            }
 
-        internal void CheckBoxIncludeSystemVariables_Checked(object sender, RoutedEventArgs e)
-        {
-            var availableVariablesCollectionView = Resources["AvailableVariablesCollectionView"] as CollectionViewSource;
-            if (((CheckBox)sender).IsChecked == true)
+            if (listBox.Name == "listBoxVariablesGroupBy" && FindName("buttonMoveToAndFromGroupByVariables") is Button moveToAndFromGroupByButton)
             {
-                availableVariablesCollectionView!.Filter -= AvailableVariablesCollectionView_FilterSystemVariables;
+                listBoxVariablesDataset.UnselectAll();
+                ButtonAutomationPeer peer = new(moveToAndFromGroupByButton);
+                IInvokeProvider? invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+                invokeProv?.Invoke();
             }
-            else
+
+            if (listBox.Name == "listBoxVariablesDependent" && FindName("buttonMoveToAndFromDependentVariable") is Button moveToAndFromDependentButton)
             {
-                availableVariablesCollectionView!.Filter += AvailableVariablesCollectionView_FilterSystemVariables;
+                listBoxVariablesDataset.UnselectAll();
+                ButtonAutomationPeer peer = new(moveToAndFromDependentButton);
+                IInvokeProvider? invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+                invokeProv?.Invoke();
             }
         }
 
@@ -153,6 +163,14 @@ namespace LSAnalyzer.Views
         internal void ListBoxVariables_OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
+        }
+        
+        internal void SearchField_OnKeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape && sender is TextBox textBox)
+            {
+                textBox.Text = string.Empty;
+            }
         }
     }
 }

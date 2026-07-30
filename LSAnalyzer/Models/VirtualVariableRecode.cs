@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
@@ -75,7 +76,18 @@ public partial class VirtualVariableRecode : VirtualVariable
 
     [ObservableProperty]
     private double _elseValue = 0.0;
+    partial void OnElseValueChanged(double value)
+    {
+        OnPropertyChanged(nameof(IsChanged));
+    }
 
+    [ObservableProperty] 
+    private string _elseLabel = string.Empty;
+    partial void OnElseLabelChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsChanged));
+    }
+    
     [JsonIgnore] 
     public bool ElseValueMakesSense => Else == ElseAction.Set;
     
@@ -92,7 +104,16 @@ public partial class VirtualVariableRecode : VirtualVariable
                 >= 2 => $"[{string.Join(",", Variables.Select(var => var.Name).ToList())}], ",
                 _ => throw new ArgumentOutOfRangeException()
             };
+            
+            return $"recode({variables}{RecodeInfo})";
+        }
+    }
 
+    [JsonIgnore]
+    public string RecodeInfo
+    {
+        get
+        {
             var elseAction = Else switch
             {
                 ElseAction.Copy => "else=copy",
@@ -103,9 +124,9 @@ public partial class VirtualVariableRecode : VirtualVariable
             
             var recodes = string.Join(";", Rules.Select(rule => rule.Info).ToList().Append(elseAction));
             
-            return $"recode({variables}'{recodes}')";
+            return $"'{recodes}'";
         }
-    } 
+    }
 
     private VirtualVariableRecode? _savedState = null;
 
@@ -126,6 +147,8 @@ public partial class VirtualVariableRecode : VirtualVariable
             Variables = [..Variables.Select(variable => variable.Clone()).ToList()],
             Rules = [..Rules.Select(rule => (rule.Clone() as Rule)!).ToList()],
             Else = Else,
+            ElseValue = ElseValue,
+            ElseLabel = ElseLabel,
         };
     }
 
@@ -141,6 +164,8 @@ public partial class VirtualVariableRecode : VirtualVariable
             Variables = [..Variables.Select(variable => variable.Clone()).ToList()],
             Rules = [..Rules.Select(rule => (rule.Clone() as Rule)!).ToList()],
             Else = Else,
+            ElseValue = ElseValue,
+            ElseLabel = ElseLabel,
         };
         OnPropertyChanged(nameof(IsChanged));
     }
@@ -159,6 +184,11 @@ public partial class VirtualVariableRecode : VirtualVariable
                    !Rules.ElementObjectsEqual(_savedState.Rules, ["Errors", "Criteria"]) ||
                    !Rules.Index().All(tupleRule => tupleRule.Item.Criteria.ElementObjectsEqual(_savedState.Rules[tupleRule.Index].Criteria, ["Errors"]));
         }
+    }
+
+    public override bool InputVariableNamesExistIn(IEnumerable<Variable> variables)
+    {
+        return Variables.All(v => variables.Select(variable => variable.Name.ToLowerInvariant()).Contains(v.Name.ToLowerInvariant()));
     }
 
     public void AddVariable(Variable variable)
@@ -295,6 +325,10 @@ public partial class VirtualVariableRecode : VirtualVariable
         private bool _resultNa = false;
         partial void OnResultNaChanged(bool value)
         {
+            if (value)
+            {
+                Label = string.Empty;
+            }
             OnPropertyChanged(nameof(ResultValueMakesSense));
         }
 
@@ -303,6 +337,9 @@ public partial class VirtualVariableRecode : VirtualVariable
 
         [JsonIgnore]
         public bool ResultValueMakesSense => !ResultNa;
+        
+        [ObservableProperty]
+        private string _label = string.Empty;
 
         [JsonIgnore]
         public string Info
@@ -324,6 +361,7 @@ public partial class VirtualVariableRecode : VirtualVariable
                 Criteria = [..Criteria.Select(criterion => (criterion.Clone() as Term)!).ToList()],
                 ResultNa = ResultNa,
                 ResultValue = ResultValue,
+                Label = Label,
             };
         }
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -58,4 +59,6 @@ public abstract partial class VirtualVariable : ObservableValidatorExtended, ICh
 
     [JsonIgnore]
     public abstract bool IsChanged { get; }
+
+    public abstract bool InputVariableNamesExistIn(IEnumerable<Variable> variables);
 }

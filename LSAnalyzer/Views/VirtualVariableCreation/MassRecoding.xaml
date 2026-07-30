@@ -1,0 +1,132 @@
+<Window x:Class="LSAnalyzer.Views.VirtualVariableCreation.MassRecoding"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:LSAnalyzer.Views.VirtualVariableCreation"
+        xmlns:viewmodels="clr-namespace:LSAnalyzer.ViewModels.VirtualVariableCreation"
+        xmlns:converter="clr-namespace:LSAnalyzer.ViewModels.ValueConverter"
+        xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop"
+        xmlns:customControls="clr-namespace:LSAnalyzer.Views.CustomControls"
+        xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=viewmodels:MassRecoding, IsDesignTimeCreatable=True}"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Title="Mass recoding" SizeToContent="Height" MinHeight="450" Width="800" x:Name="WindowMassRecoding">
+    <Window.Resources>
+        <customControls:DropHandlerVariables x:Key="DropHandlerVariables"/>
+        <converter:DictionaryHasElementToBool x:Key="DictionaryHasElementToBoolConverter"/>
+    </Window.Resources>
+    <Grid Margin="10">
+        <Grid.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="Show Labels" Click="ContextMenuShowLabels_Click" IsCheckable="True" IsChecked="True"/>
+                <Separator/>
+                <MenuItem Header="Sort alphabetically" IsCheckable="True" IsChecked="{Binding SortAlphabetically}"/>
+            </ContextMenu>
+        </Grid.ContextMenu>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="500"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>            
+        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+            <TextBlock Text="For dataset type:"/>
+            <CheckBox Margin="5,1,0,0" VerticalAlignment="Top" IsChecked="{Binding ForDatasetType}"/>
+        </StackPanel>
+        <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,5,0,0" Text="Available variables:"/>
+        <Border Grid.Row="2" Grid.Column="0" x:Name="BorderAvailableVariables" Margin="0,5,0,0" VerticalAlignment="Stretch">
+            <ListBox ItemsSource="{Binding AvailableVariables}" DisplayMemberPath="Info" Height="{Binding ElementName=BorderAvailableVariables, Path=ActualHeight}" Width="{Binding ElementName=BorderAvailableVariables, Path=ActualWidth}" ScrollViewer.CanContentScroll="False" MouseDoubleClick="ListBoxAvailableVariables_OnMouseDoubleClick" SelectionMode="Extended" dd:DragDrop.IsDragSource="True" dd:DragDrop.DragDropCopyKeyState="LeftMouseButton"/>
+        </Border>
+        <TextBlock Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" TextWrapping="Wrap">
+            <Run Text="Apply"/>
+            <Run FontWeight="Bold" Text="{Binding RecodeInfo}"/>
+            <Run Text="to further input variables ..."/>
+        </TextBlock>
+        <ContentControl Grid.Row="1" Grid.Column="1" dd:DragDrop.IsDropTarget="True" dd:DragDrop.DropHandler="{StaticResource DropHandlerVariables}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="5,5,0,0">
+                <ContentControl ContentTemplate="{StaticResource InfoTipInline}"/>
+                <TextBlock VerticalAlignment="Center" Margin="5,0,0,0">To add a variable, double-click it or drag it here.</TextBlock>
+            </StackPanel>
+        </ContentControl>
+        <Grid Grid.Row="2" Grid.Column="1" Margin="5,5,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Input variable"/>
+            <TextBlock Grid.Row="0" Grid.Column="1" Margin="5,0,0,0" Text="Output variable"/>
+            <TextBlock Grid.Row="0" Grid.Column="2" Margin="5,0,0,0" Text="Label"/>
+            <Rectangle Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Height="1" Margin="0,5,0,0" Stroke="Gray" VerticalAlignment="Top"/>
+            <ItemsControl Grid.Row="2" Grid.Column="0" ItemsSource="{Binding Recodings}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Vertical"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Height="25" Margin="0,5,0,0" Orientation="Horizontal" VerticalAlignment="Stretch">
+                            <Border Height="25">
+                                <Button Background="Transparent" BorderBrush="Transparent" Padding="0,1,0,0" VerticalAlignment="Top" Click="ButtonRemoveRecoding_OnClick">
+                                    <Button.Content>
+                                        <fa:IconImage Icon="CircleXmark" Height="15" Foreground="Red"/>
+                                    </Button.Content>
+                                </Button>
+                            </Border>
+                            <TextBlock Margin="5,0,0,0" Padding="0,1,0,0" Text="{Binding InputVariable.Name}" VerticalAlignment="Top"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <ItemsControl Grid.Row="2"  Grid.Column="1" ItemsSource="{Binding Recodings}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Vertical"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Height="25" Margin="5,5,0,0">
+                            <TextBox Height="22" Text="{Binding OutputVariableName, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center">
+                                <ToolTipService.ToolTip>
+                                    <TextBlock Text="{Binding Errors[OutputVariableName], FallbackValue=...}" Foreground="Red"/>
+                                </ToolTipService.ToolTip>
+                                <ToolTipService.IsEnabled>
+                                    <Binding Path="Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="OutputVariableName"/>
+                                </ToolTipService.IsEnabled>
+                            </TextBox>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <ItemsControl Grid.Row="2"  Grid.Column="2" ItemsSource="{Binding Recodings}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Vertical"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Height="25" Margin="5,5,0,0">
+                            <TextBox Height="22" Text="{Binding OutputVariableLabel, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+        <Button Grid.Row="3" Grid.Column="1" Height="22" Width="80" HorizontalAlignment="Right" Content="Create" IsEnabled="{Binding CanCreate}" Command="{Binding CreateRecodingsCommand}" CommandParameter="{Binding ElementName=WindowMassRecoding}"/>
+    </Grid>
+</Window>

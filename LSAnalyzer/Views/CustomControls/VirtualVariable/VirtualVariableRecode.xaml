@@ -54,6 +54,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto" MinWidth="200"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" MinHeight="22"/>
@@ -95,7 +96,8 @@
                 </ItemsControl>
             </StackPanel>
             <TextBlock Grid.Row="1" Grid.Column="2" Margin="5,5,0,0" VerticalAlignment="Center" Text="Result"/>
-            <Rectangle Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Height="1" Margin="0,5,0,0" Stroke="Gray" VerticalAlignment="Top"/>
+            <TextBlock Grid.Row="1" Grid.Column="3" Margin="5,5,0,0" VerticalAlignment="Center" Text="Label"/>
+            <Rectangle Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Height="1" Margin="0,5,0,0" Stroke="Gray" VerticalAlignment="Top"/>
             <ItemsControl Grid.Row="2" Grid.Column="0" Margin="0,10,0,0" ItemsSource="{Binding Rules}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -162,7 +164,21 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-            <Rectangle Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Height="1" Margin="0,5,0,0" Stroke="Gray" VerticalAlignment="Top"/>
+            <ItemsControl Grid.Row="2" Grid.Column="3" Margin="5,10,0,0" ItemsSource="{Binding Rules}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Vertical"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Height="25" Orientation="Horizontal">
+                            <TextBox Width="75" Height="22" VerticalAlignment="Center" Text="{Binding Label}" IsEnabled="{Binding ResultNa, Converter={StaticResource InverseBoolConverter}}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Rectangle Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" Height="1" Margin="0,5,0,0" Stroke="Gray" VerticalAlignment="Top"/>
             <Button Grid.Row="3" Grid.Column="0" Style="{StaticResource InvisibleButtonStyle}" Margin="2,10,0,0" Padding="0" VerticalAlignment="Center" HorizontalAlignment="Right" IsEnabled="{Binding Variables.Count}" Click="ButtonAddRule_OnClick">
                 <Button.Content>
                     <StackPanel>
@@ -177,6 +193,7 @@
                 <ComboBox  Width="75" HorizontalAlignment="Left" ItemsSource="{Binding Source={StaticResource EnumElseActionDataSource}}" SelectedItem="{Binding Else, Delay=10}"/>
                 <TextBox Margin="5,0,0,0" Width="50" Height="22" Text="{Binding ElseValue}" Visibility="{Binding ElseValueMakesSense, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter={StaticResource BooleanTrue}}"/>
             </StackPanel>
+            <TextBox Grid.Row="3" Grid.Column="3" Margin="5,10,0,0" Width="75" Height="22" Text="{Binding ElseLabel, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding ElseValueMakesSense, Converter={StaticResource BoolToVisibilityConverter}}"/>
         </Grid>
     </ScrollViewer>
 </UserControl>

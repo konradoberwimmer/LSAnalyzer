@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,6 +11,7 @@ using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.Views.VirtualVariableCreation;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
 
 namespace LSAnalyzer.Views;
 
@@ -29,12 +31,25 @@ public partial class VirtualVariables : Window
         
         WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.VariableNameNotAvailableMessage>(this, (_, _) =>
         {
-            MessageBox.Show($"Cannot save: Variable name '{viewModel.SelectedVirtualVariable?.Name ?? string.Empty}' is already in use.", "Saving not possible",  MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, $"Cannot save: Variable name '{viewModel.SelectedVirtualVariable?.Name ?? string.Empty}' is already in use.", "Saving not possible",  MessageBoxButton.OK, MessageBoxImage.Information);
         });
         
         WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.PreviewImpossibleMessage>(this, (_, _) =>
         {
-            MessageBox.Show("Preview not possible - check your virtual variable definition!", "Preview not possible", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, "Preview not possible - check your virtual variable definition!", "Preview not possible", MessageBoxButton.OK, MessageBoxImage.Information);
+        });
+        
+        WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.VirtualVariablesFileInvalidMessage>(this, (_, message) =>
+        {
+            MessageBox.Show(this, $"File '{message.FileName}' does not contain virtual variable definitions.", "File not valid", MessageBoxButton.OK, MessageBoxImage.Warning);
+        });
+        
+        WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.IgnoredVirtualVariablesAtImportMessage>(this, (_, message) => {
+            MessageBox.Show(this, $"Ignored the following virtual variables because of missing variables in the current data file:\n{string.Join('\n', message.VirtualVariables.Select(vv => $"- {vv.Info}"))}", "Ignored virtual variables", MessageBoxButton.OK, MessageBoxImage.Information);
+        });
+        
+        WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.DuplicatedVirtualVariablesAtImportMessage>(this, (_, message) => {
+            MessageBox.Show(this, $"Ignored the following virtual variables because name already exists in the current data file:\n{string.Join('\n', message.VirtualVariables.Select(vv => $"- {vv.Info}"))}", "Ignored virtual variables", MessageBoxButton.OK, MessageBoxImage.Information);
         });
     }
     
@@ -143,8 +158,65 @@ public partial class VirtualVariables : Window
                 equalFrequencyBinning.ShowDialog();
                 comboBox.SelectedIndex = -1;
                 break;
+            case "Mass recoding":
+                if (viewModel.SelectedVirtualVariable is not VirtualVariableRecode { IsChanged: false, Variables.Count: 1 })
+                {
+                    MessageBox.Show(this, "Mass recoding is only possible with a single input variable.", "Not possible", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    comboBox.SelectedIndex = -1;
+                    break;
+                }
+                ViewModels.VirtualVariableCreation.MassRecoding massRecodingViewModel = new(viewModel);
+                MassRecoding massRecoding = new(massRecodingViewModel);
+                massRecoding.ShowDialog();
+                comboBox.SelectedIndex = -1;
+                break;
             default:
                 break;
+        }
+    }
+
+    private void ButtonExportVirtualVariables_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ViewModels.VirtualVariables viewModel)
+        {
+            return;
+        }
+
+        if (DataGridVirtualVariables.SelectedItems.Cast<VirtualVariable>().Any(vv => vv.IsChanged))
+        {
+            MessageBox.Show(this, "Please save changed virtual variables before exporting.", "Unsaved changes", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        SaveFileDialog saveFileDialog = new()
+        {
+            Filter = "JSON File (*.json)|*.json",
+            InitialDirectory = Properties.Settings.Default.lastResultOutFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+        };
+        var wantsSave = saveFileDialog.ShowDialog(this);
+
+        if (wantsSave != true) return;
+        
+        Properties.Settings.Default.lastResultOutFileLocation = Path.GetDirectoryName(saveFileDialog.FileName);
+        viewModel.ExportVirtualVariablesCommand.Execute(new ViewModels.VirtualVariables.ExportVirtualVariablesParameters
+        {
+            VirtualVariables = DataGridVirtualVariables.SelectedItems.Cast<VirtualVariable>().ToList(),
+            FileName = saveFileDialog.FileName
+        });
+    }
+
+    private void ButtonImportVirtualVariables_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ViewModels.VirtualVariables viewModel) return;
+        
+        OpenFileDialog openFileDialog = new();
+        openFileDialog.Filter = "JSON File (*.json)|*.json";
+        openFileDialog.InitialDirectory = Properties.Settings.Default.lastResultOutFileLocation ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        var result = openFileDialog.ShowDialog(this);
+
+        if (result == true)
+        {
+            viewModel.ImportVirtualVariablesCommand.Execute(openFileDialog.FileName);
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using System.Linq;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LSAnalyzer.Helper;
@@ -160,5 +161,13 @@ public partial class VirtualVariableScale : VirtualVariable
                    (MiVariable == null) != (_savedState.MiVariable == null) ||
                    (MiVariable != null && !ObjectTools.PublicInstancePropertiesEqual(MiVariable!, _savedState.MiVariable!, []));
         }
+    }
+
+    public override bool InputVariableNamesExistIn(IEnumerable<Variable> variables)
+    {
+        return 
+            variables.Select(v => v.Name.ToLowerInvariant()).Contains(InputVariable?.Name.ToLowerInvariant() ?? "-undefined-") && 
+            (WeightVariable is null || variables.Select(v => v.Name.ToLowerInvariant()).Contains(WeightVariable.Name.ToLowerInvariant())) && 
+            (MiVariable is null || variables.Select(v => v.Name.ToLowerInvariant()).Contains(MiVariable.Name.ToLowerInvariant()));
     }
 }

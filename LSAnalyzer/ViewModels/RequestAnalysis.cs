@@ -11,6 +11,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace LSAnalyzer.ViewModels;
@@ -21,7 +22,40 @@ public partial class RequestAnalysis : ObservableValidatorExtended
 
     [ObservableProperty]
     private ObservableCollection<Variable> _availableVariables = [];
+    partial void OnAvailableVariablesChanged(ObservableCollection<Variable> value)
+    {
+        AvailableVariablesView = new CollectionViewSource
+        {
+            Source = AvailableVariables
+        };
 
+        AvailableVariablesView.View.Filter += v => 
+            v is Variable variable && 
+            (IncludeSystemVariables || !variable.IsSystemVariable) && 
+            (string.IsNullOrWhiteSpace(SearchText) || variable.Name.ToLowerInvariant().Contains(SearchText.ToLowerInvariant()));
+        
+        OnPropertyChanged(nameof(AvailableVariablesView));
+    }
+    
+    [ObservableProperty]
+    private string _searchText = string.Empty;
+    partial void OnSearchTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasNoSearchText));
+        AvailableVariablesView.View.Refresh();
+    }
+    
+    public bool HasNoSearchText => string.IsNullOrWhiteSpace(SearchText);
+    
+    [ObservableProperty]
+    private bool _includeSystemVariables = false;
+    partial void OnIncludeSystemVariablesChanged(bool value)
+    {
+        AvailableVariablesView.View.Refresh();
+    }
+
+    public CollectionViewSource AvailableVariablesView { get; set; } = new();
+    
     private bool _sortAlphabetically = false;
     public bool SortAlphabetically
     {
