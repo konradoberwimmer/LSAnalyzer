@@ -416,7 +416,7 @@ public partial class VirtualVariables : ObservableObject
                     virtualVariableRecode.Variables = [..virtualVariableRecode.Variables.Select(v => existingVariables.First(av => string.Equals(av.Name, v.Name, StringComparison.InvariantCultureIgnoreCase))).ToList()];
                     break;
                 case VirtualVariableScale virtualVariableScale:
-                    virtualVariableScale.InputVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableScale.InputVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
+                    virtualVariableScale.InputVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableScale.InputVariable!.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
                     if (virtualVariableScale.WeightVariable is not null)
                     {
                         virtualVariableScale.WeightVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableScale.WeightVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();

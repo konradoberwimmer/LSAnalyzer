@@ -104,7 +104,12 @@ public partial class VirtualVariableCompute : VirtualVariable
             return !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, [ "Info", "IsChanged", "Errors" ]);
         }
     }
-    
+
+    public override bool InputVariableNamesExistIn(IEnumerable<Variable> variables)
+    {
+        throw new NotImplementedException();
+    }
+
     private VirtualVariableComputeParser GetParser()
     {
         AntlrInputStream antlrInputStream = new(Expression);
