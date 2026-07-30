@@ -145,67 +145,57 @@ public class TestVirtualVariableRecode
     public void TestIsChanged()
     {
         VirtualVariableRecode virtualVariableRecode = new();
-        
-        Assert.True(virtualVariableRecode.IsChanged);
-        virtualVariableRecode.AcceptChanges();
-        Assert.False(virtualVariableRecode.IsChanged);
+        AssertChange(virtualVariableRecode);
         
         virtualVariableRecode.AddVariable(new Variable(1, "item1"));
-        
-        Assert.True(virtualVariableRecode.IsChanged);
-        virtualVariableRecode.AcceptChanges();
-        Assert.False(virtualVariableRecode.IsChanged);
+        AssertChange(virtualVariableRecode);
         
         virtualVariableRecode.AddRule();
-        
-        Assert.True(virtualVariableRecode.IsChanged);
-        virtualVariableRecode.AcceptChanges();
-        Assert.False(virtualVariableRecode.IsChanged);
+        AssertChange(virtualVariableRecode);
         
         virtualVariableRecode.AddVariable(new Variable(2, "item2"));
-        
-        Assert.True(virtualVariableRecode.IsChanged);
-        virtualVariableRecode.AcceptChanges();
-        Assert.False(virtualVariableRecode.IsChanged);
+        AssertChange(virtualVariableRecode);
         
         virtualVariableRecode.Rules.First().Criteria.First().Type = VirtualVariableRecode.Term.TermType.Missing;
-        
-        Assert.True(virtualVariableRecode.IsChanged);
-        virtualVariableRecode.AcceptChanges();
-        Assert.False(virtualVariableRecode.IsChanged);
+        AssertChange(virtualVariableRecode);
         
         virtualVariableRecode.Rules.First().Criteria.Last().Type = VirtualVariableRecode.Term.TermType.Between;
-        
-        Assert.True(virtualVariableRecode.IsChanged);
-        virtualVariableRecode.AcceptChanges();
-        Assert.False(virtualVariableRecode.IsChanged);
+        AssertChange(virtualVariableRecode);
         
         virtualVariableRecode.Rules.First().Criteria.Last().Value = 1.0;
-        
-        Assert.True(virtualVariableRecode.IsChanged);
-        virtualVariableRecode.AcceptChanges();
-        Assert.False(virtualVariableRecode.IsChanged);
+        AssertChange(virtualVariableRecode);
         
         virtualVariableRecode.Rules.First().Criteria.Last().MaxValue = 2.0;
-        
-        Assert.True(virtualVariableRecode.IsChanged);
-        virtualVariableRecode.AcceptChanges();
-        Assert.False(virtualVariableRecode.IsChanged);
+        AssertChange(virtualVariableRecode);
+
+        virtualVariableRecode.Rules.First().ResultValue = 10.0;
+        AssertChange(virtualVariableRecode);
+
+        virtualVariableRecode.Rules.First().Label = "high";
+        AssertChange(virtualVariableRecode);
         
         virtualVariableRecode.Rules.First().ResultNa = true;
-        
-        Assert.True(virtualVariableRecode.IsChanged);
-        virtualVariableRecode.AcceptChanges();
-        Assert.False(virtualVariableRecode.IsChanged);
+        Assert.Empty(virtualVariableRecode.Rules.First().Label);
+        AssertChange(virtualVariableRecode);
         
         virtualVariableRecode.AddRule();
+        AssertChange(virtualVariableRecode);
         
-        Assert.True(virtualVariableRecode.IsChanged);
-        virtualVariableRecode.AcceptChanges();
-        Assert.False(virtualVariableRecode.IsChanged);
+        virtualVariableRecode.Else = VirtualVariableRecode.ElseAction.Set;
+        AssertChange(virtualVariableRecode);
+
+        virtualVariableRecode.ElseValue = -1.0;
+        AssertChange(virtualVariableRecode);
+
+        virtualVariableRecode.ElseLabel = "N/A";
+        AssertChange(virtualVariableRecode);
         
         virtualVariableRecode.RemoveLastVariable();
-        
+        AssertChange(virtualVariableRecode);
+    }
+
+    private static void AssertChange(VirtualVariableRecode virtualVariableRecode)
+    {
         Assert.True(virtualVariableRecode.IsChanged);
         virtualVariableRecode.AcceptChanges();
         Assert.False(virtualVariableRecode.IsChanged);

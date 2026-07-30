@@ -2344,17 +2344,24 @@ namespace TestLSAnalyzer.Services
                     new Variable(1, "item1"),
                 ],
                 Rules = [
-                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 1 } ], ResultNa = false, ResultValue = 1 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 1 } ], ResultNa = false, ResultValue = 1, Label = "L1"},
                     new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 2 } ], ResultNa = false, ResultValue = 1 },
                     new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Exactly, Value = 3 } ], ResultNa = false, ResultValue = 1 },
-                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 3, MaxValue = 4 } ], ResultNa = false, ResultValue = 2 },
+                    new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Between, Value = 3, MaxValue = 4 } ], ResultNa = false, ResultValue = 2, Label = "L1" },
                     new VirtualVariableRecode.Rule { Criteria = [ new VirtualVariableRecode.Term { VariableIndex = 0, Type = VirtualVariableRecode.Term.TermType.Missing } ], ResultNa = false, ResultValue = 3 },
                 ],
+                Else = VirtualVariableRecode.ElseAction.Set,
+                ElseValue = 9.0,
+                ElseLabel = "N/A",
             };
             
             Assert.True(rservice.CreateVirtualVariable(virtualVariableRecodeSingleVariable, []));
             Assert.True(rservice.Execute("hasNewVariable <- 'combine2' %in% colnames(lsanalyzer_dat_raw_stored)"));
             Assert.True(rservice.Fetch("hasNewVariable").AsLogical().First());
+            Assert.True(rservice.Execute("hasRecodeLabel <- 1 == attributes(lsanalyzer_dat_raw_stored$combine2)$value.labels['L1']"));
+            Assert.True(rservice.Fetch("hasRecodeLabel").AsLogical().First());
+            Assert.True(rservice.Execute("hasElseLabel <- 9 == attributes(lsanalyzer_dat_raw_stored$combine2)$value.labels['N/A']"));
+            Assert.True(rservice.Fetch("hasElseLabel").AsLogical().First());
             Assert.True(rservice.Execute("anyNA <- any(is.na(lsanalyzer_dat_raw_stored$combine2))"));
             Assert.False(rservice.Fetch("anyNA").AsLogical().First());
             Assert.True(rservice.Execute("tab <- table(lsanalyzer_dat_raw_stored$combine2)"));
