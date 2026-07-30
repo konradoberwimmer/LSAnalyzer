@@ -170,7 +170,13 @@ public class BatchAnalyzeService : IBatchAnalyzeService
             return;
         }
             
-        foreach (var groupByVariable in analysis.GroupBy)
+        var variablesToConsiderForValueLabels = new List<Variable>(analysis.GroupBy);
+        if (analysis is AnalysisFreq or AnalysisPercDiff)
+        {
+            variablesToConsiderForValueLabels.AddRange(analysis.Vars);
+        }
+        
+        foreach (var groupByVariable in variablesToConsiderForValueLabels)
         {
             var valueLabels = _rservice.GetValueLabels(groupByVariable.Name);
             if (valueLabels != null)
