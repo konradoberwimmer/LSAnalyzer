@@ -1829,11 +1829,26 @@ namespace LSAnalyzer.Services
                     EvaluateAndLog($"{target}$`{virtualVariableRecode.Name}`[lsanalyzer_tmp_filter] <- {result}");
                 }
 
-                if (!string.IsNullOrWhiteSpace(virtualVariableRecode.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
+                if (_engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
                 {
-                    EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableRecode.Name}'] = '{virtualVariableRecode.Label}'");
+                    if (!string.IsNullOrWhiteSpace(virtualVariableRecode.Label))
+                    {
+                        EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableRecode.Name}'] = '{virtualVariableRecode.Label}'");
+                    }
+
+                    var valueLabels = string.Join(", ", virtualVariableRecode.Rules.Where(r => !r.ResultNa && !string.IsNullOrWhiteSpace(r.Label)).Select(r => $"`{r.Label.Replace("`", "'")}` = {r.ResultValue.ToString(CultureInfo.InvariantCulture)}"));
+                    if (virtualVariableRecode.ElseValueMakesSense && !string.IsNullOrWhiteSpace(virtualVariableRecode.ElseLabel))
+                    {
+                        var elseValueLabel = $"`{virtualVariableRecode.ElseLabel.Replace("`", "'")}` = {virtualVariableRecode.ElseValue.ToString(CultureInfo.InvariantCulture)}";
+                        valueLabels = string.IsNullOrWhiteSpace(valueLabels) ? elseValueLabel : $"{valueLabels}, {elseValueLabel}";
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(valueLabels))
+                    {
+                        EvaluateAndLog($"attributes({target}$`{virtualVariableRecode.Name}`)$value.labels <- c({valueLabels})");
+                    }
                 }
-                
+
                 _lastVirtualVariableNames.Add(virtualVariableRecode.Name);
                 
                 return true;
