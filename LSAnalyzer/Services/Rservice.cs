@@ -12,1932 +12,1500 @@ using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Services.Stubs;
 
-namespace LSAnalyzer.Services
+namespace LSAnalyzer.Services;
+
+public partial class Rservice : IRservice
 {
-    public class Rservice : IRservice
+    private readonly ILogging _logger;
+    private REngine? _engine;
+    private readonly string[] _rPackagesNecessary = [ "BIFIEsurvey", "foreign" ];
+
+    private List<string> _lastVirtualVariableNames = [];
+        
+    public (string rHome, string rPath) RLocation { get; set; } = (string.Empty, string.Empty);
+        
+    [ExcludeFromCodeCoverage]
+    public Rservice()
     {
-        private readonly ILogging _logger;
-        private REngine? _engine;
-        private readonly string[] _rPackagesNecessary = [ "BIFIEsurvey", "foreign" ];
+        // parameter-less constructor for mocking only
+        _logger = new LoggingStub();
 
-        private List<string> _lastVirtualVariableNames = [];
-        
-        public (string rHome, string rPath) RLocation { get; set; } = (string.Empty, string.Empty);
-        
-        [ExcludeFromCodeCoverage]
-        public Rservice()
+        RLocation = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryService()).GetRLocation() ?? (string.Empty, string.Empty);
+    }
+
+    public Rservice(ILogging logger) 
+    {
+        _logger = logger;
+    }
+
+    private SymbolicExpression EvaluateAndLog(string what, string? analysisName = null, bool oneLiner = false)
+    {
+        _logger.AddEntry(new LogEntry(DateTime.Now, what, analysisName, oneLiner));
+        return _engine!.Evaluate(what);
+    }
+
+    public bool Connect()
+    {
+        if (string.IsNullOrWhiteSpace(RLocation.rHome) || string.IsNullOrWhiteSpace(RLocation.rPath))
         {
-            // parameter-less constructor for mocking only
-            _logger = new LoggingStub();
-
-            RLocation = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryService()).GetRLocation() ?? (string.Empty, string.Empty);
+            return false;
         }
 
-        public Rservice(ILogging logger) 
+        try
         {
-            _logger = logger;
-        }
-
-        private SymbolicExpression EvaluateAndLog(string what, string? analysisName = null, bool oneLiner = false)
-        {
-            _logger.AddEntry(new LogEntry(DateTime.Now, what, analysisName, oneLiner));
-            return _engine!.Evaluate(what);
-        }
-
-        public bool Connect()
-        {
-            if (string.IsNullOrWhiteSpace(RLocation.rHome) || string.IsNullOrWhiteSpace(RLocation.rPath))
+            REngine.SetEnvironmentVariables(rPath: RLocation.rPath, rHome: RLocation.rHome);
+            _engine = REngine.GetInstance();
+            _engine.ClearGlobalEnvironment();
+                
+            string[] a = _engine.Evaluate("paste0('Result: ', stats::sd(c(1,2,3)))").AsCharacter().ToArray();
+            if (a.Length == 0 || a[0] != "Result: 1")
             {
                 return false;
             }
 
-            try
+            EvaluateAndLog("options(BIFIEsurvey.quiet = TRUE)");
+        } catch
+        {
+            Dispose();
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool IsConnected => _engine != null;
+
+    public bool NecessaryPackagesConfirmed { get; private set; }
+
+    [ExcludeFromCodeCoverage]
+    public string? GetRVersion()
+    {
+        try
+        {
+            return _engine!.Evaluate("paste(R.Version()$version.string, R.Version()$nickname, R.Version()$platform, sep = ' - ')").AsCharacter().First();
+        } catch
+        {
+            return null;
+        }
+    }
+
+    [ExcludeFromCodeCoverage]
+    public string? GetUserLibrary()
+    {
+        try
+        {
+            return _engine!.Evaluate(".libPaths()[1]").AsCharacter().First();
+        } catch
+        {
+            return null;
+        }
+    }
+
+    public virtual bool CheckNecessaryRPackages(string? packageName = null)
+    {
+        string[] rPackagesToCheck = (packageName == null ? _rPackagesNecessary : [packageName]);
+
+        try
+        {
+            foreach (string rPackage in rPackagesToCheck)
             {
-                REngine.SetEnvironmentVariables(rPath: RLocation.rPath, rHome: RLocation.rHome);
-                _engine = REngine.GetInstance();
-                _engine.ClearGlobalEnvironment();
-                
-                string[] a = _engine.Evaluate("paste0('Result: ', stats::sd(c(1,2,3)))").AsCharacter().ToArray();
-                if (a.Length == 0 || a[0] != "Result: 1")
+                bool available = _engine?.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First() ?? false;
+                if (!available)
                 {
                     return false;
                 }
+            }
 
-                EvaluateAndLog("options(BIFIEsurvey.quiet = TRUE)");
-            } catch
+            NecessaryPackagesConfirmed = true;
+            return true;
+        } catch 
+        {
+            return false;
+        }
+    }
+
+    public bool InstallNecessaryRPackages(string? packageName = null)
+    {
+        string[] rPackagesToInstall = (packageName == null ? _rPackagesNecessary : [packageName]);
+
+        try
+        {
+            EvaluateAndLog("lsanalyzer_user_library_configured <- nzchar(Sys.getenv('R_LIBS_USER'))");
+            var userLibraryFolderConfigured = _engine!.GetSymbol("lsanalyzer_user_library_configured").AsLogical().First();
+            if (!userLibraryFolderConfigured)
             {
-                Dispose();
                 return false;
+            }
+
+            EvaluateAndLog("if (!dir.exists(Sys.getenv('R_LIBS_USER'))) { dir.create(Sys.getenv('R_LIBS_USER'), recursive = TRUE) }");
+
+            foreach (string rPackage in rPackagesToInstall)
+            {
+                bool available = _engine.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
+                if (!available)
+                {
+                    try
+                    {
+                        EvaluateAndLog("utils::install.packages('" + rPackage + "', lib = Sys.getenv('R_LIBS_USER'), repos = 'https://cloud.r-project.org')");
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
             }
 
             return true;
-        }
-
-        public bool IsConnected => _engine != null;
-
-        public bool NecessaryPackagesConfirmed { get; private set; }
-
-        [ExcludeFromCodeCoverage]
-        public string? GetRVersion()
+        } catch
         {
-            try
+            return false;
+        }
+    }
+
+    [ExcludeFromCodeCoverage]
+    public string? GetBifieSurveyVersion()
+    {
+        try
+        {
+            return _engine!.Evaluate("paste(utils::packageVersion('BIFIEsurvey'), sep = '.')").AsCharacter().First();
+        } catch
+        {
+            return null;
+        }
+    }
+
+    [ExcludeFromCodeCoverage]
+    public IRservice.UpdateResult UpdateBifieSurvey()
+    {
+        try
+        {
+            EvaluateAndLog("lsanalyzer_old_packages <- data.frame(utils::old.packages(repos = 'https://cloud.r-project.org'))");
+            DataFrame? oldPackages = _engine!.GetSymbol("lsanalyzer_old_packages").AsDataFrame();
+            if (oldPackages == null || !oldPackages["Package"].AsCharacter().Contains("BIFIEsurvey"))
             {
-                return _engine!.Evaluate("paste(R.Version()$version.string, R.Version()$nickname, R.Version()$platform, sep = ' - ')").AsCharacter().First();
-            } catch
-            {
-                return null;
+                return IRservice.UpdateResult.Unavailable;
             }
-        }
 
-        [ExcludeFromCodeCoverage]
-        public string? GetUserLibrary()
+            EvaluateAndLog("utils::update.packages(repos = 'https://cloud.r-project.org', ask = FALSE, oldPkgs = 'BIFIEsurvey')");
+
+            return IRservice.UpdateResult.Success;
+        } catch
         {
-            try
-            {
-                return _engine!.Evaluate(".libPaths()[1]").AsCharacter().First();
-            } catch
-            {
-                return null;
-            }
+            return IRservice.UpdateResult.Failure;
         }
+    }
 
-        public virtual bool CheckNecessaryRPackages(string? packageName = null)
+    [ExcludeFromCodeCoverage]
+    public bool TestLoadingBifieSurvey()
+    {
+        try
         {
-            string[] rPackagesToCheck = (packageName == null ? _rPackagesNecessary : [packageName]);
-
-            try
-            {
-                foreach (string rPackage in rPackagesToCheck)
-                {
-                    bool available = _engine?.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First() ?? false;
-                    if (!available)
-                    {
-                        return false;
-                    }
-                }
-
-                NecessaryPackagesConfirmed = true;
-                return true;
-            } catch 
-            {
-                return false;
-            }
+            return _engine!.Evaluate("library(BIFIEsurvey, logical.return = TRUE)").AsLogical().First();
         }
-
-        public bool InstallNecessaryRPackages(string? packageName = null)
+        catch
         {
-            string[] rPackagesToInstall = (packageName == null ? _rPackagesNecessary : [packageName]);
+            return false;
+        }
+    }
 
-            try
+    public bool InjectAppFunctions()
+    {
+        try
+        {
+            EvaluateAndLog("""
+                           lsanalyzer_func_quantile <- function(BIFIEobj, vars, breaks, useInterpolation = TRUE, mimicIdbAnalyzer = FALSE, group=NULL, group_values=NULL)
+                           {
+                             userfct <- function(X,w)
+                             {
+                               params <- numeric()
+                               for (cc in 1:ncol(X))
+                               {
+                                 vx <- X[,cc]
+                                 vw <- w
+                                 ord <- order(vx,na.last=TRUE)
+                                 vx <- vx[ord]
+                                 vw <- vw[ord]
+                                 if (any(is.na(vx)))
+                                 {
+                                   first_na <- min(which(is.na(vx)))
+                                   vx <- vx[1:(first_na-1)]
+                                   vw <- vw[1:(first_na-1)]
+                                 }
+                                 if (length(vx)>0)
+                                 {
+                                   relw <- cumsum(vw)/sum(vw)
+                                   agg <- data.frame(x=vx,w=relw)
+                                   for (bb in breaks)
+                                   {
+                                     if (any(agg$w<bb) && !all(agg$w<bb))
+                                     {
+                                       pos <- max(which(agg$w<bb))
+                                       lowx <- agg$x[pos]
+                                       loww <- agg$w[pos]
+                                       uppx <- agg$x[pos+1]
+                                       uppw <- agg$w[pos+1]
+                                       if (useInterpolation) param <- lowx + ((uppx-lowx) * (bb-loww) / (uppw - loww + 10^-20))
+                                       if (!useInterpolation && !mimicIdbAnalyzer) param <- lowx
+                                       if (!useInterpolation && mimicIdbAnalyzer) param <- uppx
+                                       params <- c(params,param)
+                                     } else
+                                     {
+                                       params <- c(params,NaN)
+                                     }
+                                   }
+                                 } else
+                                 {
+                                   params <- c(params,rep(NaN,length(breaks)))
+                                 }
+                               }
+                               return(params)
+                             }
+
+                             userparnames <- character()
+                             for (vv in vars) userparnames <- c(userparnames,paste0(vv,"_yval_",breaks))
+                             res <- BIFIEsurvey::BIFIE.by(BIFIEobj = BIFIEobj,
+                                             vars = vars,
+                                             userfct = userfct,
+                                             userparnames = userparnames,
+                                             group = group,
+                                             group_values = group_values)
+
+                             res$stat$var <- sub("\\_yval\\_([0-9]|\\.)*$", "", res$stat$parm)
+                             res$stat$yval <- as.numeric(sub("^.*\\_yval\\_", "", res$stat$parm))
+                             res$stat$quant <- res$stat$est
+
+                             return(res)
+                           }
+                           """, null, true);
+
+            EvaluateAndLog("""
+                           lsanalyzer_func_cohensH <- function(res) {
+                             if (!"BIFIE.freq" %in% class(res)) return(NULL)
+                             if (nrow(res$stat) < 2) return(NULL)
+
+                             rowsH <- list()
+                             derivedParams <- list()
+
+                             for (ii in 1:(nrow(res$stat) - 1)) {
+                               for (jj in (ii+1):nrow(res$stat)) {
+                                 if (res$stat$var[ii] != res$stat$var[jj]) next
+                                 if (res$stat$varval[ii] != res$stat$varval[jj]) next
+
+                                 rowsH[[length(rowsH) + 1]] <- data.frame(
+                                   "var" = res$stat$var[ii], "varval" = res$stat$varval[ii],
+                                   "lineA" = ii, "lineB" = jj,
+                                   "percA" = res$stat$perc[ii], "percB" = res$stat$perc[jj],
+                                   "diff" = res$stat$perc[jj] - res$stat$perc[ii]
+                                 )
+
+                                 derivedParams[[paste0("c", length(derivedParams) + 1)]] <- stats::as.formula(paste0(
+                                   "~I(2*asin(sqrt(", res$parnames[jj], "))-2*asin(sqrt(", res$parnames[ii], ")))"
+                                 ))
+                               }
+                             }
+
+                             statH <- do.call(rbind, rowsH)
+
+                             groupA <- res$stat[statH$lineA, grep("groupva(r|l)", colnames(res$stat), value = TRUE)]
+                             colnames(groupA) <- paste0("A_", colnames(groupA))
+                             statH <- cbind(statH, groupA)
+                             groupB <- res$stat[statH$lineB, grep("groupva(r|l)", colnames(res$stat), value = TRUE)]
+                             colnames(groupB) <- paste0("B_", colnames(groupB))
+                             statH <- cbind(statH, groupB)
+                             statH <- statH[,c("var", "varval", colnames(groupA), colnames(groupB), "percA", "percB", "diff")]
+
+                             resDerived <- BIFIEsurvey::BIFIE.derivedParameters(res, derivedParams)
+                             statH <- cbind(statH, resDerived$stat[, c("coef", "se", "fmi")])
+                            
+                             statH <- statH[order(statH$var, statH$varval), ]
+                            
+                             return(list('stat' = statH))
+                           }
+                           """, null, true);
+                
+            EvaluateAndLog("""
+                           lsanalyzer_func_factorScores <- function(x, na.rm)
+                           {
+                             rownames(x) <- 1:nrow(x)
+                             colnames(x) <- paste0("V", 1:ncol(x))
+                             f <- stats::as.formula(paste0("~",paste(colnames(x), collapse = "+")))
+                             fact <- stats::factanal(f, factors = 1, data = x, scores = "regression")
+                             scores <- fact$scores
+                             scores.df <- data.frame(rows = as.numeric(rownames(scores)), scores = scores)
+                             scores.df <- merge(scores.df, data.frame(rows = 1:nrow(x)), all.y = TRUE)
+                             return(scores.df$Factor1)
+                           }
+                           """, null, true);
+                
+            return true;
+        } catch
+        {
+            return false;
+        }
+    }
+
+    public bool LoadFileIntoGlobalEnvironment(string fileName, string? fileType = null)
+    {
+        try
+        {
+            fileType ??= fileName.Substring(fileName.LastIndexOf('.') + 1);
+
+            switch (fileType.ToLower())
             {
-                EvaluateAndLog("lsanalyzer_user_library_configured <- nzchar(Sys.getenv('R_LIBS_USER'))");
-                var userLibraryFolderConfigured = _engine!.GetSymbol("lsanalyzer_user_library_configured").AsLogical().First();
-                if (!userLibraryFolderConfigured)
-                {
+                case "sav":
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
+                    break;
+                case "rds":
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored <- readRDS('" + fileName.Replace("\\", "/") + "')");
+                    break;
+                case "csv":
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored <- utils::read.csv('" + fileName.Replace("\\", "/") + "')");
+                    break;
+                case "csv2":
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored <- utils::read.csv2('" + fileName.Replace("\\", "/") + "')");
+                    break;
+                case "xlsx":
+                    EvaluateAndLog("lsanalyzer_dat_raw_stored <- openxlsx::read.xlsx('" + fileName.Replace("\\", "/") + "', sheet = 1)");
+                    break;
+                default:
                     return false;
-                }
-
-                EvaluateAndLog("if (!dir.exists(Sys.getenv('R_LIBS_USER'))) { dir.create(Sys.getenv('R_LIBS_USER'), recursive = TRUE) }");
-
-                foreach (string rPackage in rPackagesToInstall)
-                {
-                    bool available = _engine.Evaluate("nzchar(system.file(package='" + rPackage + "'))").AsLogical().First();
-                    if (!available)
-                    {
-                        try
-                        {
-                            EvaluateAndLog("utils::install.packages('" + rPackage + "', lib = Sys.getenv('R_LIBS_USER'), repos = 'https://cloud.r-project.org')");
-                        }
-                        catch
-                        {
-                            return false;
-                        }
-                    }
-                }
-
-                return true;
-            } catch
-            {
-                return false;
             }
-        }
 
-        [ExcludeFromCodeCoverage]
-        public string? GetBifieSurveyVersion()
-        {
-            try
-            {
-                return _engine!.Evaluate("paste(utils::packageVersion('BIFIEsurvey'), sep = '.')").AsCharacter().First();
-            } catch
-            {
-                return null;
-            }
-        }
-
-        [ExcludeFromCodeCoverage]
-        public IRservice.UpdateResult UpdateBifieSurvey()
-        {
-            try
-            {
-                EvaluateAndLog("lsanalyzer_old_packages <- data.frame(utils::old.packages(repos = 'https://cloud.r-project.org'))");
-                DataFrame? oldPackages = _engine!.GetSymbol("lsanalyzer_old_packages").AsDataFrame();
-                if (oldPackages == null || !oldPackages["Package"].AsCharacter().Contains("BIFIEsurvey"))
-                {
-                    return IRservice.UpdateResult.Unavailable;
-                }
-
-                EvaluateAndLog("utils::update.packages(repos = 'https://cloud.r-project.org', ask = FALSE, oldPkgs = 'BIFIEsurvey')");
-
-                return IRservice.UpdateResult.Success;
-            } catch
-            {
-                return IRservice.UpdateResult.Failure;
-            }
-        }
-
-        [ExcludeFromCodeCoverage]
-        public bool TestLoadingBifieSurvey()
-        {
-            try
-            {
-                return _engine!.Evaluate("library(BIFIEsurvey, logical.return = TRUE)").AsLogical().First();
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public bool InjectAppFunctions()
-        {
-            try
-            {
-                EvaluateAndLog("""
-                    lsanalyzer_func_quantile <- function(BIFIEobj, vars, breaks, useInterpolation = TRUE, mimicIdbAnalyzer = FALSE, group=NULL, group_values=NULL)
-                    {
-                      userfct <- function(X,w)
-                      {
-                        params <- numeric()
-                        for (cc in 1:ncol(X))
-                        {
-                          vx <- X[,cc]
-                          vw <- w
-                          ord <- order(vx,na.last=TRUE)
-                          vx <- vx[ord]
-                          vw <- vw[ord]
-                          if (any(is.na(vx)))
-                          {
-                            first_na <- min(which(is.na(vx)))
-                            vx <- vx[1:(first_na-1)]
-                            vw <- vw[1:(first_na-1)]
-                          }
-                          if (length(vx)>0)
-                          {
-                            relw <- cumsum(vw)/sum(vw)
-                            agg <- data.frame(x=vx,w=relw)
-                            for (bb in breaks)
-                            {
-                              if (any(agg$w<bb) && !all(agg$w<bb))
-                              {
-                                pos <- max(which(agg$w<bb))
-                                lowx <- agg$x[pos]
-                                loww <- agg$w[pos]
-                                uppx <- agg$x[pos+1]
-                                uppw <- agg$w[pos+1]
-                                if (useInterpolation) param <- lowx + ((uppx-lowx) * (bb-loww) / (uppw - loww + 10^-20))
-                                if (!useInterpolation && !mimicIdbAnalyzer) param <- lowx
-                                if (!useInterpolation && mimicIdbAnalyzer) param <- uppx
-                                params <- c(params,param)
-                              } else
-                              {
-                                params <- c(params,NaN)
-                              }
-                            }
-                          } else
-                          {
-                            params <- c(params,rep(NaN,length(breaks)))
-                          }
-                        }
-                        return(params)
-                      }
-
-                      userparnames <- character()
-                      for (vv in vars) userparnames <- c(userparnames,paste0(vv,"_yval_",breaks))
-                      res <- BIFIEsurvey::BIFIE.by(BIFIEobj = BIFIEobj,
-                                      vars = vars,
-                                      userfct = userfct,
-                                      userparnames = userparnames,
-                                      group = group,
-                                      group_values = group_values)
-
-                      res$stat$var <- sub("\\_yval\\_([0-9]|\\.)*$", "", res$stat$parm)
-                      res$stat$yval <- as.numeric(sub("^.*\\_yval\\_", "", res$stat$parm))
-                      res$stat$quant <- res$stat$est
-
-                      return(res)
-                    }
-                    """, null, true);
-
-                EvaluateAndLog("""
-                    lsanalyzer_func_cohensH <- function(res) {
-                      if (!"BIFIE.freq" %in% class(res)) return(NULL)
-                      if (nrow(res$stat) < 2) return(NULL)
-
-                      rowsH <- list()
-                      derivedParams <- list()
-
-                      for (ii in 1:(nrow(res$stat) - 1)) {
-                        for (jj in (ii+1):nrow(res$stat)) {
-                          if (res$stat$var[ii] != res$stat$var[jj]) next
-                          if (res$stat$varval[ii] != res$stat$varval[jj]) next
-
-                          rowsH[[length(rowsH) + 1]] <- data.frame(
-                            "var" = res$stat$var[ii], "varval" = res$stat$varval[ii],
-                            "lineA" = ii, "lineB" = jj,
-                            "percA" = res$stat$perc[ii], "percB" = res$stat$perc[jj],
-                            "diff" = res$stat$perc[jj] - res$stat$perc[ii]
-                          )
-
-                          derivedParams[[paste0("c", length(derivedParams) + 1)]] <- stats::as.formula(paste0(
-                            "~I(2*asin(sqrt(", res$parnames[jj], "))-2*asin(sqrt(", res$parnames[ii], ")))"
-                          ))
-                        }
-                      }
-
-                      statH <- do.call(rbind, rowsH)
-
-                      groupA <- res$stat[statH$lineA, grep("groupva(r|l)", colnames(res$stat), value = TRUE)]
-                      colnames(groupA) <- paste0("A_", colnames(groupA))
-                      statH <- cbind(statH, groupA)
-                      groupB <- res$stat[statH$lineB, grep("groupva(r|l)", colnames(res$stat), value = TRUE)]
-                      colnames(groupB) <- paste0("B_", colnames(groupB))
-                      statH <- cbind(statH, groupB)
-                      statH <- statH[,c("var", "varval", colnames(groupA), colnames(groupB), "percA", "percB", "diff")]
-
-                      resDerived <- BIFIEsurvey::BIFIE.derivedParameters(res, derivedParams)
-                      statH <- cbind(statH, resDerived$stat[, c("coef", "se", "fmi")])
-                     
-                      statH <- statH[order(statH$var, statH$varval), ]
-                     
-                      return(list('stat' = statH))
-                    }
-                    """, null, true);
-                
-                EvaluateAndLog("""
-                    lsanalyzer_func_factorScores <- function(x, na.rm)
-                    {
-                      rownames(x) <- 1:nrow(x)
-                      colnames(x) <- paste0("V", 1:ncol(x))
-                      f <- stats::as.formula(paste0("~",paste(colnames(x), collapse = "+")))
-                      fact <- stats::factanal(f, factors = 1, data = x, scores = "regression")
-                      scores <- fact$scores
-                      scores.df <- data.frame(rows = as.numeric(rownames(scores)), scores = scores)
-                      scores.df <- merge(scores.df, data.frame(rows = 1:nrow(x)), all.y = TRUE)
-                      return(scores.df$Factor1)
-                    }
-                    """, null, true);
-                
-                return true;
-            } catch
-            {
-                return false;
-            }
-        }
-
-        public bool LoadFileIntoGlobalEnvironment(string fileName, string? fileType = null)
-        {
-            try
-            {
-                fileType ??= fileName.Substring(fileName.LastIndexOf('.') + 1);
-
-                switch (fileType.ToLower())
-                {
-                    case "sav":
-                        EvaluateAndLog("lsanalyzer_dat_raw_stored <- foreign::read.spss('" + fileName.Replace("\\", "/") + "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
-                        break;
-                    case "rds":
-                        EvaluateAndLog("lsanalyzer_dat_raw_stored <- readRDS('" + fileName.Replace("\\", "/") + "')");
-                        break;
-                    case "csv":
-                        EvaluateAndLog("lsanalyzer_dat_raw_stored <- utils::read.csv('" + fileName.Replace("\\", "/") + "')");
-                        break;
-                    case "csv2":
-                        EvaluateAndLog("lsanalyzer_dat_raw_stored <- utils::read.csv2('" + fileName.Replace("\\", "/") + "')");
-                        break;
-                    case "xlsx":
-                        EvaluateAndLog("lsanalyzer_dat_raw_stored <- openxlsx::read.xlsx('" + fileName.Replace("\\", "/") + "', sheet = 1)");
-                        break;
-                    default:
-                        return false;
-                }
-
-                _lastVirtualVariableNames = [];
+            _lastVirtualVariableNames = [];
                     
-                EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
-
-                var rawData = _engine!.GetSymbol("lsanalyzer_dat_raw_stored").AsDataFrame();
-                if (rawData == null)
-                {
-                    return false;
-                }
-            } catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public bool SortRawDataStored(string sortBy)
-        {
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(sortBy))
-                {
-                    EvaluateAndLog("lsanalyzer_dat_raw_stored_attributes <- lapply(lsanalyzer_dat_raw_stored, attributes)");
-                    EvaluateAndLog("lsanalyzer_dat_raw_stored <- lsanalyzer_dat_raw_stored[order(lsanalyzer_dat_raw_stored$`" + sortBy + "`), ]");
-                    EvaluateAndLog("for (vv in colnames(lsanalyzer_dat_raw_stored)) attributes(lsanalyzer_dat_raw_stored[,vv]) <- lsanalyzer_dat_raw_stored_attributes[[vv]]");
-                }
-                EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
-                return true;
-            } catch
-            {
-                return false;
-            }
-        }
-
-        public bool ReplaceCharacterVariables()
-        {
-            try
-            {
-                EvaluateAndLog("""
-                    for (colname in colnames(lsanalyzer_dat_raw_stored)) {
-                        if (is.character(lsanalyzer_dat_raw_stored[, colname]) &&
-                            any(is.na(as.numeric(lsanalyzer_dat_raw_stored[, colname])) != is.na(lsanalyzer_dat_raw_stored[, colname]))) {
-                            lsanalyzer_factor1 <- factor(lsanalyzer_dat_raw_stored[, colname])
-                            lsanalyzer_labels1 <- 1:length(levels(lsanalyzer_factor1))
-                            attr(lsanalyzer_labels1, 'names') <- levels(lsanalyzer_factor1)
-                            lsanalyzer_dat_raw_stored[, colname] <- as.numeric(lsanalyzer_factor1)
-                            attr(lsanalyzer_dat_raw_stored[, colname], 'value.labels') <- lsanalyzer_labels1
-                        }
-                    }
-                """, null, true);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public virtual SubsettingInformation TestSubsetting(string subsettingExpression, string? MIvar = null)
-        {
-            try
-            {
-                EvaluateAndLog("lsanalyzer_dat_raw_stored_subset <- subset(lsanalyzer_dat_raw_stored, " + subsettingExpression + ")");
-
-                int nCases;
-                int nSubset;
-
-                if (string.IsNullOrWhiteSpace(MIvar))
-                {
-                    EvaluateAndLog("lsanalyzer_dat_raw_stored_ncases <- nrow(lsanalyzer_dat_raw_stored)");
-                    nCases = _engine!.GetSymbol("lsanalyzer_dat_raw_stored_ncases").AsInteger().First();
-
-                    EvaluateAndLog("lsanalyzer_dat_raw_stored_nsubset <- nrow(lsanalyzer_dat_raw_stored_subset)");
-                    nSubset = _engine.GetSymbol("lsanalyzer_dat_raw_stored_nsubset").AsInteger().First();
-                } else
-                {
-                    EvaluateAndLog("lsanalyzer_cnt_subset_mi <- table(lsanalyzer_dat_raw_stored_subset$" + MIvar + ")");
-                    EvaluateAndLog("lsanalyzer_cnt_subset_mi_max <- max(lsanalyzer_cnt_subset_mi)");
-                    EvaluateAndLog("lsanalyzer_cnt_subset_mi_all_equal <- all(lsanalyzer_cnt_subset_mi == lsanalyzer_cnt_subset_mi_max)");
-                    var allMIEqual = _engine!.GetSymbol("lsanalyzer_cnt_subset_mi_all_equal").AsLogical().First();
-                    if (!allMIEqual)
-                    {
-                        return new SubsettingInformation() { ValidSubset = false, MIvariance = true };
-                    }
-
-                    EvaluateAndLog("lsanalyzer_dat_raw_stored_ncases_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored[, '" + MIvar + "'])[1])");
-                    nCases = _engine.GetSymbol("lsanalyzer_dat_raw_stored_ncases_mi1").AsInteger().First();
-
-                    EvaluateAndLog("lsanalyzer_dat_raw_stored_nsubset_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'])[1])");
-                    nSubset = _engine.GetSymbol("lsanalyzer_dat_raw_stored_nsubset_mi1").AsInteger().First();
-                }
-
-                EvaluateAndLog("rm(lsanalyzer_dat_raw_stored_subset)");
-
-                if (nSubset == 0)
-                {
-                    return new SubsettingInformation() { ValidSubset = false, EmptySubset = true };
-                }
-
-                return new SubsettingInformation() { ValidSubset = true, NCases = nCases, NSubset = nSubset };
-            } catch (Exception)
-            {
-                return new SubsettingInformation() { ValidSubset = false }; 
-            }
-        }
-
-        public bool ApplySubsetting(string subsettingExpression)
-        {
-            try
-            {
-                EvaluateAndLog("lsanalyzer_dat_raw <- subset(lsanalyzer_dat_raw, " + subsettingExpression + ")");
-                return true;
-            } catch
-            {
-                return false;
-            }
-        }
-
-        public bool ReduceToNecessaryVariables(List<string> regexNecessaryVariables, string? subsettingExpression = null)
-        {
-            try
-            {
-                EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
-
-                EvaluateAndLog("lsanalyzer_necessary_variables <- numeric(0)");
-                foreach (string regexNecessaryVariable in regexNecessaryVariables)
-                {
-                    EvaluateAndLog("lsanalyzer_necessary_variable <- grep('" + regexNecessaryVariable + "', colnames(lsanalyzer_dat_raw))");
-                    if (_engine!.GetSymbol("lsanalyzer_necessary_variable").AsNumeric().Length == 0)
-                    {
-                        return false;
-                    }
-                    EvaluateAndLog("lsanalyzer_necessary_variables <- unique(c(lsanalyzer_necessary_variables, lsanalyzer_necessary_variable))");
-                }
-
-                if (!string.IsNullOrWhiteSpace(subsettingExpression) && !ApplySubsetting(subsettingExpression))
-                {
-                    return false;
-                }
-
-                EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw[, lsanalyzer_necessary_variables]");
-                var rawData = _engine!.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
-                if (rawData == null)
-                {
-                    return false;
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public bool ReduceToNecessaryVariables(Analysis analysis, string? subsettingExpression = null)
-        {
-            var regexNecessaryVariables = analysis.AnalysisConfiguration.GetRegexNecessaryVariables();
-            
-            regexNecessaryVariables.AddRange(analysis.AllVariables.Select(v => v.Name));
-
-            for (int i = 0; i < regexNecessaryVariables.Count; i++)
-            {
-                var necessaryVariable = regexNecessaryVariables[i];
-                var potentialPvVariable = analysis.AnalysisConfiguration.DatasetType!.PVvarsList.FirstOrDefault(pvvar => pvvar.DisplayName == necessaryVariable);
-                if (potentialPvVariable != null)
-                {
-                    regexNecessaryVariables[i] = potentialPvVariable.Regex;
-                }
-            }
-
-            return ReduceToNecessaryVariables(regexNecessaryVariables, subsettingExpression);
-        }
-
-        public bool CreateReplicateWeights(string weight, string jkzone, string jkrep, bool jkreverse)
-        {
-            try
-            {
-                EvaluateAndLog("lsanalyzer_jk_zones <- sort(unique(lsanalyzer_dat_raw_stored[,'" + jkzone + "']))");
-                EvaluateAndLog(
-                    "for (lsanalyzer_jk_zone in lsanalyzer_jk_zones) " +
-                    "   lsanalyzer_dat_raw[, paste0('lsanalyzer_repwgt_', lsanalyzer_jk_zone)] <- " +
-                    "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] != lsanalyzer_jk_zone) + " +
-                    "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] == lsanalyzer_jk_zone) * lsanalyzer_dat_raw[, '" + jkrep + "'] * 2;");
-                if (jkreverse)
-                {
-                    EvaluateAndLog(
-                        "for (lsanalyzer_jk_zone in lsanalyzer_jk_zones) " +
-                        "   lsanalyzer_dat_raw[, paste0('lsanalyzer_repwgt_', lsanalyzer_jk_zone + max(lsanalyzer_jk_zones))] <- " +
-                        "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] != lsanalyzer_jk_zone) + " +
-                        "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] == lsanalyzer_jk_zone) * (1 - lsanalyzer_dat_raw[, '" + jkrep + "']) * 2;");
-                }
-                EvaluateAndLog("lsanalyzer_repwgts <- grep('lsanalyzer_repwgt_', colnames(lsanalyzer_dat_raw), value = TRUE);");
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public bool CreateBIFIEdataObject(string weight, int nmi, string? mivar, ICollection<PlausibleValueVariable>? pvvars, string? repwgts, double? fayfac, bool autoEncapsulatePVvars = false)
-        {
-            try
-            {
-                string rawDataVariableName = "lsanalyzer_dat_raw";
-                if (mivar is { Length: > 0 } && nmi > 1)
-                {
-                    EvaluateAndLog("lsanalyzer_dat_raw_list <- split(lsanalyzer_dat_raw, lsanalyzer_dat_raw[, '" + mivar + "'])");
-                    rawDataVariableName = "lsanalyzer_dat_raw_list";
-                }
-
-                string baseCall = "lsanalyzer_dat_BO <- BIFIEsurvey::BIFIE.data(" + rawDataVariableName + ", wgt = '" + weight + "'";
-
-                string repwgtArg = "";
-                if (repwgts is { Length: > 0 })
-                {
-                    string repWgtsDataset = "lsanalyzer_dat_raw";
-                    if (mivar is { Length: > 0 })
-                    {
-                        repWgtsDataset = "lsanalyzer_dat_raw_list[[1]]";
-                    }
-                    repwgtArg = ", wgtrep = " + repWgtsDataset + "[, grep('" + repwgts + "', colnames(" + repWgtsDataset + "), value = TRUE)]";
-                }
-
-                string fayfacArg = "";
-                if (fayfac != null)
-                {
-                    fayfacArg = ", fayfac = " + string.Format(CultureInfo.InvariantCulture, "{0:0.####}", fayfac);
-                }
-
-                string pvvarsArg = "";
-                if (pvvars is { Count: > 0 })
-                {
-                    List<string> pvvarsList = new();
-
-                    foreach (var pvvar in pvvars)
-                    {
-                        if (!pvvar.Mandatory)
-                        {
-                            var optionalPvvar = StringFormats.EncapsulateRegex(pvvar.Regex, autoEncapsulatePVvars)!;
-                            var optionalPvExists = _engine?.Evaluate("any(grepl('" + optionalPvvar + "', colnames(lsanalyzer_dat_raw)))").AsLogical().First() ?? false;
-
-                            if (optionalPvExists)
-                            {
-                                pvvarsList.Add(optionalPvvar);
-                            }
-                        } else
-                        {
-                            pvvarsList.Add(StringFormats.EncapsulateRegex(pvvar.Regex, autoEncapsulatePVvars)!);
-                        }
-                    }
-
-                    if (pvvarsList.Count > 0)
-                    {
-                        var pvvarsArray = pvvarsList.ToArray();
-                        pvvarsArray = Array.ConvertAll(pvvarsArray, pvvar => "'" + pvvar + "'");
-                        pvvarsArg = ", pv_vars = c(" + String.Join(", ", pvvarsArray) + ")";
-                    }
-                }
-
-                string finalCall = baseCall + repwgtArg + fayfacArg + pvvarsArg + ", cdata = TRUE)";
-                EvaluateAndLog(finalCall);
-
-                var bifieDataObject = _engine!.GetSymbol("lsanalyzer_dat_BO").AsList();
-                var nmiReported = (int)bifieDataObject["Nimp"].AsNumeric().First();
-                if (nmi != nmiReported)
-                {
-                    return false;
-                }
-
-                foreach (var pvvar in (pvvars ?? new Collection<PlausibleValueVariable>()).Where(pvvar => pvvar.Regex != pvvar.DisplayName))
-                {
-                    EvaluateAndLog($"lsanalyzer_dat_BO$varnames[lsanalyzer_dat_BO$varnames == '{ pvvar.Regex }'] <- '{ pvvar.DisplayName }'");
-                    EvaluateAndLog($"lsanalyzer_dat_BO$variables[lsanalyzer_dat_BO$variables$variable == '{ pvvar.Regex }', c('variable', 'variable_orig')] <- '{pvvar.DisplayName}'");
-                }
-            }
-            catch
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public virtual bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, string? subsettingExpression = null)
-        {
-            if (_engine == null || 
-                analysisConfiguration.FileName == null || 
-                analysisConfiguration.DatasetType == null ||
-                analysisConfiguration.DatasetType.NMI == null
-                )
-            {
-                return false;
-            }
-
-            foreach (var lastVirtualVariableName in _lastVirtualVariableNames)
-            {
-                EvaluateAndLog($"lsanalyzer_dat_raw_stored$`{lastVirtualVariableName}` <- NULL");
-                // because a potential label for lastVirtualVariableName does no harm, it will not be removed
-            }
-            _lastVirtualVariableNames.Clear();
-
-            List<PlausibleValueVariable> plausibleValueVariables = [];
-            
-            List<VirtualVariable> failedVirtualVariables = [];
-            foreach (var virtualVariable in virtualVariables)
-            {
-                if (!CreateVirtualVariable(virtualVariable, analysisConfiguration.DatasetType.PVvarsList.ToList()))
-                {
-                    failedVirtualVariables.Add(virtualVariable);
-                }
-                else
-                {
-                    if (virtualVariable.FromPlausibleValues)
-                    {
-                        plausibleValueVariables.Add(new PlausibleValueVariable { DisplayName = virtualVariable.Name, Regex = $"^{virtualVariable.Name}_[0-9]+$", Mandatory = false });
-                    }
-                }
-            }
-
-            if (failedVirtualVariables.Count > 0)
-            {
-                WeakReferenceMessenger.Default.Send(new VirtualVariableErrorMessage { FailedVirtualVariables = failedVirtualVariables });
-            }
-
             EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
+
+            var rawData = _engine!.GetSymbol("lsanalyzer_dat_raw_stored").AsDataFrame();
+            if (rawData == null)
+            {
+                return false;
+            }
+        } catch (Exception)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool SortRawDataStored(string sortBy)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                EvaluateAndLog("lsanalyzer_dat_raw_stored_attributes <- lapply(lsanalyzer_dat_raw_stored, attributes)");
+                EvaluateAndLog("lsanalyzer_dat_raw_stored <- lsanalyzer_dat_raw_stored[order(lsanalyzer_dat_raw_stored$`" + sortBy + "`), ]");
+                EvaluateAndLog("for (vv in colnames(lsanalyzer_dat_raw_stored)) attributes(lsanalyzer_dat_raw_stored[,vv]) <- lsanalyzer_dat_raw_stored_attributes[[vv]]");
+            }
+            EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
+            return true;
+        } catch
+        {
+            return false;
+        }
+    }
+
+    public bool ReplaceCharacterVariables()
+    {
+        try
+        {
+            EvaluateAndLog("""
+                               for (colname in colnames(lsanalyzer_dat_raw_stored)) {
+                                   if (is.character(lsanalyzer_dat_raw_stored[, colname]) &&
+                                       any(is.na(as.numeric(lsanalyzer_dat_raw_stored[, colname])) != is.na(lsanalyzer_dat_raw_stored[, colname]))) {
+                                       lsanalyzer_factor1 <- factor(lsanalyzer_dat_raw_stored[, colname])
+                                       lsanalyzer_labels1 <- 1:length(levels(lsanalyzer_factor1))
+                                       attr(lsanalyzer_labels1, 'names') <- levels(lsanalyzer_factor1)
+                                       lsanalyzer_dat_raw_stored[, colname] <- as.numeric(lsanalyzer_factor1)
+                                       attr(lsanalyzer_dat_raw_stored[, colname], 'value.labels') <- lsanalyzer_labels1
+                                   }
+                               }
+                           """, null, true);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public virtual SubsettingInformation TestSubsetting(string subsettingExpression, string? MIvar = null)
+    {
+        try
+        {
+            EvaluateAndLog("lsanalyzer_dat_raw_stored_subset <- subset(lsanalyzer_dat_raw_stored, " + subsettingExpression + ")");
+
+            int nCases;
+            int nSubset;
+
+            if (string.IsNullOrWhiteSpace(MIvar))
+            {
+                EvaluateAndLog("lsanalyzer_dat_raw_stored_ncases <- nrow(lsanalyzer_dat_raw_stored)");
+                nCases = _engine!.GetSymbol("lsanalyzer_dat_raw_stored_ncases").AsInteger().First();
+
+                EvaluateAndLog("lsanalyzer_dat_raw_stored_nsubset <- nrow(lsanalyzer_dat_raw_stored_subset)");
+                nSubset = _engine.GetSymbol("lsanalyzer_dat_raw_stored_nsubset").AsInteger().First();
+            } else
+            {
+                EvaluateAndLog("lsanalyzer_cnt_subset_mi <- table(lsanalyzer_dat_raw_stored_subset$" + MIvar + ")");
+                EvaluateAndLog("lsanalyzer_cnt_subset_mi_max <- max(lsanalyzer_cnt_subset_mi)");
+                EvaluateAndLog("lsanalyzer_cnt_subset_mi_all_equal <- all(lsanalyzer_cnt_subset_mi == lsanalyzer_cnt_subset_mi_max)");
+                var allMIEqual = _engine!.GetSymbol("lsanalyzer_cnt_subset_mi_all_equal").AsLogical().First();
+                if (!allMIEqual)
+                {
+                    return new SubsettingInformation() { ValidSubset = false, MIvariance = true };
+                }
+
+                EvaluateAndLog("lsanalyzer_dat_raw_stored_ncases_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored[, '" + MIvar + "'])[1])");
+                nCases = _engine.GetSymbol("lsanalyzer_dat_raw_stored_ncases_mi1").AsInteger().First();
+
+                EvaluateAndLog("lsanalyzer_dat_raw_stored_nsubset_mi1 <- sum(!is.na(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "']) & lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'] == unique(lsanalyzer_dat_raw_stored_subset[, '" + MIvar + "'])[1])");
+                nSubset = _engine.GetSymbol("lsanalyzer_dat_raw_stored_nsubset_mi1").AsInteger().First();
+            }
+
+            EvaluateAndLog("rm(lsanalyzer_dat_raw_stored_subset)");
+
+            if (nSubset == 0)
+            {
+                return new SubsettingInformation() { ValidSubset = false, EmptySubset = true };
+            }
+
+            return new SubsettingInformation() { ValidSubset = true, NCases = nCases, NSubset = nSubset };
+        } catch (Exception)
+        {
+            return new SubsettingInformation() { ValidSubset = false }; 
+        }
+    }
+
+    public bool ApplySubsetting(string subsettingExpression)
+    {
+        try
+        {
+            EvaluateAndLog("lsanalyzer_dat_raw <- subset(lsanalyzer_dat_raw, " + subsettingExpression + ")");
+            return true;
+        } catch
+        {
+            return false;
+        }
+    }
+
+    public bool ReduceToNecessaryVariables(List<string> regexNecessaryVariables, string? subsettingExpression = null)
+    {
+        try
+        {
+            EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
+
+            EvaluateAndLog("lsanalyzer_necessary_variables <- numeric(0)");
+            foreach (string regexNecessaryVariable in regexNecessaryVariables)
+            {
+                EvaluateAndLog("lsanalyzer_necessary_variable <- grep('" + regexNecessaryVariable + "', colnames(lsanalyzer_dat_raw))");
+                if (_engine!.GetSymbol("lsanalyzer_necessary_variable").AsNumeric().Length == 0)
+                {
+                    return false;
+                }
+                EvaluateAndLog("lsanalyzer_necessary_variables <- unique(c(lsanalyzer_necessary_variables, lsanalyzer_necessary_variable))");
+            }
 
             if (!string.IsNullOrWhiteSpace(subsettingExpression) && !ApplySubsetting(subsettingExpression))
             {
                 return false;
             }
 
-            if (analysisConfiguration.ModeKeep == false && !ReduceToNecessaryVariables(analysisConfiguration.GetRegexNecessaryVariables()))
+            EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw[, lsanalyzer_necessary_variables]");
+            var rawData = _engine!.GetSymbol("lsanalyzer_dat_raw").AsDataFrame();
+            if (rawData == null)
             {
                 return false;
             }
-
-            var repWgtsRegex = StringFormats.EncapsulateRegex(analysisConfiguration.DatasetType.RepWgts, analysisConfiguration.DatasetType.AutoEncapsulateRegex);
-            if (!string.IsNullOrEmpty(analysisConfiguration.DatasetType.JKzone))
-            {
-                if (analysisConfiguration.DatasetType.Weight.Length == 0 || 
-                    analysisConfiguration.DatasetType.JKrep == null || 
-                    analysisConfiguration.DatasetType.JKrep.Length == 0)
-                {
-                    return false;
-                }
-
-                if (!CreateReplicateWeights(analysisConfiguration.DatasetType.Weight, analysisConfiguration.DatasetType.JKzone, analysisConfiguration.DatasetType.JKrep, analysisConfiguration.DatasetType.JKreverse))
-                {
-                    return false;
-                }
-
-                repWgtsRegex = "lsanalyzer_repwgt_";
-            }
-            
-            plausibleValueVariables.AddRange(analysisConfiguration.DatasetType.PVvarsList);
-
-            if (!CreateBIFIEdataObject(analysisConfiguration.DatasetType.Weight, (int)analysisConfiguration.DatasetType.NMI, analysisConfiguration.DatasetType.MIvar, plausibleValueVariables, repWgtsRegex, analysisConfiguration.DatasetType.FayFac, analysisConfiguration.DatasetType.AutoEncapsulateRegex))
-            {
-                return false;
-            }
-
-            return true;
+        }
+        catch (Exception)
+        {
+            return false;
         }
 
-        public bool PrepareForAnalysis(Analysis analysis)
-        {
-            if (analysis.AnalysisConfiguration.DatasetType == null || !ReduceToNecessaryVariables(analysis, analysis.SubsettingExpression))
-            {
-                return false;
-            }
+        return true;
+    }
 
-            var repWgtsRegex = StringFormats.EncapsulateRegex(analysis.AnalysisConfiguration.DatasetType.RepWgts, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex);
-            if (!string.IsNullOrEmpty(analysis.AnalysisConfiguration.DatasetType.JKzone))
-            {
-                if (analysis.AnalysisConfiguration.DatasetType.Weight.Length == 0 ||
-                    analysis.AnalysisConfiguration.DatasetType.JKrep == null ||
-                    analysis.AnalysisConfiguration.DatasetType.JKrep.Length == 0)
-                {
-                    return false;
-                }
-
-                if (!CreateReplicateWeights(analysis.AnalysisConfiguration.DatasetType.Weight, analysis.AnalysisConfiguration.DatasetType.JKzone, analysis.AnalysisConfiguration.DatasetType.JKrep, analysis.AnalysisConfiguration.DatasetType.JKreverse))
-                {
-                    return false;
-                }
-
-                repWgtsRegex = "lsanalyzer_repwgt_";
-            }
+    public bool ReduceToNecessaryVariables(Analysis analysis, string? subsettingExpression = null)
+    {
+        var regexNecessaryVariables = analysis.AnalysisConfiguration.GetRegexNecessaryVariables();
             
-            List<PlausibleValueVariable> plausibleValueVariables = [];
-            foreach (var virtualVariable in analysis.VirtualVariables.Where(vv => vv.FromPlausibleValues))
-            {
-                plausibleValueVariables.Add(new PlausibleValueVariable { DisplayName = virtualVariable.Name, Regex = virtualVariable.Name, Mandatory = false });
-            }
-            plausibleValueVariables.AddRange(analysis.AnalysisConfiguration.DatasetType.PVvarsList);
+        regexNecessaryVariables.AddRange(analysis.AllVariables.Select(v => v.Name));
 
-            if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI!, analysis.AnalysisConfiguration.DatasetType.MIvar, plausibleValueVariables, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex))
+        for (int i = 0; i < regexNecessaryVariables.Count; i++)
+        {
+            var necessaryVariable = regexNecessaryVariables[i];
+            var potentialPvVariable = analysis.AnalysisConfiguration.DatasetType!.PVvarsList.FirstOrDefault(pvvar => pvvar.DisplayName == necessaryVariable);
+            if (potentialPvVariable != null)
             {
-                return false;
+                regexNecessaryVariables[i] = potentialPvVariable.Regex;
             }
-
-            return true;
         }
 
-        public virtual List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, bool fromStoredRaw = false)
+        return ReduceToNecessaryVariables(regexNecessaryVariables, subsettingExpression);
+    }
+
+    public bool CreateReplicateWeights(string weight, string jkzone, string jkrep, bool jkreverse)
+    {
+        try
         {
-            if (analysisConfiguration.DatasetType == null)
+            EvaluateAndLog("lsanalyzer_jk_zones <- sort(unique(lsanalyzer_dat_raw_stored[,'" + jkzone + "']))");
+            EvaluateAndLog(
+                "for (lsanalyzer_jk_zone in lsanalyzer_jk_zones) " +
+                "   lsanalyzer_dat_raw[, paste0('lsanalyzer_repwgt_', lsanalyzer_jk_zone)] <- " +
+                "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] != lsanalyzer_jk_zone) + " +
+                "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] == lsanalyzer_jk_zone) * lsanalyzer_dat_raw[, '" + jkrep + "'] * 2;");
+            if (jkreverse)
             {
-                return null;
+                EvaluateAndLog(
+                    "for (lsanalyzer_jk_zone in lsanalyzer_jk_zones) " +
+                    "   lsanalyzer_dat_raw[, paste0('lsanalyzer_repwgt_', lsanalyzer_jk_zone + max(lsanalyzer_jk_zones))] <- " +
+                    "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] != lsanalyzer_jk_zone) + " +
+                    "       lsanalyzer_dat_raw[,'" + weight + "'] * (lsanalyzer_dat_raw[, '" + jkzone + "'] == lsanalyzer_jk_zone) * (1 - lsanalyzer_dat_raw[, '" + jkrep + "']) * 2;");
+            }
+            EvaluateAndLog("lsanalyzer_repwgts <- grep('lsanalyzer_repwgt_', colnames(lsanalyzer_dat_raw), value = TRUE);");
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool CreateBIFIEdataObject(string weight, int nmi, string? mivar, ICollection<PlausibleValueVariable>? pvvars, string? repwgts, double? fayfac, bool autoEncapsulatePVvars = false)
+    {
+        try
+        {
+            string rawDataVariableName = "lsanalyzer_dat_raw";
+            if (mivar is { Length: > 0 } && nmi > 1)
+            {
+                EvaluateAndLog("lsanalyzer_dat_raw_list <- split(lsanalyzer_dat_raw, lsanalyzer_dat_raw[, '" + mivar + "'])");
+                rawDataVariableName = "lsanalyzer_dat_raw_list";
             }
 
-            try
-            {
-                DataFrame? variables;
-                if (analysisConfiguration.ModeKeep == true && !fromStoredRaw)
-                {
-                    variables = _engine!.Evaluate("lsanalyzer_dat_BO$variables").AsDataFrame();
-                } else
-                {
-                    variables = _engine!.Evaluate("data.frame(variable = colnames(lsanalyzer_dat_raw_stored))").AsDataFrame();
-                }
+            string baseCall = "lsanalyzer_dat_BO <- BIFIEsurvey::BIFIE.data(" + rawDataVariableName + ", wgt = '" + weight + "'";
 
-                var variableLabelsExpression = _engine.Evaluate("attr(lsanalyzer_dat_raw_stored, 'variable.labels')");
-                Dictionary<string, string> variableLabels = new();
-                if (variableLabelsExpression != null && variableLabelsExpression.AsCharacter() != null)
+            string repwgtArg = "";
+            if (repwgts is { Length: > 0 })
+            {
+                string repWgtsDataset = "lsanalyzer_dat_raw";
+                if (mivar is { Length: > 0 })
                 {
-                    var variableLabelsVector = variableLabelsExpression.AsCharacter();
-                    for (int ll = 0; ll < variableLabelsVector.Length; ll++)
+                    repWgtsDataset = "lsanalyzer_dat_raw_list[[1]]";
+                }
+                repwgtArg = ", wgtrep = " + repWgtsDataset + "[, grep('" + repwgts + "', colnames(" + repWgtsDataset + "), value = TRUE)]";
+            }
+
+            string fayfacArg = "";
+            if (fayfac != null)
+            {
+                fayfacArg = ", fayfac = " + string.Format(CultureInfo.InvariantCulture, "{0:0.####}", fayfac);
+            }
+
+            string pvvarsArg = "";
+            if (pvvars is { Count: > 0 })
+            {
+                List<string> pvvarsList = new();
+
+                foreach (var pvvar in pvvars)
+                {
+                    if (!pvvar.Mandatory)
                     {
-                        variableLabels.Add(variableLabelsVector.Names[ll], variableLabelsVector[ll]);
+                        var optionalPvvar = StringFormats.EncapsulateRegex(pvvar.Regex, autoEncapsulatePVvars)!;
+                        var optionalPvExists = _engine?.Evaluate("any(grepl('" + optionalPvvar + "', colnames(lsanalyzer_dat_raw)))").AsLogical().First() ?? false;
+
+                        if (optionalPvExists)
+                        {
+                            pvvarsList.Add(optionalPvvar);
+                        }
+                    } else
+                    {
+                        pvvarsList.Add(StringFormats.EncapsulateRegex(pvvar.Regex, autoEncapsulatePVvars)!);
                     }
                 }
 
-                List<Variable> variableList = new();
-                foreach (var variable in variables.GetRows())
+                if (pvvarsList.Count > 0)
                 {
-                    Variable newVariable = new(variable.RowIndex, (string)variable["variable"])
-                    {
-                        IsSystemVariable = analysisConfiguration.HasSystemVariable((string)variable["variable"]),
-                        FromPlausibleValues = analysisConfiguration.DatasetType.PVvarsList.Any(pvVar => pvVar.DisplayName == (string)variable["variable"]),
-                        IsVirtual = virtualVariables.Select(vv => vv.Name).Contains((string)variable["variable"]),
-                    };
+                    var pvvarsArray = pvvarsList.ToArray();
+                    pvvarsArray = Array.ConvertAll(pvvarsArray, pvvar => "'" + pvvar + "'");
+                    pvvarsArg = ", pv_vars = c(" + String.Join(", ", pvvarsArray) + ")";
+                }
+            }
 
-                    if (variableLabels.Keys.Contains(newVariable.Name))
+            string finalCall = baseCall + repwgtArg + fayfacArg + pvvarsArg + ", cdata = TRUE)";
+            EvaluateAndLog(finalCall);
+
+            var bifieDataObject = _engine!.GetSymbol("lsanalyzer_dat_BO").AsList();
+            var nmiReported = (int)bifieDataObject["Nimp"].AsNumeric().First();
+            if (nmi != nmiReported)
+            {
+                return false;
+            }
+
+            foreach (var pvvar in (pvvars ?? new Collection<PlausibleValueVariable>()).Where(pvvar => pvvar.Regex != pvvar.DisplayName))
+            {
+                EvaluateAndLog($"lsanalyzer_dat_BO$varnames[lsanalyzer_dat_BO$varnames == '{ pvvar.Regex }'] <- '{ pvvar.DisplayName }'");
+                EvaluateAndLog($"lsanalyzer_dat_BO$variables[lsanalyzer_dat_BO$variables$variable == '{ pvvar.Regex }', c('variable', 'variable_orig')] <- '{pvvar.DisplayName}'");
+            }
+        }
+        catch
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public virtual bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, string? subsettingExpression = null)
+    {
+        if (_engine == null || 
+            analysisConfiguration.FileName == null || 
+            analysisConfiguration.DatasetType == null ||
+            analysisConfiguration.DatasetType.NMI == null
+           )
+        {
+            return false;
+        }
+
+        foreach (var lastVirtualVariableName in _lastVirtualVariableNames)
+        {
+            EvaluateAndLog($"lsanalyzer_dat_raw_stored$`{lastVirtualVariableName}` <- NULL");
+            // because a potential label for lastVirtualVariableName does no harm, it will not be removed
+        }
+        _lastVirtualVariableNames.Clear();
+
+        List<PlausibleValueVariable> plausibleValueVariables = [];
+            
+        List<VirtualVariable> failedVirtualVariables = [];
+        foreach (var virtualVariable in virtualVariables)
+        {
+            if (!CreateVirtualVariable(virtualVariable, analysisConfiguration.DatasetType.PVvarsList.ToList()))
+            {
+                failedVirtualVariables.Add(virtualVariable);
+            }
+            else
+            {
+                if (virtualVariable.FromPlausibleValues)
+                {
+                    plausibleValueVariables.Add(new PlausibleValueVariable { DisplayName = virtualVariable.Name, Regex = $"^{virtualVariable.Name}_[0-9]+$", Mandatory = false });
+                }
+            }
+        }
+
+        if (failedVirtualVariables.Count > 0)
+        {
+            WeakReferenceMessenger.Default.Send(new VirtualVariableErrorMessage { FailedVirtualVariables = failedVirtualVariables });
+        }
+
+        EvaluateAndLog("lsanalyzer_dat_raw <- lsanalyzer_dat_raw_stored");
+
+        if (!string.IsNullOrWhiteSpace(subsettingExpression) && !ApplySubsetting(subsettingExpression))
+        {
+            return false;
+        }
+
+        if (analysisConfiguration.ModeKeep == false && !ReduceToNecessaryVariables(analysisConfiguration.GetRegexNecessaryVariables()))
+        {
+            return false;
+        }
+
+        var repWgtsRegex = StringFormats.EncapsulateRegex(analysisConfiguration.DatasetType.RepWgts, analysisConfiguration.DatasetType.AutoEncapsulateRegex);
+        if (!string.IsNullOrEmpty(analysisConfiguration.DatasetType.JKzone))
+        {
+            if (analysisConfiguration.DatasetType.Weight.Length == 0 || 
+                analysisConfiguration.DatasetType.JKrep == null || 
+                analysisConfiguration.DatasetType.JKrep.Length == 0)
+            {
+                return false;
+            }
+
+            if (!CreateReplicateWeights(analysisConfiguration.DatasetType.Weight, analysisConfiguration.DatasetType.JKzone, analysisConfiguration.DatasetType.JKrep, analysisConfiguration.DatasetType.JKreverse))
+            {
+                return false;
+            }
+
+            repWgtsRegex = "lsanalyzer_repwgt_";
+        }
+            
+        plausibleValueVariables.AddRange(analysisConfiguration.DatasetType.PVvarsList);
+
+        if (!CreateBIFIEdataObject(analysisConfiguration.DatasetType.Weight, (int)analysisConfiguration.DatasetType.NMI, analysisConfiguration.DatasetType.MIvar, plausibleValueVariables, repWgtsRegex, analysisConfiguration.DatasetType.FayFac, analysisConfiguration.DatasetType.AutoEncapsulateRegex))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool PrepareForAnalysis(Analysis analysis)
+    {
+        if (analysis.AnalysisConfiguration.DatasetType == null || !ReduceToNecessaryVariables(analysis, analysis.SubsettingExpression))
+        {
+            return false;
+        }
+
+        var repWgtsRegex = StringFormats.EncapsulateRegex(analysis.AnalysisConfiguration.DatasetType.RepWgts, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex);
+        if (!string.IsNullOrEmpty(analysis.AnalysisConfiguration.DatasetType.JKzone))
+        {
+            if (analysis.AnalysisConfiguration.DatasetType.Weight.Length == 0 ||
+                analysis.AnalysisConfiguration.DatasetType.JKrep == null ||
+                analysis.AnalysisConfiguration.DatasetType.JKrep.Length == 0)
+            {
+                return false;
+            }
+
+            if (!CreateReplicateWeights(analysis.AnalysisConfiguration.DatasetType.Weight, analysis.AnalysisConfiguration.DatasetType.JKzone, analysis.AnalysisConfiguration.DatasetType.JKrep, analysis.AnalysisConfiguration.DatasetType.JKreverse))
+            {
+                return false;
+            }
+
+            repWgtsRegex = "lsanalyzer_repwgt_";
+        }
+            
+        List<PlausibleValueVariable> plausibleValueVariables = [];
+        foreach (var virtualVariable in analysis.VirtualVariables.Where(vv => vv.FromPlausibleValues))
+        {
+            plausibleValueVariables.Add(new PlausibleValueVariable { DisplayName = virtualVariable.Name, Regex = virtualVariable.Name, Mandatory = false });
+        }
+        plausibleValueVariables.AddRange(analysis.AnalysisConfiguration.DatasetType.PVvarsList);
+
+        if (!CreateBIFIEdataObject(analysis.AnalysisConfiguration.DatasetType.Weight, (int)analysis.AnalysisConfiguration.DatasetType.NMI!, analysis.AnalysisConfiguration.DatasetType.MIvar, plausibleValueVariables, repWgtsRegex, analysis.AnalysisConfiguration.DatasetType.FayFac, analysis.AnalysisConfiguration.DatasetType.AutoEncapsulateRegex))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public virtual List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables, bool fromStoredRaw = false)
+    {
+        if (analysisConfiguration.DatasetType == null)
+        {
+            return null;
+        }
+
+        try
+        {
+            DataFrame? variables;
+            if (analysisConfiguration.ModeKeep == true && !fromStoredRaw)
+            {
+                variables = _engine!.Evaluate("lsanalyzer_dat_BO$variables").AsDataFrame();
+            } else
+            {
+                variables = _engine!.Evaluate("data.frame(variable = colnames(lsanalyzer_dat_raw_stored))").AsDataFrame();
+            }
+
+            var variableLabelsExpression = _engine.Evaluate("attr(lsanalyzer_dat_raw_stored, 'variable.labels')");
+            Dictionary<string, string> variableLabels = new();
+            if (variableLabelsExpression != null && variableLabelsExpression.AsCharacter() != null)
+            {
+                var variableLabelsVector = variableLabelsExpression.AsCharacter();
+                for (int ll = 0; ll < variableLabelsVector.Length; ll++)
+                {
+                    variableLabels.Add(variableLabelsVector.Names[ll], variableLabelsVector[ll]);
+                }
+            }
+
+            List<Variable> variableList = new();
+            foreach (var variable in variables.GetRows())
+            {
+                Variable newVariable = new(variable.RowIndex, (string)variable["variable"])
+                {
+                    IsSystemVariable = analysisConfiguration.HasSystemVariable((string)variable["variable"]),
+                    FromPlausibleValues = analysisConfiguration.DatasetType.PVvarsList.Any(pvVar => pvVar.DisplayName == (string)variable["variable"]),
+                    IsVirtual = virtualVariables.Select(vv => vv.Name).Contains((string)variable["variable"]),
+                };
+
+                if (variableLabels.Keys.Contains(newVariable.Name))
+                {
+                    newVariable.Label = variableLabels[newVariable.Name];
+                } else if (!string.IsNullOrWhiteSpace(analysisConfiguration.DatasetType.PVvarsList.FirstOrDefault(pvVar => pvVar.DisplayName == newVariable.Name)?.Label))
+                {
+                    newVariable.Label = analysisConfiguration.DatasetType.PVvarsList.First(pvVar => pvVar.DisplayName == newVariable.Name).Label;
+                } else
+                {
+                    for (int ll = 0; ll < variableLabels.Count; ll++)
                     {
-                        newVariable.Label = variableLabels[newVariable.Name];
-                    } else if (!string.IsNullOrWhiteSpace(analysisConfiguration.DatasetType.PVvarsList.FirstOrDefault(pvVar => pvVar.DisplayName == newVariable.Name)?.Label))
-                    {
-                        newVariable.Label = analysisConfiguration.DatasetType.PVvarsList.First(pvVar => pvVar.DisplayName == newVariable.Name).Label;
-                    } else
-                    {
-                        for (int ll = 0; ll < variableLabels.Count; ll++)
+                        try
                         {
-                            try
+                            if (Regex.IsMatch(variableLabels.Keys.ToList()[ll], newVariable.Name))
                             {
-                                if (Regex.IsMatch(variableLabels.Keys.ToList()[ll], newVariable.Name))
-                                {
-                                    newVariable.Label = variableLabels[variableLabels.Keys.ToList()[ll]];
-                                    break;
-                                }
-                            }
-                            catch
-                            {
+                                newVariable.Label = variableLabels[variableLabels.Keys.ToList()[ll]];
                                 break;
                             }
                         }
-                    }
-
-                    variableList.Add(newVariable);
-                }
-
-                if (analysisConfiguration.ModeKeep == false && !fromStoredRaw)
-                {
-                    var maxPosition = variableList.Last().Position + 1;
-
-                    List<PlausibleValueVariable> plausibleValueVariables = [];
-
-                    foreach (var virtualVariable in virtualVariables.Where(vv => vv.FromPlausibleValues))
-                    {
-                        plausibleValueVariables.Add(new PlausibleValueVariable { DisplayName = virtualVariable.Name, Regex = $"{virtualVariable.Name}_", Mandatory = false });
-                    }
-                    
-                    plausibleValueVariables.AddRange(analysisConfiguration.DatasetType.PVvarsList);
-                    
-                    foreach (var pvVar in plausibleValueVariables)
-                    {
-                        var pvVarRegex = StringFormats.EncapsulateRegex(pvVar.Regex, analysisConfiguration.DatasetType.AutoEncapsulateRegex)!;
-
-                        var firstMatch = variableList.FirstOrDefault(var => Regex.IsMatch(var.Name, pvVarRegex));
-
-                        if (firstMatch != null)
+                        catch
                         {
-                            variableList.RemoveAll(var => Regex.IsMatch(var.Name, pvVarRegex));
-                            Variable newVariable = new(maxPosition++, pvVar.DisplayName);
-                            newVariable.FromPlausibleValues = true;
-                            newVariable.Label = string.IsNullOrWhiteSpace(pvVar.Label) ? firstMatch.Label : pvVar.Label;
-                            variableList.Add(newVariable);
+                            break;
                         }
                     }
+                }
+
+                variableList.Add(newVariable);
+            }
+
+            if (analysisConfiguration.ModeKeep == false && !fromStoredRaw)
+            {
+                var maxPosition = variableList.Last().Position + 1;
+
+                List<PlausibleValueVariable> plausibleValueVariables = [];
+
+                foreach (var virtualVariable in virtualVariables.Where(vv => vv.FromPlausibleValues))
+                {
+                    plausibleValueVariables.Add(new PlausibleValueVariable { DisplayName = virtualVariable.Name, Regex = $"{virtualVariable.Name}_", Mandatory = false });
+                }
+                    
+                plausibleValueVariables.AddRange(analysisConfiguration.DatasetType.PVvarsList);
+                    
+                foreach (var pvVar in plausibleValueVariables)
+                {
+                    var pvVarRegex = StringFormats.EncapsulateRegex(pvVar.Regex, analysisConfiguration.DatasetType.AutoEncapsulateRegex)!;
+
+                    var firstMatch = variableList.FirstOrDefault(var => Regex.IsMatch(var.Name, pvVarRegex));
+
+                    if (firstMatch != null)
+                    {
+                        variableList.RemoveAll(var => Regex.IsMatch(var.Name, pvVarRegex));
+                        Variable newVariable = new(maxPosition++, pvVar.DisplayName);
+                        newVariable.FromPlausibleValues = true;
+                        newVariable.Label = string.IsNullOrWhiteSpace(pvVar.Label) ? firstMatch.Label : pvVar.Label;
+                        variableList.Add(newVariable);
+                    }
+                }
                                         
-                    variableList.Add(new(maxPosition + 1, "one"));
-                }
+                variableList.Add(new(maxPosition + 1, "one"));
+            }
 
-                return variableList;
-            }
-            catch
-            {
-                return null;
-            }
+            return variableList;
         }
+        catch
+        {
+            return null;
+        }
+    }
         
-        public List<GenericVector>? CalculateUnivar(AnalysisUnivar analysis)
+    public List<GenericVector>? CalculateUnivar(AnalysisUnivar analysis)
+    {
+        try
         {
-            try
-            {
-                if (analysis.Vars.Count == 0 ||
-                    analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
-                {
-                    return null;
-                }
-
-                List<GenericVector> resultList = new();
-
-                string baseCall = "lsanalyzer_result_univar <- BIFIEsurvey::BIFIE.univar(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                string groupByArg = "";
-
-                if (analysis.GroupBy.Count == 0)
-                {
-                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
-                } else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
-                {
-                    groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    EvaluateAndLog("lsanalyzer_result_univar$stat$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_univar$stat$M, factor(lsanalyzer_result_univar$stat$var, levels = unique(lsanalyzer_result_univar$stat$var))), rank, ties.method = 'min'))");
-                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
-                } else
-                {
-                    var groupByCombinations = Combinations.GetCombinations(analysis.GroupBy);
-
-                    for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
-                    {
-                        if (nGroups > 0 && nGroups < analysis.GroupBy.Count && !analysis.CalculateCrosswise) continue;
-                        
-                        if (nGroups == 0)
-                        {
-                            groupByArg = "";
-                            EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
-                        } else
-                        {
-                            var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
-                            foreach (var combination in groupByCombinationsN)
-                            {
-                                groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                                EvaluateAndLog("lsanalyzer_result_univar$stat$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_univar$stat$M, factor(lsanalyzer_result_univar$stat$var, levels = unique(lsanalyzer_result_univar$stat$var))), rank, ties.method = 'min'))");
-                                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
-                            }
-                        }
-                    }
-                }
-
-                return resultList;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public List<GenericVector>? CalculateMeanDiff(AnalysisMeanDiff analysis)
-        {
-            try
-            {
-                if (analysis.Vars.Count == 0 || analysis.GroupBy.Count == 0 ||
-                    analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
-                {
-                        return null;
-                }
-
-                List<GenericVector> resultList = new();
-
-                string baseCall = "lsanalyzer_result_univar <- BIFIEsurvey::BIFIE.univar(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
-
-                if (!analysis.CalculateSeparately)
-                {
-                    string groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    EvaluateAndLog("lsanalyzer_result_univar_test <- BIFIEsurvey::BIFIE.univar.test(lsanalyzer_result_univar)", analysis.AnalysisName);
-                    EvaluateAndLog("lsanalyzer_result_univar <- c(lsanalyzer_result_univar, lsanalyzer_result_univar_test)");
-                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
-                } else
-                {
-                    foreach (var groupByVar in analysis.GroupBy)
-                    {
-                        string groupByArg = ", group = '" + groupByVar.Name + "'";
-                        EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                        EvaluateAndLog("lsanalyzer_result_univar_test <- BIFIEsurvey::BIFIE.univar.test(lsanalyzer_result_univar)", analysis.AnalysisName);
-                        EvaluateAndLog("lsanalyzer_result_univar <- c(lsanalyzer_result_univar, lsanalyzer_result_univar_test)");
-                        resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
-                    }
-                }
-
-                return resultList;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public List<GenericVector>? CalculatePercDiff(AnalysisPercDiff analysis)
-        {
-            try
-            {
-                if (analysis.Vars.Count == 0 || analysis.GroupBy.Count == 0 ||
-                    analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
-                {
-                        return null;
-                }
-
-                List<GenericVector> resultList = [];
-
-                var baseCall = "lsanalyzer_result_freq <- BIFIEsurvey::BIFIE.freq(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                var skipSE = analysis.CalculateSE ? string.Empty : ", se = FALSE";
-                
-                if (!analysis.CalculateSeparately)
-                {
-                    var groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    EvaluateAndLog(baseCall + groupByArg + skipSE + ")", analysis.AnalysisName);
-                    EvaluateAndLog("lsanalyzer_result_cohens <- lsanalyzer_func_cohensH(lsanalyzer_result_freq)", analysis.AnalysisName);
-                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_cohens").AsList());
-                } else
-                {
-                    foreach (var groupByVar in analysis.GroupBy)
-                    {
-                        var groupByArg = ", group = '" + groupByVar.Name + "'";
-                        EvaluateAndLog(baseCall + groupByArg + skipSE + ")", analysis.AnalysisName);
-                        EvaluateAndLog("lsanalyzer_result_cohens <- lsanalyzer_func_cohensH(lsanalyzer_result_freq)", analysis.AnalysisName);
-                        resultList.Add(_engine!.GetSymbol("lsanalyzer_result_cohens").AsList());
-                    }
-                }
-
-                return resultList;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public List<GenericVector>? CalculateFreq(AnalysisFreq analysis)
-        {
-            try
-            {
-                if (analysis.Vars.Count == 0 ||
-                    analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
-                {
-                    return null;
-                }
-
-                List<GenericVector> resultList = new();
-
-                string baseCall = "lsanalyzer_result_freq <- BIFIEsurvey::BIFIE.freq(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                string groupByArg = "";
-
-                if (analysis.GroupBy.Count == 0)
-                {
-                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_freq").AsList());
-                }
-                else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
-                {
-                    groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    EvaluateAndLog("lsanalyzer_result_freq$stat$lsanalyzer_rank <- as.numeric(NA)");
-                    EvaluateAndLog("ff <- lsanalyzer_result_freq$stat$varval == min(lsanalyzer_result_freq$stat$varval)");
-                    EvaluateAndLog("lsanalyzer_result_freq$stat[ff,]$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_freq$stat[ff,]$perc, factor(lsanalyzer_result_freq$stat[ff,]$var, levels = unique(lsanalyzer_result_freq$stat[ff,]$var))), rank, ties.method = 'min'))");
-                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_freq").AsList());
-                }
-                else
-                {
-                    var groupByCombinations = Combinations.GetCombinations(analysis.GroupBy);
-
-                    for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
-                    {
-                        if (nGroups > 0 && nGroups < analysis.GroupBy.Count && !analysis.CalculateCrosswise) continue;
-                        
-                        if (nGroups == 0)
-                        {
-                            groupByArg = "";
-                            EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_freq").AsList());
-                        }
-                        else
-                        {
-                            var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
-                            foreach (var combination in groupByCombinationsN)
-                            {
-                                groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                                EvaluateAndLog("lsanalyzer_result_freq$stat$lsanalyzer_rank <- as.numeric(NA)");
-                                EvaluateAndLog("ff <- lsanalyzer_result_freq$stat$varval == min(lsanalyzer_result_freq$stat$varval)");
-                                EvaluateAndLog("lsanalyzer_result_freq$stat[ff,]$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_freq$stat[ff,]$perc, factor(lsanalyzer_result_freq$stat[ff,]$var, levels = unique(lsanalyzer_result_freq$stat[ff,]$var))), rank, ties.method = 'min'))");
-                                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_freq").AsList());
-                            }
-                        }
-                    }
-                }
-
-                return resultList;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public List<GenericVector>? CalculateBivariate(AnalysisFreq analysis)
-        {
-            try
-            {
-                if (analysis.Vars.Count == 0 || analysis.GroupBy.Count == 0 ||
-                    analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
-                {
-                    return null;
-                }
-
-                List<GenericVector> resultList = new();
-
-                string baseCall = "lsanalyzer_result_crosstab <- BIFIEsurvey::BIFIE.crosstab(BIFIEobj = lsanalyzer_dat_BO";
-                
-                foreach (var group in analysis.GroupBy)
-                {
-                    foreach (var variable in analysis.Vars)
-                    {
-                        string vars1arg = ", vars1 = '" + group.Name + "'";
-                        string vars2arg = ", vars2 = '" + variable.Name + "'";
-                        string finalCall = baseCall + vars1arg + vars2arg + ");";
-
-                        EvaluateAndLog(finalCall, analysis.AnalysisName);
-                        resultList.Add(_engine!.GetSymbol("lsanalyzer_result_crosstab").AsList());
-                    }
-                }
-
-                return resultList;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public List<GenericVector>? CalculatePercentiles(AnalysisPercentiles analysis)
-        {
-            try
-            {
-                if (analysis.Vars.Count == 0 || analysis.Percentiles.Count == 0 ||
-                    analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
-                {
-                    return null;
-                }
-
-                List<GenericVector> resultList = new();
-
-                string baseCall;
-                string varsArg = ", vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                string breaksArg = ", breaks = c(" + string.Join(", ", analysis.Percentiles.OrderBy(val => val).Select(val => val.ToString(CultureInfo.InvariantCulture))) + ")";
-
-                if (!analysis.CalculateSE)
-                {
-                    baseCall = "lsanalyzer_result_ecdf <- BIFIEsurvey::BIFIE.ecdf(BIFIEobj = lsanalyzer_dat_BO" + varsArg + breaksArg;
-                    if (!analysis.UseInterpolation)
-                    {
-                        baseCall += ", quanttype = 2";
-                    }
-                } else
-                {
-                    baseCall = "lsanalyzer_result_ecdf <- lsanalyzer_func_quantile(BIFIEobj = lsanalyzer_dat_BO" + varsArg + breaksArg;
-                    if (!analysis.UseInterpolation)
-                    {
-                        baseCall += ", useInterpolation = FALSE";
-                    }
-                    if (analysis.MimicIdbAnalyzer)
-                    {
-                        baseCall += ", mimicIdbAnalyzer = TRUE";
-                    }
-                }
-
-                string groupByArg = "";
-
-                if (analysis.GroupBy.Count == 0)
-                {
-                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_ecdf").AsList());
-                }
-                else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
-                {
-                    groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_ecdf").AsList());
-                }
-                else
-                {
-                    var groupByCombinations = Combinations.GetCombinations(analysis.GroupBy);
-
-                    for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
-                    {
-                        if (nGroups > 0 && nGroups < analysis.GroupBy.Count && !analysis.CalculateCrosswise) continue;
-                        
-                        if (nGroups == 0)
-                        {
-                            groupByArg = "";
-                            EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_ecdf").AsList());
-                        }
-                        else
-                        {
-                            var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
-                            foreach (var combination in groupByCombinationsN)
-                            {
-                                groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_ecdf").AsList());
-                            }
-                        }
-                    }
-                }
-
-                return resultList;
-            } catch
-            { 
-                return null; 
-            }
-        }
-
-        public List<GenericVector>? CalculateCorr(AnalysisCorr analysis)
-        {
-            try
-            {
-                if (analysis.Vars.Count == 0 ||
-                    analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
-                {
-                    return null;
-                }
-
-                List<GenericVector> resultList = new();
-
-                string baseCall = "lsanalyzer_result_corr <- BIFIEsurvey::BIFIE.correl(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                string groupByArg = "";
-
-                if (analysis.GroupBy.Count == 0)
-                {
-                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_corr").AsList());
-                }
-                else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
-                {
-                    groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_corr").AsList());
-                }
-                else
-                {
-                    var groupByCombinations = Combinations.GetCombinations(analysis.GroupBy);
-
-                    for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
-                    {
-                        if (nGroups > 0 && nGroups < analysis.GroupBy.Count && !analysis.CalculateCrosswise) continue;
-                        
-                        if (nGroups == 0)
-                        {
-                            groupByArg = "";
-                            EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_corr").AsList());
-                        }
-                        else
-                        {
-                            var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
-                            foreach (var combination in groupByCombinationsN)
-                            {
-                                groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
-                                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_corr").AsList());
-                            }
-                        }
-                    }
-                }
-
-                return resultList;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public List<GenericVector>? CalculateLinreg(AnalysisLinreg analysis)
-        {
-            return CalculateRegression("BIFIE.linreg", "R^2", analysis);
-        }
-
-        public List<GenericVector>? CalculateLogistReg(AnalysisLogistReg analysis)
-        {
-            return CalculateRegression("BIFIE.logistreg", "R2", analysis);
-        }
-        
-        private List<GenericVector>? CalculateRegression(string method, string r2parameter, AnalysisRegression analysis)
-        {
-            if (analysis.Dependent == null || analysis.Vars.Count == 0 ||
+            if (analysis.Vars.Count == 0 ||
                 analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
             {
                 return null;
             }
 
-            if (analysis.Sequence == AnalysisRegression.RegressionSequence.AllIn || analysis.Vars.Count == 1)
+            List<GenericVector> resultList = new();
+
+            string baseCall = "lsanalyzer_result_univar <- BIFIEsurvey::BIFIE.univar(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
+            string groupByArg = "";
+
+            if (analysis.GroupBy.Count == 0)
             {
-                var result = CalculateRegressionSingle(method, analysis.Dependent, analysis.Vars, analysis.WithIntercept, analysis.GroupBy, analysis.CalculateOverall, analysis.CalculateCrosswise);
-                if (result == null)
-                {
-                    return null;
-                }
-                else
-                {
-                    return result;
-                }
-            }
-
-            if (analysis.Sequence == AnalysisRegression.RegressionSequence.Forward)
+                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
+            } else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
             {
-                List<Variable> usedPredictors = new();
-                List<Variable> availablePredictors = new(analysis.Vars);
-                List<GenericVector> resultList = new();
+                groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                EvaluateAndLog("lsanalyzer_result_univar$stat$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_univar$stat$M, factor(lsanalyzer_result_univar$stat$var, levels = unique(lsanalyzer_result_univar$stat$var))), rank, ties.method = 'min'))");
+                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
+            } else
+            {
+                var groupByCombinations = Combinations.GetCombinations(analysis.GroupBy);
 
-                while (availablePredictors.Count > 0)
+                for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
                 {
-                    double maxR2 = double.MinValue;
-                    Variable? bestNextPredictor = null;
-                    GenericVector? bestNextModel = null;
-
-                    foreach (var predictor in availablePredictors)
+                    if (nGroups > 0 && nGroups < analysis.GroupBy.Count && !analysis.CalculateCrosswise) continue;
+                        
+                    if (nGroups == 0)
                     {
-                        var result = CalculateRegressionSingle(method, analysis.Dependent, usedPredictors.Concat(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false, false);
-                        if (result == null)
+                        groupByArg = "";
+                        EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                        resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
+                    } else
+                    {
+                        var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
+                        foreach (var combination in groupByCombinationsN)
                         {
-                            return null;
-                        }
-
-                        var stats = result[0]["stat"].AsDataFrame();
-                        double R2 = (double)stats.GetRows().First(row => (string)row["parameter"] == r2parameter)["est"];
-
-                        if (R2 > maxR2)
-                        {
-                            maxR2 = R2;
-                            bestNextPredictor = predictor;
-                            bestNextModel = result[0];
+                            groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                            EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                            EvaluateAndLog("lsanalyzer_result_univar$stat$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_univar$stat$M, factor(lsanalyzer_result_univar$stat$var, levels = unique(lsanalyzer_result_univar$stat$var))), rank, ties.method = 'min'))");
+                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
                         }
                     }
-
-                    usedPredictors.Add(bestNextPredictor!);
-                    availablePredictors.Remove(bestNextPredictor!);
-                    resultList.Add(bestNextModel!);
                 }
-
-                return resultList;
             }
 
-            if (analysis.Sequence == AnalysisRegression.RegressionSequence.Backward)
+            return resultList;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public List<GenericVector>? CalculateMeanDiff(AnalysisMeanDiff analysis)
+    {
+        try
+        {
+            if (analysis.Vars.Count == 0 || analysis.GroupBy.Count == 0 ||
+                analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
             {
-                var result = CalculateRegressionSingle(method, analysis.Dependent, analysis.Vars, analysis.WithIntercept, new(), false, false);
-                if (result == null)
+                return null;
+            }
+
+            List<GenericVector> resultList = new();
+
+            string baseCall = "lsanalyzer_result_univar <- BIFIEsurvey::BIFIE.univar(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
+
+            if (!analysis.CalculateSeparately)
+            {
+                string groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                EvaluateAndLog("lsanalyzer_result_univar_test <- BIFIEsurvey::BIFIE.univar.test(lsanalyzer_result_univar)", analysis.AnalysisName);
+                EvaluateAndLog("lsanalyzer_result_univar <- c(lsanalyzer_result_univar, lsanalyzer_result_univar_test)");
+                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
+            } else
+            {
+                foreach (var groupByVar in analysis.GroupBy)
                 {
-                    return null;
+                    string groupByArg = ", group = '" + groupByVar.Name + "'";
+                    EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                    EvaluateAndLog("lsanalyzer_result_univar_test <- BIFIEsurvey::BIFIE.univar.test(lsanalyzer_result_univar)", analysis.AnalysisName);
+                    EvaluateAndLog("lsanalyzer_result_univar <- c(lsanalyzer_result_univar, lsanalyzer_result_univar_test)");
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_univar").AsList());
                 }
+            }
 
-                List<Variable> usedPredictors = new(analysis.Vars);
-                List<GenericVector> resultList = [result[0]];
+            return resultList;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
-                while (usedPredictors.Count > 1)
+    public List<GenericVector>? CalculatePercDiff(AnalysisPercDiff analysis)
+    {
+        try
+        {
+            if (analysis.Vars.Count == 0 || analysis.GroupBy.Count == 0 ||
+                analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
+            {
+                return null;
+            }
+
+            List<GenericVector> resultList = [];
+
+            var baseCall = "lsanalyzer_result_freq <- BIFIEsurvey::BIFIE.freq(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
+            var skipSE = analysis.CalculateSE ? string.Empty : ", se = FALSE";
+                
+            if (!analysis.CalculateSeparately)
+            {
+                var groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                EvaluateAndLog(baseCall + groupByArg + skipSE + ")", analysis.AnalysisName);
+                EvaluateAndLog("lsanalyzer_result_cohens <- lsanalyzer_func_cohensH(lsanalyzer_result_freq)", analysis.AnalysisName);
+                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_cohens").AsList());
+            } else
+            {
+                foreach (var groupByVar in analysis.GroupBy)
                 {
-                    double minR2 = double.MaxValue;
-                    Variable? bestNextPredictor = null;
-                    GenericVector? worstNextModel = null;
+                    var groupByArg = ", group = '" + groupByVar.Name + "'";
+                    EvaluateAndLog(baseCall + groupByArg + skipSE + ")", analysis.AnalysisName);
+                    EvaluateAndLog("lsanalyzer_result_cohens <- lsanalyzer_func_cohensH(lsanalyzer_result_freq)", analysis.AnalysisName);
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_cohens").AsList());
+                }
+            }
 
-                    foreach (var predictor in usedPredictors)
+            return resultList;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public List<GenericVector>? CalculateFreq(AnalysisFreq analysis)
+    {
+        try
+        {
+            if (analysis.Vars.Count == 0 ||
+                analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
+            {
+                return null;
+            }
+
+            List<GenericVector> resultList = new();
+
+            string baseCall = "lsanalyzer_result_freq <- BIFIEsurvey::BIFIE.freq(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
+            string groupByArg = "";
+
+            if (analysis.GroupBy.Count == 0)
+            {
+                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_freq").AsList());
+            }
+            else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
+            {
+                groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                EvaluateAndLog("lsanalyzer_result_freq$stat$lsanalyzer_rank <- as.numeric(NA)");
+                EvaluateAndLog("ff <- lsanalyzer_result_freq$stat$varval == min(lsanalyzer_result_freq$stat$varval)");
+                EvaluateAndLog("lsanalyzer_result_freq$stat[ff,]$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_freq$stat[ff,]$perc, factor(lsanalyzer_result_freq$stat[ff,]$var, levels = unique(lsanalyzer_result_freq$stat[ff,]$var))), rank, ties.method = 'min'))");
+                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_freq").AsList());
+            }
+            else
+            {
+                var groupByCombinations = Combinations.GetCombinations(analysis.GroupBy);
+
+                for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
+                {
+                    if (nGroups > 0 && nGroups < analysis.GroupBy.Count && !analysis.CalculateCrosswise) continue;
+                        
+                    if (nGroups == 0)
                     {
-                        result = CalculateRegressionSingle(method, analysis.Dependent, usedPredictors.Except(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false, false);
-                        if (result == null)
+                        groupByArg = "";
+                        EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                        resultList.Add(_engine!.GetSymbol("lsanalyzer_result_freq").AsList());
+                    }
+                    else
+                    {
+                        var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
+                        foreach (var combination in groupByCombinationsN)
                         {
-                            return null;
-                        }
-
-                        var stats = result[0]["stat"].AsDataFrame();
-                        double R2 = (double)stats.GetRows().First(row => (string)row["parameter"] == r2parameter)["est"];
-
-                        if (R2 < minR2)
-                        {
-                            minR2 = R2;
-                            bestNextPredictor = predictor;
-                            worstNextModel = result[0];
+                            groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                            EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                            EvaluateAndLog("lsanalyzer_result_freq$stat$lsanalyzer_rank <- as.numeric(NA)");
+                            EvaluateAndLog("ff <- lsanalyzer_result_freq$stat$varval == min(lsanalyzer_result_freq$stat$varval)");
+                            EvaluateAndLog("lsanalyzer_result_freq$stat[ff,]$lsanalyzer_rank <- unlist(lapply(split(lsanalyzer_result_freq$stat[ff,]$perc, factor(lsanalyzer_result_freq$stat[ff,]$var, levels = unique(lsanalyzer_result_freq$stat[ff,]$var))), rank, ties.method = 'min'))");
+                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_freq").AsList());
                         }
                     }
-
-                    usedPredictors.Remove(bestNextPredictor!);
-                    resultList.Add(worstNextModel!);
                 }
-
-                return resultList;
             }
 
+            return resultList;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public List<GenericVector>? CalculateBivariate(AnalysisFreq analysis)
+    {
+        try
+        {
+            if (analysis.Vars.Count == 0 || analysis.GroupBy.Count == 0 ||
+                analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
+            {
+                return null;
+            }
+
+            List<GenericVector> resultList = new();
+
+            string baseCall = "lsanalyzer_result_crosstab <- BIFIEsurvey::BIFIE.crosstab(BIFIEobj = lsanalyzer_dat_BO";
+                
+            foreach (var group in analysis.GroupBy)
+            {
+                foreach (var variable in analysis.Vars)
+                {
+                    string vars1arg = ", vars1 = '" + group.Name + "'";
+                    string vars2arg = ", vars2 = '" + variable.Name + "'";
+                    string finalCall = baseCall + vars1arg + vars2arg + ");";
+
+                    EvaluateAndLog(finalCall, analysis.AnalysisName);
+                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_crosstab").AsList());
+                }
+            }
+
+            return resultList;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public List<GenericVector>? CalculatePercentiles(AnalysisPercentiles analysis)
+    {
+        try
+        {
+            if (analysis.Vars.Count == 0 || analysis.Percentiles.Count == 0 ||
+                analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
+            {
+                return null;
+            }
+
+            List<GenericVector> resultList = new();
+
+            string baseCall;
+            string varsArg = ", vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
+            string breaksArg = ", breaks = c(" + string.Join(", ", analysis.Percentiles.OrderBy(val => val).Select(val => val.ToString(CultureInfo.InvariantCulture))) + ")";
+
+            if (!analysis.CalculateSE)
+            {
+                baseCall = "lsanalyzer_result_ecdf <- BIFIEsurvey::BIFIE.ecdf(BIFIEobj = lsanalyzer_dat_BO" + varsArg + breaksArg;
+                if (!analysis.UseInterpolation)
+                {
+                    baseCall += ", quanttype = 2";
+                }
+            } else
+            {
+                baseCall = "lsanalyzer_result_ecdf <- lsanalyzer_func_quantile(BIFIEobj = lsanalyzer_dat_BO" + varsArg + breaksArg;
+                if (!analysis.UseInterpolation)
+                {
+                    baseCall += ", useInterpolation = FALSE";
+                }
+                if (analysis.MimicIdbAnalyzer)
+                {
+                    baseCall += ", mimicIdbAnalyzer = TRUE";
+                }
+            }
+
+            string groupByArg = "";
+
+            if (analysis.GroupBy.Count == 0)
+            {
+                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_ecdf").AsList());
+            }
+            else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
+            {
+                groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_ecdf").AsList());
+            }
+            else
+            {
+                var groupByCombinations = Combinations.GetCombinations(analysis.GroupBy);
+
+                for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
+                {
+                    if (nGroups > 0 && nGroups < analysis.GroupBy.Count && !analysis.CalculateCrosswise) continue;
+                        
+                    if (nGroups == 0)
+                    {
+                        groupByArg = "";
+                        EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                        resultList.Add(_engine!.GetSymbol("lsanalyzer_result_ecdf").AsList());
+                    }
+                    else
+                    {
+                        var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
+                        foreach (var combination in groupByCombinationsN)
+                        {
+                            groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                            EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_ecdf").AsList());
+                        }
+                    }
+                }
+            }
+
+            return resultList;
+        } catch
+        { 
+            return null; 
+        }
+    }
+
+    public List<GenericVector>? CalculateCorr(AnalysisCorr analysis)
+    {
+        try
+        {
+            if (analysis.Vars.Count == 0 ||
+                analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
+            {
+                return null;
+            }
+
+            List<GenericVector> resultList = new();
+
+            string baseCall = "lsanalyzer_result_corr <- BIFIEsurvey::BIFIE.correl(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
+            string groupByArg = "";
+
+            if (analysis.GroupBy.Count == 0)
+            {
+                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_corr").AsList());
+            }
+            else if (analysis.GroupBy.Count > 0 && !analysis.CalculateOverall)
+            {
+                groupByArg = ", group = c(" + string.Join(", ", analysis.GroupBy.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_corr").AsList());
+            }
+            else
+            {
+                var groupByCombinations = Combinations.GetCombinations(analysis.GroupBy);
+
+                for (int nGroups = 0; nGroups <= analysis.GroupBy.Count; nGroups++)
+                {
+                    if (nGroups > 0 && nGroups < analysis.GroupBy.Count && !analysis.CalculateCrosswise) continue;
+                        
+                    if (nGroups == 0)
+                    {
+                        groupByArg = "";
+                        EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                        resultList.Add(_engine!.GetSymbol("lsanalyzer_result_corr").AsList());
+                    }
+                    else
+                    {
+                        var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
+                        foreach (var combination in groupByCombinationsN)
+                        {
+                            groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                            EvaluateAndLog(baseCall + groupByArg + ")", analysis.AnalysisName);
+                            resultList.Add(_engine!.GetSymbol("lsanalyzer_result_corr").AsList());
+                        }
+                    }
+                }
+            }
+
+            return resultList;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public List<GenericVector>? CalculateLinreg(AnalysisLinreg analysis)
+    {
+        return CalculateRegression("BIFIE.linreg", "R^2", analysis);
+    }
+
+    public List<GenericVector>? CalculateLogistReg(AnalysisLogistReg analysis)
+    {
+        return CalculateRegression("BIFIE.logistreg", "R2", analysis);
+    }
+        
+    private List<GenericVector>? CalculateRegression(string method, string r2parameter, AnalysisRegression analysis)
+    {
+        if (analysis.Dependent == null || analysis.Vars.Count == 0 ||
+            analysis.AnalysisConfiguration.ModeKeep == false && !PrepareForAnalysis(analysis))
+        {
             return null;
         }
 
-        private List<GenericVector>? CalculateRegressionSingle(string method, Variable dependent, List<Variable> predictors, bool withIntercept, List<Variable> groups, bool calcualteOverall, bool calculateCrosswise)
+        if (analysis.Sequence == AnalysisRegression.RegressionSequence.AllIn || analysis.Vars.Count == 1)
         {
-            try
+            var result = CalculateRegressionSingle(method, analysis.Dependent, analysis.Vars, analysis.WithIntercept, analysis.GroupBy, analysis.CalculateOverall, analysis.CalculateCrosswise);
+            if (result == null)
             {
-                List<GenericVector> resultList = new();
+                return null;
+            }
+            else
+            {
+                return result;
+            }
+        }
 
-                string baseCall = "lsanalyzer_result_regression <- BIFIEsurvey::" + method + "(BIFIEobj = lsanalyzer_dat_BO, dep = '" + dependent.Name + "', pre = c(" + (withIntercept ? "'one', " : "") + string.Join(", ", predictors.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                string groupByArg = "";
+        if (analysis.Sequence == AnalysisRegression.RegressionSequence.Forward)
+        {
+            List<Variable> usedPredictors = new();
+            List<Variable> availablePredictors = new(analysis.Vars);
+            List<GenericVector> resultList = new();
 
-                if (groups.Count == 0)
-                {
-                    EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
-                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_regression").AsList());
-                }
-                else if (groups.Count > 0 && !calcualteOverall)
-                {
-                    groupByArg = ", group = c(" + string.Join(", ", groups.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                    EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
-                    resultList.Add(_engine!.GetSymbol("lsanalyzer_result_regression").AsList());
-                }
-                else
-                {
-                    var groupByCombinations = Combinations.GetCombinations(groups);
+            while (availablePredictors.Count > 0)
+            {
+                double maxR2 = double.MinValue;
+                Variable? bestNextPredictor = null;
+                GenericVector? bestNextModel = null;
 
-                    for (int nGroups = 0; nGroups <= groups.Count; nGroups++)
+                foreach (var predictor in availablePredictors)
+                {
+                    var result = CalculateRegressionSingle(method, analysis.Dependent, usedPredictors.Concat(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false, false);
+                    if (result == null)
                     {
-                        if (nGroups > 0 && nGroups < groups.Count && !calculateCrosswise) continue;
+                        return null;
+                    }
+
+                    var stats = result[0]["stat"].AsDataFrame();
+                    double R2 = (double)stats.GetRows().First(row => (string)row["parameter"] == r2parameter)["est"];
+
+                    if (R2 > maxR2)
+                    {
+                        maxR2 = R2;
+                        bestNextPredictor = predictor;
+                        bestNextModel = result[0];
+                    }
+                }
+
+                usedPredictors.Add(bestNextPredictor!);
+                availablePredictors.Remove(bestNextPredictor!);
+                resultList.Add(bestNextModel!);
+            }
+
+            return resultList;
+        }
+
+        if (analysis.Sequence == AnalysisRegression.RegressionSequence.Backward)
+        {
+            var result = CalculateRegressionSingle(method, analysis.Dependent, analysis.Vars, analysis.WithIntercept, new(), false, false);
+            if (result == null)
+            {
+                return null;
+            }
+
+            List<Variable> usedPredictors = new(analysis.Vars);
+            List<GenericVector> resultList = [result[0]];
+
+            while (usedPredictors.Count > 1)
+            {
+                double minR2 = double.MaxValue;
+                Variable? bestNextPredictor = null;
+                GenericVector? worstNextModel = null;
+
+                foreach (var predictor in usedPredictors)
+                {
+                    result = CalculateRegressionSingle(method, analysis.Dependent, usedPredictors.Except(new List<Variable>() { predictor }).ToList(), analysis.WithIntercept, new(), false, false);
+                    if (result == null)
+                    {
+                        return null;
+                    }
+
+                    var stats = result[0]["stat"].AsDataFrame();
+                    double R2 = (double)stats.GetRows().First(row => (string)row["parameter"] == r2parameter)["est"];
+
+                    if (R2 < minR2)
+                    {
+                        minR2 = R2;
+                        bestNextPredictor = predictor;
+                        worstNextModel = result[0];
+                    }
+                }
+
+                usedPredictors.Remove(bestNextPredictor!);
+                resultList.Add(worstNextModel!);
+            }
+
+            return resultList;
+        }
+
+        return null;
+    }
+
+    private List<GenericVector>? CalculateRegressionSingle(string method, Variable dependent, List<Variable> predictors, bool withIntercept, List<Variable> groups, bool calcualteOverall, bool calculateCrosswise)
+    {
+        try
+        {
+            List<GenericVector> resultList = new();
+
+            string baseCall = "lsanalyzer_result_regression <- BIFIEsurvey::" + method + "(BIFIEobj = lsanalyzer_dat_BO, dep = '" + dependent.Name + "', pre = c(" + (withIntercept ? "'one', " : "") + string.Join(", ", predictors.ConvertAll(var => "'" + var.Name + "'")) + ")";
+            string groupByArg = "";
+
+            if (groups.Count == 0)
+            {
+                EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
+                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_regression").AsList());
+            }
+            else if (groups.Count > 0 && !calcualteOverall)
+            {
+                groupByArg = ", group = c(" + string.Join(", ", groups.ConvertAll(var => "'" + var.Name + "'")) + ")";
+                EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
+                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_regression").AsList());
+            }
+            else
+            {
+                var groupByCombinations = Combinations.GetCombinations(groups);
+
+                for (int nGroups = 0; nGroups <= groups.Count; nGroups++)
+                {
+                    if (nGroups > 0 && nGroups < groups.Count && !calculateCrosswise) continue;
                         
-                        if (nGroups == 0)
+                    if (nGroups == 0)
+                    {
+                        groupByArg = "";
+                        EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
+                        resultList.Add(_engine!.GetSymbol("lsanalyzer_result_regression").AsList());
+                    }
+                    else
+                    {
+                        var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
+                        foreach (var combination in groupByCombinationsN)
                         {
-                            groupByArg = "";
+                            groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
                             EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
                             resultList.Add(_engine!.GetSymbol("lsanalyzer_result_regression").AsList());
                         }
-                        else
-                        {
-                            var groupByCombinationsN = groupByCombinations.Where(combination => combination.Count == nGroups).ToList();
-                            foreach (var combination in groupByCombinationsN)
-                            {
-                                groupByArg = ", group = c(" + string.Join(", ", combination.ConvertAll(var => "'" + var.Name + "'")) + ")";
-                                EvaluateAndLog(baseCall + groupByArg + ")", method == "BIFIE.linreg" ? "Linear regression" : "Logistic regression");
-                                resultList.Add(_engine!.GetSymbol("lsanalyzer_result_regression").AsList());
-                            }
-                        }
                     }
                 }
+            }
 
-                return resultList;
-            }
-            catch
-            {
-                return null;
-            }
+            return resultList;
         }
-        
-        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable> pvVars, bool forPreview = false)
+        catch
         {
-            return virtualVariable switch
-            {
-                VirtualVariableCombine virtualVariableCombine => CreateVirtualVariableCombine(virtualVariableCombine, pvVars, forPreview),
-                VirtualVariableScale virtualVariableScale => CreateVirtualVariableScale(virtualVariableScale, pvVars, forPreview),
-                VirtualVariableRecode virtualVariableRecode => CreateVirtualVariableRecode(virtualVariableRecode, pvVars, forPreview),
-                _ => throw new ArgumentOutOfRangeException(nameof(virtualVariable), virtualVariable, null)
-            };
+            return null;
         }
+    }
 
-        private bool CreateVirtualVariableCombine(VirtualVariableCombine virtualVariableCombine, List<PlausibleValueVariable> pvVars, bool forPreview)
+    public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null, bool fromStoredRaw = false)
+    {
+        try
         {
-            try
+            if (!fromStoredRaw)
             {
-                if (!virtualVariableCombine.FromPlausibleValues)
+                fileType ??= fileName.Substring(fileName.LastIndexOf('.') + 1);
+
+                switch (fileType.ToLower())
                 {
-                    return ComputeVirtualVariableCombine(virtualVariableCombine, forPreview);
-                }
-                
-                Dictionary<string, List<string>> pvVarsNames = [];
-                
-                foreach (var pvVar in pvVars.Where(pvVar => virtualVariableCombine.Variables.Any(var => var.Name == pvVar.DisplayName)))
-                {
-                    pvVarsNames.Add(pvVar.DisplayName, _engine?.Evaluate($"""grep("{pvVar.Regex}", colnames(lsanalyzer_dat_raw_stored), value = TRUE)""").AsCharacter().Order().ToList() ?? []);
-                }
-                
-                if (pvVarsNames.Count == 0) return false;
-
-                var numberOfImputations = pvVarsNames.First().Value.Count;
-                if (numberOfImputations == 0 || pvVarsNames.Any(entry => entry.Value.Count != numberOfImputations)) return false;
-
-                for (var imputation = 0; imputation < numberOfImputations; imputation++)
-                {
-                    var virtualVariableClone = (virtualVariableCombine.Clone() as VirtualVariableCombine)!;
-                    virtualVariableClone.Name = virtualVariableCombine.Name + "_" + (imputation + 1);
-                    
-                    foreach (var (name, varNames) in pvVarsNames)
-                    {
-                        virtualVariableClone.Variables.First(variable => variable.Name == name).Name = varNames[imputation];
-                    }
-
-                    if (!ComputeVirtualVariableCombine(virtualVariableClone, forPreview)) return false;
-                }
-                
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private bool ComputeVirtualVariableCombine(VirtualVariableCombine virtualVariableCombine, bool forPreview)
-        {
-            try
-            {
-                if (virtualVariableCombine.Variables.Count == 0) return false;
-
-                if (forPreview)
-                {
-                    var inputVariablesString = string.Join(", ", virtualVariableCombine.Variables.Select(v => "'" + v.Name + "'"));
-                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString}),drop=FALSE]");
-                }
-
-                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
-                
-                var nameExists = _engine?.Evaluate($"'{virtualVariableCombine.Name}' %in% colnames({target})").AsLogical().First() ?? true;
-                if (nameExists) return false;
-
-                var assignment = $"{target}[,'{virtualVariableCombine.Name}']";
-                
-                var baseCall = virtualVariableCombine.Type switch
-                {
-                    VirtualVariableCombine.CombinationFunction.Sum => "rowSums",
-                    VirtualVariableCombine.CombinationFunction.Mean => "rowMeans",
-                    VirtualVariableCombine.CombinationFunction.FactorScores => "lsanalyzer_func_factorScores",
-                    _ => throw new ArgumentOutOfRangeException(nameof(virtualVariableCombine), virtualVariableCombine.Type.ToString(), "not in enum")
-                };
-
-                var subset = $"subset({target}, select = c({string.Join(", ", virtualVariableCombine.Variables.ToList().ConvertAll(var => "'" + var.Name + "'"))}))";
-                var removeNa = virtualVariableCombine.RemoveNa ? "TRUE" : "FALSE";
-                
-                var fullCall = $"{assignment} <- {baseCall}({subset}, na.rm = {removeNa})";
-                
-                EvaluateAndLog(fullCall);
-
-                EvaluateAndLog($"{assignment}[is.nan({assignment})] <- as.numeric(NA)");
-
-                if (!string.IsNullOrWhiteSpace(virtualVariableCombine.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
-                {
-                    EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableCombine.Name}'] = '{virtualVariableCombine.Label}'");
-                }
-                
-                _lastVirtualVariableNames.Add(virtualVariableCombine.Name);
-                
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private bool CreateVirtualVariableScale(VirtualVariableScale virtualVariableScale, List<PlausibleValueVariable> pvVars, bool forPreview)
-        {
-            try
-            {
-                if (virtualVariableScale.InputVariable is null) return false;
-                
-                if (!virtualVariableScale.FromPlausibleValues)
-                {
-                    return ComputeVirtualVariableScale(virtualVariableScale, forPreview);
-                }
-
-                var pvVar = pvVars.FirstOrDefault(pvVar => pvVar.DisplayName == virtualVariableScale.InputVariable.Name);
-                if (pvVar is null) return false;
-                
-                var baseVariableNames = _engine?.Evaluate($"""grep("{pvVar.Regex}", colnames(lsanalyzer_dat_raw_stored), value = TRUE)""").AsCharacter().Order().ToList();
-                if (baseVariableNames is null || baseVariableNames.Count == 0) return false;
-                
-                for (var imputation = 0; imputation < baseVariableNames.Count; imputation++)
-                {
-                    var virtualVariableClone = (virtualVariableScale.Clone() as VirtualVariableScale)!;
-                    virtualVariableClone.Name = virtualVariableScale.Name + "_" + (imputation + 1);
-                    virtualVariableClone.InputVariable!.Name = baseVariableNames[imputation];
-                    
-                    if (!ComputeVirtualVariableScale(virtualVariableClone, forPreview)) return false;
-                }
-                
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private bool ComputeVirtualVariableScale(VirtualVariableScale virtualVariableScale, bool forPreview)
-        {
-            try
-            {
-                if (virtualVariableScale.InputVariable is null || virtualVariableScale.WeightVariable is null) return false;
-
-                if (forPreview)
-                {
-                    var addMiVariableToPreview = virtualVariableScale.MiVariable is null
-                        ? string.Empty
-                        : $", '{virtualVariableScale.MiVariable.Name}'";
-                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c('{virtualVariableScale.InputVariable.Name}', '{virtualVariableScale.WeightVariable.Name}'{addMiVariableToPreview}),drop=FALSE]");
-                }
-
-                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
-                
-                var nameExists = _engine?.Evaluate($"'{virtualVariableScale.Name}' %in% colnames({target})").AsLogical().First() ?? true;
-                if (nameExists) return false;
-
-                switch (virtualVariableScale.Type)
-                {
-                    case VirtualVariableScale.ScaleType.Linear:
-                        if (!ComputeVirtualVariableScaleLinear(virtualVariableScale, forPreview)) return false;
+                    case "sav":
+                        EvaluateAndLog("lsanalyzer_some_file_raw <- foreign::read.spss('" +
+                                       fileName.Replace("\\", "/") +
+                                       "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
                         break;
-                    case VirtualVariableScale.ScaleType.Logarithmic:
-                        if (!ComputeVirtualVariableScaleLogarithmic(virtualVariableScale, forPreview)) return false;
+                    case "rds":
+                        EvaluateAndLog("lsanalyzer_some_file_raw <- readRDS('" + fileName.Replace("\\", "/") +
+                                       "')");
+                        break;
+                    case "csv":
+                        EvaluateAndLog("lsanalyzer_some_file_raw <- utils::read.csv('" +
+                                       fileName.Replace("\\", "/") + "')");
+                        break;
+                    case "csv2":
+                        EvaluateAndLog("lsanalyzer_some_file_raw <- utils::read.csv2('" +
+                                       fileName.Replace("\\", "/") + "')");
+                        break;
+                    case "xlsx":
+                        EvaluateAndLog("lsanalyzer_some_file_raw <- openxlsx::read.xlsx('" +
+                                       fileName.Replace("\\", "/") + "', sheet = 1)");
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        return new();
                 }
-                
-                return true;
             }
-            catch
-            {
-                return false;
-            }
+
+            var target = fromStoredRaw ? "lsanalyzer_dat_raw_stored" : "lsanalyzer_some_file_raw";
+
+            var variables = _engine!.Evaluate($"colnames({target})").AsCharacter();
+
+            var vv = 0;
+
+            return variables.Select(variable => new Variable(++vv, variable)).ToList();
         }
-
-        private bool ComputeVirtualVariableScaleLinear(VirtualVariableScale virtualVariableScale, bool forPreview)
+        catch
         {
-            // uses stats::weighted.mean with na.rm = TRUE to get a mean (per MI)
-            // mimics Hmisc::wtd.var (5.2-4) with na.rm = TRUE to a get variance (per MI)
-            try
-            {
-                if (virtualVariableScale.InputVariable is null || virtualVariableScale.WeightVariable is null) return false;
-                
-                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
-                var inputVariable = virtualVariableScale.InputVariable.Name;
-                var weightVariable = virtualVariableScale.WeightVariable.Name;
-                
-                if (virtualVariableScale.MiVariable is null)
-                {
-                    var weightedMean = $"stats::weighted.mean({target}$`{inputVariable}`, w = {target}$`{weightVariable}`, na.rm = TRUE)";
-                    EvaluateAndLog($"{target}$lsanalyzer_tmp_mean <- {weightedMean}");
-
-                    var sumOfWeights = $"sum({target}$`{weightVariable}`[!is.na({target}$`{inputVariable}`)])";
-                    var weightedSd = $"sqrt(sum({target}$`{weightVariable}` * ({target}$`{inputVariable}` - {target}$lsanalyzer_tmp_mean) ^ 2.0, na.rm = TRUE) / ({sumOfWeights} - 1))";
-                    EvaluateAndLog($"{target}$lsanalyzer_tmp_sd <- {weightedSd}");
-                }
-                else
-                {
-                    var miVariable = virtualVariableScale.MiVariable.Name;
-                    var weightedMean = $"stats::weighted.mean(imp1$`{inputVariable}`, w = imp1$`{weightVariable}`, na.rm = TRUE)";
-                    var sumOfWeights = $"sum(imp1$`{weightVariable}`[!is.na(imp1$`{inputVariable}`)])";
-                    var weightedSd = $"sqrt(sum(imp1$`{weightVariable}` * (imp1$`{inputVariable}` - {weightedMean}) ^ 2.0, na.rm = TRUE) / ({sumOfWeights} - 1))";
-                    
-                    EvaluateAndLog($$"""lsanalyzer_tmp_means <- do.call('rbind', lapply(split({{target}}, {{target}}$`{{miVariable}}`), FUN = function(imp1) { return(data.frame(mi = unique(imp1$`{{miVariable}}`), lsanalyzer_tmp_mean = {{weightedMean}}, lsanalyzer_tmp_sd = {{weightedSd}})) }))""");
-                    EvaluateAndLog($"{target} <- merge({target}, lsanalyzer_tmp_means, by.x='{miVariable}', by.y='mi', all.x=TRUE)");
-                }
-
-                EvaluateAndLog($"{target}$`{virtualVariableScale.Name}` <- ({target}$`{inputVariable}` - {target}$lsanalyzer_tmp_mean) / {target}$lsanalyzer_tmp_sd * {virtualVariableScale.Sd.ToString(CultureInfo.InvariantCulture)} + {virtualVariableScale.Mean.ToString(CultureInfo.InvariantCulture)}");
-                
-                EvaluateAndLog($"{target}$lsanalyzer_tmp_mean <- NULL");
-                EvaluateAndLog($"{target}$lsanalyzer_tmp_sd <- NULL");
-
-                if (!string.IsNullOrWhiteSpace(virtualVariableScale.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
-                {
-                    EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableScale.Name}'] = '{virtualVariableScale.Label}'");
-                }
-                
-                _lastVirtualVariableNames.Add(virtualVariableScale.Name);
-                
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return null;
         }
+    }
 
-        private bool ComputeVirtualVariableScaleLogarithmic(VirtualVariableScale virtualVariableScale, bool forPreview)
+    public DataFrame? GetValueLabels(string variable)
+    {
+        try
         {
-            try
+            if (_engine!.Evaluate("'" + variable + "' %in% colnames(lsanalyzer_dat_raw_stored)").AsLogical().First()) 
             {
-                if (virtualVariableScale.InputVariable is null || virtualVariableScale.LogBase <= 1.0) return false;
-
-                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
-                var inputVariable = virtualVariableScale.InputVariable.Name;
-                
-                if (!virtualVariableScale.Center)
-                {
-                    EvaluateAndLog($"{target}$`{virtualVariableScale.Name}` <- log({target}$`{inputVariable}`, base = {virtualVariableScale.LogBase.ToString(CultureInfo.InvariantCulture)})");
-                }
-                else
-                {
-                    if (virtualVariableScale.WeightVariable is null) return false;
-                    
-                    var weightVariable = virtualVariableScale.WeightVariable.Name;
-                    
-                    if (virtualVariableScale.MiVariable is null)
-                    {
-                        var weightedMean = $"stats::weighted.mean({target}$`{inputVariable}`, w = {target}$`{weightVariable}`, na.rm = TRUE)";
-                        EvaluateAndLog($"{target}$lsanalyzer_tmp_mean <- {weightedMean}");
-                    }
-                    else
-                    {
-                        var miVariable = virtualVariableScale.MiVariable.Name;
-                        var weightedMean = $"stats::weighted.mean(imp1$`{inputVariable}`, w = imp1$`{weightVariable}`, na.rm = TRUE)";
-                        
-                        EvaluateAndLog($$"""lsanalyzer_tmp_means <- do.call('rbind', lapply(split({{target}}, {{target}}$`{{miVariable}}`), FUN = function(imp1) { return(data.frame(mi = unique(imp1$`{{miVariable}}`), lsanalyzer_tmp_mean = {{weightedMean}})) }))""");
-                        EvaluateAndLog($"{target} <- merge({target}, lsanalyzer_tmp_means, by.x='{miVariable}', by.y='mi', all.x=TRUE)");
-                    }
-                    
-                    EvaluateAndLog($"{target}$`{virtualVariableScale.Name}` <- log({target}$`{inputVariable}` / {target}$lsanalyzer_tmp_mean, base = {virtualVariableScale.LogBase.ToString(CultureInfo.InvariantCulture)})");
-                    
-                    EvaluateAndLog($"{target}$lsanalyzer_tmp_mean <- NULL");
-                }
-
-                if (!string.IsNullOrWhiteSpace(virtualVariableScale.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
-                {
-                    EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableScale.Name}'] = '{virtualVariableScale.Label}'");
-                }
-                
-                _lastVirtualVariableNames.Add(virtualVariableScale.Name);
-                
-                return true;
-            }
-            catch
+                EvaluateAndLog("lsanalyzer_value_labels <- attr(lsanalyzer_dat_raw_stored[, '" + variable + "'], 'value.labels')");
+            } else
             {
-                return false;
-            }
-        }
-        
-        private bool CreateVirtualVariableRecode(VirtualVariableRecode virtualVariableRecode, List<PlausibleValueVariable> pvVars, bool forPreview)
-        {
-            try
-            {
-                if (!virtualVariableRecode.FromPlausibleValues)
-                {
-                    return ComputeVirtualVariableRecode(virtualVariableRecode, forPreview);
-                }
-                
-                Dictionary<string, List<string>> pvVarsNames = [];
-                
-                foreach (var pvVar in pvVars.Where(pvVar => virtualVariableRecode.Variables.Any(var => var.Name == pvVar.DisplayName)))
-                {
-                    pvVarsNames.Add(pvVar.DisplayName, _engine?.Evaluate($"""grep("{pvVar.Regex}", colnames(lsanalyzer_dat_raw_stored), value = TRUE)""").AsCharacter().Order().ToList() ?? []);
-                }
-                
-                if (pvVarsNames.Count == 0) return false;
-
-                var numberOfImputations = pvVarsNames.First().Value.Count;
-                if (numberOfImputations == 0 || pvVarsNames.Any(entry => entry.Value.Count != numberOfImputations)) return false;
-
-                for (var imputation = 0; imputation < numberOfImputations; imputation++)
-                {
-                    var virtualVariableClone = (virtualVariableRecode.Clone() as VirtualVariableRecode)!;
-                    virtualVariableClone.Name = virtualVariableRecode.Name + "_" + (imputation + 1);
-                    
-                    foreach (var (name, varNames) in pvVarsNames)
-                    {
-                        virtualVariableClone.Variables.First(variable => variable.Name == name).Name = varNames[imputation];
-                    }
-
-                    if (!ComputeVirtualVariableRecode(virtualVariableClone, forPreview)) return false;
-                }
-                
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private bool ComputeVirtualVariableRecode(VirtualVariableRecode virtualVariableRecode, bool forPreview)
-        {
-            try
-            {
-                if (forPreview)
-                {
-                    if (virtualVariableRecode.Variables.Count > 0)
-                    {
-                        var inputVariablesString = string.Join(", ", virtualVariableRecode.Variables.Select(v => "'" + v.Name + "'"));
-                        EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString}),drop=FALSE]");
-                    }
-                    else
-                    {
-                        EvaluateAndLog($"lsanalyzer_dat_raw_preview <- data.frame(Input = numeric(nrow(lsanalyzer_dat_raw_stored)))");
-                    }
-                }
-                
-                var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
-                
-                var nameExists = _engine?.Evaluate($"'{virtualVariableRecode.Name}' %in% colnames({target})").AsLogical().First() ?? true;
-                if (nameExists) return false;
-                
-                if (virtualVariableRecode is { Else: VirtualVariableRecode.ElseAction.Copy, Variables.Count: 0 }) return false;
-                var elseResult = virtualVariableRecode.Else switch
-                {
-                    VirtualVariableRecode.ElseAction.Missing => "as.numeric(NA)",
-                    VirtualVariableRecode.ElseAction.Copy => $"{target}$`{virtualVariableRecode.Variables.First().Name}`",
-                    VirtualVariableRecode.ElseAction.Set => $"{virtualVariableRecode.ElseValue.ToString(CultureInfo.InvariantCulture)}",
-                    _ => throw new ArgumentOutOfRangeException(),
-                };
-
-                EvaluateAndLog($"{target}$`{virtualVariableRecode.Name}` <- {elseResult}");
-
-                foreach (var rule in virtualVariableRecode.Rules)
-                {
-                    var criteria = rule.Criteria.Select(crit =>
-                    {
-                        var variable = $"{target}$`{virtualVariableRecode.Variables[crit.VariableIndex].Name}`";
-                        var value = $"{crit.Value.ToString(CultureInfo.InvariantCulture)}";
-                        var maxValue = $"{crit.MaxValue.ToString(CultureInfo.InvariantCulture)}";
-                        
-                        return crit.Type switch
-                        {
-                            VirtualVariableRecode.Term.TermType.Missing => $"is.na({variable})",
-                            VirtualVariableRecode.Term.TermType.Exactly => $"{variable} == {value}",
-                            VirtualVariableRecode.Term.TermType.Between => $"{variable} >= {value} & {variable} <= {maxValue}",
-                            VirtualVariableRecode.Term.TermType.AtLeast => $"{variable} >= {value}",
-                            VirtualVariableRecode.Term.TermType.AtMost => $"{variable} <= {maxValue}",
-                            _ => throw new ArgumentOutOfRangeException()
-                        };
-                    }).ToList();
-
-                    EvaluateAndLog($"lsanalyzer_tmp_filter <- {string.Join(" & ", criteria)}");
-                    EvaluateAndLog("lsanalyzer_tmp_filter[is.na(lsanalyzer_tmp_filter)] <- FALSE");
-
-                    var result = rule.ResultNa ? "NA" : rule.ResultValue.ToString(CultureInfo.InvariantCulture);
-                    
-                    EvaluateAndLog($"{target}$`{virtualVariableRecode.Name}`[lsanalyzer_tmp_filter] <- {result}");
-                }
-
-                if (_engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
-                {
-                    if (!string.IsNullOrWhiteSpace(virtualVariableRecode.Label))
-                    {
-                        EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableRecode.Name}'] = '{virtualVariableRecode.Label}'");
-                    }
-
-                    var valueLabels = string.Join(", ", virtualVariableRecode.Rules.Where(r => !r.ResultNa && !string.IsNullOrWhiteSpace(r.Label)).Select(r => $"`{r.Label.Replace("`", "'")}` = {r.ResultValue.ToString(CultureInfo.InvariantCulture)}"));
-                    if (virtualVariableRecode.ElseValueMakesSense && !string.IsNullOrWhiteSpace(virtualVariableRecode.ElseLabel))
-                    {
-                        var elseValueLabel = $"`{virtualVariableRecode.ElseLabel.Replace("`", "'")}` = {virtualVariableRecode.ElseValue.ToString(CultureInfo.InvariantCulture)}";
-                        valueLabels = string.IsNullOrWhiteSpace(valueLabels) ? elseValueLabel : $"{valueLabels}, {elseValueLabel}";
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(valueLabels))
-                    {
-                        EvaluateAndLog($"attributes({target}$`{virtualVariableRecode.Name}`)$value.labels <- c({valueLabels})");
-                    }
-                }
-
-                _lastVirtualVariableNames.Add(virtualVariableRecode.Name);
-                
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-        
-        public (bool success, DataTable? dataTable) GetPreviewData()
-        {
-            try
-            {
-                _engine?.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview[!duplicated(lsanalyzer_dat_raw_preview),]");
-                _engine?.Evaluate("if (nrow(lsanalyzer_dat_raw_preview_distinct) > 50) lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[1:50,]");
-                _engine?.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[do.call(order, lsanalyzer_dat_raw_preview_distinct),]");
-
-                var previewData = Fetch("lsanalyzer_dat_raw_preview_distinct")?.AsDataFrame();
-                
-                return previewData is null ? (false, null) : (true, DataFrameToDataTable(previewData, "preview"));
-            }
-            catch
-            {
-                return (false, null);
-            }
-        }
-
-        public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null, bool fromStoredRaw = false)
-        {
-            try
-            {
-                if (!fromStoredRaw)
-                {
-                    fileType ??= fileName.Substring(fileName.LastIndexOf('.') + 1);
-
-                    switch (fileType.ToLower())
-                    {
-                        case "sav":
-                            EvaluateAndLog("lsanalyzer_some_file_raw <- foreign::read.spss('" +
-                                           fileName.Replace("\\", "/") +
-                                           "', use.value.labels = FALSE, to.data.frame = TRUE, use.missings = TRUE)");
-                            break;
-                        case "rds":
-                            EvaluateAndLog("lsanalyzer_some_file_raw <- readRDS('" + fileName.Replace("\\", "/") +
-                                           "')");
-                            break;
-                        case "csv":
-                            EvaluateAndLog("lsanalyzer_some_file_raw <- utils::read.csv('" +
-                                           fileName.Replace("\\", "/") + "')");
-                            break;
-                        case "csv2":
-                            EvaluateAndLog("lsanalyzer_some_file_raw <- utils::read.csv2('" +
-                                           fileName.Replace("\\", "/") + "')");
-                            break;
-                        case "xlsx":
-                            EvaluateAndLog("lsanalyzer_some_file_raw <- openxlsx::read.xlsx('" +
-                                           fileName.Replace("\\", "/") + "', sheet = 1)");
-                            break;
-                        default:
-                            return new();
-                    }
-                }
-
-                var target = fromStoredRaw ? "lsanalyzer_dat_raw_stored" : "lsanalyzer_some_file_raw";
-
-                var variables = _engine!.Evaluate($"colnames({target})").AsCharacter();
-
-                var vv = 0;
-
-                return variables.Select(variable => new Variable(++vv, variable)).ToList();
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public DataFrame? GetValueLabels(string variable)
-        {
-            try
-            {
-                if (_engine!.Evaluate("'" + variable + "' %in% colnames(lsanalyzer_dat_raw_stored)").AsLogical().First()) 
-                {
-                    EvaluateAndLog("lsanalyzer_value_labels <- attr(lsanalyzer_dat_raw_stored[, '" + variable + "'], 'value.labels')");
-                } else
-                {
-                    // try to use variable name as regex but only return value labels if they are the same for all matches
-                    EvaluateAndLog(@"# try to fetch value labels per variable name regex
+                // try to use variable name as regex but only return value labels if they are the same for all matches
+                EvaluateAndLog(@"# try to fetch value labels per variable name regex
                         lsanalyzer_value_labels <- NULL
                         lsanalyzer_possible_variables <- grep('" + variable + @"', colnames(lsanalyzer_dat_raw_stored), value = TRUE)
                         for (lsanalyzer_possible_variable in lsanalyzer_possible_variables) {
@@ -1957,137 +1525,131 @@ namespace LSAnalyzer.Services
                         }
                     ", null, true);
 
-                }
+            }
 
-                if (!_engine!.GetSymbol("lsanalyzer_value_labels").IsVector())
+            if (!_engine!.GetSymbol("lsanalyzer_value_labels").IsVector())
+            {
+                return null;
+            }
+
+            EvaluateAndLog("lsanalyzer_value_labels_df <- data.frame(value = lsanalyzer_value_labels, label = names(lsanalyzer_value_labels))");
+            return _engine.GetSymbol("lsanalyzer_value_labels_df").AsDataFrame();
+        } catch 
+        { 
+            return null; 
+        }
+    }
+
+    public List<double>? GetDistinctValues(Variable variable, List<PlausibleValueVariable> plausibleValueVariables)
+    {
+        try
+        {
+            List<string> variableNamesInRawData;
+
+            if (!variable.FromPlausibleValues)
+            {
+                variableNamesInRawData = [variable.Name];
+            }
+            else
+            {
+                var plausibleValueVariable = plausibleValueVariables.FirstOrDefault(pv => pv.DisplayName == variable.Name);
+                if (plausibleValueVariable is null)
                 {
                     return null;
                 }
 
-                EvaluateAndLog("lsanalyzer_value_labels_df <- data.frame(value = lsanalyzer_value_labels, label = names(lsanalyzer_value_labels))");
-                return _engine.GetSymbol("lsanalyzer_value_labels_df").AsDataFrame();
-            } catch 
-            { 
-                return null; 
+                variableNamesInRawData = _engine!.Evaluate($"grep('{plausibleValueVariable.Regex}', colnames(lsanalyzer_dat_raw_stored), value = TRUE)").AsCharacter().ToList();
             }
-        }
 
-        public List<double>? GetDistinctValues(Variable variable, List<PlausibleValueVariable> plausibleValueVariables)
-        {
-            try
+            EvaluateAndLog("lsanalyzer_tmp_distinct_values <- numeric(0)");
+
+            foreach (var variableName in variableNamesInRawData)
             {
-                List<string> variableNamesInRawData;
-
-                if (!variable.FromPlausibleValues)
+                if (!_engine!.Evaluate($"'{variableName}' %in% colnames(lsanalyzer_dat_raw_stored)").AsLogical().First())
                 {
-                    variableNamesInRawData = [variable.Name];
+                    return null;
                 }
-                else
-                {
-                    var plausibleValueVariable = plausibleValueVariables.FirstOrDefault(pv => pv.DisplayName == variable.Name);
-                    if (plausibleValueVariable is null)
-                    {
-                        return null;
-                    }
-
-                    variableNamesInRawData = _engine!.Evaluate($"grep('{plausibleValueVariable.Regex}', colnames(lsanalyzer_dat_raw_stored), value = TRUE)").AsCharacter().ToList();
-                }
-
-                EvaluateAndLog("lsanalyzer_tmp_distinct_values <- numeric(0)");
-
-                foreach (var variableName in variableNamesInRawData)
-                {
-                    if (!_engine!.Evaluate($"'{variableName}' %in% colnames(lsanalyzer_dat_raw_stored)").AsLogical().First())
-                    {
-                        return null;
-                    }
-                    EvaluateAndLog($"lsanalyzer_tmp_distinct_values <- sort(unique(c(lsanalyzer_tmp_distinct_values, unique(stats::na.omit(lsanalyzer_dat_raw_stored$`{variableName}`)))))");
-                }
+                EvaluateAndLog($"lsanalyzer_tmp_distinct_values <- sort(unique(c(lsanalyzer_tmp_distinct_values, unique(stats::na.omit(lsanalyzer_dat_raw_stored$`{variableName}`)))))");
+            }
                 
-                return _engine!.GetSymbol("lsanalyzer_tmp_distinct_values").AsNumeric().ToList();
-            }
-            catch
-            {
-                return null;
-            }
+            return _engine!.GetSymbol("lsanalyzer_tmp_distinct_values").AsNumeric().ToList();
         }
-
-        public virtual bool Execute(string rCode, bool oneLiner = false)
+        catch
         {
-            try
-            {
-                EvaluateAndLog(rCode, null, oneLiner);
-                return true;
-            } catch
-            {
-                return false;
-            }
+            return null;
         }
+    }
 
-        public virtual SymbolicExpression? Fetch(string objectName)
+    public virtual bool Execute(string rCode, bool oneLiner = false)
+    {
+        try
         {
-            try
-            {
-                return _engine!.GetSymbol(objectName);
-            }
-            catch
-            {
-                return null;
-            }
+            EvaluateAndLog(rCode, null, oneLiner);
+            return true;
+        } catch
+        {
+            return false;
         }
+    }
 
-        private DataTable DataFrameToDataTable(DataFrame dataFrame, string name)
+    public virtual SymbolicExpression? Fetch(string objectName)
+    {
+        try
         {
-            DataTable previewTable = new(name);
+            return _engine!.GetSymbol(objectName);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private DataTable DataFrameToDataTable(DataFrame dataFrame, string name)
+    {
+        DataTable previewTable = new(name);
+        for (var cc = 0; cc < dataFrame.ColumnCount; cc++)
+        {
+            previewTable.Columns.Add(dataFrame.ColumnNames[cc].Replace("_", "__"), typeof(double));
+        }
+        for (var rc = 0; rc < dataFrame.RowCount; rc++)
+        {
+            var newRow = previewTable.Rows.Add();
             for (var cc = 0; cc < dataFrame.ColumnCount; cc++)
             {
-                previewTable.Columns.Add(dataFrame.ColumnNames[cc].Replace("_", "__"), typeof(double));
+                newRow[cc] = dataFrame[rc, cc];
             }
-            for (var rc = 0; rc < dataFrame.RowCount; rc++)
-            {
-                var newRow = previewTable.Rows.Add();
-                for (var cc = 0; cc < dataFrame.ColumnCount; cc++)
-                {
-                    newRow[cc] = dataFrame[rc, cc];
-                }
-            }
-
-            return previewTable;
         }
 
-        public void SendUserInterrupt()
-        {
-            _engine?.UserInterrupt();
-        }
-
-        public void ClearUserInterrupt()
-        {
-            _engine?.ClearUserInterrupt();
-        }
-
-        public void Dispose()
-        {
-            _engine?.Dispose();
-            _engine = null;
-        }
-
-        public class VirtualVariableErrorMessage
-        {
-            public required List<VirtualVariable> FailedVirtualVariables { init; get; }
-        }
+        return previewTable;
     }
 
-    public class SubsettingInformation
+    public void SendUserInterrupt()
     {
-        public bool ValidSubset { get; set; }
-        public bool MIvariance { get; set; } = false;
-        public bool EmptySubset { get; set; } = false;
-        public int NCases { get; set; }
-        public int NSubset { get; set; }
-
-        public string Stringify =>
-            ValidSubset ? "Subset has " + NSubset + " cases, data has " + NCases + " cases." : 
-                (MIvariance ? "Subsetting is not supported for variables with MI variance." : 
-                    (EmptySubset ? "Empty subset." : "Invalid subsetting expression."));
+        _engine?.UserInterrupt();
     }
+
+    public void ClearUserInterrupt()
+    {
+        _engine?.ClearUserInterrupt();
+    }
+
+    public void Dispose()
+    {
+        _engine?.Dispose();
+        _engine = null;
+    }
+}
+
+public class SubsettingInformation
+{
+    public bool ValidSubset { get; set; }
+    public bool MIvariance { get; set; } = false;
+    public bool EmptySubset { get; set; } = false;
+    public int NCases { get; set; }
+    public int NSubset { get; set; }
+
+    public string Stringify =>
+        ValidSubset ? "Subset has " + NSubset + " cases, data has " + NCases + " cases." : 
+            (MIvariance ? "Subsetting is not supported for variables with MI variance." : 
+                (EmptySubset ? "Empty subset." : "Invalid subsetting expression."));
 }
