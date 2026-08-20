@@ -46,6 +46,21 @@ namespace TestLSAnalyzer.Services
             Assert.NotNull(rservice.Fetch("x"));
             Assert.Null(rservice.Fetch("notexistenttestvariable"));
         }
+        
+        [Fact]
+        public void TestEvaluateAndLog()
+        {
+            Logging logger = new();
+            Rservice rservice = new(logger)
+            {
+                RLocation = new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryService()).GetRLocation() ?? (string.Empty, string.Empty)
+            };
+            
+            Assert.True(rservice.Connect(), "R must also be available for tests");
+            Assert.True(rservice.Execute("x <- 2 * 2"));
+            
+            Assert.Contains("x <- 2 * 2", logger.GetFullText());
+        }
 
         [Fact]
         public void TestInstallAndCheckNecessaryRPackages()
@@ -1275,7 +1290,6 @@ namespace TestLSAnalyzer.Services
         [Fact]
         public void TestCalculateLogistregAllIn()
         {
-            // TODO: test should also assert correct values but at BIFIEsurvey version 3.4-15, logistic regression with grouping variable is broken
             AnalysisConfiguration analysisConfiguration = new()
             {
                 FileName = Path.Combine(AssemblyDirectory, "_testData", "test_nmi10_logistic.sav"),
@@ -1308,6 +1322,7 @@ namespace TestLSAnalyzer.Services
             var stats = firstResult["stat"].AsDataFrame();
             Assert.Equal(8, stats.RowCount);
             Assert.Equal(5, Convert.ToInt32(stats["Ncases"][2]));
+            Assert.True(Math.Abs((double)stats["est"][3] - 0.19803206) < 0.0001);
 
             AnalysisConfiguration analysisConfigurationModeBuild = new()
             {

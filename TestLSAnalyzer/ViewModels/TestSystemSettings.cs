@@ -12,15 +12,31 @@ namespace TestLSAnalyzer.ViewModels;
 public class TestSystemSettings
 {
     [Fact]
+    public void TestSaveSessionLogCommand()
+    {
+        Logging logger = new();
+        var rservice = new Mock<IRservice>();
+        
+        SystemSettings systemSettingsViewModel = new(rservice.Object, new Mock<Configuration>().Object, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub(), new AnalysisQueueStub());
+
+        logger.AddEntry(new LogEntry(DateTime.Now, "lsanalyzer_func_quantile <- function("));
+        
+        var filename = Path.GetTempFileName();
+        systemSettingsViewModel.SaveSessionLogCommand.Execute(filename);
+
+        var savedLog = File.ReadAllText(filename);
+        Assert.Contains("- lsanalyzer_func_quantile <- function(", savedLog);
+    }
+    
+    [Fact]
     public void TestSaveSessionRcodeCommand()
     {
         Logging logger = new();
-        FakeRservice rservice = new(logger);
+        var rservice = new Mock<IRservice>();
 
-        rservice.Connect();
-        rservice.InjectAppFunctions();
+        SystemSettings systemSettingsViewModel = new(rservice.Object, new Mock<Configuration>().Object, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub(), new AnalysisQueueStub());
 
-        SystemSettings systemSettingsViewModel = new(rservice, new Mock<Configuration>().Object, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub(), new AnalysisQueueStub());
+        logger.AddEntry(new LogEntry(DateTime.Now, "lsanalyzer_func_quantile <- function("));
 
         var filename = Path.GetTempFileName();
         systemSettingsViewModel.SaveSessionRcodeCommand.Execute(filename);
@@ -29,25 +45,7 @@ public class TestSystemSettings
         Assert.Contains("lsanalyzer_func_quantile <- function(", savedLog);
         Assert.DoesNotContain("- lsanalyzer_func_quantile <- function(", savedLog);
     }
-
-    [Fact]
-    public void TestSaveSessionLogCommand()
-    {
-        Logging logger = new();
-        FakeRservice rservice = new(logger);
-
-        rservice.Connect();
-        rservice.InjectAppFunctions();
-
-        SystemSettings systemSettingsViewModel = new(rservice, new Mock<Configuration>().Object, logger, new DatasetTypeRepositoryStub(), new SettingsServiceStub(), new AnalysisQueueStub());
-
-        var filename = Path.GetTempFileName();
-        systemSettingsViewModel.SaveSessionLogCommand.Execute(filename);
-
-        var savedLog = File.ReadAllText(filename);
-        Assert.Contains("- lsanalyzer_func_quantile <- function(", savedLog);
-    }
-
+    
     [Fact]
     public void TestLoadDefaultDatasetTypesCommand()
     {
@@ -453,234 +451,5 @@ public class TestSystemSettings
         configuration.Verify(conf => conf.StoreDatasetType(It.IsAny<DatasetType>()), Times.Once);
         
         settingsService.VerifySet(service => service.DatasetTypeHashes = new Dictionary<int, string> { { 102, "4EE1" }, { 101, "3FD4" } });
-    }
-    
-    internal class FakeRservice : IRservice
-    {
-        private ILogging _logger;
-
-        internal FakeRservice(ILogging logger)
-        {
-            _logger = logger;
-        }
-        
-        public (string rHome, string rPath) RLocation { get; set; }
-        public bool Connect()
-        {
-            _logger.AddEntry(new LogEntry(DateTime.Now, "options(BIFIEsurvey.quiet = TRUE)"));
-            return true;
-        }
-
-        public bool IsConnected { get; }
-        public string? GetRVersion()
-        {
-            throw new NotImplementedException();
-        }
-
-        public string? GetUserLibrary()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CheckNecessaryRPackages(string? packageName = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool InstallNecessaryRPackages(string? packageName = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool NecessaryPackagesConfirmed => true;
-        
-        public string? GetBifieSurveyVersion()
-        {
-            throw new NotImplementedException();
-        }
-
-        public IRservice.UpdateResult UpdateBifieSurvey()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool TestLoadingBifieSurvey()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool InjectAppFunctions()
-        {
-            _logger.AddEntry(new LogEntry(DateTime.Now, "lsanalyzer_func_quantile <- function(X, w) { }"));
-            return true;
-        }
-
-        public bool LoadFileIntoGlobalEnvironment(string fileName, string? fileType = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool SortRawDataStored(string sortBy)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool ReplaceCharacterVariables()
-        {
-            throw new NotImplementedException();
-        }
-
-        public SubsettingInformation TestSubsetting(string subsettingExpression, string? MIvar = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool ApplySubsetting(string subsettingExpression)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool ReduceToNecessaryVariables(List<string> regexNecessaryVariables, string? subsettingExpression = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool ReduceToNecessaryVariables(Analysis analysis, string? subsettingExpression = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CreateReplicateWeights(string weight, string jkzone, string jkrep, bool jkreverse)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CreateBIFIEdataObject(string weight, int nmi, string? mivar, ICollection<PlausibleValueVariable>? pvvars, string? repwgts, double? fayfac,
-            bool autoEncapsulatePVvars = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables,
-            string? subsettingExpression = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool TestAnalysisConfiguration(AnalysisConfiguration analysisConfiguration, string? subsettingExpression = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool PrepareForAnalysis(Analysis analysis)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<Variable>? GetCurrentDatasetVariables(AnalysisConfiguration analysisConfiguration, List<VirtualVariable> virtualVariables,
-            bool fromStoredRaw = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<GenericVector>? CalculateUnivar(AnalysisUnivar analysis)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<GenericVector>? CalculateMeanDiff(AnalysisMeanDiff analysis)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<GenericVector>? CalculatePercDiff(AnalysisPercDiff analysis)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<GenericVector>? CalculateFreq(AnalysisFreq analysis)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<GenericVector>? CalculateBivariate(AnalysisFreq analysis)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<GenericVector>? CalculatePercentiles(AnalysisPercentiles analysis)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<GenericVector>? CalculateCorr(AnalysisCorr analysis)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<GenericVector>? CalculateLinreg(AnalysisLinreg analysis)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<GenericVector>? CalculateLogistReg(AnalysisLogistReg analysis)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable> pvVars, bool forPreview = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public (bool success, DataTable? dataTable) GetPreviewData()
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null, bool fromStoredRaw = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public DataFrame? GetValueLabels(string variable)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<double>? GetDistinctValues(Variable variable, List<PlausibleValueVariable> plausibleValueVariables)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<double>? GetDistinctValues(Variable variable)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Execute(string rCode, bool oneLiner = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public SymbolicExpression? Fetch(string objectName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SendUserInterrupt()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ClearUserInterrupt()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
     }
 }
