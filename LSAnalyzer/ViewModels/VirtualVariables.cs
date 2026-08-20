@@ -217,7 +217,7 @@ public partial class VirtualVariables : ObservableObject
                 virtualVariableRecode.AddVariable(selectedAvailableVariables.First().Clone());
                 break;
             default:
-                throw new NotImplementedException();
+                throw new ArgumentOutOfRangeException();
         }
     }
 

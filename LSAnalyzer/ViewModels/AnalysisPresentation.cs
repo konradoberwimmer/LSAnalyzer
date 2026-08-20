@@ -1708,7 +1708,7 @@ public partial class AnalysisPresentation : ObservableObject
                 File.WriteAllText(exportOptions.FileName, ExportService.CreateCsvExport(Analysis, DataView, null, false)[0]);
                 break;
             default:
-                throw new NotImplementedException();
+                throw new ArgumentOutOfRangeException();
         }
     }
 

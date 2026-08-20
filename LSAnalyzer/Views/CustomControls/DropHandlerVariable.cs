@@ -36,7 +36,7 @@ public class DropHandlerVariable : IDropTarget
                 virtualVariableRecode.AddVariable(variable.Clone());
                 break;
             default:
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
         }
     }
 }

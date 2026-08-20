@@ -34,7 +34,7 @@ public class DropHandlerVariables : IDropTarget
                 massRecoding.HandleAvailableVariablesCommand.Execute(variables);
                 break;
             default:
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
         }
     }
 }

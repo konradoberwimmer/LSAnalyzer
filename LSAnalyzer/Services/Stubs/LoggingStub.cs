@@ -14,11 +14,11 @@ public class LoggingStub : ILogging
 
     public string GetRcode()
     {
-        throw new System.NotImplementedException();
+        throw new System.InvalidOperationException();
     }
 
     public string GetFullText()
     {
-        throw new System.NotImplementedException();
+        throw new System.InvalidOperationException();
     }
 }

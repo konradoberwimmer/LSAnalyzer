@@ -28,6 +28,6 @@ namespace LSAnalyzer.Models
         public override string AnalysisName => "Frequencies";
 
         [JsonIgnore]
-        public override Dictionary<string, DataColumn> TableColumns => throw new NotImplementedException();
+        public override Dictionary<string, DataColumn> TableColumns => throw new InvalidOperationException();
     }
 }
