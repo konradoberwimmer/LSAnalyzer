@@ -890,6 +890,59 @@ public class TestRserviceVirtualVariables
         Assert.True(rservice.Execute("tabLength <- length(table(lsanalyzer_dat_raw_stored$overperformerMales_1))"));
         Assert.Equal(2, rservice.Fetch("tabLength").AsNumeric().First());
     }
+    
+    public static IEnumerable<object[]> TestCreateVirtualVariableComputeNoPvData => [
+        [ "", false, 0.0 ],
+        [ "ITSEX -", false, 0.0 ],
+        [ "ITSEX", true, 1.516055 ],
+        [ "13.7", true, 13.7 ],
+        [ "-0.005", true, -0.005 ],
+        [ "-ITSEX", true, -1.516055 ],
+        [ "2 - ITSEX", true, 0.483945 ],
+        [ "200 - ITSEX * 100", true, 48.3945 ],
+        [ "(2 - ITSEX) * 100", true, 48.3945 ],
+        [ "(ASBG05A + ASBG05B + ASBG05C) / 3.0", true, 1.10811 ],
+        [ "(-4.3 + 13.3) / (2.0 - -1.0)", true, 3],
+        [ "(-4.3+13.3)/(2.0--1.0)", true, 3],
+    ];
+    
+    [Theory, MemberData(nameof(TestCreateVirtualVariableComputeNoPvData))]
+    public void TestCreateVirtualVariableComputeNoPv(string text, bool computed, double mean)
+    {
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+            DatasetType = new()
+            {
+                Weight = "TOTWGT",
+                NMI = 5,
+                PVvarsList = new() { new() { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true } },
+                FayFac = 0.5,
+                JKzone = "JKZONE",
+                JKrep = "JKREP",
+                JKreverse = true,
+            },
+            ModeKeep = false,
+        };
+            
+        Rservice rservice = new();
+            
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+        VirtualVariableCompute virtualVariable = new() { Name = "myComputation", Expression = text };
+
+        Assert.Equal(computed, rservice.CreateVirtualVariable(virtualVariable, []));
+
+        if (computed)
+        {
+            Assert.True(rservice.Execute("hasComputedVariable <- 'myComputation' %in% colnames(lsanalyzer_dat_raw_stored)"));
+            Assert.True(rservice.Fetch("hasComputedVariable").AsLogical().First());
+            Assert.True(rservice.Execute("computedMean <- mean(lsanalyzer_dat_raw_stored$myComputation, na.rm = TRUE)"));
+            var computedMean = rservice.Fetch("computedMean").AsNumeric().First();
+            Assert.True(Math.Abs(computedMean - mean) < 0.00001, $"Mean was not {mean}, but {computedMean}");
+        }
+    }
         
     public static string AssemblyDirectory
     {

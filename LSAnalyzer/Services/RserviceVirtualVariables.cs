@@ -3,13 +3,19 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using Antlr4.Runtime.Tree;
 using LSAnalyzer.Models;
 using RDotNet;
 
 namespace LSAnalyzer.Services;
 
-public partial class Rservice : IRservice
+public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRservice
 {
+    private string _currentTarget = "lsanalyzer_dat_raw_stored";
+    private List<string> _tempVariableNames = [];
+    private readonly Random _random = new Random();
+    private const string Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    
     public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable> pvVars, bool forPreview = false)
     {
         return virtualVariable switch
@@ -17,6 +23,7 @@ public partial class Rservice : IRservice
             VirtualVariableCombine virtualVariableCombine => CreateVirtualVariableCombine(virtualVariableCombine, pvVars, forPreview),
             VirtualVariableScale virtualVariableScale => CreateVirtualVariableScale(virtualVariableScale, pvVars, forPreview),
             VirtualVariableRecode virtualVariableRecode => CreateVirtualVariableRecode(virtualVariableRecode, pvVars, forPreview),
+            VirtualVariableCompute virtualVariableCompute => CreateVirtualVariableCompute(virtualVariableCompute, pvVars, forPreview),
             _ => throw new ArgumentOutOfRangeException(nameof(virtualVariable), virtualVariable, null)
         };
     }
@@ -423,6 +430,96 @@ public partial class Rservice : IRservice
             return false;
         }
     }
+    
+    private bool CreateVirtualVariableCompute(VirtualVariableCompute virtualVariableCompute, List<PlausibleValueVariable> pvVars, bool forPreview)
+    {
+        try
+        {
+            virtualVariableCompute.PossiblePlausibleValueVariables = [..pvVars];
+            
+            if (!virtualVariableCompute.FromPlausibleValues)
+            {
+                return ComputeVirtualVariableCompute(virtualVariableCompute, forPreview);
+            }
+                
+            Dictionary<string, List<string>> pvVarsNames = [];
+            
+            foreach (var pvVar in pvVars.Where(pvVar => virtualVariableCompute.Variables.Any(var => var == pvVar.DisplayName)))
+            {
+                pvVarsNames.Add(pvVar.DisplayName, _engine?.Evaluate($"""grep("{pvVar.Regex}", colnames(lsanalyzer_dat_raw_stored), value = TRUE)""").AsCharacter().Order().ToList() ?? []);
+            }
+            
+            if (pvVarsNames.Count == 0) return false;
+
+            var numberOfImputations = pvVarsNames.First().Value.Count;
+            if (numberOfImputations == 0 || pvVarsNames.Any(entry => entry.Value.Count != numberOfImputations)) return false;
+
+            for (var imputation = 0; imputation < numberOfImputations; imputation++)
+            {
+                var virtualVariableClone = (virtualVariableCompute.Clone() as VirtualVariableCompute)!;
+                virtualVariableClone.Name = virtualVariableCompute.Name + "_" + (imputation + 1);
+                    
+                foreach (var (name, varNames) in pvVarsNames)
+                {
+                    throw new NotImplementedException("modify the parse tree");
+                }
+
+                if (!ComputeVirtualVariableCompute(virtualVariableClone, forPreview)) return false;
+            }
+                
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+    private bool ComputeVirtualVariableCompute(VirtualVariableCompute virtualVariableCompute, bool forPreview)
+    {
+        try
+        {
+            if (!virtualVariableCompute.ValidExpression)
+            {
+                return false;
+            }
+            
+            if (forPreview)
+            {
+                if (virtualVariableCompute.Variables.Count > 0)
+                {
+                    var inputVariablesString = string.Join(", ", virtualVariableCompute.Variables.Select(v => $"'{v}'"));
+                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString}),drop=FALSE]");
+                }
+                else
+                {
+                    EvaluateAndLog("lsanalyzer_dat_raw_preview <- data.frame(Input = numeric(nrow(lsanalyzer_dat_raw_stored)))");
+                }
+            }
+                
+            var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
+                
+            var nameExists = _engine?.Evaluate($"'{virtualVariableCompute.Name}' %in% colnames({target})").AsLogical().First() ?? true;
+            if (nameExists) return false;
+
+            _currentTarget = target;
+            _tempVariableNames = [];
+            var parser = virtualVariableCompute.GetParser();
+            var lastTempVariableName = VisitExpression(parser.expression());
+            
+            EvaluateAndLog($"{target}$`{virtualVariableCompute.Name}` <- {target}$`{lastTempVariableName}`");
+            foreach (var tempVariableName in _tempVariableNames)
+            {
+                EvaluateAndLog($"{target}$`{tempVariableName}` <- NULL");
+            }
+            
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
         
     public (bool success, DataTable? dataTable) GetPreviewData()
     {
@@ -445,5 +542,62 @@ public partial class Rservice : IRservice
     public class VirtualVariableErrorMessage
     {
         public required List<VirtualVariable> FailedVirtualVariables { init; get; }
+    }
+
+    private string GetTempVariableName()
+    {
+        string tempVariableName;
+        do
+        {
+            tempVariableName = $"lsanalyzer_tmp_{new string(Enumerable.Repeat(Chars, 8).Select(s => s[_random.Next(s.Length)]).ToArray())}";
+        } while (_tempVariableNames.Contains(tempVariableName));
+        _tempVariableNames.Add(tempVariableName);
+        
+        return tempVariableName;
+    }
+
+    public override string VisitVariable(VirtualVariableComputeParser.VariableContext context)
+    {
+        return context.GetText();
+    }
+
+    public override string VisitNumber(VirtualVariableComputeParser.NumberContext context)
+    {
+        var tempVariableName = GetTempVariableName();
+
+        EvaluateAndLog($"{_currentTarget}$`{tempVariableName}` <- {context.GetText()}");
+        
+        return tempVariableName;
+    }
+
+    public override string VisitNegation(VirtualVariableComputeParser.NegationContext context)
+    {
+        var tempVariableName = GetTempVariableName();
+        var childVariableName = Visit(context.value());
+        
+        EvaluateAndLog($"{_currentTarget}$`{tempVariableName}` <- (0 - {_currentTarget}$`{childVariableName}`)");
+        
+        return tempVariableName;
+    }
+
+    public override string VisitOperation(VirtualVariableComputeParser.OperationContext context)
+    {
+        var tempVariableName = GetTempVariableName();
+        var leftChildVariableName = Visit(context.left);
+        var rightChildVariableName = Visit(context.right);
+        
+        EvaluateAndLog($"{_currentTarget}$`{tempVariableName}` <- ({_currentTarget}$`{leftChildVariableName}` {context.op.Text} {_currentTarget}$`{rightChildVariableName}`)");
+        
+        return tempVariableName;
+    }
+
+    public override string VisitParentheses(VirtualVariableComputeParser.ParenthesesContext context)
+    {
+        return Visit(context.term());
+    }
+
+    public override string VisitExpression(VirtualVariableComputeParser.ExpressionContext context)
+    {
+        return Visit(context.term());
     }
 }

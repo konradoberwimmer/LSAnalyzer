@@ -103,7 +103,7 @@ public partial class VirtualVariableCompute : VirtualVariable, IAntlrErrorListen
         throw new NotImplementedException();
     }
 
-    private VirtualVariableComputeParser GetParser()
+    public VirtualVariableComputeParser GetParser()
     {
         AntlrInputStream antlrInputStream = new(Expression);
         VirtualVariableComputeLexer lexer = new(antlrInputStream);

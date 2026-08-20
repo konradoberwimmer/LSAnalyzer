@@ -3,19 +3,17 @@ grammar VirtualVariableCompute;
 expression: term EOF;
 
 term  
-    : '-' value
-    | term op=('*'|'/') term
-    | term op=('+'|'-') term
-    | value
+    : '-' value                         #negation
+    | left=term op=('*'|'/') right=term #operation
+    | left=term op=('+'|'-') right=term #operation
+    | value                             #valueTerm
     ;
 
 value
-    : NUMBER
-    | variable
-    | '(' term ')'
+    : number=NUMBER                     #number
+    | variable=VARIABLE                 #variable
+    | '(' term ')'                      #parentheses
     ;
-
-variable : VARIABLE;
 
 fragment LOWERCASE : [a-z];
 fragment UPPERCASE : [A-Z];

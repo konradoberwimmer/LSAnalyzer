@@ -281,6 +281,7 @@ public partial class VirtualVariables : ObservableObject
         {
             case VirtualVariableCombine:
             case VirtualVariableScale:
+            case VirtualVariableCompute:
                 if (!SelectedVirtualVariable.Validate()) return;
                 break;
             case VirtualVariableRecode virtualVariableRecode:
@@ -425,6 +426,9 @@ public partial class VirtualVariables : ObservableObject
                     {
                         virtualVariableScale.MiVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableScale.MiVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
                     }
+                    break;
+                case VirtualVariableCompute virtualVariableCompute:
+                    throw new NotImplementedException();
                     break;
             }
             
