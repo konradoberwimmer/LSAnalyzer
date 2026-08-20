@@ -64,7 +64,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Antlr4 Include="*.g4" />
+    <Antlr4 Include="Models\*.g4" />
   </ItemGroup>
 
 </Project>

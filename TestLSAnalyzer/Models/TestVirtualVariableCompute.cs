@@ -1,67 +1,46 @@
-using Antlr4.Runtime;
-using Antlr4.Runtime.Tree;
 using LSAnalyzer.Models;
 
 namespace TestLSAnalyzer.Models;
 
 public class TestVirtualVariableCompute
 {
-    private VirtualVariableComputeParser SetupParser(string text)
-    {
-        AntlrInputStream antlrInputStream = new(text);
-        VirtualVariableComputeLexer lexer = new(antlrInputStream);
-        CommonTokenStream commonTokenStream = new(lexer);
-        VirtualVariableComputeParser parser = new(commonTokenStream);
-
-        return parser;
-    }
-
-    [Theory, MemberData(nameof(TestVirtualVariableComputeParserData))]
-    public void TestVirtualVariableComputeParser(string text, bool rootCorrect, bool termStructureCorrect, int expectedChildren, int firstTerminalNodeLexerType)
-    {
-        var parser = SetupParser(text);
-        var expression = parser.expression();
-        
-        Assert.Equal(rootCorrect, expression.children.All(child => child is not ErrorNodeImpl));
-        
-        if (!rootCorrect) return;
-        
-        var rootTerm = expression.GetChild(0) as VirtualVariableComputeParser.TermContext;
-        Assert.Equal(!termStructureCorrect, VirtualVariableCompute.TermHasErrorRecursive(rootTerm));
-        
-        if (!termStructureCorrect) return;
-        
-        Assert.Equal(expectedChildren, rootTerm!.ChildCount);
-        
-        if (rootTerm.GetChild(0) is not TerminalNodeImpl terminalNode) return;
-        
-        Assert.Equal(firstTerminalNodeLexerType, terminalNode.Symbol.Type);
-    }
-
-    public static IEnumerable<object[]> TestVirtualVariableComputeParserData => [
-        [ "", true, false, 0, 0 ],
-        [ "0.000", true, true, 1, VirtualVariableComputeLexer.NUMBER ],
-        [ "abc", true, true, 1, VirtualVariableComputeLexer.VARIABLE ],
-        [ "ABC", true, true, 1, VirtualVariableComputeLexer.VARIABLE ],
-        [ "1abc", false, false, 1, 0 ],
-        [ "abc -", true, false, 2, 0 ],
-        [ "item2d + 2", true, true, 3, VirtualVariableComputeLexer.VARIABLE ],
-        [ "-0.25 + item12 / 12.2", true, true, 3, VirtualVariableComputeLexer.NUMBER ],
+    public static IEnumerable<object[]> TestValidExpressionData => [
+        [ "", false, 0 ],
+        [ "0.000", true, 0 ],
+        [ "-2.40", true, 0 ],
+        [ "abc", true, 0 ],
+        [ "ab$c", false, 3 ],
+        [ "ABC", true, 0 ],
+        [ "1abc", false, 1 ],
+        [ "abc -", false, 5 ],
+        [ "-abc", true, 0 ],
+        [ "-(3+4)", true, 0 ],
+        [ "item2d + 2", true, 0 ],
+        [ "-0.25 + item12 / 12.2", true, 0 ],
+        [ "(-0.25 + item12 / 12.2", false, 22 ],
+        [ "(-0.25 - item12) / 12.2", true, 0 ],
+        [ "( -0.25 + item12 ) / 12.2", true, 0 ],
+        [ "(i1 + i2 + i3) / 3", true, 0 ],
+        [ "(i1 + (i2 + i3) * 2) / 5", true, 0 ],
     ];
 
-    [Theory, MemberData(nameof(TestVirtualVariableComputeParserData))]
-    public void TestValidExpression(string text, bool rootCorrect, bool termStructureCorrect, int expectedChildren, int firstTerminalNodeLexerType)
+    [Theory, MemberData(nameof(TestValidExpressionData))]
+    public void TestValidExpression(string text, bool correct, int position)
     {
         VirtualVariableCompute virtualVariableCompute = new()
         {
             Expression = text
         };
 
-        Assert.Equal(rootCorrect && termStructureCorrect, virtualVariableCompute.ValidExpression);
+        Assert.Equal(correct, virtualVariableCompute.ValidExpression);
+        if (!correct)
+        {
+            Assert.Equal(position, virtualVariableCompute.LastSyntaxErrors.Last().CharPositionInLine);
+        }
     }
 
-    [Theory, MemberData(nameof(TestVirtualVariableComputeParserData))]
-    public void TestValidate(string text, bool rootCorrect, bool termStructureCorrect, int expectedChildren, int firstTerminalNodeLexerType)
+    [Theory, MemberData(nameof(TestValidExpressionData))]
+    public void TestValidate(string text, bool correct, int _)
     {
         VirtualVariableCompute virtualVariableCompute = new()
         {
@@ -69,11 +48,36 @@ public class TestVirtualVariableCompute
             Expression = text
         };
 
-        Assert.Equal(rootCorrect && termStructureCorrect, virtualVariableCompute.Validate());
+        Assert.Equal(correct, virtualVariableCompute.Validate());
+    }
+    
+    public static IEnumerable<object[]> TestVariablesData => [
+        [ "-", new List<string>(), false ],
+        [ "4 + abc", new List<string> { "abc" }, false ],
+        [ "MATH", new List<string> { "MATH" }, true ],
+        [ "4 + MATH", new List<string> { "MATH" }, true ],
+        [ "MATH + SCIE", new List<string> { "MATH", "SCIE" }, true ],
+        [ "-3.4 + SCIE - MATH", new List<string> { "SCIE", "MATH" }, true ],
+        [ "-3.4 + SCIE - MATH - SCIE", new List<string> { "SCIE", "MATH" }, true ]
+    ];
+    
+    [Theory, MemberData(nameof(TestVariablesData))]
+    public void TestVariables(string text, List<string> expected, bool _)
+    {
+        VirtualVariableCompute virtualVariableCompute = new()
+        {
+            Name = "computed",
+            Expression = text
+        };
+
+        if (virtualVariableCompute.ValidExpression)
+        {
+            Assert.Equal(expected, virtualVariableCompute.Variables);
+        }
     }
 
-    [Theory, MemberData(nameof(TestFromPlausibleValuesData))]
-    public void TestFromPlausibleValues(string text, bool expected)
+    [Theory, MemberData(nameof(TestVariablesData))]
+    public void TestFromPlausibleValues(string text, List<string> _, bool expected)
     {
         VirtualVariableCompute virtualVariableCompute = new()
         {
@@ -86,12 +90,22 @@ public class TestVirtualVariableCompute
         Assert.Equal(expected, virtualVariableCompute.FromPlausibleValues);
     }
 
-    public static IEnumerable<object[]> TestFromPlausibleValuesData => [
-        [ "-", false ],
-        [ "4 + abc", false ],
-        [ "MATH", true ],
-        [ "4 + MATH", true ],
-        [ "MATH + SCIE", true ],
-        [ "-3.4 + SCIE - MATH", true ]
-    ];
+    [Fact]
+    public void TestIsChanged()
+    {
+        VirtualVariableCompute virtualVariableCompute = new()
+        {            
+            Name = "computed",
+            PossiblePlausibleValueVariables = [
+                new PlausibleValueVariable { DisplayName = "MATH", Regex = "PV[0-9]+MATH", Label = "PV in Maths", Mandatory = false }
+            ],
+            Expression = "MATH + SCIE"
+        };
+        
+        Assert.True(virtualVariableCompute.IsChanged);
+        
+        virtualVariableCompute.AcceptChanges();
+        
+        Assert.False(virtualVariableCompute.IsChanged);
+    }
 }

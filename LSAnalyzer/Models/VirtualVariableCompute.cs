@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
 using Antlr4.Runtime;
@@ -10,8 +11,10 @@ using LSAnalyzer.Models.ValidationAttributes;
 
 namespace LSAnalyzer.Models;
 
-public partial class VirtualVariableCompute : VirtualVariable
+public partial class VirtualVariableCompute : VirtualVariable, IAntlrErrorListener<IToken>
 {
+    private VariablesVisitor _variablesVisitor = new();
+    
     [JsonIgnore]
     public List<PlausibleValueVariable> PossiblePlausibleValueVariables = [];
     
@@ -22,36 +25,16 @@ public partial class VirtualVariableCompute : VirtualVariable
     private string _expression = string.Empty;
     partial void OnExpressionChanged(string value)
     {
+        _syntaxErrors = [];
         OnPropertyChanged(nameof(ValidExpression));
         OnPropertyChanged(nameof(IsChanged));
     }
 
-    public override bool FromPlausibleValues
-    {
-        get
-        {
-            if (!ValidExpression) return false;
-
-            var expression = GetParser().expression();
-            var rootNode = (expression.GetChild(0) as VirtualVariableComputeParser.TermContext)!;
-            return HasPlausibleValueRecursive(rootNode);
-        }
-    }
-
-    private bool HasPlausibleValueRecursive(VirtualVariableComputeParser.TermContext? term)
-    {
-        if (term is null) return false;
-        
-        if (term.children.Any(child => 
-                child is ITerminalNode terminalNode && 
-                terminalNode.Symbol.Type == VirtualVariableComputeLexer.VARIABLE && 
-                PossiblePlausibleValueVariables.Any(pv => pv.DisplayName == terminalNode.GetText())))
-        {
-            return true;
-        }
-
-        return term.children.Aggregate(false, (current, termChild) => current || HasPlausibleValueRecursive(termChild as VirtualVariableComputeParser.TermContext));
-    }
+    private List<SyntaxErrorEntry> _syntaxErrors = [];
+    [JsonIgnore]
+    public List<SyntaxErrorEntry> LastSyntaxErrors => _syntaxErrors;
+    
+    public override bool FromPlausibleValues => PossiblePlausibleValueVariables.Any(pv => Variables.Contains(pv.DisplayName));
 
     public override string Info => Expression;
 
@@ -60,14 +43,24 @@ public partial class VirtualVariableCompute : VirtualVariable
     {
         get
         {
-            var expression = GetParser().expression();
+            _syntaxErrors = [];
+            var parser = GetParser();
+            parser.AddErrorListener(this);
+            parser.expression();
+            return _syntaxErrors.Count == 0;
+        }
+    }
 
-            if (expression.children.Any(child => child is ErrorNodeImpl))
-            {
-                return false;
-            }
+    [JsonIgnore]
+    public List<string> Variables
+    {
+        get
+        {
+            if (!ValidExpression) return [];
             
-            return !TermHasErrorRecursive(expression.GetChild(0) as VirtualVariableComputeParser.TermContext);
+            var parser = GetParser();
+            var variablesVisitor = new VariablesVisitor();
+            return variablesVisitor.VisitExpression(parser.expression());
         }
     }
     
@@ -101,7 +94,7 @@ public partial class VirtualVariableCompute : VirtualVariable
             
             if (_savedState is null) return true;
             
-            return !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, [ "Info", "IsChanged", "Errors" ]);
+            return !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, [ "Info", "IsChanged", "Errors", "ValidExpression", "LastSyntaxErrors", "Variables", "PossiblePlausibleValueVariables", "FromPlausibleValues" ]);
         }
     }
 
@@ -114,16 +107,34 @@ public partial class VirtualVariableCompute : VirtualVariable
     {
         AntlrInputStream antlrInputStream = new(Expression);
         VirtualVariableComputeLexer lexer = new(antlrInputStream);
+        lexer.RemoveErrorListener(ConsoleErrorListener<int>.Instance);
         CommonTokenStream commonTokenStream = new(lexer);
         VirtualVariableComputeParser parser = new(commonTokenStream);
+        parser.RemoveErrorListener(ConsoleErrorListener<IToken>.Instance);
 
         return parser;
     }
-    
-    public static bool TermHasErrorRecursive(VirtualVariableComputeParser.TermContext? term)
+
+    public void SyntaxError(TextWriter output, IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
     {
-        if (term is null) return false;
-        
-        return term.exception is not null || term.children.Any(t => TermHasErrorRecursive(t as VirtualVariableComputeParser.TermContext));
+        _syntaxErrors.Add(new SyntaxErrorEntry(offendingSymbol, line, charPositionInLine, msg));
+    }
+
+    public record SyntaxErrorEntry(IToken? OffendingSymbol, int Line, int CharPositionInLine, string Message);
+
+    private class VariablesVisitor : VirtualVariableComputeBaseVisitor<List<string>>
+    {
+        public override List<string> VisitVariable(VirtualVariableComputeParser.VariableContext context)
+        {
+            return [ context.GetText() ];
+        }
+
+        protected override List<string> DefaultResult => [];
+
+        protected override List<string> AggregateResult(List<string> aggregate, List<string> nextResult)
+        {
+            aggregate.AddRange(nextResult);
+            return aggregate.Distinct().ToList();
+        }
     }
 }
