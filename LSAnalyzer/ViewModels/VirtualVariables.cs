@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using Antlr4.Runtime;
+using Antlr4.Runtime.Tree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -428,7 +430,17 @@ public partial class VirtualVariables : ObservableObject
                     }
                     break;
                 case VirtualVariableCompute virtualVariableCompute:
-                    throw new NotImplementedException();
+                    var variableNamesInImportFile = new List<string>(virtualVariableCompute.Variables);
+                    foreach (var variableNameInInputFile in variableNamesInImportFile.Where(variableNameInInputFile => !existingVariables.Select(vv => vv.Name).Contains(variableNameInInputFile)))
+                    {
+                        VirtualVariableComputeLexer lexer = new(new AntlrInputStream(virtualVariableCompute.Expression));
+                        CommonTokenStream tokens = new(lexer);
+                        VirtualVariableComputeParser parser = new(tokens);
+                        Rservice.ReplaceVariableNamesListener listener = new(tokens) { VariableName = variableNameInInputFile, Replacement = existingVariables.First(ev => string.Equals(ev.Name, variableNameInInputFile, StringComparison.InvariantCultureIgnoreCase)).Name };
+                        ParseTreeWalker.Default.Walk(listener, parser.expression());
+        
+                        virtualVariableCompute.Expression = listener.GetReplacedExpression();
+                    }
                     break;
             }
             

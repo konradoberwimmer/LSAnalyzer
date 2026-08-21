@@ -100,7 +100,7 @@ public partial class VirtualVariableCompute : VirtualVariable, IAntlrErrorListen
 
     public override bool InputVariableNamesExistIn(IEnumerable<Variable> variables)
     {
-        throw new NotImplementedException();
+        return Variables.All(v => variables.Select(variable => variable.Name.ToLowerInvariant()).Contains(v.ToLowerInvariant()));
     }
 
     public VirtualVariableComputeParser GetParser()
