@@ -587,6 +587,17 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         return tempVariableName;
     }
 
+    public override string VisitExponent(VirtualVariableComputeParser.ExponentContext context)
+    {
+        var tempVariableName = GetTempVariableName();
+        var leftChildVariableName = Visit(context.left);
+        var rightChildVariableName = Visit(context.right);
+        
+        EvaluateAndLog($"{_currentTarget}$`{tempVariableName}` <- ({_currentTarget}$`{leftChildVariableName}` ^ {_currentTarget}$`{rightChildVariableName}`)");
+        
+        return tempVariableName;
+    }
+
     public override string VisitOperation(VirtualVariableComputeParser.OperationContext context)
     {
         var tempVariableName = GetTempVariableName();
@@ -594,6 +605,27 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         var rightChildVariableName = Visit(context.right);
         
         EvaluateAndLog($"{_currentTarget}$`{tempVariableName}` <- ({_currentTarget}$`{leftChildVariableName}` {context.op.Text} {_currentTarget}$`{rightChildVariableName}`)");
+        
+        return tempVariableName;
+    }
+
+    public override string VisitIsNa(VirtualVariableComputeParser.IsNaContext context)
+    {
+        var tempVariableName = GetTempVariableName();
+        var childVariableName = Visit(context.term());
+        
+        EvaluateAndLog($"{_currentTarget}$`{tempVariableName}` <- as.numeric(is.na({_currentTarget}$`{childVariableName}`))");
+        
+        return tempVariableName;
+    }
+
+    public override string VisitComparion(VirtualVariableComputeParser.ComparionContext context)
+    {
+        var tempVariableName = GetTempVariableName();
+        var leftChildVariableName = Visit(context.left);
+        var rightChildVariableName = Visit(context.right);
+        
+        EvaluateAndLog($"{_currentTarget}$`{tempVariableName}` <- as.numeric({_currentTarget}$`{leftChildVariableName}` {context.op.Text} {_currentTarget}$`{rightChildVariableName}`)");
         
         return tempVariableName;
     }

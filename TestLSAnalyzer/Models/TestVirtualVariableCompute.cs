@@ -22,6 +22,16 @@ public class TestVirtualVariableCompute
         [ "( -0.25 + item12 ) / 12.2", true, 0 ],
         [ "(i1 + i2 + i3) / 3", true, 0 ],
         [ "(i1 + (i2 + i3) * 2) / 5", true, 0 ],
+        [ "x ^ y", true, 0 ],
+        [ "^x", false, 0 ],
+        [ "x ^ (y-1)", true, 0 ],
+        [ "wgt * (rep==1) * 2.0", true, 0 ],
+        [ "scale > 0.5", true, 0 ],
+        [ "mean <= 0", true, 0 ],
+        [ "isNa(item1)", true, 0 ],
+        [ "isNA(item1)", false, 4 ],
+        [ "isNa(item1 == 2)", true, 0 ],
+        [ "2 * isNa(item1 + item2 + item3)", true, 0 ],
     ];
 
     [Theory, MemberData(nameof(TestValidExpressionData))]
