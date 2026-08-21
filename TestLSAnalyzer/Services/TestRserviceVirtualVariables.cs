@@ -1,4 +1,6 @@
 using System.Reflection;
+using Antlr4.Runtime;
+using Antlr4.Runtime.Tree;
 using CommunityToolkit.Mvvm.Messaging;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
@@ -942,6 +944,70 @@ public class TestRserviceVirtualVariables
             var computedMean = rservice.Fetch("computedMean").AsNumeric().First();
             Assert.True(Math.Abs(computedMean - mean) < 0.00001, $"Mean was not {mean}, but {computedMean}");
         }
+    }
+
+    [Fact]
+    public void TestReplaceVariableNamesListener()
+    {
+        VirtualVariableComputeLexer lexer = new(new AntlrInputStream("(item11 + item1) / 2.0 + (item12 + item1) / 2.0"));
+        CommonTokenStream tokens = new(lexer);
+        VirtualVariableComputeParser parser = new(tokens);
+        Rservice.ReplaceVariableNamesListener listener = new(tokens) { VariableName = "item1", Replacement = "item1_01" };
+        ParseTreeWalker.Default.Walk(listener, parser.expression());
+        
+        Assert.Equal("(item11+item1_01)/2.0+(item12+item1_01)/2.0", listener.GetReplacedExpression());
+    }
+    
+    [Fact]
+    public void TestCreateVirtualVariableComputePv()
+    {
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            FileName = Path.Combine(AssemblyDirectory, "_testData", "test_asgautr4.sav"),
+            DatasetType = new()
+            {
+                Weight = "TOTWGT",
+                NMI = 5,
+                PVvarsList = [
+                    new PlausibleValueVariable { Regex = "ASRREA", DisplayName = "ASRREA", Mandatory = true },
+                    new PlausibleValueVariable { Regex = "ASRINF", DisplayName = "ASRINF", Mandatory = true },
+                    new PlausibleValueVariable { Regex = "ASRLIT", DisplayName = "ASRLIT", Mandatory = true },
+                ],
+                FayFac = 0.5,
+                JKzone = "JKZONE",
+                JKrep = "JKREP",
+                JKreverse = true,
+            },
+            ModeKeep = false,
+        };
+            
+        Rservice rservice = new();
+            
+        Assert.True(rservice.Connect(), "R must also be available for tests");
+        Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
+
+        VirtualVariableCompute virtualVariable = new() { Name = "comb", Expression = "(ASRLIT + ASRINF) / 2.0", PossiblePlausibleValueVariables = [..analysisConfiguration.DatasetType.PVvarsList] };
+        Assert.True(virtualVariable.FromPlausibleValues);
+        
+        Assert.True(rservice.CreateVirtualVariable(virtualVariable, [..analysisConfiguration.DatasetType.PVvarsList]));
+
+        Assert.True(rservice.Execute("hasComputedVariables <- all(c('comb_1', 'comb_2', 'comb_3', 'comb_4', 'comb_5') %in% colnames(lsanalyzer_dat_raw_stored))"));
+        Assert.True(rservice.Fetch("hasComputedVariables").AsLogical().First());
+        Assert.True(rservice.Execute("computedMean1 <- mean(lsanalyzer_dat_raw_stored$comb_1)"));
+        var computedMean1 = rservice.Fetch("computedMean1").AsNumeric().First();
+        Assert.True(Math.Abs(computedMean1 - 540.4559) < 0.0001);
+        Assert.True(rservice.Execute("computedMean2 <- mean(lsanalyzer_dat_raw_stored$comb_2)"));
+        var computedMean2 = rservice.Fetch("computedMean2").AsNumeric().First();
+        Assert.True(Math.Abs(computedMean2 - 540.0522) < 0.0001);
+        Assert.True(rservice.Execute("computedMean3 <- mean(lsanalyzer_dat_raw_stored$comb_3)"));
+        var computedMean3 = rservice.Fetch("computedMean3").AsNumeric().First();
+        Assert.True(Math.Abs(computedMean3 - 539.9573) < 0.0001);
+        Assert.True(rservice.Execute("computedMean4 <- mean(lsanalyzer_dat_raw_stored$comb_4)"));
+        var computedMean4 = rservice.Fetch("computedMean4").AsNumeric().First();
+        Assert.True(Math.Abs(computedMean4 - 539.8065) < 0.0001);
+        Assert.True(rservice.Execute("computedMean5 <- mean(lsanalyzer_dat_raw_stored$comb_5)"));
+        var computedMean5 = rservice.Fetch("computedMean5").AsNumeric().First();
+        Assert.True(Math.Abs(computedMean5 - 539.4367) < 0.0001);
     }
         
     public static string AssemblyDirectory

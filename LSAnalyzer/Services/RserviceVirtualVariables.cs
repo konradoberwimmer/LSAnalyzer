@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using LSAnalyzer.Models;
 using RDotNet;
@@ -461,7 +462,13 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
                     
                 foreach (var (name, varNames) in pvVarsNames)
                 {
-                    throw new NotImplementedException("modify the parse tree");
+                    VirtualVariableComputeLexer lexer = new(new AntlrInputStream(virtualVariableClone.Expression));
+                    CommonTokenStream tokens = new(lexer);
+                    VirtualVariableComputeParser parser = new(tokens);
+                    ReplaceVariableNamesListener listener = new(tokens) { VariableName = name, Replacement = varNames[imputation] };
+                    ParseTreeWalker.Default.Walk(listener, parser.expression());
+        
+                    virtualVariableClone.Expression = listener.GetReplacedExpression();
                 }
 
                 if (!ComputeVirtualVariableCompute(virtualVariableClone, forPreview)) return false;
@@ -599,5 +606,29 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
     public override string VisitExpression(VirtualVariableComputeParser.ExpressionContext context)
     {
         return Visit(context.term());
+    }
+
+    public class ReplaceVariableNamesListener(CommonTokenStream tokens) : VirtualVariableComputeBaseListener
+    {
+        private readonly TokenStreamRewriter _rewriter = new(tokens);
+        
+        public required string VariableName { get; init; }
+        
+        public required string Replacement { get; init; }
+
+        public override void EnterVariable(VirtualVariableComputeParser.VariableContext context)
+        {
+            if (context.GetText() != VariableName)
+            {
+                return;
+            }
+            
+            _rewriter.Replace(context.Start, context.Stop, Replacement);
+        }
+
+        public string GetReplacedExpression()
+        {
+            return _rewriter.GetText();
+        }
     }
 }
