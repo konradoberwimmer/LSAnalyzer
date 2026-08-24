@@ -32,6 +32,11 @@ public class TestVirtualVariableCompute
         [ "isNA(item1)", false, 4 ],
         [ "isNa(item1 == 2)", true, 0 ],
         [ "2 * isNa(item1 + item2 + item3)", true, 0 ],
+        [ "!", false, 1 ],
+        [ "!(x == 1)", true, 0 ],
+        [ "!isNa(item1)", true, 0 ],
+        [ "!isNa(item1) & item1 == 2", true, 0 ],
+        [ "item1==1 |item1 == 2", true, 0 ],
     ];
 
     [Theory, MemberData(nameof(TestValidExpressionData))]

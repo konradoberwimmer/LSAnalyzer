@@ -917,6 +917,10 @@ public class TestRserviceVirtualVariables
         [ "2 < ITSEX", true, 0 ],
         [ "isNa(ITSEX)", true, 0 ],
         [ "isNa(ASBG05C)", true, 0.006651 ],
+        [ "!isNa(ASBG05C)", true, 0.993349 ],
+        [ "!isNa(ASBG05C) & (ASBG05C == 1 | ASBG05C == 2)", true, 0.993349 ],
+        [ "ASBG05C == 1", true, 0.778804 ],
+        [ "!isNa(ASBG05C) & ASBG05C == 1", true, 0.773624 ],
     ];
     
     [Theory, MemberData(nameof(TestCreateVirtualVariableComputeNoPvData))]

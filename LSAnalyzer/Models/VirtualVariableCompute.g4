@@ -3,18 +3,19 @@ grammar VirtualVariableCompute;
 expression: term EOF;
 
 term  
-    : '-' value                                             #negation
+    : op=('-'|'!') value                                    #negation
     | <assoc=right> left=term '^' right=term                #exponent
     | left=term op=('*'|'/') right=term                     #operation
     | left=term op=('+'|'-') right=term                     #operation
-    | 'isNa(' term ')'                                      #isNa
-    | left=term op=('=='|'!='|'<'|'<='|'>='|'>') right=term #comparion
+    | left=term op=('=='|'!='|'<'|'<='|'>='|'>') right=term #comparison
+    | left=term op=('&'|'|') right=term                     #boolean
     | value                                                 #valueTerm
     ;
 
 value
     : number=NUMBER     #number
     | variable=VARIABLE #variable
+    | 'isNa(' term ')'  #isNa
     | '(' term ')'      #parentheses
     ;
 
