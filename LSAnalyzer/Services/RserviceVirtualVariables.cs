@@ -35,7 +35,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         {
             if (!virtualVariableCombine.FromPlausibleValues)
             {
-                return ComputeVirtualVariableCombine(virtualVariableCombine, forPreview);
+                return CreateSingleVirtualVariableCompute(virtualVariableCombine, forPreview);
             }
                 
             Dictionary<string, List<string>> pvVarsNames = [];
@@ -60,7 +60,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
                     virtualVariableClone.Variables.First(variable => variable.Name == name).Name = varNames[imputation];
                 }
 
-                if (!ComputeVirtualVariableCombine(virtualVariableClone, forPreview)) return false;
+                if (!CreateSingleVirtualVariableCompute(virtualVariableClone, forPreview)) return false;
             }
                 
             return true;
@@ -71,20 +71,32 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         }
     }
 
-    private bool ComputeVirtualVariableCombine(VirtualVariableCombine virtualVariableCombine, bool forPreview)
+    private bool CreateSingleVirtualVariableCompute(VirtualVariableCombine virtualVariableCombine, bool forPreview)
+    {
+        if (virtualVariableCombine.Variables.Count == 0) return false;
+
+        if (forPreview)
+        {
+            var inputVariablesString = string.Join(", ", virtualVariableCombine.Variables.Select(v => "'" + v.Name + "'"));
+            EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString}),drop=FALSE]");
+        }
+
+        var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
+        
+        var success =  ComputeVirtualVariableCombine(virtualVariableCombine, target);
+
+        if (success)
+        {
+            _lastVirtualVariableNames.Add(virtualVariableCombine.Name);
+        }
+        
+        return success;
+    }
+
+    private bool ComputeVirtualVariableCombine(VirtualVariableCombine virtualVariableCombine, string target)
     {
         try
         {
-            if (virtualVariableCombine.Variables.Count == 0) return false;
-
-            if (forPreview)
-            {
-                var inputVariablesString = string.Join(", ", virtualVariableCombine.Variables.Select(v => "'" + v.Name + "'"));
-                EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString}),drop=FALSE]");
-            }
-
-            var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
-                
             var nameExists = _engine?.Evaluate($"'{virtualVariableCombine.Name}' %in% colnames({target})").AsLogical().First() ?? true;
             if (nameExists) return false;
 
@@ -111,8 +123,6 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             {
                 EvaluateAndLog($"attributes({target})$variable.labels['{virtualVariableCombine.Name}'] = '{virtualVariableCombine.Label}'");
             }
-                
-            _lastVirtualVariableNames.Add(virtualVariableCombine.Name);
                 
             return true;
         }
@@ -625,6 +635,43 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         EvaluateAndLog($"{_currentTarget}$`{tempVariableName}` <- as.numeric(is.na({_currentTarget}$`{childVariableName}`))");
         
         return tempVariableName;
+    }
+
+    public override string VisitCombine(VirtualVariableComputeParser.CombineContext context)
+    {
+        var tempVariableName = GetTempVariableName();
+
+        var variableList = Visit(context.termlist()).Split(",").Select(varname => new Variable(0, varname)).ToList();
+        
+        VirtualVariableCombine virtualVariableCombine = new()
+        {
+            Name = tempVariableName,
+            Type = context.func.Text[..^1] switch
+            {
+                "sum" => VirtualVariableCombine.CombinationFunction.Sum,
+                "mean" => VirtualVariableCombine.CombinationFunction.Mean,
+                "factorscores" => VirtualVariableCombine.CombinationFunction.FactorScores,
+                _ => throw new ArgumentOutOfRangeException()
+            },
+            RemoveNa = 
+                context.optbool() is null || 
+                (context.optbool().param.Text == "naRM" && context.optbool().val.Text == "T"),
+            Variables = [..variableList]
+        };
+        
+        ComputeVirtualVariableCombine(virtualVariableCombine, _currentTarget);
+        
+        return tempVariableName;
+    }
+
+    public override string VisitTermlist(VirtualVariableComputeParser.TermlistContext context)
+    {
+        if (context.termlist() is null)
+        {
+            return Visit(context.term());
+        }
+        
+        return Visit(context.term()) + "," + Visit(context.termlist());
     }
 
     public override string VisitComparison(VirtualVariableComputeParser.ComparisonContext context)

@@ -915,12 +915,22 @@ public class TestRserviceVirtualVariables
         [ "2 >= ITSEX", true, 1 ],
         [ "(1+1) > ITSEX", true, 0.483945 ],
         [ "2 < ITSEX", true, 0 ],
-        [ "isNa(ITSEX)", true, 0 ],
-        [ "isNa(ASBG05C)", true, 0.006651 ],
-        [ "!isNa(ASBG05C)", true, 0.993349 ],
-        [ "!isNa(ASBG05C) & (ASBG05C == 1 | ASBG05C == 2)", true, 0.993349 ],
+        [ "isNA(ITSEX)", true, 0 ],
+        [ "isNA(ASBG05C)", true, 0.006651 ],
+        [ "!isNA(ASBG05C)", true, 0.993349 ],
+        [ "!isNA(ASBG05C) & (ASBG05C == 1 | ASBG05C == 2)", true, 0.993349 ],
         [ "ASBG05C == 1", true, 0.778804 ],
-        [ "!isNa(ASBG05C) & ASBG05C == 1", true, 0.773624 ],
+        [ "!isNA(ASBG05C) & ASBG05C == 1", true, 0.773624 ],
+        [ "mean(ASBG05A, ASBG05B, ASBG05C)", true, 1.109258 ],
+        [ "mean(ASBG05A, ASBG05B, ASBG05C, naRM = T)", true, 1.109258 ],
+        [ "mean(ASBG05A, ASBG05B, ASBG05C, naRM = F)", true, 1.10811 ],
+        [ "sum(1)", true, 1 ],
+        [ "sum(ITSEX)", true, 1.516055 ],
+        [ "sum(ITSEX) > 1", true, 0.516055 ],
+        [ "sum(ITSEX+1, ITSEX+1)", true, 5.032110 ],
+        [ "sum(ASBG05A, ASBG05B, ASBG05C, naRM = F)", true, 3.324331 ],
+        [ "sum(ASBG05A, sum(ASBG05B, ASBG05C, naRM = F), naRM = F)", true, 3.324331 ],
+        [ "factorscores(ASBG05A, ASBG05B, ASBG05C)", true, 0.0 ],
     ];
     
     [Theory, MemberData(nameof(TestCreateVirtualVariableComputeNoPvData))]
@@ -945,6 +955,7 @@ public class TestRserviceVirtualVariables
         Rservice rservice = new();
             
         Assert.True(rservice.Connect(), "R must also be available for tests");
+        Assert.True(rservice.InjectAppFunctions());
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
 
         VirtualVariableCompute virtualVariable = new() { Name = "myComputation", Expression = text };
