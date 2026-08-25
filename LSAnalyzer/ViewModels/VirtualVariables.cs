@@ -168,21 +168,20 @@ public partial class VirtualVariables : ObservableObject
     [RelayCommand]
     private void NewVirtualVariable()
     {
-        if (SelectedVirtualVariableType is null) return;
+        if (SelectedVirtualVariableType is null || AnalysisConfiguration?.DatasetType is null) return;
 
         if (Activator.CreateInstance(SelectedVirtualVariableType) is not VirtualVariable newVirtualVariable) return;
-
+        
+        var datasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, []) ?? [];
+        
         switch (newVirtualVariable)
         {
             case VirtualVariableCompute virtualVariableCompute:
-                if (AnalysisConfiguration?.DatasetType is null) break;
-                
                 virtualVariableCompute.PossiblePlausibleValueVariables = new List<PlausibleValueVariable>(AnalysisConfiguration.DatasetType.PVvarsList);
+                virtualVariableCompute.WeightVariable = datasetVariables.FirstOrDefault(var => var.Name == AnalysisConfiguration.DatasetType.Weight)?.Clone();
+                virtualVariableCompute.MiVariable = AnalysisConfiguration.DatasetType.MIvar is null ? null : datasetVariables.FirstOrDefault(var => var.Name == AnalysisConfiguration.DatasetType.MIvar)?.Clone();
                 break;
             case VirtualVariableScale virtualVariableScale:
-                if (AnalysisConfiguration?.DatasetType is null) break;
-                
-                var datasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, []) ?? [];
                 virtualVariableScale.WeightVariable = datasetVariables.FirstOrDefault(var => var.Name == AnalysisConfiguration.DatasetType.Weight)?.Clone();
                 virtualVariableScale.MiVariable = AnalysisConfiguration.DatasetType.MIvar is null ? null : datasetVariables.FirstOrDefault(var => var.Name == AnalysisConfiguration.DatasetType.MIvar)?.Clone();
                 break;
@@ -440,6 +439,14 @@ public partial class VirtualVariables : ObservableObject
                         ParseTreeWalker.Default.Walk(listener, parser.expression());
         
                         virtualVariableCompute.Expression = listener.GetReplacedExpression();
+                    }
+                    if (virtualVariableCompute.WeightVariable is not null)
+                    {
+                        virtualVariableCompute.WeightVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableCompute.WeightVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
+                    }
+                    if (virtualVariableCompute.MiVariable is not null)
+                    {
+                        virtualVariableCompute.MiVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableCompute.MiVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
                     }
                     break;
             }

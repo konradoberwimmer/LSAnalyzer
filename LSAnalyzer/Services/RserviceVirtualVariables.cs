@@ -12,6 +12,7 @@ namespace LSAnalyzer.Services;
 
 public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRservice
 {
+    private VirtualVariableCompute? _currentVirtualVariableCompute = null;
     private string _currentTarget = "lsanalyzer_dat_raw_stored";
     private List<string> _tempVariableNames = [];
     private readonly Random _random = new Random();
@@ -136,7 +137,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
     {
         try
         {
-            if (virtualVariableScale.InputVariable is null) return false;
+            if (virtualVariableScale.InputVariable is null || virtualVariableScale.WeightVariable is null) return false;
                 
             if (!virtualVariableScale.FromPlausibleValues)
             {
@@ -170,14 +171,12 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
     {
         try
         {
-            if (virtualVariableScale.InputVariable is null || virtualVariableScale.WeightVariable is null) return false;
-
             if (forPreview)
             {
                 var addMiVariableToPreview = virtualVariableScale.MiVariable is null
                     ? string.Empty
                     : $", '{virtualVariableScale.MiVariable.Name}'";
-                EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c('{virtualVariableScale.InputVariable.Name}', '{virtualVariableScale.WeightVariable.Name}'{addMiVariableToPreview}),drop=FALSE]");
+                EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c('{virtualVariableScale.InputVariable!.Name}', '{virtualVariableScale.WeightVariable!.Name}'{addMiVariableToPreview}),drop=FALSE]");
             }
 
             var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
@@ -188,10 +187,10 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             switch (virtualVariableScale.Type)
             {
                 case VirtualVariableScale.ScaleType.Linear:
-                    if (!ComputeVirtualVariableScaleLinear(virtualVariableScale, forPreview)) return false;
+                    if (!ComputeVirtualVariableScaleLinear(virtualVariableScale, target)) return false;
                     break;
                 case VirtualVariableScale.ScaleType.Logarithmic:
-                    if (!ComputeVirtualVariableScaleLogarithmic(virtualVariableScale, forPreview)) return false;
+                    if (!ComputeVirtualVariableScaleLogarithmic(virtualVariableScale, target)) return false;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -205,17 +204,14 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         }
     }
 
-    private bool ComputeVirtualVariableScaleLinear(VirtualVariableScale virtualVariableScale, bool forPreview)
+    private bool ComputeVirtualVariableScaleLinear(VirtualVariableScale virtualVariableScale, string target)
     {
         // uses stats::weighted.mean with na.rm = TRUE to get a mean (per MI)
         // mimics Hmisc::wtd.var (5.2-4) with na.rm = TRUE to a get variance (per MI)
         try
         {
-            if (virtualVariableScale.InputVariable is null || virtualVariableScale.WeightVariable is null) return false;
-                
-            var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
-            var inputVariable = virtualVariableScale.InputVariable.Name;
-            var weightVariable = virtualVariableScale.WeightVariable.Name;
+            var inputVariable = virtualVariableScale.InputVariable!.Name;
+            var weightVariable = virtualVariableScale.WeightVariable!.Name;
                 
             if (virtualVariableScale.MiVariable is null)
             {
@@ -257,14 +253,13 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         }
     }
 
-    private bool ComputeVirtualVariableScaleLogarithmic(VirtualVariableScale virtualVariableScale, bool forPreview)
+    private bool ComputeVirtualVariableScaleLogarithmic(VirtualVariableScale virtualVariableScale, string target)
     {
         try
         {
-            if (virtualVariableScale.InputVariable is null || virtualVariableScale.LogBase <= 1.0) return false;
+            if (virtualVariableScale.LogBase <= 1.0) return false;
 
-            var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
-            var inputVariable = virtualVariableScale.InputVariable.Name;
+            var inputVariable = virtualVariableScale.InputVariable!.Name;
                 
             if (!virtualVariableScale.Center)
             {
@@ -272,9 +267,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             }
             else
             {
-                if (virtualVariableScale.WeightVariable is null) return false;
-                    
-                var weightVariable = virtualVariableScale.WeightVariable.Name;
+                var weightVariable = virtualVariableScale.WeightVariable!.Name;
                     
                 if (virtualVariableScale.MiVariable is null)
                 {
@@ -503,10 +496,13 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             
             if (forPreview)
             {
+                var addWeightVariableToPreview = virtualVariableCompute.WeightVariable is null ? string.Empty : $", '{virtualVariableCompute.WeightVariable.Name}'";
+                var addMiVariableToPreview = virtualVariableCompute.MiVariable is null ? string.Empty : $", '{virtualVariableCompute.MiVariable.Name}'";
+                
                 if (virtualVariableCompute.Variables.Count > 0)
                 {
                     var inputVariablesString = string.Join(", ", virtualVariableCompute.Variables.Select(v => $"'{v}'"));
-                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString}),drop=FALSE]");
+                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString}{addWeightVariableToPreview}{addMiVariableToPreview}),drop=FALSE]");
                 }
                 else
                 {
@@ -519,6 +515,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             var nameExists = _engine?.Evaluate($"'{virtualVariableCompute.Name}' %in% colnames({target})").AsLogical().First() ?? true;
             if (nameExists) return false;
 
+            _currentVirtualVariableCompute = virtualVariableCompute;
             _currentTarget = target;
             _tempVariableNames = [];
             var parser = virtualVariableCompute.GetParser();
@@ -660,6 +657,52 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         };
         
         ComputeVirtualVariableCombine(virtualVariableCombine, _currentTarget);
+        
+        return tempVariableName;
+    }
+
+    public override string VisitScale(VirtualVariableComputeParser.ScaleContext context)
+    {
+        var tempVariableName = GetTempVariableName();
+
+        VirtualVariableScale virtualVariableScale = new()
+        {
+            Name = tempVariableName,
+            Type = context.func.Text[..^1] switch
+            {
+                "linear" => VirtualVariableScale.ScaleType.Linear,
+                "logarithmic" => VirtualVariableScale.ScaleType.Logarithmic,
+                _ => throw new ArgumentOutOfRangeException()
+            },
+            InputVariable = new Variable(0, Visit(context.term())),
+            Mean = 
+                context.optnumber().Any(optNumber => optNumber.param.Text == "mean") ? 
+                    double.Parse(context.optnumber().First(optNumber => optNumber.param.Text == "mean").val.Text) : 
+                    0.0,
+            Sd = 
+                context.optnumber().Any(optNumber => optNumber.param.Text == "sd") ? 
+                    double.Parse(context.optnumber().First(optNumber => optNumber.param.Text == "sd").val.Text) : 
+                    1.0,
+            LogBase = 
+                context.optnumber().Any(optNumber => optNumber.param.Text == "logbase") ? 
+                    double.Parse(context.optnumber().First(optNumber => optNumber.param.Text == "logbase").val.Text) : 
+                    10.0,
+            Center = context.optbool() is not null && context.optbool().param.Text == "center" && context.optbool().val.Text == "T",
+            WeightVariable = _currentVirtualVariableCompute?.WeightVariable,
+            MiVariable = _currentVirtualVariableCompute?.MiVariable,
+        };
+
+        switch (virtualVariableScale.Type)
+        {
+            case VirtualVariableScale.ScaleType.Linear:
+                ComputeVirtualVariableScaleLinear(virtualVariableScale, _currentTarget);
+                break;
+            case VirtualVariableScale.ScaleType.Logarithmic:
+                ComputeVirtualVariableScaleLogarithmic(virtualVariableScale, _currentTarget);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
         
         return tempVariableName;
     }

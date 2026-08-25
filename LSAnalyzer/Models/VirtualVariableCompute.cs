@@ -64,6 +64,12 @@ public partial class VirtualVariableCompute : VirtualVariable, IAntlrErrorListen
         }
     }
     
+    [ObservableProperty] 
+    private Variable? _weightVariable;
+
+    [ObservableProperty] 
+    private Variable? _miVariable;
+    
     public override VirtualVariable Clone()
     {
         return new VirtualVariableCompute
@@ -73,6 +79,8 @@ public partial class VirtualVariableCompute : VirtualVariable, IAntlrErrorListen
             ForFileName = ForFileName,
             ForDatasetTypeId = ForDatasetTypeId,
             Expression = Expression,
+            WeightVariable = WeightVariable?.Clone(),
+            MiVariable = MiVariable?.Clone(),
         };
     }
     
@@ -94,13 +102,19 @@ public partial class VirtualVariableCompute : VirtualVariable, IAntlrErrorListen
             
             if (_savedState is null) return true;
             
-            return !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, [ "Info", "IsChanged", "Errors", "ValidExpression", "LastSyntaxErrors", "Variables", "PossiblePlausibleValueVariables", "FromPlausibleValues" ]);
+            return !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, [ "Info", "IsChanged", "Errors", "ValidExpression", "LastSyntaxErrors", "Variables", "PossiblePlausibleValueVariables", "FromPlausibleValues", "WeightVariable", "MiVariable" ]) ||
+                   (WeightVariable == null) != (_savedState.WeightVariable == null) ||
+                   (WeightVariable != null && !ObjectTools.PublicInstancePropertiesEqual(WeightVariable!, _savedState.WeightVariable!, [])) ||
+                   (MiVariable == null) != (_savedState.MiVariable == null) ||
+                   (MiVariable != null && !ObjectTools.PublicInstancePropertiesEqual(MiVariable!, _savedState.MiVariable!, []));
         }
     }
 
     public override bool InputVariableNamesExistIn(IEnumerable<Variable> variables)
     {
-        return Variables.All(v => variables.Select(variable => variable.Name.ToLowerInvariant()).Contains(v.ToLowerInvariant()));
+        return Variables.All(v => variables.Select(variable => variable.Name.ToLowerInvariant()).Contains(v.ToLowerInvariant())) && 
+               (WeightVariable is null || variables.Select(variable => variable.Name.ToLowerInvariant()).Contains(WeightVariable.Name.ToLowerInvariant())) && 
+               (MiVariable is null || variables.Select(variable => variable.Name.ToLowerInvariant()).Contains(MiVariable.Name.ToLowerInvariant()));
     }
 
     public VirtualVariableComputeParser GetParser()

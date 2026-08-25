@@ -43,6 +43,15 @@ public class TestVirtualVariableCompute
         [ "sum(item1,item2,naRM=)", false, 21 ],
         [ "Mean(item1,item2,item3)", false, 4 ],
         [ "sum(item1, mean(item2, item3) * 2.0)", true, 0 ],
+        [ "linear(pv1)", true, 0 ],
+        [ "linear(pv1, mean=100, sd = 0.25)", true, 0 ],
+        [ "linear(pv1, mean=100, sd = 0.25, unnecessary = 12)", true, 0 ],
+        [ "linear(pv1)", true, 0 ],
+        [ "logarithmic(pv1)", true, 0 ],
+        [ "logarithmic(pv1, center = F)", true, 0 ],
+        [ "logarithmic(pv1, center = F, other = T)", false, 27 ],
+        [ "logarithmic(pv1, center = F, logbase = 2)", false, 27 ], // TODO order of named parameters should not matter
+        [ "logarithmic(pv1, logbase = 2, center = T)", true, 0 ],
     ];
 
     [Theory, MemberData(nameof(TestValidExpressionData))]

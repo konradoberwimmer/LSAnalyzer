@@ -13,15 +13,17 @@ term
     ;
 
 value
-    : number=NUMBER                                                  #number
-    | variable=ID                                                    #variable
-    | 'isNA(' term ')'                                               #isNa
-    | func=('sum('|'mean('|'factorscores(') termlist optbool? ')'    #combine
-    | '(' term ')'                                                   #parentheses
+    : number=NUMBER                                                #number
+    | variable=ID                                                  #variable
+    | 'isNA(' term ')'                                             #isNa
+    | func=('sum('|'mean('|'factorscores(') termlist optbool? ')'  #combine
+    | func=('linear('|'logarithmic(') term optnumber* optbool? ')' #scale
+    | '(' term ')'                                                 #parentheses
     ;
 
 termlist: term | (term ',' termlist);
 optbool: ',' param=ID '=' val=BOOLEAN;
+optnumber: ',' param=ID '=' val=NUMBER;
 
 fragment LOWERCASE : [a-z];
 fragment UPPERCASE : [A-Z];

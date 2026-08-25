@@ -931,6 +931,10 @@ public class TestRserviceVirtualVariables
         [ "sum(ASBG05A, ASBG05B, ASBG05C, naRM = F)", true, 3.324331 ],
         [ "sum(ASBG05A, sum(ASBG05B, ASBG05C, naRM = F), naRM = F)", true, 3.324331 ],
         [ "factorscores(ASBG05A, ASBG05B, ASBG05C)", true, 0.0 ],
+        [ "linear(ASBG05C)", true, 0.053090 ],
+        [ "linear(ASBG05C, mean = 10, sd = 5)", true, 10.265451 ],
+        [ "linear(ASBG05C + 1, mean = 10, sd = 5)", true, 10.265451 ],
+        [ "logarithmic(mean(ASBG05A, ASBG05B, ASBG05C), center = T)", true, -0.001885 ],
     ];
     
     [Theory, MemberData(nameof(TestCreateVirtualVariableComputeNoPvData))]
@@ -958,7 +962,7 @@ public class TestRserviceVirtualVariables
         Assert.True(rservice.InjectAppFunctions());
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
 
-        VirtualVariableCompute virtualVariable = new() { Name = "myComputation", Expression = text };
+        VirtualVariableCompute virtualVariable = new() { Name = "myComputation", Expression = text, WeightVariable = new Variable(0, "TOTWGT") };
 
         Assert.Equal(computed, rservice.CreateVirtualVariable(virtualVariable, []));
 
