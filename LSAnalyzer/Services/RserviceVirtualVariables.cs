@@ -309,7 +309,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         {
             if (!virtualVariableRecode.FromPlausibleValues)
             {
-                return ComputeVirtualVariableRecode(virtualVariableRecode, forPreview);
+                return CreateSingleVirtualVariableRecode(virtualVariableRecode, forPreview);
             }
                 
             Dictionary<string, List<string>> pvVarsNames = [];
@@ -334,7 +334,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
                     virtualVariableClone.Variables.First(variable => variable.Name == name).Name = varNames[imputation];
                 }
 
-                if (!ComputeVirtualVariableRecode(virtualVariableClone, forPreview)) return false;
+                if (!CreateSingleVirtualVariableRecode(virtualVariableClone, forPreview)) return false;
             }
                 
             return true;
@@ -345,25 +345,37 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         }
     }
 
-    private bool ComputeVirtualVariableRecode(VirtualVariableRecode virtualVariableRecode, bool forPreview)
+    private bool CreateSingleVirtualVariableRecode(VirtualVariableRecode virtualVariableRecode, bool forPreview)
+    {
+        if (forPreview)
+        {
+            if (virtualVariableRecode.Variables.Count > 0)
+            {
+                var inputVariablesString = string.Join(", ", virtualVariableRecode.Variables.Select(v => "'" + v.Name + "'"));
+                EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString}),drop=FALSE]");
+            }
+            else
+            {
+                EvaluateAndLog($"lsanalyzer_dat_raw_preview <- data.frame(Input = numeric(nrow(lsanalyzer_dat_raw_stored)))");
+            }
+        }
+            
+        var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
+            
+        var success = ComputeVirtualVariableRecode(virtualVariableRecode, target);
+
+        if (success)
+        {
+            _lastVirtualVariableNames.Add(virtualVariableRecode.Name);    
+        }
+        
+        return success;
+    }
+    
+    private bool ComputeVirtualVariableRecode(VirtualVariableRecode virtualVariableRecode, string target)
     {
         try
         {
-            if (forPreview)
-            {
-                if (virtualVariableRecode.Variables.Count > 0)
-                {
-                    var inputVariablesString = string.Join(", ", virtualVariableRecode.Variables.Select(v => "'" + v.Name + "'"));
-                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- lsanalyzer_dat_raw_stored[,c({inputVariablesString}),drop=FALSE]");
-                }
-                else
-                {
-                    EvaluateAndLog($"lsanalyzer_dat_raw_preview <- data.frame(Input = numeric(nrow(lsanalyzer_dat_raw_stored)))");
-                }
-            }
-                
-            var target = forPreview ? "lsanalyzer_dat_raw_preview" : "lsanalyzer_dat_raw_stored";
-                
             var nameExists = _engine?.Evaluate($"'{virtualVariableRecode.Name}' %in% colnames({target})").AsLogical().First() ?? true;
             if (nameExists) return false;
                 
@@ -424,8 +436,6 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
                     EvaluateAndLog($"attributes({target}$`{virtualVariableRecode.Name}`)$value.labels <- c({valueLabels})");
                 }
             }
-
-            _lastVirtualVariableNames.Add(virtualVariableRecode.Name);
                 
             return true;
         }
@@ -638,7 +648,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
     {
         var tempVariableName = GetTempVariableName();
 
-        var variableList = Visit(context.termlist()).Split(",").Select(varname => new Variable(0, varname)).ToList();
+        var variableList = context._tl.Select(c => Visit(c)).Select(varname => new Variable(0, varname)).ToList();
         
         VirtualVariableCombine virtualVariableCombine = new()
         {
@@ -677,15 +687,15 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             InputVariable = new Variable(0, Visit(context.term())),
             Mean = 
                 context.optnumber().Any(optNumber => optNumber.param.Text == "mean") ? 
-                    double.Parse(context.optnumber().First(optNumber => optNumber.param.Text == "mean").val.Text) : 
+                    double.Parse(context.optnumber().First(optNumber => optNumber.param.Text == "mean").val.GetText(), CultureInfo.InvariantCulture) : 
                     0.0,
             Sd = 
                 context.optnumber().Any(optNumber => optNumber.param.Text == "sd") ? 
-                    double.Parse(context.optnumber().First(optNumber => optNumber.param.Text == "sd").val.Text) : 
+                    double.Parse(context.optnumber().First(optNumber => optNumber.param.Text == "sd").val.GetText(), CultureInfo.InvariantCulture) : 
                     1.0,
             LogBase = 
                 context.optnumber().Any(optNumber => optNumber.param.Text == "logbase") ? 
-                    double.Parse(context.optnumber().First(optNumber => optNumber.param.Text == "logbase").val.Text) : 
+                    double.Parse(context.optnumber().First(optNumber => optNumber.param.Text == "logbase").val.GetText(), CultureInfo.InvariantCulture) : 
                     10.0,
             Center = context.optbool() is not null && context.optbool().param.Text == "center" && context.optbool().val.Text == "T",
             WeightVariable = _currentVirtualVariableCompute?.WeightVariable,
@@ -707,14 +717,92 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         return tempVariableName;
     }
 
-    public override string VisitTermlist(VirtualVariableComputeParser.TermlistContext context)
+    public override string VisitRecode(VirtualVariableComputeParser.RecodeContext context)
     {
-        if (context.termlist() is null)
+        var tempVariableName = GetTempVariableName();
+
+        var variableList = context._tl.Select(c => Visit(c)).Select(varname => new Variable(0, varname)).ToList();
+        
+        VirtualVariableRecode virtualVariableRecode = new()
         {
-            return Visit(context.term());
+            Name = tempVariableName,
+            Variables = [..variableList],
+            Else = VirtualVariableRecode.ElseAction.Missing,
+        };
+
+        if (context.recodeexpr().elseexpr() is not null)
+        {
+            virtualVariableRecode.Else = context.recodeexpr().elseexpr().elseval().GetText() switch
+            {
+                "NA" => VirtualVariableRecode.ElseAction.Missing,
+                "copy" => VirtualVariableRecode.ElseAction.Copy,
+                _ => VirtualVariableRecode.ElseAction.Set,
+            };
+        }
+
+        if (virtualVariableRecode.Variables.Count > 1 && virtualVariableRecode.Else == VirtualVariableRecode.ElseAction.Copy)
+        {
+            virtualVariableRecode.Else = VirtualVariableRecode.ElseAction.Missing;
+        }
+
+        if (virtualVariableRecode.Else == VirtualVariableRecode.ElseAction.Set)
+        {
+            virtualVariableRecode.ElseValue = double.Parse(context.recodeexpr().elseexpr().elseval().GetText(), CultureInfo.InvariantCulture);
+        }
+
+        foreach (var recoderuleContext in context.recodeexpr()._rl)
+        {
+            if (recoderuleContext.criterion()._cl.Count != virtualVariableRecode.Variables.Count)
+            {
+                continue;
+            }
+            
+            VirtualVariableRecode.Rule rule = new()
+            {
+                ResultNa = recoderuleContext.recodeval.GetText() == "NA",
+                ResultValue = recoderuleContext.recodeval.GetText() == "NA" ? 0.0 : double.Parse(recoderuleContext.recodeval.GetText(), CultureInfo.InvariantCulture),
+            };
+
+            foreach (var (index, crittermContext) in recoderuleContext.criterion()._cl.Index())
+            {
+                VirtualVariableRecode.Term term = new()
+                {
+                    VariableIndex =  index,
+                    Type = crittermContext switch
+                    {
+                        { na.Text: "NA" } => VirtualVariableRecode.Term.TermType.Missing,
+                        { op.Text: "<=" } => VirtualVariableRecode.Term.TermType.AtMost,
+                        { op.Text: ">=" } => VirtualVariableRecode.Term.TermType.AtLeast,
+                        { num.IsEmpty: false } => VirtualVariableRecode.Term.TermType.Exactly,
+                        { left.IsEmpty: false, right.IsEmpty: false } => VirtualVariableRecode.Term.TermType.Between,
+                        _ => throw new ArgumentOutOfRangeException()
+                    }
+                };
+
+                term.Value = term.Type switch
+                {
+                    VirtualVariableRecode.Term.TermType.Exactly => double.Parse(crittermContext.num.GetText(), CultureInfo.InvariantCulture),
+                    VirtualVariableRecode.Term.TermType.Between => double.Parse(crittermContext.left.GetText(), CultureInfo.InvariantCulture),
+                    VirtualVariableRecode.Term.TermType.AtLeast => double.Parse(crittermContext.num.GetText(), CultureInfo.InvariantCulture),
+                    _ => 0.0
+                };
+                
+                term.MaxValue = term.Type switch
+                {
+                    VirtualVariableRecode.Term.TermType.Between => double.Parse(crittermContext.right.GetText(), CultureInfo.InvariantCulture),
+                    VirtualVariableRecode.Term.TermType.AtMost => double.Parse(crittermContext.num.GetText(), CultureInfo.InvariantCulture),
+                    _ => 1.0
+                };
+                
+                rule.Criteria.Add(term);
+            }
+            
+            virtualVariableRecode.Rules.Add(rule);
         }
         
-        return Visit(context.term()) + "," + Visit(context.termlist());
+        ComputeVirtualVariableRecode(virtualVariableRecode, _currentTarget);
+        
+        return tempVariableName;
     }
 
     public override string VisitComparison(VirtualVariableComputeParser.ComparisonContext context)

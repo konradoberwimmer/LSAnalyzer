@@ -13,23 +13,48 @@ term
     ;
 
 value
-    : number=NUMBER                                                #number
-    | variable=ID                                                  #variable
-    | 'isNA(' term ')'                                             #isNa
-    | func=('sum('|'mean('|'factorscores(') termlist optbool? ')'  #combine
-    | func=('linear('|'logarithmic(') term optnumber* optbool? ')' #scale
-    | '(' term ')'                                                 #parentheses
+    : number=NUMBER                                                                          #number
+    | variable=ID                                                                            #variable
+    | 'isNA(' term ')'                                                                       #isNa
+    | func=('sum('|'mean('|'factorscores(') tl+=term (',' tl+=term)* optbool? ')'            #combine
+    | func=('linear('|'logarithmic(') term optnumber* optbool? ')'                           #scale
+    | 'recode(' (tl+=term | ('[' tl+=term (',' tl+=term)* ']')) ',' '\'' recodeexpr '\'' ')' #recode
+    | '(' term ')'                                                                           #parentheses
     ;
 
-termlist: term | (term ',' termlist);
+atomicnumber
+    : '-' NUMBER
+    | NUMBER
+    ;
+
+atomicnumberna
+    : NA
+    | atomicnumber
+    ;
+
 optbool: ',' param=ID '=' val=BOOLEAN;
-optnumber: ',' param=ID '=' val=NUMBER;
+optnumber: ',' param=ID '=' val=atomicnumber;
+recodeexpr
+    : (rl+=recoderule (';' rl+=recoderule)* ';')? elseexpr?
+    | rl+=recoderule (';' rl+=recoderule)*
+    ;
+elseexpr: 'else' '=' elseval;
+elseval: ID | atomicnumberna;
+recoderule: criterion '=' recodeval=atomicnumberna;
+criterion: cl+=critterm | ('[' cl+=critterm (',' cl+=critterm)* ']');
+critterm
+    : na=NA   
+    | num=atomicnumber
+    | left=atomicnumber '-' right=atomicnumber
+    | op=('<='|'>=') num=atomicnumber
+    ;
 
 fragment LOWERCASE : [a-z];
 fragment UPPERCASE : [A-Z];
 fragment DIGITS : [0-9];
 
 BOOLEAN : ('T'|'F');
+NA : 'NA';
 ID : (LOWERCASE|UPPERCASE) (LOWERCASE|UPPERCASE|DIGITS)*;
 NUMBER : DIGITS+ ([.]DIGITS+)?;
 

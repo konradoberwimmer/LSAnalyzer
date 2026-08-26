@@ -897,6 +897,7 @@ public class TestRserviceVirtualVariables
         [ "", false, 0.0 ],
         [ "ITSEX -", false, 0.0 ],
         [ "ITSEX", true, 1.516055 ],
+        [ "-ASBG05A", true, -1.040481 ],
         [ "13.7", true, 13.7 ],
         [ "-0.005", true, -0.005 ],
         [ "-ITSEX", true, -1.516055 ],
@@ -933,8 +934,20 @@ public class TestRserviceVirtualVariables
         [ "factorscores(ASBG05A, ASBG05B, ASBG05C)", true, 0.0 ],
         [ "linear(ASBG05C)", true, 0.053090 ],
         [ "linear(ASBG05C, mean = 10, sd = 5)", true, 10.265451 ],
+        [ "linear(ASBG05C, mean = -10, sd = 5)", true, -9.734549 ],
         [ "linear(ASBG05C + 1, mean = 10, sd = 5)", true, 10.265451 ],
         [ "logarithmic(mean(ASBG05A, ASBG05B, ASBG05C), center = T)", true, -0.001885 ],
+        [ "recode(5,'else=-01.7')", true, -1.7 ],
+        [ "recode(5,'1-4=1;else=copy')", true, 5 ],
+        [ "recode(5,'')", true, double.NaN ],
+        [ "recode(-5,'-10--2=1;else=0')", true, 1 ],
+        [ "recode([5, ITSEX],'1-4=1;else=copy')", true, double.NaN ],
+        [ "recode([5, ITSEX],'1-4=1;else=2')", true, 2 ],
+        [ "recode([5, ITSEX],'[5,>=2]=1;else=0')", true, 0.516055 ],
+        [ "recode(ASBG05A,'5=1;4=2;3=3;2=4;1=5;else=NA')", true, 4.959519 ],
+        [ "recode(linear(ASRINF01),'<=-1=1;-1-0=2;0-1=3;>=1=4;else=NA')", true, 2.486009 ],
+        [ "recode(linear(ASRINF01),'<=-1=1;-1-0=2;0-1=3;>=1=4')", true, 2.486009 ],
+        [ "recode(linear(ASRINF01),'<=-1 = 1;-1-0 = 2;0-1 = 3;>=1 = 4')", true, 2.486009 ],
     ];
     
     [Theory, MemberData(nameof(TestCreateVirtualVariableComputeNoPvData))]
@@ -972,7 +985,11 @@ public class TestRserviceVirtualVariables
             Assert.True(rservice.Fetch("hasComputedVariable").AsLogical().First());
             Assert.True(rservice.Execute("computedMean <- mean(lsanalyzer_dat_raw_stored$myComputation, na.rm = TRUE)"));
             var computedMean = rservice.Fetch("computedMean").AsNumeric().First();
-            Assert.True(Math.Abs(computedMean - mean) < 0.00001, $"Mean was not {mean}, but {computedMean}");
+            Assert.True(double.IsNaN(computedMean) == double.IsNaN(mean));
+            if (!double.IsNaN(computedMean))
+            {
+                Assert.True(Math.Abs(computedMean - mean) < 0.00001, $"Mean was not {mean}, but {computedMean}");
+            }
         }
     }
 

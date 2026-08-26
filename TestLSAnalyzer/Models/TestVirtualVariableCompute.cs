@@ -45,6 +45,8 @@ public class TestVirtualVariableCompute
         [ "sum(item1, mean(item2, item3) * 2.0)", true, 0 ],
         [ "linear(pv1)", true, 0 ],
         [ "linear(pv1, mean=100, sd = 0.25)", true, 0 ],
+        [ "linear(pv1, mean=-100, sd = -0.25)", true, 0 ],
+        [ "linear(pv1, mean=NA, sd = NA)", false, 17 ],
         [ "linear(pv1, mean=100, sd = 0.25, unnecessary = 12)", true, 0 ],
         [ "linear(pv1)", true, 0 ],
         [ "logarithmic(pv1)", true, 0 ],
@@ -52,6 +54,19 @@ public class TestVirtualVariableCompute
         [ "logarithmic(pv1, center = F, other = T)", false, 27 ],
         [ "logarithmic(pv1, center = F, logbase = 2)", false, 27 ], // TODO order of named parameters should not matter
         [ "logarithmic(pv1, logbase = 2, center = T)", true, 0 ],
+        [ "recode(item1)", false, 12 ],
+        [ "recode('else=copy')", false, 7 ],
+        [ "recode(item1, else=copy)", false, 23 ],
+        [ "recode(item1, 'else=copy')", true, 0 ],
+        [ "recode(item1, item2, 'else=copy')", false, 14 ],
+        [ "recode([ item1, item2 ], ' else=copy ')", true, 0 ],
+        [ "recode([ item1, item2 ], '<=4=1;>=5=0; else=copy ')", true, 0 ], // syntactically correct even though invalid
+        [ "recode([ item1, item2 ], '[<=4,NA]=1;[>=5,1]=0; else=NA ')", true, 0 ],
+        [ "recode(item1, '1-4=1;5=0;else=NA')", true, 0 ],
+        [ "recode(item1, '1-2=-1;3=0;4-5=1;else=NA')", true, 0 ],
+        [ "recode(item1, '<=-1=0;-2--1=-1;-1-0=2;else=NA')", true, 0 ],
+        [ "recode(item1, '')", true, 0 ],
+        [ "recode(item1, '1-2=0;3-5=1')", true, 0 ],
     ];
 
     [Theory, MemberData(nameof(TestValidExpressionData))]
