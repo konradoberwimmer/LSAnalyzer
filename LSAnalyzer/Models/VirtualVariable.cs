@@ -8,6 +8,7 @@ using LSAnalyzer.Helper;
 namespace LSAnalyzer.Models;
 
 [JsonDerivedType(typeof(VirtualVariableCombine), typeDiscriminator: "combine")]
+[JsonDerivedType(typeof(VirtualVariableCompute), typeDiscriminator: "compute")]
 [JsonDerivedType(typeof(VirtualVariableScale), typeDiscriminator: "scale")]
 [JsonDerivedType(typeof(VirtualVariableRecode), typeDiscriminator: "recode")]
 public abstract partial class VirtualVariable : ObservableValidatorExtended, IChangeTracking

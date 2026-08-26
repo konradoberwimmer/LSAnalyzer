@@ -20,7 +20,7 @@ namespace LSAnalyzer.Models
         public override string AnalysisName => "Mean difference";
 
         [JsonIgnore]
-        public override Dictionary<string, DataColumn> TableColumns => throw new NotImplementedException();
+        public override Dictionary<string, DataColumn> TableColumns => throw new InvalidOperationException();
 
         [JsonIgnore]
         public override string? SecondaryTableName => "Explained variance";

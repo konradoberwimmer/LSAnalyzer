@@ -67,6 +67,10 @@ public class TestVirtualVariables
         {
             SelectedVirtualVariable = null,
             CurrentVirtualVariables = [],
+            AnalysisConfiguration = new AnalysisConfiguration
+            {
+                DatasetType = new DatasetType()
+            },
         };
 
         viewModel.NewVirtualVariableCommand.Execute(null);
@@ -107,11 +111,25 @@ public class TestVirtualVariables
     [Fact]
     public void TestHandleAvailableVariables()
     {
-        VirtualVariables viewModel = new()
+        var rservice = new Mock<IRservice>();
+        rservice.Setup(service =>
+            service.GetCurrentDatasetVariables(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(),
+                false)).Returns([
+            new Variable(1, "item1"),
+            new Variable(1, "item2"),
+            new Variable(3, "mi") { IsSystemVariable = true },
+            new Variable(4, "wgt") { IsSystemVariable = true },
+        ]);
+        
+        VirtualVariables viewModel = new(new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryServiceStub()), rservice.Object)
         {
             SelectedVirtualVariable = null,
             CurrentVirtualVariables = [],
             SelectedVirtualVariableType = typeof(VirtualVariableCombine),
+            AnalysisConfiguration = new AnalysisConfiguration
+            {
+                DatasetType = new DatasetType()
+            },
         };
         
         // expect no error
@@ -142,14 +160,28 @@ public class TestVirtualVariables
     [Fact]
     public void TestSaveSelectedVirtualVariable()
     {
+        var rservice = new Mock<IRservice>();
+        rservice.Setup(service =>
+            service.GetCurrentDatasetVariables(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(),
+                false)).Returns([
+            new Variable(1, "item1"),
+            new Variable(1, "item2"),
+            new Variable(3, "mi") { IsSystemVariable = true },
+            new Variable(4, "wgt") { IsSystemVariable = true },
+        ]);
+        
         var configuration = new Mock<Configuration>();
         
-        VirtualVariables viewModel = new(configuration.Object, new RserviceStub())
+        VirtualVariables viewModel = new(configuration.Object, rservice.Object)
         {
             SelectedVirtualVariable = null,
             AvailableVariables = [
                 new Variable(1, "existing_variable")
             ],
+            AnalysisConfiguration = new AnalysisConfiguration
+            {
+                DatasetType = new DatasetType()
+            },
         };
         
         // expect no error
@@ -231,11 +263,25 @@ public class TestVirtualVariables
     [Fact]
     public void TestRemoveSelectedVirtualVariable()
     {
-        VirtualVariables viewModel = new()
+        var rservice = new Mock<IRservice>();
+        rservice.Setup(service =>
+            service.GetCurrentDatasetVariables(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(),
+                false)).Returns([
+            new Variable(1, "item1"),
+            new Variable(1, "item2"),
+            new Variable(3, "mi") { IsSystemVariable = true },
+            new Variable(4, "wgt") { IsSystemVariable = true },
+        ]);
+        
+        VirtualVariables viewModel = new(new Configuration(string.Empty, null, new SettingsServiceStub(), new RegistryServiceStub()), rservice.Object)
         {
             SelectedVirtualVariable = null,
             CurrentVirtualVariables = [],
             SelectedVirtualVariableType = typeof(VirtualVariableCombine),
+            AnalysisConfiguration = new AnalysisConfiguration
+            {
+                DatasetType = new DatasetType()
+            },
         };
         
         // expect no error
@@ -269,6 +315,10 @@ public class TestVirtualVariables
             SelectedVirtualVariable = null,
             CurrentVirtualVariables = [],
             SelectedVirtualVariableType = typeof(VirtualVariableCombine),
+            AnalysisConfiguration = new AnalysisConfiguration
+            {
+                DatasetType = new DatasetType()
+            },
         };
         
         Assert.Equal("Input", viewModel.Preview.Table?.Columns[0].ColumnName);
@@ -459,5 +509,50 @@ public class TestVirtualVariables
         Assert.Equal(12, newVirtualVariable.ForDatasetTypeId);
         Assert.Equal("correct label", newVirtualVariable.InputVariable!.Label);
         Assert.Equal("TOTWGT", newVirtualVariable.WeightVariable!.Name);
+    }
+    
+    [Fact]
+    public void TestImportVirtualVariablesModifiesVariableNamesInExpression()
+    {
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.Setup(service => service.VirtualVariables).Returns([]);
+        
+        Configuration configuration = new(string.Empty, null, settingsService.Object, new RegistryServiceStub());
+        
+        var rservice = new Mock<IRservice>();
+        rservice.Setup(service => service.GetCurrentDatasetVariables(It.IsAny<AnalysisConfiguration>(), It.IsAny<List<VirtualVariable>>(), false)).Returns(
+        [
+            new Variable(1, "item1"),
+            new Variable(2, "item2"),
+            new Variable(2, "item3"),
+            new Variable(2, "TOTWGT") { IsSystemVariable = true },
+        ]);
+
+        VirtualVariables viewModel = new(configuration, rservice.Object);
+        viewModel.AnalysisConfiguration = new AnalysisConfiguration { FileName = @"C:\path\to\other_file.csv", DatasetType = new DatasetType { Id = 12, Name = "myDatasetType" }};
+
+        VirtualVariableCompute virtualVariableCompute = new()
+        {
+            Id = 2178,
+            Name = "myScale",
+            ForFileName = "old_file.csv",
+            ForDatasetTypeId = 99,
+            Expression = "(ITEM1 + item2 + Item3) / 3.0"
+        };
+        
+        List<VirtualVariable> virtualVariables = [virtualVariableCompute];
+        
+        var fileName = Path.GetTempFileName();
+        viewModel.ExportVirtualVariablesCommand.Execute(new VirtualVariables.ExportVirtualVariablesParameters { VirtualVariables = virtualVariables, FileName = fileName });
+        Assert.NotEmpty(File.ReadAllLines(fileName));
+
+        viewModel.ImportVirtualVariablesCommand.Execute(fileName);
+        Assert.Single(viewModel.CurrentVirtualVariables);
+        
+        var newVirtualVariable = viewModel.CurrentVirtualVariables.Last() as VirtualVariableCompute;
+        Assert.NotEqual(2178, newVirtualVariable!.Id);
+        Assert.Equal("other_file.csv", newVirtualVariable.ForFileName);
+        Assert.Equal(12, newVirtualVariable.ForDatasetTypeId);
+        Assert.Equal("(item1+item2+item3)/3.0", newVirtualVariable.Expression);
     }
 }

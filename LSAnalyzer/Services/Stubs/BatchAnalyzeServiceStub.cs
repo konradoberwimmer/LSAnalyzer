@@ -8,22 +8,22 @@ public class BatchAnalyzeServiceStub : IBatchAnalyzeService
 {
     public void RunBatch(IEnumerable<BatchAnalyze.BatchEntry> analyses, bool useCurrentFile, AnalysisConfiguration? currentConfiguration, string? currentSubsettingExpression, List<VirtualVariable> currentVirtualVariables)
     {
-        throw new System.NotImplementedException();
+        throw new System.InvalidOperationException();
     }
 
     public void AbortBatch()
     {
-        throw new System.NotImplementedException();
+        throw new System.InvalidOperationException();
     }
 
     public (bool success, string? errorMessage, IDataProvider? dataProvider) RetrieveDataProvider(string fileRetrieval)
     {
-        throw new System.NotImplementedException();
+        throw new System.InvalidOperationException();
     }
 
     public (bool success, string? errorMessage, dynamic? fileInformation) RetrieveFileInformation(IDataProvider dataProvider,
         string fileRetrieval)
     {
-        throw new System.NotImplementedException();
+        throw new System.InvalidOperationException();
     }
 }

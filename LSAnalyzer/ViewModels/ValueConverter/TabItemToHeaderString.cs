@@ -15,8 +15,7 @@ namespace LSAnalyzer.ViewModels.ValueConverter
         [ExcludeFromCodeCoverage]
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

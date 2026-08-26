@@ -18,5 +18,5 @@ public class AnalysisPercDiff : Analysis
     public override string AnalysisName => "Percentage difference";
     
     [JsonIgnore]
-    public override Dictionary<string, DataColumn> TableColumns => throw new NotImplementedException();
+    public override Dictionary<string, DataColumn> TableColumns => throw new InvalidOperationException();
 }

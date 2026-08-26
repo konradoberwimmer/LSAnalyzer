@@ -26,6 +26,9 @@ public class DropHandlerVariable : IDropTarget
 
         switch (contentControl.DataContext)
         {
+            case VirtualVariableCompute virtualVariableCompute:
+                virtualVariableCompute.Expression += variable.Name;
+                break;
             case VirtualVariableScale virtualVariableScale:
                 virtualVariableScale.InputVariable = variable.Clone();
                 break;
@@ -33,7 +36,7 @@ public class DropHandlerVariable : IDropTarget
                 virtualVariableRecode.AddVariable(variable.Clone());
                 break;
             default:
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
         }
     }
 }

@@ -22,7 +22,7 @@ public partial class ExportService : IExportService
         
         if (path is null)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
         
         return options.ExportType.Name switch
@@ -41,13 +41,13 @@ public partial class ExportService : IExportService
                             AnalysisFreq => Path.Combine(path, baseFileName + "_bivariate" + extension),
                             AnalysisMeanDiff => Path.Combine(path, baseFileName + "_anova" + extension),
                             AnalysisCorr => Path.Combine(path, baseFileName + "_covariance" + extension),
-                            _ => throw new NotImplementedException()
+                            _ => throw new ArgumentOutOfRangeException()
                         },
                         Path.Combine(path, baseFileName + "_meta" + extension)
                     ],
-                    _ => throw new NotImplementedException()
+                    _ => throw new ArgumentOutOfRangeException()
                 },
-            _ => throw new NotImplementedException()
+            _ => throw new ArgumentOutOfRangeException()
         };
     }
 

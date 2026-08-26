@@ -17,6 +17,6 @@ namespace LSAnalyzer.Models
         public override string AnalysisName => "Linear regression";
 
         [JsonIgnore]
-        public override Dictionary<string, DataColumn> TableColumns => throw new NotImplementedException();
+        public override Dictionary<string, DataColumn> TableColumns => throw new InvalidOperationException();
     }
 }

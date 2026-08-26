@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using Antlr4.Runtime;
+using Antlr4.Runtime.Tree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -70,6 +72,7 @@ public partial class VirtualVariables : ObservableObject
     [ObservableProperty] 
     private List<Type> _virtualVariableTypes = [
         typeof(VirtualVariableCombine),
+        typeof(VirtualVariableCompute),
         typeof(VirtualVariableRecode),
         typeof(VirtualVariableScale)
     ];
@@ -165,16 +168,20 @@ public partial class VirtualVariables : ObservableObject
     [RelayCommand]
     private void NewVirtualVariable()
     {
-        if (SelectedVirtualVariableType is null) return;
+        if (SelectedVirtualVariableType is null || AnalysisConfiguration?.DatasetType is null) return;
 
         if (Activator.CreateInstance(SelectedVirtualVariableType) is not VirtualVariable newVirtualVariable) return;
-
+        
+        var datasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, []) ?? [];
+        
         switch (newVirtualVariable)
         {
+            case VirtualVariableCompute virtualVariableCompute:
+                virtualVariableCompute.PossiblePlausibleValueVariables = new List<PlausibleValueVariable>(AnalysisConfiguration.DatasetType.PVvarsList);
+                virtualVariableCompute.WeightVariable = datasetVariables.FirstOrDefault(var => var.Name == AnalysisConfiguration.DatasetType.Weight)?.Clone();
+                virtualVariableCompute.MiVariable = AnalysisConfiguration.DatasetType.MIvar is null ? null : datasetVariables.FirstOrDefault(var => var.Name == AnalysisConfiguration.DatasetType.MIvar)?.Clone();
+                break;
             case VirtualVariableScale virtualVariableScale:
-                if (AnalysisConfiguration?.DatasetType is null) break;
-                
-                var datasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, []) ?? [];
                 virtualVariableScale.WeightVariable = datasetVariables.FirstOrDefault(var => var.Name == AnalysisConfiguration.DatasetType.Weight)?.Clone();
                 virtualVariableScale.MiVariable = AnalysisConfiguration.DatasetType.MIvar is null ? null : datasetVariables.FirstOrDefault(var => var.Name == AnalysisConfiguration.DatasetType.MIvar)?.Clone();
                 break;
@@ -201,6 +208,9 @@ public partial class VirtualVariables : ObservableObject
                     virtualVariableCombine.Variables.Add(selectedVariable.Clone());
                 }
                 break;
+            case VirtualVariableCompute virtualVariableCompute:
+                virtualVariableCompute.Expression += selectedAvailableVariables.First().Name;
+                break;
             case VirtualVariableScale virtualVariableScale:
                 virtualVariableScale.InputVariable = selectedAvailableVariables.First().Clone();
                 break;
@@ -208,7 +218,7 @@ public partial class VirtualVariables : ObservableObject
                 virtualVariableRecode.AddVariable(selectedAvailableVariables.First().Clone());
                 break;
             default:
-                throw new NotImplementedException();
+                throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -220,6 +230,7 @@ public partial class VirtualVariables : ObservableObject
         switch (SelectedVirtualVariable)
         {
             case VirtualVariableCombine:
+            case VirtualVariableCompute:
             case VirtualVariableScale:
                 if (!SelectedVirtualVariable.Validate()) return;
                 break;
@@ -271,6 +282,7 @@ public partial class VirtualVariables : ObservableObject
         {
             case VirtualVariableCombine:
             case VirtualVariableScale:
+            case VirtualVariableCompute:
                 if (!SelectedVirtualVariable.Validate()) return;
                 break;
             case VirtualVariableRecode virtualVariableRecode:
@@ -406,7 +418,7 @@ public partial class VirtualVariables : ObservableObject
                     virtualVariableRecode.Variables = [..virtualVariableRecode.Variables.Select(v => existingVariables.First(av => string.Equals(av.Name, v.Name, StringComparison.InvariantCultureIgnoreCase))).ToList()];
                     break;
                 case VirtualVariableScale virtualVariableScale:
-                    virtualVariableScale.InputVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableScale.InputVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
+                    virtualVariableScale.InputVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableScale.InputVariable!.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
                     if (virtualVariableScale.WeightVariable is not null)
                     {
                         virtualVariableScale.WeightVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableScale.WeightVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
@@ -414,6 +426,27 @@ public partial class VirtualVariables : ObservableObject
                     if (virtualVariableScale.MiVariable is not null)
                     {
                         virtualVariableScale.MiVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableScale.MiVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
+                    }
+                    break;
+                case VirtualVariableCompute virtualVariableCompute:
+                    var variableNamesInImportFile = new List<string>(virtualVariableCompute.Variables);
+                    foreach (var variableNameInInputFile in variableNamesInImportFile.Where(variableNameInInputFile => !existingVariables.Select(vv => vv.Name).Contains(variableNameInInputFile)))
+                    {
+                        VirtualVariableComputeLexer lexer = new(new AntlrInputStream(virtualVariableCompute.Expression));
+                        CommonTokenStream tokens = new(lexer);
+                        VirtualVariableComputeParser parser = new(tokens);
+                        Rservice.ReplaceVariableNamesListener listener = new(tokens) { VariableName = variableNameInInputFile, Replacement = existingVariables.First(ev => string.Equals(ev.Name, variableNameInInputFile, StringComparison.InvariantCultureIgnoreCase)).Name };
+                        ParseTreeWalker.Default.Walk(listener, parser.expression());
+        
+                        virtualVariableCompute.Expression = listener.GetReplacedExpression();
+                    }
+                    if (virtualVariableCompute.WeightVariable is not null)
+                    {
+                        virtualVariableCompute.WeightVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableCompute.WeightVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
+                    }
+                    if (virtualVariableCompute.MiVariable is not null)
+                    {
+                        virtualVariableCompute.MiVariable = existingVariables.First(av => string.Equals(av.Name, virtualVariableCompute.MiVariable.Name, StringComparison.InvariantCultureIgnoreCase)).Clone();
                     }
                     break;
             }

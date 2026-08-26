@@ -6,7 +6,7 @@ public class AnalysisQueueStub : IAnalysisQueue
 {
     public void Add(AnalysisPresentation analysisPresentation)
     {
-        throw new System.NotImplementedException();
+        throw new System.InvalidOperationException();
     }
 
     public int Count => 0;

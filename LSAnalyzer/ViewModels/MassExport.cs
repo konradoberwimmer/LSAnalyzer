@@ -140,7 +140,7 @@ public partial class MassExport : ObservableObject
                         outputObjects.Add(_exportService.CreateCsvExport(analysisPresentation.Analysis, analysisPresentation.DataView, null, false)[0]);
                         break;
                     default:
-                        throw new NotImplementedException();
+                        throw new ArgumentOutOfRangeException();
                 }
             }
         }
@@ -163,7 +163,7 @@ public partial class MassExport : ObservableObject
                     File.WriteAllText(allFileNames[currentFileNameIndex], csvString);
                     break;
                 default:
-                    throw new NotImplementedException();
+                    throw new ArgumentOutOfRangeException();
             }
             
             currentFileNameIndex++;
