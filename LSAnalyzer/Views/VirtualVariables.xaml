@@ -179,7 +179,10 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Preview:"/>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock Text="Preview:"/>
+                    <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="At most, 200 distinct cases are shown."/>
+                </StackPanel>
                 <Button Grid.Column="1" Margin="5,0,0,0" Width="16" Height="16" HorizontalAlignment="Right" IsEnabled="{Binding HasSelectedVirtualVariable}" Command="{Binding FetchPreviewDataCommand}">
                     <Button.Content>
                         <fa:IconBlock Icon="Redo"/>

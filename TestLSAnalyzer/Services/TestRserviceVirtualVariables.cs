@@ -269,7 +269,7 @@ public class TestRserviceVirtualVariables
         var (successContinuous, previewDataContinuous) = rservice.GetPreviewData(virtualVariableContinuous);
         Assert.True(successContinuous);
         Assert.NotNull(previewDataContinuous);
-        Assert.Equal(50, previewDataContinuous.Rows.Count);
+        Assert.Equal(200, previewDataContinuous.Rows.Count);
         
         VirtualVariableScale virtualVariableScale = new()
         {

@@ -567,7 +567,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             }
             
             _engine.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[!duplicated(lsanalyzer_dat_raw_preview_distinct),]");
-            _engine.Evaluate("if (nrow(lsanalyzer_dat_raw_preview_distinct) > 50) lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[1:50,]");
+            _engine.Evaluate("if (nrow(lsanalyzer_dat_raw_preview_distinct) > 200) lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[1:200,]");
             _engine.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[do.call(order, lsanalyzer_dat_raw_preview_distinct),]");
 
             var previewData = Fetch("lsanalyzer_dat_raw_preview_distinct")?.AsDataFrame();
