@@ -31,7 +31,7 @@ public interface IRservice
     
     public bool TestLoadingBifieSurvey();
 
-    public bool InjectAppFunctions();
+    public bool InjectAppFunctions(string[]? functionNames = null);
 
     public bool LoadFileIntoGlobalEnvironment(string fileName, string? fileType = null);
 

@@ -670,7 +670,6 @@ public class TestRservice
 
         Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
-        Assert.True(rservice.InjectAppFunctions());
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
 
         AnalysisPercDiff analysisPercDiff = new(analysisConfiguration)
@@ -716,7 +715,6 @@ public class TestRservice
 
         Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
-        Assert.True(rservice.InjectAppFunctions());
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
 
         AnalysisPercDiff analysisPercDiff = new(analysisConfiguration)
@@ -994,7 +992,6 @@ public class TestRservice
 
         Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
-        Assert.True(rservice.InjectAppFunctions());
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
         Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1));
 

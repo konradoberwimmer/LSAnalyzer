@@ -34,7 +34,6 @@ public class TestRserviceVirtualVariables
         Rservice rservice = new();
             
         Assert.True(rservice.Connect(), "R must also be available for tests");
-        Assert.True(rservice.InjectAppFunctions());
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
 
         VirtualVariableCombine virtualVariable = new() { Name = "ASBR01_mean_rmNA" };
@@ -972,7 +971,6 @@ public class TestRserviceVirtualVariables
         Rservice rservice = new();
             
         Assert.True(rservice.Connect(), "R must also be available for tests");
-        Assert.True(rservice.InjectAppFunctions());
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
 
         VirtualVariableCompute virtualVariable = new() { Name = "myComputation", Expression = text, WeightVariable = new Variable(0, "TOTWGT") };

@@ -53,7 +53,7 @@ public class RserviceStub : IRservice
         throw new System.InvalidOperationException();
     }
 
-    public bool InjectAppFunctions()
+    public bool InjectAppFunctions(string[]? functionNames = null)
     {
         throw new System.InvalidOperationException();
     }

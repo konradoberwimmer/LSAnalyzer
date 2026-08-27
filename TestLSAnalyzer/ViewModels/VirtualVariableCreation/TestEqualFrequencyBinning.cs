@@ -33,7 +33,6 @@ public class TestEqualFrequencyBinning
 
         Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
-        Assert.True(rservice.InjectAppFunctions());
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
         Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1));
 
@@ -92,7 +91,6 @@ public class TestEqualFrequencyBinning
 
         Rservice rservice = new();
         Assert.True(rservice.Connect(), "R must also be available for tests");
-        Assert.True(rservice.InjectAppFunctions());
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
         Assert.True(rservice.CreateBIFIEdataObject("wgt", 10, "mi", null, "repwgt", 1));
 

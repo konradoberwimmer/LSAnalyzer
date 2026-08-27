@@ -111,6 +111,8 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
                 _ => throw new ArgumentOutOfRangeException(nameof(virtualVariableCombine), virtualVariableCombine.Type.ToString(), "not in enum")
             };
 
+            if (virtualVariableCombine.Type == VirtualVariableCombine.CombinationFunction.FactorScores && !InjectAppFunctions(["lsanalyzer_func_factorScores"])) return false;
+            
             var subset = $"subset({target}, select = c({string.Join(", ", virtualVariableCombine.Variables.ToList().ConvertAll(var => "'" + var.Name + "'"))}))";
             var removeNa = virtualVariableCombine.RemoveNa ? "TRUE" : "FALSE";
                 
