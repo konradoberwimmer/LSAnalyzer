@@ -227,7 +227,7 @@ public class TestRserviceVirtualVariables
         Assert.True(rservice.Connect(), "R must also be available for tests");
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             
-        var (successNoPreviewData, previewDataNone) = rservice.GetPreviewData();
+        var (successNoPreviewData, previewDataNone) = rservice.GetPreviewData(new VirtualVariableScale());
         Assert.False(successNoPreviewData);
         Assert.Null(previewDataNone);
             
@@ -245,7 +245,7 @@ public class TestRserviceVirtualVariables
             
         Assert.True(rservice.CreateVirtualVariable(virtualVariable, [], true));
 
-        var (success, previewData) = rservice.GetPreviewData();
+        var (success, previewData) = rservice.GetPreviewData(virtualVariable);
         Assert.True(success);
         Assert.NotNull(previewData);
         Assert.True(previewData.Rows.Count < 50);
@@ -266,10 +266,24 @@ public class TestRserviceVirtualVariables
             
         Assert.True(rservice.CreateVirtualVariable(virtualVariableContinuous, [], true));
 
-        var (successContinuous, previewDataContinuous) = rservice.GetPreviewData();
+        var (successContinuous, previewDataContinuous) = rservice.GetPreviewData(virtualVariableContinuous);
         Assert.True(successContinuous);
         Assert.NotNull(previewDataContinuous);
-        Assert.True(previewDataContinuous.Rows.Count == 50);
+        Assert.Equal(50, previewDataContinuous.Rows.Count);
+        
+        VirtualVariableScale virtualVariableScale = new()
+        {
+            InputVariable = new Variable(1, "ASRLIT01"),
+            WeightVariable = new Variable(2, "TOTWGT"),
+            Name = "zASRLIT",
+        };
+            
+        Assert.True(rservice.CreateVirtualVariable(virtualVariableScale, [], true));
+
+        var (successScale, previewDataScale) = rservice.GetPreviewData(virtualVariableScale);
+        Assert.True(successScale);
+        Assert.NotNull(previewDataScale);
+        Assert.Equal(2, previewDataScale.Columns.Count);
     }
 
     [Fact]

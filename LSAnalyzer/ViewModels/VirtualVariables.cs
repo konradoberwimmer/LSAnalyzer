@@ -304,7 +304,7 @@ public partial class VirtualVariables : ObservableObject
             return;
         }
 
-        var (success, previewData) = _rservice.GetPreviewData();
+        var (success, previewData) = _rservice.GetPreviewData(SelectedVirtualVariable);
 
         IsBusy = false;
         

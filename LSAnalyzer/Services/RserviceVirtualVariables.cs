@@ -547,13 +547,28 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         }
     }
         
-    public (bool success, DataTable? dataTable) GetPreviewData()
+    public (bool success, DataTable? dataTable) GetPreviewData(VirtualVariable virtualVariable)
     {
         try
         {
-            _engine?.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview[!duplicated(lsanalyzer_dat_raw_preview),]");
-            _engine?.Evaluate("if (nrow(lsanalyzer_dat_raw_preview_distinct) > 50) lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[1:50,]");
-            _engine?.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[do.call(order, lsanalyzer_dat_raw_preview_distinct),]");
+            _engine!.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview");
+            
+            List<Variable?> variablesToRemove = virtualVariable switch
+            {
+                VirtualVariableScale virtualVariableScale => [virtualVariableScale.WeightVariable, virtualVariableScale.MiVariable],
+                VirtualVariableCompute virtualVariableCompute => [virtualVariableCompute.WeightVariable, virtualVariableCompute.MiVariable],
+                _ => []
+            };
+            variablesToRemove = variablesToRemove.Where(v => v is not null).ToList();
+
+            foreach (var variableNameToRemove in variablesToRemove.Select(v => v.Name))
+            {
+                _engine.Evaluate($"lsanalyzer_dat_raw_preview_distinct$`{variableNameToRemove}` <- NULL");
+            }
+            
+            _engine.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[!duplicated(lsanalyzer_dat_raw_preview_distinct),]");
+            _engine.Evaluate("if (nrow(lsanalyzer_dat_raw_preview_distinct) > 50) lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[1:50,]");
+            _engine.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[do.call(order, lsanalyzer_dat_raw_preview_distinct),]");
 
             var previewData = Fetch("lsanalyzer_dat_raw_preview_distinct")?.AsDataFrame();
                 

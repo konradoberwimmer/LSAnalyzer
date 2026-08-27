@@ -307,7 +307,7 @@ public class TestVirtualVariables
             .SetupSequence(service => service.CreateVirtualVariable(It.IsAny<VirtualVariable>(), It.IsAny<List<PlausibleValueVariable>>(), It.Is<bool>(b => b == true)))
             .Returns(false).Returns(true).Returns(true);
         rservice
-            .SetupSequence(service => service.GetPreviewData())
+            .SetupSequence(service => service.GetPreviewData(It.IsAny<VirtualVariable>()))
             .Returns((false, null)).Returns((true, new DataTable("preview")));
         
         VirtualVariables viewModel = new(Mock.Of<Configuration>(), rservice.Object)
