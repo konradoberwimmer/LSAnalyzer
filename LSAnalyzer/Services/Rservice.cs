@@ -208,76 +208,120 @@ public partial class Rservice : IRservice
         }
     }
 
-    public bool InjectAppFunctions()
+    public bool InjectAppFunctions(string[]? functionNames = null)
+    {
+        try
+        {
+            functionNames ??= ["lsanalyzer_func_quantile", "lsanalyzer_func_cohensH", "lsanalyzer_func_factorScores"];
+
+            foreach (var functionName in functionNames)
+            {
+                if (_engine!.Evaluate($"exists('{functionName}')").AsLogical().First())
+                {
+                    continue;
+                }
+                
+                var success = functionName switch
+                {
+                    "lsanalyzer_func_quantile" => InjectAppFunctionQuantile(),
+                    "lsanalyzer_func_cohensH" => InjectAppFunctionCohensH(),
+                    "lsanalyzer_func_factorScores" => InjectAppFunctionFactorScores(),
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+
+                if (!success)
+                {
+                    return false;
+                }
+            }
+            
+            return true;
+        } catch
+        {
+            return false;
+        }
+    }
+
+    private bool InjectAppFunctionQuantile()
     {
         try
         {
             EvaluateAndLog("""
-                           lsanalyzer_func_quantile <- function(BIFIEobj, vars, breaks, useInterpolation = TRUE, mimicIdbAnalyzer = FALSE, group=NULL, group_values=NULL)
+                   lsanalyzer_func_quantile <- function(BIFIEobj, vars, breaks, useInterpolation = TRUE, mimicIdbAnalyzer = FALSE, group=NULL, group_values=NULL)
+                   {
+                     userfct <- function(X,w)
+                     {
+                       params <- numeric()
+                       for (cc in 1:ncol(X))
+                       {
+                         vx <- X[,cc]
+                         vw <- w
+                         ord <- order(vx,na.last=TRUE)
+                         vx <- vx[ord]
+                         vw <- vw[ord]
+                         if (any(is.na(vx)))
+                         {
+                           first_na <- min(which(is.na(vx)))
+                           vx <- vx[1:(first_na-1)]
+                           vw <- vw[1:(first_na-1)]
+                         }
+                         if (length(vx)>0)
+                         {
+                           relw <- cumsum(vw)/sum(vw)
+                           agg <- data.frame(x=vx,w=relw)
+                           for (bb in breaks)
                            {
-                             userfct <- function(X,w)
+                             if (any(agg$w<bb) && !all(agg$w<bb))
                              {
-                               params <- numeric()
-                               for (cc in 1:ncol(X))
-                               {
-                                 vx <- X[,cc]
-                                 vw <- w
-                                 ord <- order(vx,na.last=TRUE)
-                                 vx <- vx[ord]
-                                 vw <- vw[ord]
-                                 if (any(is.na(vx)))
-                                 {
-                                   first_na <- min(which(is.na(vx)))
-                                   vx <- vx[1:(first_na-1)]
-                                   vw <- vw[1:(first_na-1)]
-                                 }
-                                 if (length(vx)>0)
-                                 {
-                                   relw <- cumsum(vw)/sum(vw)
-                                   agg <- data.frame(x=vx,w=relw)
-                                   for (bb in breaks)
-                                   {
-                                     if (any(agg$w<bb) && !all(agg$w<bb))
-                                     {
-                                       pos <- max(which(agg$w<bb))
-                                       lowx <- agg$x[pos]
-                                       loww <- agg$w[pos]
-                                       uppx <- agg$x[pos+1]
-                                       uppw <- agg$w[pos+1]
-                                       if (useInterpolation) param <- lowx + ((uppx-lowx) * (bb-loww) / (uppw - loww + 10^-20))
-                                       if (!useInterpolation && !mimicIdbAnalyzer) param <- lowx
-                                       if (!useInterpolation && mimicIdbAnalyzer) param <- uppx
-                                       params <- c(params,param)
-                                     } else
-                                     {
-                                       params <- c(params,NaN)
-                                     }
-                                   }
-                                 } else
-                                 {
-                                   params <- c(params,rep(NaN,length(breaks)))
-                                 }
-                               }
-                               return(params)
+                               pos <- max(which(agg$w<bb))
+                               lowx <- agg$x[pos]
+                               loww <- agg$w[pos]
+                               uppx <- agg$x[pos+1]
+                               uppw <- agg$w[pos+1]
+                               if (useInterpolation) param <- lowx + ((uppx-lowx) * (bb-loww) / (uppw - loww + 10^-20))
+                               if (!useInterpolation && !mimicIdbAnalyzer) param <- lowx
+                               if (!useInterpolation && mimicIdbAnalyzer) param <- uppx
+                               params <- c(params,param)
+                             } else
+                             {
+                               params <- c(params,NaN)
                              }
-
-                             userparnames <- character()
-                             for (vv in vars) userparnames <- c(userparnames,paste0(vv,"_yval_",breaks))
-                             res <- BIFIEsurvey::BIFIE.by(BIFIEobj = BIFIEobj,
-                                             vars = vars,
-                                             userfct = userfct,
-                                             userparnames = userparnames,
-                                             group = group,
-                                             group_values = group_values)
-
-                             res$stat$var <- sub("\\_yval\\_([0-9]|\\.)*$", "", res$stat$parm)
-                             res$stat$yval <- as.numeric(sub("^.*\\_yval\\_", "", res$stat$parm))
-                             res$stat$quant <- res$stat$est
-
-                             return(res)
                            }
-                           """, null, true);
+                         } else
+                         {
+                           params <- c(params,rep(NaN,length(breaks)))
+                         }
+                       }
+                       return(params)
+                     }
 
+                     userparnames <- character()
+                     for (vv in vars) userparnames <- c(userparnames,paste0(vv,"_yval_",breaks))
+                     res <- BIFIEsurvey::BIFIE.by(BIFIEobj = BIFIEobj,
+                                     vars = vars,
+                                     userfct = userfct,
+                                     userparnames = userparnames,
+                                     group = group,
+                                     group_values = group_values)
+
+                     res$stat$var <- sub("\\_yval\\_([0-9]|\\.)*$", "", res$stat$parm)
+                     res$stat$yval <- as.numeric(sub("^.*\\_yval\\_", "", res$stat$parm))
+                     res$stat$quant <- res$stat$est
+
+                     return(res)
+                   }
+                   """, null, true);
+            return true;
+        } catch
+        {
+            return false;
+        }
+    }
+
+    private bool InjectAppFunctionCohensH()
+    {
+        try
+        {
             EvaluateAndLog("""
                            lsanalyzer_func_cohensH <- function(res) {
                              if (!"BIFIE.freq" %in% class(res)) return(NULL)
@@ -322,7 +366,18 @@ public partial class Rservice : IRservice
                              return(list('stat' = statH))
                            }
                            """, null, true);
-                
+            
+            return true;
+        } catch
+        {
+            return false;
+        }
+    }
+    
+    private bool InjectAppFunctionFactorScores()
+    {
+        try
+        {
             EvaluateAndLog("""
                            lsanalyzer_func_factorScores <- function(x, na.rm)
                            {
@@ -336,14 +391,14 @@ public partial class Rservice : IRservice
                              return(scores.df$Factor1)
                            }
                            """, null, true);
-                
+            
             return true;
         } catch
         {
             return false;
         }
     }
-
+        
     public bool LoadFileIntoGlobalEnvironment(string fileName, string? fileType = null)
     {
         try
@@ -1000,6 +1055,8 @@ public partial class Rservice : IRservice
 
             List<GenericVector> resultList = [];
 
+            if (!InjectAppFunctions(["lsanalyzer_func_cohensH"])) return null;
+
             var baseCall = "lsanalyzer_result_freq <- BIFIEsurvey::BIFIE.freq(BIFIEobj = lsanalyzer_dat_BO, vars = c(" + string.Join(", ", analysis.Vars.ConvertAll(var => "'" + var.Name + "'")) + ")";
             var skipSE = analysis.CalculateSE ? string.Empty : ", se = FALSE";
                 
@@ -1155,6 +1212,8 @@ public partial class Rservice : IRservice
                 }
             } else
             {
+                if (!InjectAppFunctions(["lsanalyzer_func_quantile"])) return null;
+                
                 baseCall = "lsanalyzer_result_ecdf <- lsanalyzer_func_quantile(BIFIEobj = lsanalyzer_dat_BO" + varsArg + breaksArg;
                 if (!analysis.UseInterpolation)
                 {

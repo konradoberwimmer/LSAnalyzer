@@ -158,11 +158,6 @@ namespace LSAnalyzer
                 MessageBox.Show($"BIFIEsurvey was found ({rLibrary}) but cannot be loaded. Thus, LSAnalyzer is not fully functioning. Please check your R installation!", "BIFIEsurvey error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
-            if (rService.IsConnected && !rService.InjectAppFunctions())
-            {
-                MessageBox.Show("There was a problem putting specific functions for LSAnalyzer into the global environment!", "R session error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-
             var configurationService = _serviceProvider.GetRequiredService<Configuration>();
             var fileDatasetTypes = configurationService.DatasetTypesConfigFile;
             if (!File.Exists(fileDatasetTypes))
