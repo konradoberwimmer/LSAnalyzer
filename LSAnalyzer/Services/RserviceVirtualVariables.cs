@@ -539,6 +539,8 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
                 EvaluateAndLog($"{target}$`{tempVariableName}` <- NULL");
             }
             
+            _lastVirtualVariableNames.Add(virtualVariableCompute.Name);
+            
             return true;
         }
         catch
