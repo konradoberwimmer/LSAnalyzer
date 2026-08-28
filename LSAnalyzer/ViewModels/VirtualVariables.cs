@@ -48,6 +48,11 @@ public partial class VirtualVariables : ObservableObject
                 _configuration.GetVirtualVariablesFor(CurrentFileName, _analysisConfiguration.DatasetType);
             foreach (var currentVirtualVariable in currentVirtualVariables)
             {
+                if (currentVirtualVariable is VirtualVariableCompute virtualVariableCompute)
+                {
+                    virtualVariableCompute.PossiblePlausibleValueVariables = new List<PlausibleValueVariable>(_analysisConfiguration.DatasetType.PVvarsList);
+                }
+                
                 currentVirtualVariable.AcceptChanges();
             }
             CurrentVirtualVariables = new ObservableCollection<VirtualVariable>(currentVirtualVariables);
@@ -429,6 +434,7 @@ public partial class VirtualVariables : ObservableObject
                     }
                     break;
                 case VirtualVariableCompute virtualVariableCompute:
+                    virtualVariableCompute.PossiblePlausibleValueVariables = new List<PlausibleValueVariable>(AnalysisConfiguration!.DatasetType!.PVvarsList);
                     var variableNamesInImportFile = new List<string>(virtualVariableCompute.Variables);
                     foreach (var variableNameInInputFile in variableNamesInImportFile.Where(variableNameInInputFile => !existingVariables.Select(vv => vv.Name).Contains(variableNameInInputFile)))
                     {
