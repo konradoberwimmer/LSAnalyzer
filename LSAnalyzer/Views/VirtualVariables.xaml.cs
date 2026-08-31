@@ -98,14 +98,18 @@ public partial class VirtualVariables : Window
 
     private void ButtonRemoveVirtualVariable_OnClick(object sender, RoutedEventArgs e)
     {
-        if (DataContext is not ViewModels.VirtualVariables { SelectedVirtualVariable: VirtualVariable virtualVariable } viewModel) return;
+        if (DataContext is not ViewModels.VirtualVariables viewModel) return;
 
-        var result = MessageBox.Show($"Do you want to remove virtual variable '{virtualVariable.Name}'?", "Confirm removal",
+        var virtualVariables = DataGridVirtualVariables.SelectedItems.Cast<VirtualVariable>().ToList();
+
+        if (virtualVariables.Count == 0) return;
+
+        var result = MessageBox.Show($"Do you want to remove virtual variable{(virtualVariables.Count > 1 ? "s" : "")} {string.Join(", ", virtualVariables.Select(vv => "'" + vv.Name + "'"))}?", "Confirm removal",
             MessageBoxButton.YesNo, MessageBoxImage.Question);
 
         if (result == MessageBoxResult.Yes)
         {
-            viewModel.RemoveSelectedVirtualVariableCommand.Execute(null);
+            viewModel.RemoveSelectedVirtualVariableCommand.Execute(virtualVariables);
         }
     }
 

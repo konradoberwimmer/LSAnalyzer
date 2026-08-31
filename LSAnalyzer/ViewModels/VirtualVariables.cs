@@ -274,13 +274,14 @@ public partial class VirtualVariables : ObservableObject
     }
 
     [RelayCommand]
-    private void RemoveSelectedVirtualVariable()
+    private void RemoveSelectedVirtualVariable(List<VirtualVariable> virtualVariables)
     {
-        if (SelectedVirtualVariable is null) return;
+        foreach (var virtualVariable in virtualVariables)
+        {
+            _configuration.RemoveVirtualVariable(virtualVariable);
+            CurrentVirtualVariables.Remove(virtualVariable);
+        }
         
-        _configuration.RemoveVirtualVariable(SelectedVirtualVariable);
-        
-        CurrentVirtualVariables.Remove(SelectedVirtualVariable);
         SelectedVirtualVariable = null;
 
         HasChangedVirtualVariables = true;

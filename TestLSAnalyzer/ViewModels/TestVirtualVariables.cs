@@ -304,14 +304,28 @@ public class TestVirtualVariables
         };
         
         // expect no error
-        viewModel.RemoveSelectedVirtualVariableCommand.Execute(null);
+        viewModel.RemoveSelectedVirtualVariableCommand.Execute([]);
         
         viewModel.NewVirtualVariableCommand.Execute(null);
         
         Assert.NotNull(viewModel.SelectedVirtualVariable);
         Assert.NotEmpty(viewModel.CurrentVirtualVariables);
         
-        viewModel.RemoveSelectedVirtualVariableCommand.Execute(null);
+        viewModel.RemoveSelectedVirtualVariableCommand.Execute([viewModel.SelectedVirtualVariable]);
+        
+        Assert.Empty(viewModel.CurrentVirtualVariables);
+        Assert.Null(viewModel.SelectedVirtualVariable);
+        Assert.True(viewModel.HasChangedVirtualVariables);
+        
+        viewModel.SelectedVirtualVariableType = typeof(VirtualVariableCombine);
+        viewModel.NewVirtualVariableCommand.Execute(null);
+        viewModel.SelectedVirtualVariableType = typeof(VirtualVariableRecode);
+        viewModel.NewVirtualVariableCommand.Execute(null);
+
+        Assert.NotNull(viewModel.SelectedVirtualVariable);
+        Assert.Equal(2, viewModel.CurrentVirtualVariables.Count);
+        
+        viewModel.RemoveSelectedVirtualVariableCommand.Execute([..viewModel.CurrentVirtualVariables]);
         
         Assert.Empty(viewModel.CurrentVirtualVariables);
         Assert.Null(viewModel.SelectedVirtualVariable);
