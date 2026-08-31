@@ -180,7 +180,12 @@ public class TestVirtualVariables
             ],
             AnalysisConfiguration = new AnalysisConfiguration
             {
-                DatasetType = new DatasetType()
+                DatasetType = new DatasetType
+                {
+                    PVvarsList = [
+                        new PlausibleValueVariable { Regex = "myPV", DisplayName = "myPV" }
+                    ], 
+                }
             },
         };
         
@@ -213,8 +218,10 @@ public class TestVirtualVariables
         Assert.Single(viewModel.CurrentVirtualVariables);
         Assert.True(viewModel.HasChangedVirtualVariables);
         
-        var messageSent = false;
-        WeakReferenceMessenger.Default.Register<VirtualVariables.VariableNameNotAvailableMessage>(this, (_,_) => messageSent = true);
+        var nameNotAvailableMessageSent = false;
+        var nameMatcheRegexMessageSent = false;
+        WeakReferenceMessenger.Default.Register<VirtualVariables.VariableNameNotAvailableMessage>(this, (_,_) => nameNotAvailableMessageSent = true);
+        WeakReferenceMessenger.Default.Register<VirtualVariables.VariableNameMatchesPvRegexMessage>(this, (_,_) => nameMatcheRegexMessageSent = true);
         
         viewModel.SelectedVirtualVariableType = typeof(VirtualVariableCombine);
         viewModel.NewVirtualVariableCommand.Execute(null);
@@ -229,16 +236,28 @@ public class TestVirtualVariables
         
         viewModel.SaveSelectedVirtualVariableCommand.Execute(null);
 
-        Assert.True(messageSent);
+        Assert.True(nameNotAvailableMessageSent);
+        Assert.False(nameMatcheRegexMessageSent);
         Assert.True(viewModel.SelectedVirtualVariable.IsChanged);
         
-        messageSent = false;
+        nameNotAvailableMessageSent = false;
         
         viewModel.SelectedVirtualVariable.Name = "existing_variable";
         
         viewModel.SaveSelectedVirtualVariableCommand.Execute(null);
 
-        Assert.True(messageSent);
+        Assert.True(nameNotAvailableMessageSent);
+        Assert.False(nameMatcheRegexMessageSent);
+        Assert.True(viewModel.SelectedVirtualVariable.IsChanged);
+        
+        nameNotAvailableMessageSent = false;
+        
+        viewModel.SelectedVirtualVariable.Name = "zmyPV";
+        
+        viewModel.SaveSelectedVirtualVariableCommand.Execute(null);
+
+        Assert.False(nameNotAvailableMessageSent);
+        Assert.True(nameMatcheRegexMessageSent);
         Assert.True(viewModel.SelectedVirtualVariable.IsChanged);
     }
 

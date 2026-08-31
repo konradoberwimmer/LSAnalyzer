@@ -7,11 +7,13 @@ using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.Services.Stubs;
@@ -253,6 +255,12 @@ public partial class VirtualVariables : ObservableObject
             return;
         }
 
+        if (AnalysisConfiguration?.DatasetType?.PVvarsList.Any(pvVar => Regex.IsMatch(SelectedVirtualVariable.Name, StringFormats.EncapsulateRegex(pvVar.Regex, AnalysisConfiguration.DatasetType.AutoEncapsulateRegex) ?? "-")) ?? false)
+        {
+            WeakReferenceMessenger.Default.Send(new VariableNameMatchesPvRegexMessage());
+            return;
+        }
+
         if (SelectedVirtualVariable.Id == 0)
         {
             SelectedVirtualVariable.Id = _configuration.GetNextVirtualVariableId();
@@ -401,7 +409,8 @@ public partial class VirtualVariables : ObservableObject
             }
 
             if (CurrentVirtualVariables.Select(vv => vv.Name.ToLowerInvariant()).Contains(virtualVariable.Name.ToLowerInvariant()) ||
-                existingVariables.Select(v => v.Name.ToLowerInvariant()).Contains(virtualVariable.Name.ToLowerInvariant()))
+                existingVariables.Select(v => v.Name.ToLowerInvariant()).Contains(virtualVariable.Name.ToLowerInvariant()) ||
+                (AnalysisConfiguration.DatasetType?.PVvarsList.Any(pvVar => Regex.IsMatch(virtualVariable.Name, StringFormats.EncapsulateRegex(pvVar.Regex, AnalysisConfiguration.DatasetType.AutoEncapsulateRegex) ?? "-")) ?? false))
             {
                 duplicatedVirtualVariables.Add(virtualVariable);
                 continue;
@@ -411,7 +420,7 @@ public partial class VirtualVariables : ObservableObject
             virtualVariable.ForFileName = CurrentFileName;
             if (virtualVariable.ForDatasetTypeId is not null)
             {
-                virtualVariable.ForDatasetTypeId = AnalysisConfiguration?.DatasetType?.Id;
+                virtualVariable.ForDatasetTypeId = AnalysisConfiguration.DatasetType?.Id;
             }
 
             switch (virtualVariable)
@@ -497,6 +506,8 @@ public partial class VirtualVariables : ObservableObject
     }
 
     public class VariableNameNotAvailableMessage;
+
+    public class VariableNameMatchesPvRegexMessage;
 
     public class PreviewImpossibleMessage;
 

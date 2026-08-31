@@ -34,6 +34,11 @@ public partial class VirtualVariables : Window
             MessageBox.Show(this, $"Cannot save: Variable name '{viewModel.SelectedVirtualVariable?.Name ?? string.Empty}' is already in use.", "Saving not possible",  MessageBoxButton.OK, MessageBoxImage.Information);
         });
         
+        WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.VariableNameMatchesPvRegexMessage>(this, (_, _) =>
+        {
+            MessageBox.Show(this, $"Cannot save: Variable name '{viewModel.SelectedVirtualVariable?.Name ?? string.Empty}' as it would match a plausible value variable definition.", "Saving not possible",  MessageBoxButton.OK, MessageBoxImage.Information);
+        });
+        
         WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.PreviewImpossibleMessage>(this, (_, _) =>
         {
             MessageBox.Show(this, "Preview not possible - check your virtual variable definition!", "Preview not possible", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -45,11 +50,11 @@ public partial class VirtualVariables : Window
         });
         
         WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.IgnoredVirtualVariablesAtImportMessage>(this, (_, message) => {
-            MessageBox.Show(this, $"Ignored the following virtual variables because of missing variables in the current data file:\n{string.Join('\n', message.VirtualVariables.Select(vv => $"- {vv.Info}"))}", "Ignored virtual variables", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, $"Ignored the following virtual variables because of missing variables in the current data file:\n{string.Join('\n', message.VirtualVariables.Select(vv => $"- {vv.Name}: {vv.Info}"))}", "Ignored virtual variables", MessageBoxButton.OK, MessageBoxImage.Information);
         });
         
         WeakReferenceMessenger.Default.Register<ViewModels.VirtualVariables.DuplicatedVirtualVariablesAtImportMessage>(this, (_, message) => {
-            MessageBox.Show(this, $"Ignored the following virtual variables because name already exists in the current data file:\n{string.Join('\n', message.VirtualVariables.Select(vv => $"- {vv.Info}"))}", "Ignored virtual variables", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, $"Ignored the following virtual variables because their name already exists in the current data file (or matches a plausible value variable definition):\n{string.Join('\n', message.VirtualVariables.Select(vv => $"- {vv.Name}: {vv.Info}"))}", "Ignored virtual variables", MessageBoxButton.OK, MessageBoxImage.Information);
         });
     }
     
