@@ -87,7 +87,7 @@ public class TestVirtualVariableCompute
         Assert.Equal(correct, virtualVariableCompute.ValidExpression);
         if (!correct)
         {
-            Assert.Equal(position, virtualVariableCompute.LastSyntaxErrors.Last().CharPositionInLine);
+            Assert.Equal(position, virtualVariableCompute.LastSyntaxError?.CharPositionInLine);
         }
     }
 

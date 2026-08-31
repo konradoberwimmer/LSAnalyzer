@@ -13,12 +13,14 @@
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
         <converter:DictionaryHasElementToBool x:Key="DictionaryHasElementToBoolConverter"/>
+        <converter:NullToVisibilityCollapsed x:Key="NullToVisibilityCollapsedConverter"/>
         <customControls:DropHandlerVariable x:Key="DropHandlerVariable"/>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <TextBlock Grid.Row="0" Grid.Column="0" Text="Expression:" HorizontalAlignment="Left"/>
         <ContentControl Grid.Row="1" Grid.Column="0" Margin="0,5,0,0" dd:DragDrop.IsDropTarget="True" dd:DragDrop.DropHandler="{StaticResource DropHandlerVariable}">
@@ -31,5 +33,6 @@
                 </ToolTipService.IsEnabled>
             </TextBox>
         </ContentControl>
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding LastSyntaxError.Info, FallbackValue=info}" Visibility="{Binding LastSyntaxError, Converter={StaticResource NullToVisibilityCollapsedConverter}}" HorizontalAlignment="Left" Foreground="Red" TextWrapping="Wrap"/>
     </Grid>
 </UserControl>
