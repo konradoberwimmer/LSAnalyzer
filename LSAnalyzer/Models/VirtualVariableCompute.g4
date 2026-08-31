@@ -16,8 +16,8 @@ value
     : number=NUMBER                                                                          #number
     | variable=ID                                                                            #variable
     | 'isNA(' term ')'                                                                       #isNa
-    | func=('sum('|'mean('|'factorscores(') tl+=term (',' tl+=term)* optbool? ')'            #combine
-    | func=('linear('|'logarithmic(') term optnumber* optbool? ')'                           #scale
+    | func=('rowSums('|'rowMeans('|'factorScores(') tl+=term (',' tl+=term)* optbool? ')'    #combine
+    | func=('linear('|'scale('|'logarithmic(') term optnumber* optbool? ')'                  #scale
     | 'recode(' (tl+=term | ('[' tl+=term (',' tl+=term)* ']')) ',' '\'' recodeexpr '\'' ')' #recode
     | '(' term ')'                                                                           #parentheses
     ;

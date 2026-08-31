@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -55,7 +56,21 @@ public partial class VirtualVariableCombine : VirtualVariable
 
     public override bool FromPlausibleValues => Variables.Any(variable => variable.FromPlausibleValues);
 
-    public override string Info => $"{Type.ToString().ToLower()}({string.Join(", ", Variables.Select(variable => variable.Name))}, rmNA = {(RemoveNa ? "T" : "F")})";
+    public override string Info
+    {
+        get
+        {
+            var functionName = Type switch
+            {
+                CombinationFunction.Sum => "rowSums",
+                CombinationFunction.Mean => "rowMeans",
+                CombinationFunction.FactorScores => "factorScores",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+            
+            return $"{functionName}({string.Join(", ", Variables.Select(variable => variable.Name))}, rmNA = {(RemoveNa ? "T" : "F")})";
+        }
+    }
 
     private VirtualVariableCombine? _savedState;
     [JsonIgnore]

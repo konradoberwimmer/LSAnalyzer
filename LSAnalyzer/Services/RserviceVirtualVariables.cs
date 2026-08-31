@@ -674,14 +674,14 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             Name = tempVariableName,
             Type = context.func.Text[..^1] switch
             {
-                "sum" => VirtualVariableCombine.CombinationFunction.Sum,
-                "mean" => VirtualVariableCombine.CombinationFunction.Mean,
-                "factorscores" => VirtualVariableCombine.CombinationFunction.FactorScores,
+                "rowSums" => VirtualVariableCombine.CombinationFunction.Sum,
+                "rowMeans" => VirtualVariableCombine.CombinationFunction.Mean,
+                "factorScores" => VirtualVariableCombine.CombinationFunction.FactorScores,
                 _ => throw new ArgumentOutOfRangeException()
             },
             RemoveNa = 
                 context.optbool() is null || 
-                (context.optbool().param.Text == "naRM" && context.optbool().val.Text == "T"),
+                (context.optbool().param.Text == "rmNA" && context.optbool().val.Text == "T"),
             Variables = [..variableList]
         };
         
@@ -699,7 +699,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             Name = tempVariableName,
             Type = context.func.Text[..^1] switch
             {
-                "linear" => VirtualVariableScale.ScaleType.Linear,
+                "linear" or "scale" => VirtualVariableScale.ScaleType.Linear,
                 "logarithmic" => VirtualVariableScale.ScaleType.Logarithmic,
                 _ => throw new ArgumentOutOfRangeException()
             },
