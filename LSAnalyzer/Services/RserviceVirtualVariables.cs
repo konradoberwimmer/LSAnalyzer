@@ -663,6 +663,40 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         return tempVariableName;
     }
 
+    public override string VisitUnivar(VirtualVariableComputeParser.UnivarContext context)
+    {
+        var tempVariableName = GetTempVariableName();
+        var childVariableName = Visit(context.term());
+
+        var weightFactor = 
+            _currentVirtualVariableCompute?.WeightVariable is null ? 
+                string.Empty : 
+                $"* {_currentTarget}$`{_currentVirtualVariableCompute.WeightVariable.Name}`";
+        var weightSums =  
+            _currentVirtualVariableCompute?.WeightVariable is null ? 
+                $"sum(!is.na({_currentTarget}$`{childVariableName}`))" : 
+                $"sum({_currentTarget}$`{_currentVirtualVariableCompute.WeightVariable.Name}`[!is.na({_currentTarget}$`{childVariableName}`)])";
+        
+        string[] rCalls = context.func.Text[..^1] switch
+        {
+            "sum" => [ $"{_currentTarget}$`{tempVariableName}` <- sum({_currentTarget}$`{childVariableName}`{weightFactor}, na.rm = TRUE)" ],
+            "mean" => [ $"{_currentTarget}$`{tempVariableName}` <- sum({_currentTarget}$`{childVariableName}`{weightFactor}, na.rm = TRUE) / {weightSums}" ],
+            "sd" => [
+                $"{_currentTarget}$`{tempVariableName}_mean` <- sum({_currentTarget}$`{childVariableName}`{weightFactor}, na.rm = TRUE) / {weightSums}",
+                $"{_currentTarget}$`{tempVariableName}` <- sqrt(sum(({_currentTarget}$`{childVariableName}` - {_currentTarget}$`{tempVariableName}_mean`) ^ 2.0 {weightFactor}, na.rm = TRUE) / ({weightSums} - 1))",
+                $"{_currentTarget}$`{tempVariableName}_mean` <- NULL",
+            ],
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        foreach (var rCall in rCalls)
+        {
+            EvaluateAndLog(rCall);
+        }
+        
+        return tempVariableName;
+    }
+
     public override string VisitCombine(VirtualVariableComputeParser.CombineContext context)
     {
         var tempVariableName = GetTempVariableName();

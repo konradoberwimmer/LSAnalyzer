@@ -70,6 +70,10 @@ public class TestVirtualVariableCompute
         [ "recode(item1, '<=-1=0;-2--1=-1;-1-0=2;else=NA')", true, 0 ],
         [ "recode(item1, '')", true, 0 ],
         [ "recode(item1, '1-2=0;3-5=1')", true, 0 ],
+        [ "sum(item1, item2)", false, 9 ],
+        [ "sum(item1)", true, 0 ],
+        [ "item1 - mean(item1)", true, 0 ],
+        [ "(x - mean(x))/sd(x)", true, 0 ],
     ];
 
     [Theory, MemberData(nameof(TestValidExpressionData))]

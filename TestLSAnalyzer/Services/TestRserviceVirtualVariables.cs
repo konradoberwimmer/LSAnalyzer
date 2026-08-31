@@ -962,6 +962,11 @@ public class TestRserviceVirtualVariables
         [ "recode(linear(ASRINF01),'<=-1=1;-1-0=2;0-1=3;>=1=4;else=NA')", true, 2.486009 ],
         [ "recode(linear(ASRINF01),'<=-1=1;-1-0=2;0-1=3;>=1=4')", true, 2.486009 ],
         [ "recode(linear(ASRINF01),'<=-1 = 1;-1-0 = 2;0-1 = 3;>=1 = 4')", true, 2.486009 ],
+        [ "mean(1+2)", true, 3 ],
+        [ "mean(ITSEX)", true, 1.515454 ],
+        [ "mean(ASBG05C)", true, 1.199961 ],
+        [ "sd(ASBG05C)", true, 0.3999736 ],
+        [ "(ASBG05C - mean(ASBG05C)) / sd(ASBG05C)", true, 0.053090 ],
     ];
     
     [Theory, MemberData(nameof(TestCreateVirtualVariableComputeNoPvData))]
