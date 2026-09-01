@@ -26,13 +26,15 @@ public partial class VirtualVariableCompute : VirtualVariable, IAntlrErrorListen
     partial void OnExpressionChanged(string value)
     {
         _syntaxErrors = [];
+        OnPropertyChanged(nameof(LastSyntaxError));
+        
         OnPropertyChanged(nameof(ValidExpression));
         OnPropertyChanged(nameof(IsChanged));
     }
 
     private List<SyntaxErrorEntry> _syntaxErrors = [];
     [JsonIgnore]
-    public List<SyntaxErrorEntry> LastSyntaxErrors => _syntaxErrors;
+    public SyntaxErrorEntry? LastSyntaxError => _syntaxErrors.LastOrDefault();
     
     public override bool FromPlausibleValues => PossiblePlausibleValueVariables.Any(pv => Variables.Contains(pv.DisplayName));
 
@@ -47,6 +49,7 @@ public partial class VirtualVariableCompute : VirtualVariable, IAntlrErrorListen
             var parser = GetParser();
             parser.AddErrorListener(this);
             parser.expression();
+            OnPropertyChanged(nameof(LastSyntaxError));
             return _syntaxErrors.Count == 0;
         }
     }
@@ -134,7 +137,10 @@ public partial class VirtualVariableCompute : VirtualVariable, IAntlrErrorListen
         _syntaxErrors.Add(new SyntaxErrorEntry(offendingSymbol, line, charPositionInLine, msg));
     }
 
-    public record SyntaxErrorEntry(IToken? OffendingSymbol, int Line, int CharPositionInLine, string Message);
+    public record SyntaxErrorEntry(IToken? OffendingSymbol, int Line, int CharPositionInLine, string Message)
+    {
+        public string Info => $"line {Line}, column {CharPositionInLine}: {Message}";
+    }
 
     private class VariablesVisitor : VirtualVariableComputeBaseVisitor<List<string>>
     {

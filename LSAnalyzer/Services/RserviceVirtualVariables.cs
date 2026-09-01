@@ -539,6 +539,8 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
                 EvaluateAndLog($"{target}$`{tempVariableName}` <- NULL");
             }
             
+            _lastVirtualVariableNames.Add(virtualVariableCompute.Name);
+            
             return true;
         }
         catch
@@ -547,13 +549,28 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         }
     }
         
-    public (bool success, DataTable? dataTable) GetPreviewData()
+    public (bool success, DataTable? dataTable) GetPreviewData(VirtualVariable virtualVariable)
     {
         try
         {
-            _engine?.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview[!duplicated(lsanalyzer_dat_raw_preview),]");
-            _engine?.Evaluate("if (nrow(lsanalyzer_dat_raw_preview_distinct) > 50) lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[1:50,]");
-            _engine?.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[do.call(order, lsanalyzer_dat_raw_preview_distinct),]");
+            _engine!.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview");
+            
+            List<Variable?> variablesToRemove = virtualVariable switch
+            {
+                VirtualVariableScale virtualVariableScale => [virtualVariableScale.WeightVariable, virtualVariableScale.MiVariable],
+                VirtualVariableCompute virtualVariableCompute => [virtualVariableCompute.WeightVariable, virtualVariableCompute.MiVariable],
+                _ => []
+            };
+            variablesToRemove = variablesToRemove.Where(v => v is not null).ToList();
+
+            foreach (var variableNameToRemove in variablesToRemove.Select(v => v.Name))
+            {
+                _engine.Evaluate($"lsanalyzer_dat_raw_preview_distinct$`{variableNameToRemove}` <- NULL");
+            }
+            
+            _engine.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[!duplicated(lsanalyzer_dat_raw_preview_distinct),]");
+            _engine.Evaluate("if (nrow(lsanalyzer_dat_raw_preview_distinct) > 200) lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[1:200,]");
+            _engine.Evaluate("lsanalyzer_dat_raw_preview_distinct <- lsanalyzer_dat_raw_preview_distinct[do.call(order, lsanalyzer_dat_raw_preview_distinct),]");
 
             var previewData = Fetch("lsanalyzer_dat_raw_preview_distinct")?.AsDataFrame();
                 
@@ -646,6 +663,40 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
         return tempVariableName;
     }
 
+    public override string VisitUnivar(VirtualVariableComputeParser.UnivarContext context)
+    {
+        var tempVariableName = GetTempVariableName();
+        var childVariableName = Visit(context.term());
+
+        var weightFactor = 
+            _currentVirtualVariableCompute?.WeightVariable is null ? 
+                string.Empty : 
+                $"* {_currentTarget}$`{_currentVirtualVariableCompute.WeightVariable.Name}`";
+        var weightSums =  
+            _currentVirtualVariableCompute?.WeightVariable is null ? 
+                $"sum(!is.na({_currentTarget}$`{childVariableName}`))" : 
+                $"sum({_currentTarget}$`{_currentVirtualVariableCompute.WeightVariable.Name}`[!is.na({_currentTarget}$`{childVariableName}`)])";
+        
+        string[] rCalls = context.func.Text[..^1] switch
+        {
+            "sum" => [ $"{_currentTarget}$`{tempVariableName}` <- sum({_currentTarget}$`{childVariableName}`{weightFactor}, na.rm = TRUE)" ],
+            "mean" => [ $"{_currentTarget}$`{tempVariableName}` <- sum({_currentTarget}$`{childVariableName}`{weightFactor}, na.rm = TRUE) / {weightSums}" ],
+            "sd" => [
+                $"{_currentTarget}$`{tempVariableName}_mean` <- sum({_currentTarget}$`{childVariableName}`{weightFactor}, na.rm = TRUE) / {weightSums}",
+                $"{_currentTarget}$`{tempVariableName}` <- sqrt(sum(({_currentTarget}$`{childVariableName}` - {_currentTarget}$`{tempVariableName}_mean`) ^ 2.0 {weightFactor}, na.rm = TRUE) / ({weightSums} - 1))",
+                $"{_currentTarget}$`{tempVariableName}_mean` <- NULL",
+            ],
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        foreach (var rCall in rCalls)
+        {
+            EvaluateAndLog(rCall);
+        }
+        
+        return tempVariableName;
+    }
+
     public override string VisitCombine(VirtualVariableComputeParser.CombineContext context)
     {
         var tempVariableName = GetTempVariableName();
@@ -657,14 +708,14 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             Name = tempVariableName,
             Type = context.func.Text[..^1] switch
             {
-                "sum" => VirtualVariableCombine.CombinationFunction.Sum,
-                "mean" => VirtualVariableCombine.CombinationFunction.Mean,
-                "factorscores" => VirtualVariableCombine.CombinationFunction.FactorScores,
+                "rowSums" => VirtualVariableCombine.CombinationFunction.Sum,
+                "rowMeans" => VirtualVariableCombine.CombinationFunction.Mean,
+                "factorScores" => VirtualVariableCombine.CombinationFunction.FactorScores,
                 _ => throw new ArgumentOutOfRangeException()
             },
             RemoveNa = 
                 context.optbool() is null || 
-                (context.optbool().param.Text == "naRM" && context.optbool().val.Text == "T"),
+                (context.optbool().param.Text == "rmNA" && context.optbool().val.Text == "T"),
             Variables = [..variableList]
         };
         
@@ -682,7 +733,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             Name = tempVariableName,
             Type = context.func.Text[..^1] switch
             {
-                "linear" => VirtualVariableScale.ScaleType.Linear,
+                "linear" or "scale" => VirtualVariableScale.ScaleType.Linear,
                 "logarithmic" => VirtualVariableScale.ScaleType.Logarithmic,
                 _ => throw new ArgumentOutOfRangeException()
             },

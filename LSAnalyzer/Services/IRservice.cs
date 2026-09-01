@@ -77,7 +77,7 @@ public interface IRservice
 
     public bool CreateVirtualVariable(VirtualVariable virtualVariable, List<PlausibleValueVariable> pvVars, bool forPreview = false);
 
-    public (bool success, DataTable? dataTable) GetPreviewData();
+    public (bool success, DataTable? dataTable) GetPreviewData(VirtualVariable virtualVariable);
     
     public List<Variable>? GetDatasetVariables(string fileName, string? fileType = null, bool fromStoredRaw = false);
 

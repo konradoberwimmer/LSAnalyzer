@@ -180,7 +180,12 @@ public class TestVirtualVariables
             ],
             AnalysisConfiguration = new AnalysisConfiguration
             {
-                DatasetType = new DatasetType()
+                DatasetType = new DatasetType
+                {
+                    PVvarsList = [
+                        new PlausibleValueVariable { Regex = "myPV", DisplayName = "myPV" }
+                    ], 
+                }
             },
         };
         
@@ -213,8 +218,10 @@ public class TestVirtualVariables
         Assert.Single(viewModel.CurrentVirtualVariables);
         Assert.True(viewModel.HasChangedVirtualVariables);
         
-        var messageSent = false;
-        WeakReferenceMessenger.Default.Register<VirtualVariables.VariableNameNotAvailableMessage>(this, (_,_) => messageSent = true);
+        var nameNotAvailableMessageSent = false;
+        var nameMatcheRegexMessageSent = false;
+        WeakReferenceMessenger.Default.Register<VirtualVariables.VariableNameNotAvailableMessage>(this, (_,_) => nameNotAvailableMessageSent = true);
+        WeakReferenceMessenger.Default.Register<VirtualVariables.VariableNameMatchesPvRegexMessage>(this, (_,_) => nameMatcheRegexMessageSent = true);
         
         viewModel.SelectedVirtualVariableType = typeof(VirtualVariableCombine);
         viewModel.NewVirtualVariableCommand.Execute(null);
@@ -229,16 +236,28 @@ public class TestVirtualVariables
         
         viewModel.SaveSelectedVirtualVariableCommand.Execute(null);
 
-        Assert.True(messageSent);
+        Assert.True(nameNotAvailableMessageSent);
+        Assert.False(nameMatcheRegexMessageSent);
         Assert.True(viewModel.SelectedVirtualVariable.IsChanged);
         
-        messageSent = false;
+        nameNotAvailableMessageSent = false;
         
         viewModel.SelectedVirtualVariable.Name = "existing_variable";
         
         viewModel.SaveSelectedVirtualVariableCommand.Execute(null);
 
-        Assert.True(messageSent);
+        Assert.True(nameNotAvailableMessageSent);
+        Assert.False(nameMatcheRegexMessageSent);
+        Assert.True(viewModel.SelectedVirtualVariable.IsChanged);
+        
+        nameNotAvailableMessageSent = false;
+        
+        viewModel.SelectedVirtualVariable.Name = "zmyPV";
+        
+        viewModel.SaveSelectedVirtualVariableCommand.Execute(null);
+
+        Assert.False(nameNotAvailableMessageSent);
+        Assert.True(nameMatcheRegexMessageSent);
         Assert.True(viewModel.SelectedVirtualVariable.IsChanged);
     }
 
@@ -285,14 +304,28 @@ public class TestVirtualVariables
         };
         
         // expect no error
-        viewModel.RemoveSelectedVirtualVariableCommand.Execute(null);
+        viewModel.RemoveSelectedVirtualVariableCommand.Execute([]);
         
         viewModel.NewVirtualVariableCommand.Execute(null);
         
         Assert.NotNull(viewModel.SelectedVirtualVariable);
         Assert.NotEmpty(viewModel.CurrentVirtualVariables);
         
-        viewModel.RemoveSelectedVirtualVariableCommand.Execute(null);
+        viewModel.RemoveSelectedVirtualVariableCommand.Execute([viewModel.SelectedVirtualVariable]);
+        
+        Assert.Empty(viewModel.CurrentVirtualVariables);
+        Assert.Null(viewModel.SelectedVirtualVariable);
+        Assert.True(viewModel.HasChangedVirtualVariables);
+        
+        viewModel.SelectedVirtualVariableType = typeof(VirtualVariableCombine);
+        viewModel.NewVirtualVariableCommand.Execute(null);
+        viewModel.SelectedVirtualVariableType = typeof(VirtualVariableRecode);
+        viewModel.NewVirtualVariableCommand.Execute(null);
+
+        Assert.NotNull(viewModel.SelectedVirtualVariable);
+        Assert.Equal(2, viewModel.CurrentVirtualVariables.Count);
+        
+        viewModel.RemoveSelectedVirtualVariableCommand.Execute([..viewModel.CurrentVirtualVariables]);
         
         Assert.Empty(viewModel.CurrentVirtualVariables);
         Assert.Null(viewModel.SelectedVirtualVariable);
@@ -307,7 +340,7 @@ public class TestVirtualVariables
             .SetupSequence(service => service.CreateVirtualVariable(It.IsAny<VirtualVariable>(), It.IsAny<List<PlausibleValueVariable>>(), It.Is<bool>(b => b == true)))
             .Returns(false).Returns(true).Returns(true);
         rservice
-            .SetupSequence(service => service.GetPreviewData())
+            .SetupSequence(service => service.GetPreviewData(It.IsAny<VirtualVariable>()))
             .Returns((false, null)).Returns((true, new DataTable("preview")));
         
         VirtualVariables viewModel = new(Mock.Of<Configuration>(), rservice.Object)

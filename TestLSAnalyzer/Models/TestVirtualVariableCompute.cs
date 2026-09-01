@@ -37,17 +37,20 @@ public class TestVirtualVariableCompute
         [ "!isNA(item1)", true, 0 ],
         [ "!isNA(item1) & item1 == 2", true, 0 ],
         [ "item1==1 |item1 == 2", true, 0 ],
-        [ "sum(naRM=T)", false, 8 ],
-        [ "sum(item1, item2, item3)", true, 0 ],
-        [ "sum(item1, item2, item3, naRM = T)", true, 0 ],
-        [ "sum(item1,item2,naRM=)", false, 21 ],
-        [ "Mean(item1,item2,item3)", false, 4 ],
-        [ "sum(item1, mean(item2, item3) * 2.0)", true, 0 ],
+        [ "rowSums(rmNA=T)", false, 12 ],
+        [ "rowSums(item1, item2, item3)", true, 0 ],
+        [ "rowSums(item1, item2, item3, rmNA = T)", true, 0 ],
+        [ "rowSums(item1,item2,rmNA=)", false, 25 ],
+        [ "RowMeans(item1,item2,item3)", false, 8 ],
+        [ "rowSums(item1, rowMeans(item2, item3) * 2.0)", true, 0 ],
+        [ "rowMeans(item1, rowMeans(item2, item3) * 2.0)", true, 0 ],
+        [ "factorScores(item1, rowMeans(item2, item3) * 2.0)", true, 0 ],
         [ "linear(pv1)", true, 0 ],
         [ "linear(pv1, mean=100, sd = 0.25)", true, 0 ],
         [ "linear(pv1, mean=-100, sd = -0.25)", true, 0 ],
         [ "linear(pv1, mean=NA, sd = NA)", false, 17 ],
         [ "linear(pv1, mean=100, sd = 0.25, unnecessary = 12)", true, 0 ],
+        [ "scale(pv1, mean=100, sd = 0.25, unnecessary = 12)", true, 0 ],
         [ "linear(pv1)", true, 0 ],
         [ "logarithmic(pv1)", true, 0 ],
         [ "logarithmic(pv1, center = F)", true, 0 ],
@@ -67,6 +70,10 @@ public class TestVirtualVariableCompute
         [ "recode(item1, '<=-1=0;-2--1=-1;-1-0=2;else=NA')", true, 0 ],
         [ "recode(item1, '')", true, 0 ],
         [ "recode(item1, '1-2=0;3-5=1')", true, 0 ],
+        [ "sum(item1, item2)", false, 9 ],
+        [ "sum(item1)", true, 0 ],
+        [ "item1 - mean(item1)", true, 0 ],
+        [ "(x - mean(x))/sd(x)", true, 0 ],
     ];
 
     [Theory, MemberData(nameof(TestValidExpressionData))]
@@ -80,7 +87,7 @@ public class TestVirtualVariableCompute
         Assert.Equal(correct, virtualVariableCompute.ValidExpression);
         if (!correct)
         {
-            Assert.Equal(position, virtualVariableCompute.LastSyntaxErrors.Last().CharPositionInLine);
+            Assert.Equal(position, virtualVariableCompute.LastSyntaxError?.CharPositionInLine);
         }
     }
 

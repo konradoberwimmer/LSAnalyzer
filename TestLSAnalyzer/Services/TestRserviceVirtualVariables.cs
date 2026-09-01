@@ -227,7 +227,7 @@ public class TestRserviceVirtualVariables
         Assert.True(rservice.Connect(), "R must also be available for tests");
         Assert.True(rservice.LoadFileIntoGlobalEnvironment(analysisConfiguration.FileName));
             
-        var (successNoPreviewData, previewDataNone) = rservice.GetPreviewData();
+        var (successNoPreviewData, previewDataNone) = rservice.GetPreviewData(new VirtualVariableScale());
         Assert.False(successNoPreviewData);
         Assert.Null(previewDataNone);
             
@@ -245,7 +245,7 @@ public class TestRserviceVirtualVariables
             
         Assert.True(rservice.CreateVirtualVariable(virtualVariable, [], true));
 
-        var (success, previewData) = rservice.GetPreviewData();
+        var (success, previewData) = rservice.GetPreviewData(virtualVariable);
         Assert.True(success);
         Assert.NotNull(previewData);
         Assert.True(previewData.Rows.Count < 50);
@@ -266,10 +266,24 @@ public class TestRserviceVirtualVariables
             
         Assert.True(rservice.CreateVirtualVariable(virtualVariableContinuous, [], true));
 
-        var (successContinuous, previewDataContinuous) = rservice.GetPreviewData();
+        var (successContinuous, previewDataContinuous) = rservice.GetPreviewData(virtualVariableContinuous);
         Assert.True(successContinuous);
         Assert.NotNull(previewDataContinuous);
-        Assert.True(previewDataContinuous.Rows.Count == 50);
+        Assert.Equal(200, previewDataContinuous.Rows.Count);
+        
+        VirtualVariableScale virtualVariableScale = new()
+        {
+            InputVariable = new Variable(1, "ASRLIT01"),
+            WeightVariable = new Variable(2, "TOTWGT"),
+            Name = "zASRLIT",
+        };
+            
+        Assert.True(rservice.CreateVirtualVariable(virtualVariableScale, [], true));
+
+        var (successScale, previewDataScale) = rservice.GetPreviewData(virtualVariableScale);
+        Assert.True(successScale);
+        Assert.NotNull(previewDataScale);
+        Assert.Equal(2, previewDataScale.Columns.Count);
     }
 
     [Fact]
@@ -921,21 +935,22 @@ public class TestRserviceVirtualVariables
         [ "!isNA(ASBG05C) & (ASBG05C == 1 | ASBG05C == 2)", true, 0.993349 ],
         [ "ASBG05C == 1", true, 0.778804 ],
         [ "!isNA(ASBG05C) & ASBG05C == 1", true, 0.773624 ],
-        [ "mean(ASBG05A, ASBG05B, ASBG05C)", true, 1.109258 ],
-        [ "mean(ASBG05A, ASBG05B, ASBG05C, naRM = T)", true, 1.109258 ],
-        [ "mean(ASBG05A, ASBG05B, ASBG05C, naRM = F)", true, 1.10811 ],
-        [ "sum(1)", true, 1 ],
-        [ "sum(ITSEX)", true, 1.516055 ],
-        [ "sum(ITSEX) > 1", true, 0.516055 ],
-        [ "sum(ITSEX+1, ITSEX+1)", true, 5.032110 ],
-        [ "sum(ASBG05A, ASBG05B, ASBG05C, naRM = F)", true, 3.324331 ],
-        [ "sum(ASBG05A, sum(ASBG05B, ASBG05C, naRM = F), naRM = F)", true, 3.324331 ],
-        [ "factorscores(ASBG05A, ASBG05B, ASBG05C)", true, 0.0 ],
+        [ "rowMeans(ASBG05A, ASBG05B, ASBG05C)", true, 1.109258 ],
+        [ "rowMeans(ASBG05A, ASBG05B, ASBG05C, rmNA = T)", true, 1.109258 ],
+        [ "rowMeans(ASBG05A, ASBG05B, ASBG05C, rmNA = F)", true, 1.10811 ],
+        [ "rowSums(1)", true, 1 ],
+        [ "rowSums(ITSEX)", true, 1.516055 ],
+        [ "rowSums(ITSEX) > 1", true, 0.516055 ],
+        [ "rowSums(ITSEX+1, ITSEX+1)", true, 5.032110 ],
+        [ "rowSums(ASBG05A, ASBG05B, ASBG05C, rmNA = F)", true, 3.324331 ],
+        [ "rowSums(ASBG05A, rowSums(ASBG05B, ASBG05C, rmNA = F), naRM = F)", true, 3.324331 ],
+        [ "factorScores(ASBG05A, ASBG05B, ASBG05C)", true, 0.0 ],
         [ "linear(ASBG05C)", true, 0.053090 ],
+        [ "scale(ASBG05C)", true, 0.053090 ],
         [ "linear(ASBG05C, mean = 10, sd = 5)", true, 10.265451 ],
         [ "linear(ASBG05C, mean = -10, sd = 5)", true, -9.734549 ],
         [ "linear(ASBG05C + 1, mean = 10, sd = 5)", true, 10.265451 ],
-        [ "logarithmic(mean(ASBG05A, ASBG05B, ASBG05C), center = T)", true, -0.001885 ],
+        [ "logarithmic(rowMeans(ASBG05A, ASBG05B, ASBG05C), center = T)", true, -0.001885 ],
         [ "recode(5,'else=-01.7')", true, -1.7 ],
         [ "recode(5,'1-4=1;else=copy')", true, 5 ],
         [ "recode(5,'')", true, double.NaN ],
@@ -947,6 +962,11 @@ public class TestRserviceVirtualVariables
         [ "recode(linear(ASRINF01),'<=-1=1;-1-0=2;0-1=3;>=1=4;else=NA')", true, 2.486009 ],
         [ "recode(linear(ASRINF01),'<=-1=1;-1-0=2;0-1=3;>=1=4')", true, 2.486009 ],
         [ "recode(linear(ASRINF01),'<=-1 = 1;-1-0 = 2;0-1 = 3;>=1 = 4')", true, 2.486009 ],
+        [ "mean(1+2)", true, 3 ],
+        [ "mean(ITSEX)", true, 1.515454 ],
+        [ "mean(ASBG05C)", true, 1.199961 ],
+        [ "sd(ASBG05C)", true, 0.3999736 ],
+        [ "(ASBG05C - mean(ASBG05C)) / sd(ASBG05C)", true, 0.053090 ],
     ];
     
     [Theory, MemberData(nameof(TestCreateVirtualVariableComputeNoPvData))]

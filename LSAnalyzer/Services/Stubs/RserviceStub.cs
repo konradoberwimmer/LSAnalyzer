@@ -169,7 +169,7 @@ public class RserviceStub : IRservice
         throw new System.InvalidOperationException();
     }
 
-    public (bool success, DataTable? dataTable) GetPreviewData()
+    public (bool success, DataTable? dataTable) GetPreviewData(VirtualVariable virtualVariable)
     {
         throw new System.InvalidOperationException();
     }
