@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using CommunityToolkit.Mvvm.Messaging;
 using GongSolutions.Wpf.DragDrop;
 using LSAnalyzer.Models;
 
@@ -26,8 +27,8 @@ public class DropHandlerVariable : IDropTarget
 
         switch (contentControl.DataContext)
         {
-            case VirtualVariableCompute virtualVariableCompute:
-                virtualVariableCompute.Expression += variable.Name;
+            case VirtualVariableCompute:
+                WeakReferenceMessenger.Default.Send(new VirtualVariables.DoubleClickedAvailableVariablesMessage(variable));
                 break;
             case VirtualVariableScale virtualVariableScale:
                 virtualVariableScale.InputVariable = variable.Clone();

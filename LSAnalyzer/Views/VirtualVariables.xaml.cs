@@ -93,7 +93,14 @@ public partial class VirtualVariables : Window
     {
         if (sender is not ListBox listBox || DataContext is not ViewModels.VirtualVariables viewModel) return;
 
-        viewModel.HandleAvailableVariablesCommand.Execute(listBox.SelectedItems.Cast<Variable>().ToList());
+        if (viewModel.SelectedVirtualVariable is not VirtualVariableCompute)
+        {
+            viewModel.HandleAvailableVariablesCommand.Execute(listBox.SelectedItems.Cast<Variable>().ToList());
+        }
+        else if (listBox.SelectedItem is Variable variable)
+        {
+            WeakReferenceMessenger.Default.Send(new DoubleClickedAvailableVariablesMessage(variable));
+        }
     }
 
     private void ButtonRemoveVirtualVariable_OnClick(object sender, RoutedEventArgs e)
@@ -228,4 +235,6 @@ public partial class VirtualVariables : Window
             viewModel.ImportVirtualVariablesCommand.Execute(openFileDialog.FileName);
         }
     }
+
+    public record DoubleClickedAvailableVariablesMessage(Variable Variable);
 }

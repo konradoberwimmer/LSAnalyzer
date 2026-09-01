@@ -24,7 +24,7 @@
         </Grid.RowDefinitions>
         <TextBlock Grid.Row="0" Grid.Column="0" Text="Expression:" HorizontalAlignment="Left"/>
         <ContentControl Grid.Row="1" Grid.Column="0" Margin="0,5,0,0" dd:DragDrop.IsDropTarget="True" dd:DragDrop.DropHandler="{StaticResource DropHandlerVariable}">
-            <TextBox TextWrapping="WrapWithOverflow" Text="{Binding Expression, UpdateSourceTrigger=PropertyChanged}">
+            <TextBox x:Name="TextBoxExpression" TextWrapping="WrapWithOverflow" Text="{Binding Expression, UpdateSourceTrigger=PropertyChanged}" LostKeyboardFocus="TextBoxExpression_OnLostKeyboardFocus">
                 <ToolTipService.ToolTip>
                     <TextBlock Text="{Binding Errors[Expression], FallbackValue=...}" Foreground="Red"/>
                 </ToolTipService.ToolTip>
