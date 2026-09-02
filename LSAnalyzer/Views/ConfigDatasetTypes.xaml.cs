@@ -2,9 +2,13 @@
 using LSAnalyzer.ViewModels;
 using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Windows;
+using DocumentFormat.OpenXml.Drawing.Charts;
+using LSAnalyzer.Models;
 
 namespace LSAnalyzer.Views
 {
@@ -92,6 +96,32 @@ namespace LSAnalyzer.Views
             {
                 Properties.Settings.Default.lastResultOutFileLocation = Path.GetDirectoryName(saveFileDialog.FileName);
                 configDatasetTypesViewModel.ExportDatasetTypeCommand.Execute(saveFileDialog.FileName);
+            }
+        }
+
+        private void ButtonWeightVariables_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.ConfigDatasetTypes viewModel || viewModel.SelectedDatasetType is null) return;
+
+            var storedPossibleWeightVariables = viewModel.SelectedDatasetType.PossibleWeightVariables.Select(weightVariable => new WeightVariable(weightVariable)).ToList();
+            
+            if (!string.IsNullOrWhiteSpace(viewModel.SelectedDatasetType.Weight) && viewModel.SelectedDatasetType.PossibleWeightVariables.Count == 0)
+            {
+                foreach (var weightVariable in viewModel.SelectedDatasetType.Weight.Split(";"))
+                {
+                    viewModel.SelectedDatasetType.PossibleWeightVariables.Add(new WeightVariable { Name = weightVariable, Mandatory = true});
+                }
+            }
+            WeightVariables weightVariablesView = new()
+            {
+                DataContext = viewModel
+            };
+            
+            weightVariablesView.ShowDialog();
+
+            if (string.Join(";", viewModel.SelectedDatasetType.PossibleWeightVariables.Select(weightVariable => weightVariable.Name)) != viewModel.SelectedDatasetType.Weight)
+            {
+                viewModel.SelectedDatasetType.PossibleWeightVariables = [..storedPossibleWeightVariables];
             }
         }
     }

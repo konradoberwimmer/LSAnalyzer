@@ -17,15 +17,15 @@ namespace TestLSAnalyzer.Helper
             DatasetType dst1 = new DatasetType();
             DatasetType dst2 = new DatasetType(dst1);
 
-            Assert.True(ObjectTools.PublicInstancePropertiesEqual(dst1, dst2, new string[] { "PVvarsList", "Errors" }));
+            Assert.True(ObjectTools.PublicInstancePropertiesEqual(dst1, dst2, new string[] { "PossibleWeightVariables", "PVvarsList", "Errors" }));
 
             dst1.FayFac = 2;
 
-            Assert.False(ObjectTools.PublicInstancePropertiesEqual(dst1, dst2, new string[] { "PVvarsList", "Errors" }));
+            Assert.False(ObjectTools.PublicInstancePropertiesEqual(dst1, dst2, new string[] { "PossibleWeightVariables","PVvarsList", "Errors" }));
 
             dst2.FayFac = 2;
 
-            Assert.True(ObjectTools.PublicInstancePropertiesEqual(dst1, dst2, new string[] { "PVvarsList", "Errors" }));
+            Assert.True(ObjectTools.PublicInstancePropertiesEqual(dst1, dst2, new string[] { "PossibleWeightVariables","PVvarsList", "Errors" }));
         }
 
         [Fact]

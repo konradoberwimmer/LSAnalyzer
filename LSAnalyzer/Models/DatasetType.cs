@@ -1,15 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models.ValidationAttributes;
-using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
@@ -52,6 +48,15 @@ namespace LSAnalyzer.Models
         {
             OnPropertyChanged(nameof(IsChanged));
         }
+        [ObservableProperty] private ItemsChangeObservableCollection<WeightVariable> _possibleWeightVariables = [];
+        partial void OnPossibleWeightVariablesChanged(ItemsChangeObservableCollection<WeightVariable> value)
+        {
+            PossibleWeightVariables.CollectionChanged += delegate
+            {
+                OnPropertyChanged(nameof(IsChanged)); 
+            };
+            OnPropertyChanged(nameof(IsChanged));
+        }
         [MutuallyExclusive(nameof(PVvarsList), "Cannot specify both indicator variable for multiple imputations and plausible value variables!")]
         [ObservableProperty] private string? _MIvar;
         partial void OnMIvarChanged(string? value)
@@ -67,7 +72,7 @@ namespace LSAnalyzer.Models
         [ObservableProperty] private ItemsChangeObservableCollection<PlausibleValueVariable> _PVvarsList;
         partial void OnPVvarsListChanged(ItemsChangeObservableCollection<PlausibleValueVariable> value)
         {
-            PVvarsList.CollectionChanged += delegate (object? sender, NotifyCollectionChangedEventArgs args) 
+            PVvarsList.CollectionChanged += delegate
             { 
                 OnPropertyChanged(nameof(IsChanged)); 
             };
@@ -115,7 +120,10 @@ namespace LSAnalyzer.Models
                     return true;
                 }
 
-                return !PVvarsList.ElementObjectsEqual(_savedState.PVvarsList, new string[] { "Errors" }) || !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, new string[] { "PVvarsList", "Errors", "IsChanged" });
+                return 
+                    !PVvarsList.ElementObjectsEqual(_savedState.PVvarsList, [ "Errors" ]) || 
+                    !PossibleWeightVariables.ElementObjectsEqual(_savedState.PossibleWeightVariables, [ "Errors" ]) || 
+                    !ObjectTools.PublicInstancePropertiesEqual(this, _savedState, [ "PossibleWeightVariables", "PVvarsList", "Errors", "IsChanged" ]);
             }
         }
 
@@ -135,6 +143,11 @@ namespace LSAnalyzer.Models
             AutoEncapsulateRegex = datasetType.AutoEncapsulateRegex;
             Description = datasetType.Description;
             Weight = datasetType.Weight;
+            PossibleWeightVariables = new();
+            foreach (var weightVariable in datasetType.PossibleWeightVariables)
+            {
+                PossibleWeightVariables.Add(new(weightVariable));
+            }
             NMI = datasetType.NMI;
             MIvar = datasetType.MIvar;
             IDvar = datasetType.IDvar;
@@ -461,6 +474,26 @@ namespace LSAnalyzer.Models
                     FayFac = 1, JKzone = "JKZONEC", JKrep = "JKREPC", JKreverse = false,
                 }
             };
+        }
+    }
+
+    public class WeightVariable : ObservableValidatorExtended
+    {
+        [Required(ErrorMessage = "A name is required!")]
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public bool Mandatory { get; set; } = true;
+
+        public WeightVariable()
+        {
+            
+        }
+        
+        public WeightVariable(WeightVariable otherWeightVariable)
+        {
+            Name = otherWeightVariable.Name;
+            Description = otherWeightVariable.Description;
+            Mandatory = otherWeightVariable.Mandatory;
         }
     }
 }

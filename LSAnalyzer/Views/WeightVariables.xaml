@@ -1,0 +1,24 @@
+<Window x:Class="LSAnalyzer.Views.WeightVariables"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:viewModels="clr-namespace:LSAnalyzer.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=viewModels:ConfigDatasetTypes, IsDesignTimeCreatable=True}"
+        x:Name="WindowWeightVariables"
+        Title="Weight variables" Height="300" MinHeight="300" Width="600" MinWidth="600" WindowStartupLocation="CenterOwner"><Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <DataGrid Grid.Row="0" ItemsSource="{Binding SelectedDatasetType.PossibleWeightVariables}" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="150"/>
+                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="300"/>
+                <DataGridCheckBoxColumn Header="Mandatory" Binding="{Binding Mandatory}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button Grid.Row="1" Margin="0,5,0,0" Content="Apply" HorizontalAlignment="Right" Width="80" Height="22" Command="{Binding MakeWeightFromPossibleWeightVariablesCommand}" CommandParameter="{Binding ElementName=WindowWeightVariables}"/>
+    </Grid>
+</Window>

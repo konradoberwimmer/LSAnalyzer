@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
+using LSAnalyzer.Helper;
 
 namespace LSAnalyzer.ViewModels;
 
@@ -168,6 +169,22 @@ public partial class ConfigDatasetTypes : ObservableObject
         };
 
         File.WriteAllText(filename, JsonSerializer.Serialize(SelectedDatasetType, jsonSerializerOptions));
+    }
+
+    [RelayCommand]
+    private void MakeWeightFromPossibleWeightVariables(ICloseable? window)
+    {
+        if (SelectedDatasetType?.PossibleWeightVariables.Any(weightVariable => !weightVariable.Validate()) ?? false)
+        {
+            return;
+        }
+        
+        if (SelectedDatasetType is not null)
+        {
+            SelectedDatasetType.Weight = string.Join(";", SelectedDatasetType.PossibleWeightVariables.Select(weightVariable => weightVariable.Name));
+        }
+        
+        window?.Close();
     }
 }
 
