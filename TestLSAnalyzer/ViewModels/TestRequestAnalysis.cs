@@ -24,7 +24,7 @@ public class TestRequestAnalysis
 
         Assert.Equal(11, requestAnalysisViewModel.AvailableVariables.Count());
 
-        requestAnalysisViewModel.MoveToAndFromAnalysisVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
+        requestAnalysisViewModel.MoveToAndFromAnalysisVariablesCommand.Execute(new RequestAnalysis.MoveToAndFromVariablesCommandParameters()
         {
             SelectedFrom = requestAnalysisViewModel.AvailableVariables.Where(var => (var.Name == "x" || var.Name == "y")).ToList(),
             SelectedTo = new(),
@@ -33,7 +33,7 @@ public class TestRequestAnalysis
         Assert.Equal(9, requestAnalysisViewModel.AvailableVariables.Count());
         Assert.Equal(2, requestAnalysisViewModel.AnalysisVariables.Count());
 
-        requestAnalysisViewModel.MoveToAndFromGroupByVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
+        requestAnalysisViewModel.MoveToAndFromGroupByVariablesCommand.Execute(new RequestAnalysis.MoveToAndFromVariablesCommandParameters()
         {
             SelectedFrom = requestAnalysisViewModel.AvailableVariables.Where(var => var.Name == "cat").ToList(),
             SelectedTo = new(),
@@ -42,7 +42,7 @@ public class TestRequestAnalysis
         Assert.Equal(8, requestAnalysisViewModel.AvailableVariables.Count());
         Assert.Single(requestAnalysisViewModel.GroupByVariables);
 
-        requestAnalysisViewModel.MoveToAndFromAnalysisVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
+        requestAnalysisViewModel.MoveToAndFromAnalysisVariablesCommand.Execute(new RequestAnalysis.MoveToAndFromVariablesCommandParameters()
         {
             SelectedFrom = new(),
             SelectedTo = requestAnalysisViewModel.AnalysisVariables.Where(var => var.Name == "x").ToList(),
@@ -51,7 +51,7 @@ public class TestRequestAnalysis
         Assert.Equal(9, requestAnalysisViewModel.AvailableVariables.Count());
         Assert.Single(requestAnalysisViewModel.AnalysisVariables);
 
-        requestAnalysisViewModel.MoveToAndFromGroupByVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
+        requestAnalysisViewModel.MoveToAndFromGroupByVariablesCommand.Execute(new RequestAnalysis.MoveToAndFromVariablesCommandParameters()
         {
             SelectedFrom = requestAnalysisViewModel.AvailableVariables.Where(var => var.Name == "x").ToList(),
             SelectedTo = requestAnalysisViewModel.GroupByVariables.Where(var => var.Name == "cat").ToList(),
@@ -62,7 +62,7 @@ public class TestRequestAnalysis
         Assert.Empty(requestAnalysisViewModel.GroupByVariables.Where(var => var.Name == "cat"));
         Assert.Single(requestAnalysisViewModel.GroupByVariables.Where(var => var.Name == "x"));
 
-        requestAnalysisViewModel.MoveToAndFromDependentVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
+        requestAnalysisViewModel.MoveToAndFromDependentVariablesCommand.Execute(new RequestAnalysis.MoveToAndFromVariablesCommandParameters()
         {
             SelectedFrom = requestAnalysisViewModel.AvailableVariables.Where(var => var.Name == "cat").ToList(),
             SelectedTo = new(),
@@ -71,7 +71,7 @@ public class TestRequestAnalysis
         Assert.Equal(8, requestAnalysisViewModel.AvailableVariables.Count());
         Assert.Single(requestAnalysisViewModel.DependentVariables);
 
-        requestAnalysisViewModel.MoveToAndFromDependentVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
+        requestAnalysisViewModel.MoveToAndFromDependentVariablesCommand.Execute(new RequestAnalysis.MoveToAndFromVariablesCommandParameters()
         {
             SelectedFrom = new(),
             SelectedTo = requestAnalysisViewModel.DependentVariables.Where(var => var.Name == "cat").ToList(),
@@ -331,7 +331,7 @@ public class TestRequestAnalysis
             AvailableVariables = new(GetCurrentVariables())
         };
 
-        requestAnalysisViewModel.MoveToAndFromAnalysisVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
+        requestAnalysisViewModel.MoveToAndFromAnalysisVariablesCommand.Execute(new RequestAnalysis.MoveToAndFromVariablesCommandParameters()
         {
             SelectedFrom = requestAnalysisViewModel.AvailableVariables.Where(var => (var.Name == "x" || var.Name == "y")).ToList(),
             SelectedTo = new(),
@@ -339,7 +339,7 @@ public class TestRequestAnalysis
 
         bool messageSent = false;
         Analysis? requestedAnalysis = null;
-        WeakReferenceMessenger.Default.Register<RequestAnalysisMessage>(this, (r, m) =>
+        WeakReferenceMessenger.Default.Register<RequestAnalysis.RequestAnalysisMessage>(this, (r, m) =>
         {
             messageSent = true;
             requestedAnalysis = m.Value as Analysis;
@@ -374,7 +374,7 @@ public class TestRequestAnalysis
         requestAnalysisViewModel.SendAnalysisRequestCommand.Execute(new MockRequestingAnalysisLinreg());
         Assert.False(messageSent);
 
-        requestAnalysisViewModel.MoveToAndFromDependentVariablesCommand.Execute(new MoveToAndFromVariablesCommandParameters()
+        requestAnalysisViewModel.MoveToAndFromDependentVariablesCommand.Execute(new RequestAnalysis.MoveToAndFromVariablesCommandParameters()
         {
             SelectedFrom = requestAnalysisViewModel.AvailableVariables.Where(var => var.Name == "cat").ToList(),
             SelectedTo = new(),

@@ -534,7 +534,7 @@ public class TestMainWindow
         
         Assert.Empty(mainWindow.Analyses);
 
-        WeakReferenceMessenger.Default.Send(new RequestAnalysisMessage(new AnalysisCorr(new AnalysisConfiguration()) { Vars = [new Variable(1, "x"), new Variable(2, "usedVirtualVariable") { IsVirtual = true }]}));
+        WeakReferenceMessenger.Default.Send(new RequestAnalysis.RequestAnalysisMessage(new AnalysisCorr(new AnalysisConfiguration()) { Vars = [new Variable(1, "x"), new Variable(2, "usedVirtualVariable") { IsVirtual = true }]}));
         
         Assert.Single(mainWindow.Analyses);
         Assert.Single(mainWindow.Analyses.First().Analysis.VirtualVariables);

@@ -115,7 +115,7 @@ namespace TestLSAnalyzer.ViewModels
             var numberOfDatasetTypes = datasetTypesViewModel.DatasetTypes.Count;
 
             string failureMessageSent = string.Empty;
-            WeakReferenceMessenger.Default.Register<FailureImportDatasetTypeMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ConfigDatasetTypes.FailureImportDatasetTypeMessage>(this, (r, m) =>
             {
                 failureMessageSent = m.Value;
             });

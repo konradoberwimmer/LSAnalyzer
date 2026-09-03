@@ -186,20 +186,8 @@ public partial class ConfigDatasetTypes : ObservableObject
         
         window?.Close();
     }
-}
+    
+    public class FailureImportDatasetTypeMessage(string message) : ValueChangedMessage<string>(message);
 
-internal class FailureImportDatasetTypeMessage : ValueChangedMessage<string>
-{
-    public FailureImportDatasetTypeMessage(string message) : base(message)
-    {
-
-    }
-}
-
-internal class SuccessImportDatasetTypeMessage : ValueChangedMessage<string>
-{
-    public SuccessImportDatasetTypeMessage(string message) : base(message)
-    {
-
-    }
+    public class SuccessImportDatasetTypeMessage(string message) : ValueChangedMessage<string>(message);
 }

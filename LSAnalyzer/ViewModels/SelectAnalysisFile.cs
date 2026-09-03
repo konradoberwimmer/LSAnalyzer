@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using CommunityToolkit.Mvvm.Messaging.Messages;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Models.DataProviderConfiguration;
@@ -12,7 +11,6 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -20,7 +18,6 @@ using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LSAnalyzer.Services.Stubs;
 
-[assembly: InternalsVisibleTo("TestLSAnalyzer")]
 namespace LSAnalyzer.ViewModels;
 
 public partial class SelectAnalysisFile : ObservableObject

@@ -118,7 +118,7 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            ((Button)sender).CommandParameter = new MoveToAndFromVariablesCommandParameters()
+            ((Button)sender).CommandParameter = new RequestAnalysis.MoveToAndFromVariablesCommandParameters()
             {
                 SelectedFrom = listBoxVariablesDataset.SelectedItems.Cast<Variable>().ToList(),
                 SelectedTo = listBoxVariablesAnalyze.SelectedItems.Cast<Variable>().ToList(),
@@ -135,7 +135,7 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            ((Button)sender).CommandParameter = new MoveToAndFromVariablesCommandParameters()
+            ((Button)sender).CommandParameter = new RequestAnalysis.MoveToAndFromVariablesCommandParameters()
             {
                 SelectedFrom = listBoxVariablesDataset.SelectedItems.Cast<Variable>().ToList(),
                 SelectedTo = listBoxVariablesGroupBy.SelectedItems.Cast<Variable>().ToList(),
@@ -153,7 +153,7 @@ namespace LSAnalyzer.Views
                 return;
             }
 
-            ((Button)sender).CommandParameter = new MoveToAndFromVariablesCommandParameters()
+            ((Button)sender).CommandParameter = new RequestAnalysis.MoveToAndFromVariablesCommandParameters()
             {
                 SelectedFrom = listBoxVariablesDependent.Items.Count == 0 && listBoxVariablesDataset.SelectedItems.Count > 0 ? new List<Variable>() { listBoxVariablesDataset.SelectedItems.Cast<Variable>().First() } : new List<Variable>(),
                 SelectedTo = listBoxVariablesDependent.SelectedItems.Cast<Variable>().ToList(),

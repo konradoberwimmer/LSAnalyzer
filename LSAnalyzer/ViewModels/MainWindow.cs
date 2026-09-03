@@ -149,12 +149,12 @@ public partial class MainWindow : ObservableObject
             CurrentDatasetVariables = _rservice.GetCurrentDatasetVariables(AnalysisConfiguration, virtualVariables) ?? [];
         });
 
-        WeakReferenceMessenger.Default.Register<SetSubsettingExpressionMessage>(this, (_, m) =>
+        WeakReferenceMessenger.Default.Register<Subsetting.SetSubsettingExpressionMessage>(this, (_, m) =>
         {
             SubsettingExpression = string.IsNullOrWhiteSpace(m.Value) ? null : m.Value;
         });
 
-        WeakReferenceMessenger.Default.Register<RequestAnalysisMessage>(this, (_, m) =>
+        WeakReferenceMessenger.Default.Register<RequestAnalysis.RequestAnalysisMessage>(this, (_, m) =>
         {
             var analysis = m.Value;
             analysis.VirtualVariables = 

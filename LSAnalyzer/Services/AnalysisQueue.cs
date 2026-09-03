@@ -139,5 +139,5 @@ public class AnalysisQueue : IAnalysisQueue
 
     public class AnalysisQueueCountChangedMessage;
     
-    internal class FailureWithAnalysisCalculationMessage(Analysis analysis) : ValueChangedMessage<Analysis>(analysis);
+    public class FailureWithAnalysisCalculationMessage(Analysis analysis) : ValueChangedMessage<Analysis>(analysis);
 }

@@ -468,6 +468,14 @@ public partial class RequestAnalysis : ObservableValidatorExtended
         WithIntercept = true;
         RegressionSequence = AnalysisRegression.RegressionSequence.AllIn;
     }
+    
+    public class MoveToAndFromVariablesCommandParameters
+    {
+        public List<Variable> SelectedFrom { get; set; } = new();
+        public List<Variable> SelectedTo { get; set; } = new();
+    }
+    
+    public class RequestAnalysisMessage(Analysis analysis) : ValueChangedMessage<Analysis>(analysis);
 }
 
 public class PercentileWrapper : IComparable<PercentileWrapper>
@@ -478,18 +486,4 @@ public class PercentileWrapper : IComparable<PercentileWrapper>
     {
         return Value.CompareTo(other?.Value);
     }
-}
-
-internal class RequestAnalysisMessage : ValueChangedMessage<Analysis>
-{
-    public RequestAnalysisMessage(Analysis analysis) : base(analysis)
-    {
-
-    }
-}
-
-public class MoveToAndFromVariablesCommandParameters
-{
-    public List<Variable> SelectedFrom { get; set; } = new();
-    public List<Variable> SelectedTo { get; set; } = new();
 }

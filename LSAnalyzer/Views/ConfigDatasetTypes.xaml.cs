@@ -1,13 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
-using LSAnalyzer.ViewModels;
 using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using DocumentFormat.OpenXml.Drawing.Charts;
 using LSAnalyzer.Models;
 
 namespace LSAnalyzer.Views
@@ -23,12 +20,12 @@ namespace LSAnalyzer.Views
 
             DataContext = configDatasetTypesViewModel;
 
-            WeakReferenceMessenger.Default.Register<SuccessImportDatasetTypeMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.ConfigDatasetTypes.SuccessImportDatasetTypeMessage>(this, (r, m) =>
             {
                 MessageBox.Show($"Import of dataset type '{ m.Value }' successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             });
 
-            WeakReferenceMessenger.Default.Register<FailureImportDatasetTypeMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.ConfigDatasetTypes.FailureImportDatasetTypeMessage>(this, (r, m) =>
             {
                 MessageBox.Show("Import failed: " + m.Value, "Import failure", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
