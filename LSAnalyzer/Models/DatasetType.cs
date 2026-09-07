@@ -176,7 +176,7 @@ namespace LSAnalyzer.Models
                 return false;
             }
 
-            if (Weight == name || MIvar == name || IDvar == name)
+            if (Weight == name || MIvar == name || IDvar == name || PossibleWeightVariables.Any(weightVariable => weightVariable.Name == name))
             {
                 return true;
             }
