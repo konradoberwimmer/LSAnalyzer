@@ -266,6 +266,53 @@ public class TestExportService
         Assert.Empty(worksheet.Column("A").Cells().Where(cell => cell.Value.ToString() == "item3"));
     }
     
+        
+    [Fact]
+    public void TestAddWorksheetMetadataWithVirtualVariables()
+    {
+        XLWorkbook wb = new();
+
+        AnalysisConfiguration analysisConfiguration = new()
+        {
+            DatasetType = DatasetType.CreateDefaultDatasetTypes().First(),
+            FileName = @"C:\myProject\myData\myFile.sav",
+            FileType = "spss",
+            ModeKeep = true,
+        };
+        
+        Analysis analysis = new AnalysisCorr(analysisConfiguration)
+        {
+            Vars = [
+                new Variable(1, "item1") { Label = "Item 1" },
+                new Variable(2, "item2") { Label = "Item 2" },
+                new Variable(3, "item3") { IsVirtual = true, Label = "Item 3" },
+            ],
+            VirtualVariables = [
+                new VirtualVariableCompute
+                {
+                    Name = "item3",
+                    Label = "Item 3",
+                    Expression = "item1 + item2",
+                }
+            ],
+            CalculateOverall = true,
+            ResultAt = DateTime.Now,
+            ResultDuration = 0.13,
+        };
+        
+        ExportService exportService = new();
+        exportService.AddWorksheetMetadata(wb, analysis);
+        
+        var worksheet = wb.Worksheets.First();
+        
+        Assert.Equal(13, worksheet.RowsUsed().Count());
+        Assert.Equal(XLCellValue.FromObject(null), worksheet.Cell("A8").Value);
+        Assert.Equal("item1 + item2", worksheet.Cell("B10").Value);
+        Assert.Equal(XLCellValue.FromObject(null), worksheet.Cell("A11").Value);
+        Assert.Single(worksheet.Column("A").Cells().Where(cell => cell.Value.ToString() == "item2"));
+        Assert.Equal(2, worksheet.Column("A").Cells().Count(cell => cell.Value.ToString() == "item3"));
+    }
+    
     [Fact]
     public void TestAddWorksheetMetadataWithVariableLabelsButWithoutStyles()
     {

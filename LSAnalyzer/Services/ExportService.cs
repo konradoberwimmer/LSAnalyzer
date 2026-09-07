@@ -168,6 +168,23 @@ public partial class ExportService : IExportService
         
         var variableLabels = analysis.VariableLabels;
 
+        if (analysis.UsedVirtualVariables.Count > 0)
+        {
+            if (useStyles)
+            {
+                rowCount++;
+                wsMeta.Cell(rowCount, 1).Value = "Virtual variables:";
+                rowCount++;
+            }
+
+            foreach (var (virtualVariableName, virtualVariableInfo) in analysis.UsedVirtualVariables)
+            {
+                wsMeta.Cell(rowCount, 1).Value = virtualVariableName;
+                wsMeta.Cell(rowCount, 2).Value = virtualVariableInfo;
+                rowCount++;
+            }
+        }
+
         if (variableLabels.Count == 0) return;
 
         if (useStyles)
@@ -285,6 +302,11 @@ public partial class ExportService : IExportService
                 ]);
             }
         
+            foreach (var (virutalVariableName, virtualVariableInfo) in analysis.UsedVirtualVariables)
+            {
+                metaDataTable.Rows.Add([virutalVariableName, virtualVariableInfo]);
+            }
+            
             var variableLabels = analysis.VariableLabels;
 
             foreach (var variableLabel in variableLabels)
