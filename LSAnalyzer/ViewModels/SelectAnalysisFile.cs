@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using CommunityToolkit.Mvvm.Messaging.Messages;
 using LSAnalyzer.Helper;
 using LSAnalyzer.Models;
 using LSAnalyzer.Models.DataProviderConfiguration;
@@ -12,7 +11,6 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -20,7 +18,6 @@ using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LSAnalyzer.Services.Stubs;
 
-[assembly: InternalsVisibleTo("TestLSAnalyzer")]
 namespace LSAnalyzer.ViewModels;
 
 public partial class SelectAnalysisFile : ObservableObject
@@ -142,12 +139,17 @@ public partial class SelectAnalysisFile : ObservableObject
             if (SelectedDatasetType != null)
             {
                 SelectedWeightVariable = null;
-                List<string> possibleWeights = new();
-                foreach (var weight in SelectedDatasetType.Weight.Split(";"))
+
+                if (SelectedDatasetType.PossibleWeightVariables.Count > 0)
                 {
-                    possibleWeights.Add(weight);
+                    PossibleWeightVariables = [..SelectedDatasetType.PossibleWeightVariables];
                 }
-                PossibleWeightVariables = possibleWeights;
+                else
+                {
+                    var possibleWeights = SelectedDatasetType.Weight.Split(";").Select(weightVariableName => new WeightVariable { Name =  weightVariableName }).ToList();
+                    PossibleWeightVariables = possibleWeights;
+                }
+                
                 SelectedWeightVariable = PossibleWeightVariables.FirstOrDefault();
             }
 
@@ -182,10 +184,10 @@ public partial class SelectAnalysisFile : ObservableObject
     private IDataProviderViewModel? _dataProviderViewModel;
 
     [ObservableProperty]
-    private List<string> _possibleWeightVariables = [];
+    private List<WeightVariable> _possibleWeightVariables = [];
 
-    private string? _selectedWeightVariable;
-    public string? SelectedWeightVariable
+    private WeightVariable? _selectedWeightVariable;
+    public WeightVariable? SelectedWeightVariable
     {
         get => _selectedWeightVariable;
         set
@@ -282,7 +284,7 @@ public partial class SelectAnalysisFile : ObservableObject
         
         ReplaceCharacterVectors = recentFileForAnalysis.ConvertCharacters;
         SelectedDatasetType = DatasetTypes.First(dst => dst.Id == recentFileForAnalysis.DatasetTypeId);
-        SelectedWeightVariable = recentFileForAnalysis.Weight;
+        SelectedWeightVariable = PossibleWeightVariables.FirstOrDefault(possibleWeightVariable => possibleWeightVariable.Name == recentFileForAnalysis.Weight);
         SelectedAnalysisMode = recentFileForAnalysis.ModeKeep ? AnalysisModes.Keep : AnalysisModes.Build;
     }
 
@@ -366,8 +368,11 @@ public partial class SelectAnalysisFile : ObservableObject
         {
             var priority = 0;
 
-            var weightVariables = datasetType.Weight.Split(";");
-            var foundAllWeightVariables = weightVariables.All(weightVariable => variables.Any(var => var.Name == weightVariable));
+            var foundAllWeightVariables = datasetType switch
+            {
+                { PossibleWeightVariables.Count: > 0 } =>  PossibleWeightVariables.Where(weightVariable => weightVariable.Mandatory).All(weightVariable => variables.Any(var => var.Name == weightVariable.Name)),
+                _ => datasetType.Weight.Split(";").All(weightVariable => variables.Any(var => var.Name == weightVariable))
+            };
             if (!foundAllWeightVariables)
             {
                 continue;
@@ -479,7 +484,7 @@ public partial class SelectAnalysisFile : ObservableObject
         };
         if (analysisConfiguration.DatasetType != null)
         {
-            analysisConfiguration.DatasetType.Weight = SelectedWeightVariable ?? String.Empty;
+            analysisConfiguration.DatasetType.Weight = SelectedWeightVariable?.Name ?? string.Empty;
         }
 
         Configuration.RecentFileForAnalysis recentFileForAnalysis = new()

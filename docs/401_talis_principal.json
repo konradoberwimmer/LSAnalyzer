@@ -6,6 +6,14 @@
   "AutoEncapsulateRegex": false,
   "Weight": "SCHWGT",
   "NMI": 1,
+  "PossibleWeightVariables": [
+    {
+      "Name": "SCHWGT",
+      "Description": "Final school weight",
+      "Mandatory": true,
+      "HasErrors": false
+    }
+  ],
   "MIvar": null,
   "IDvar": null,
   "PVvarsList": [],

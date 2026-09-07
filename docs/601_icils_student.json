@@ -6,6 +6,14 @@
   "AutoEncapsulateRegex": false,
   "Weight": "TOTWGTS",
   "NMI": 5,
+  "PossibleWeightVariables": [
+    {
+      "Name": "TOTWGTS",
+      "Description": "Final student weight",
+      "Mandatory": true,
+      "HasErrors": false
+    }
+  ],
   "MIvar": null,
   "IDvar": null,
   "PVvarsList": [

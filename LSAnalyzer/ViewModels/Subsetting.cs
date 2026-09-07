@@ -244,12 +244,6 @@ public partial class Subsetting : ObservableObject
         e.Result = new SetSubsettingExpressionMessage(SubsetExpression);
         IsBusy = false;
     }
-}
-
-internal class SetSubsettingExpressionMessage : ValueChangedMessage<string?>
-{
-    public SetSubsettingExpressionMessage(string? subsettingExpression) : base(subsettingExpression)
-    {
-
-    }
+    
+    public class SetSubsettingExpressionMessage(string? subsettingExpression) : ValueChangedMessage<string?>(subsettingExpression);
 }

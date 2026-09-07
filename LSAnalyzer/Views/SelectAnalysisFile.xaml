@@ -111,7 +111,9 @@
         </ComboBox>
         <Button Grid.Row="2" Grid.Column="2" ContentTemplate="{StaticResource MagicWand}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="80" Height="22" Command="{Binding GuessDatasetTypeCommand}" IsEnabled="{Binding ReadyToGuess}"/>
         <TextBlock Grid.Row="3" Text="Weight variable:" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Center"/>
-        <ComboBox Grid.Row="3" Grid.Column="1" x:Name="comboBoxWeightVariable" HorizontalAlignment="Stretch" Margin="10,10,0,0" VerticalAlignment="Top" Height="22" ItemsSource="{Binding PossibleWeightVariables}" SelectedItem="{Binding SelectedWeightVariable}" IsEnabled="{Binding ElementName=comboBoxDatasetType, Path=SelectedIndex, Converter={StaticResource IndexToBoolConverter}}"/>
+        <Border x:Name="borderTextBoxWeight" Grid.Row="3" Grid.Column="1" Margin="10,10,0,0">
+            <ComboBox x:Name="comboBoxWeightVariable" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="22" ItemsSource="{Binding PossibleWeightVariables}" DisplayMemberPath="Info" SelectedItem="{Binding SelectedWeightVariable}" IsEnabled="{Binding ElementName=comboBoxDatasetType, Path=SelectedIndex, Converter={StaticResource IndexToBoolConverter}}" MaxWidth="{Binding ElementName=borderTextBoxWeight, Path=ActualWidth}"/>
+        </Border>
         <TextBlock Grid.Row="4" Text="Mode:" HorizontalAlignment="Left" Margin="0,10,0,0" VerticalAlignment="Top"/>
         <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Vertical" Margin="10,10,0,0">
             <RadioButton x:Name="radioButtonAnalysisModeKeep" Content="Keep BIFIEdata object between analyses (recommended if memory limit allows it)" HorizontalAlignment="Left" Height="15" GroupName="AnalysisMode" IsChecked="{Binding SelectedAnalysisMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Keep}"/>

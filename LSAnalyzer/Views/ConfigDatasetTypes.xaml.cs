@@ -1,10 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
-using LSAnalyzer.ViewModels;
 using Microsoft.Win32;
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Windows;
+using LSAnalyzer.Models;
 
 namespace LSAnalyzer.Views
 {
@@ -19,12 +20,12 @@ namespace LSAnalyzer.Views
 
             DataContext = configDatasetTypesViewModel;
 
-            WeakReferenceMessenger.Default.Register<SuccessImportDatasetTypeMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.ConfigDatasetTypes.SuccessImportDatasetTypeMessage>(this, (r, m) =>
             {
                 MessageBox.Show($"Import of dataset type '{ m.Value }' successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             });
 
-            WeakReferenceMessenger.Default.Register<FailureImportDatasetTypeMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ViewModels.ConfigDatasetTypes.FailureImportDatasetTypeMessage>(this, (r, m) =>
             {
                 MessageBox.Show("Import failed: " + m.Value, "Import failure", MessageBoxButton.OK, MessageBoxImage.Warning);
             });
@@ -93,6 +94,28 @@ namespace LSAnalyzer.Views
                 Properties.Settings.Default.lastResultOutFileLocation = Path.GetDirectoryName(saveFileDialog.FileName);
                 configDatasetTypesViewModel.ExportDatasetTypeCommand.Execute(saveFileDialog.FileName);
             }
+        }
+
+        private void ButtonWeightVariables_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.ConfigDatasetTypes viewModel || viewModel.SelectedDatasetType is null) return;
+
+            var storedPossibleWeightVariables = viewModel.SelectedDatasetType.PossibleWeightVariables.Select(weightVariable => new WeightVariable(weightVariable)).ToList();
+            
+            if (!string.IsNullOrWhiteSpace(viewModel.SelectedDatasetType.Weight) && viewModel.SelectedDatasetType.PossibleWeightVariables.Count == 0)
+            {
+                foreach (var weightVariable in viewModel.SelectedDatasetType.Weight.Split(";"))
+                {
+                    viewModel.SelectedDatasetType.PossibleWeightVariables.Add(new WeightVariable { Name = weightVariable, Mandatory = true});
+                }
+            }
+            WeightVariables weightVariablesView = new()
+            {
+                DataContext = viewModel,
+                FormerWeightVariables = viewModel.SelectedDatasetType.PossibleWeightVariables.Select(weightVariable => new WeightVariable(weightVariable)).ToList()
+            };
+            
+            weightVariablesView.ShowDialog();
         }
     }
 }

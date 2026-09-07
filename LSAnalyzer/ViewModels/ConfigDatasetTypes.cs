@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
+using LSAnalyzer.Helper;
 
 namespace LSAnalyzer.ViewModels;
 
@@ -169,20 +170,24 @@ public partial class ConfigDatasetTypes : ObservableObject
 
         File.WriteAllText(filename, JsonSerializer.Serialize(SelectedDatasetType, jsonSerializerOptions));
     }
-}
 
-internal class FailureImportDatasetTypeMessage : ValueChangedMessage<string>
-{
-    public FailureImportDatasetTypeMessage(string message) : base(message)
+    [RelayCommand]
+    private void MakeWeightFromPossibleWeightVariables(ICloseable? window)
     {
-
+        if (SelectedDatasetType?.PossibleWeightVariables.Any(weightVariable => !weightVariable.Validate()) ?? false)
+        {
+            return;
+        }
+        
+        if (SelectedDatasetType is not null)
+        {
+            SelectedDatasetType.Weight = string.Join(";", SelectedDatasetType.PossibleWeightVariables.Select(weightVariable => weightVariable.Name));
+        }
+        
+        window?.Close();
     }
-}
+    
+    public class FailureImportDatasetTypeMessage(string message) : ValueChangedMessage<string>(message);
 
-internal class SuccessImportDatasetTypeMessage : ValueChangedMessage<string>
-{
-    public SuccessImportDatasetTypeMessage(string message) : base(message)
-    {
-
-    }
+    public class SuccessImportDatasetTypeMessage(string message) : ValueChangedMessage<string>(message);
 }

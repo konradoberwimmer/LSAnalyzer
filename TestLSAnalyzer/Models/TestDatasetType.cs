@@ -43,6 +43,12 @@ namespace TestLSAnalyzer.Models
 
             datasetType.AcceptChanges();
             Assert.False(datasetType.IsChanged);
+            
+            datasetType.PossibleWeightVariables.Add(new WeightVariable { Name = "TOTWGT", Description = "Final student weight", Mandatory = true });
+            Assert.True(datasetType.IsChanged);
+
+            datasetType.AcceptChanges();
+            Assert.False(datasetType.IsChanged);
         }
 
         [Theory]

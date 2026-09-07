@@ -88,7 +88,7 @@ public class TestSubsetting
         subsettingViewModel.AnalysisConfiguration = new() { ModeKeep = false, DatasetType = new() { Id = 1234 } };
 
         string? message = null;
-        WeakReferenceMessenger.Default.Register<SetSubsettingExpressionMessage>(this, (r, m) =>
+        WeakReferenceMessenger.Default.Register<Subsetting.SetSubsettingExpressionMessage>(this, (r, m) =>
         {
             message = m.Value;
         });
@@ -139,7 +139,7 @@ public class TestSubsetting
 
         bool messageReceived = false;
         string? message = null;
-        WeakReferenceMessenger.Default.Register<SetSubsettingExpressionMessage>(this, (r, m) =>
+        WeakReferenceMessenger.Default.Register<Subsetting.SetSubsettingExpressionMessage>(this, (r, m) =>
         {
             messageReceived = true;
             message = m.Value;

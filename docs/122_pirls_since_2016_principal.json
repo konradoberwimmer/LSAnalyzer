@@ -6,6 +6,20 @@
   "AutoEncapsulateRegex": false,
   "Weight": "SCHWGT;STOTWGTU",
   "NMI": 1,
+  "PossibleWeightVariables": [
+    {
+      "Name": "SCHWGT",
+      "Description": "School weight",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Name": "STOTWGTU",
+      "Description": "Sum of total student weight at school level",
+      "Mandatory": true,
+      "HasErrors": false
+    }
+  ],
   "MIvar": null,
   "IDvar": null,
   "PVvarsList": [],

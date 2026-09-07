@@ -2,12 +2,7 @@
 using LSAnalyzer.Models;
 using LSAnalyzer.Services;
 using LSAnalyzer.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using LSAnalyzer.Services.Stubs;
 
 namespace TestLSAnalyzer.ViewModels
@@ -120,7 +115,7 @@ namespace TestLSAnalyzer.ViewModels
             var numberOfDatasetTypes = datasetTypesViewModel.DatasetTypes.Count;
 
             string failureMessageSent = string.Empty;
-            WeakReferenceMessenger.Default.Register<FailureImportDatasetTypeMessage>(this, (r, m) =>
+            WeakReferenceMessenger.Default.Register<ConfigDatasetTypes.FailureImportDatasetTypeMessage>(this, (r, m) =>
             {
                 failureMessageSent = m.Value;
             });
@@ -184,6 +179,36 @@ namespace TestLSAnalyzer.ViewModels
             datasetTypesViewModel.SelectedDatasetType.Weight = "validWeight";
             datasetTypesViewModel.ExportDatasetTypeCommand.Execute(filename);
             Assert.NotEmpty(File.ReadAllLines(filename));
+        }
+
+        [Fact]
+        public void TestMakeWeightFromPossibleWeightVariables()
+        {
+            Configuration datasetTypesConfiguration = new(Path.GetTempFileName(), null, new SettingsServiceStub(), new RegistryServiceStub());
+            foreach (var datasetType in DatasetType.CreateDefaultDatasetTypes())
+            {
+                datasetTypesConfiguration.StoreDatasetType(datasetType);
+            }
+
+            ConfigDatasetTypes datasetTypesViewModel = new(datasetTypesConfiguration);
+            
+            datasetTypesViewModel.NewDatasetTypeCommand.Execute(null);
+            
+            Assert.NotNull(datasetTypesViewModel.SelectedDatasetType);
+            Assert.Empty(datasetTypesViewModel.SelectedDatasetType.Weight);
+
+            datasetTypesViewModel.MakeWeightFromPossibleWeightVariablesCommand.Execute(null);
+            
+            datasetTypesViewModel.SelectedDatasetType.Weight = "oldWeight";
+            datasetTypesViewModel.SelectedDatasetType.PossibleWeightVariables =
+            [
+                new WeightVariable { Name = "totwgt", Mandatory = true },
+                new WeightVariable { Name = "senwgt", Mandatory = false }
+            ];
+            
+            datasetTypesViewModel.MakeWeightFromPossibleWeightVariablesCommand.Execute(null);
+            
+            Assert.Equal("totwgt;senwgt", datasetTypesViewModel.SelectedDatasetType.Weight);
         }
     }
 }

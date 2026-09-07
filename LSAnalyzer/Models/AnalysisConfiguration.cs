@@ -51,8 +51,9 @@ namespace LSAnalyzer.Models
             return 
                 ObjectTools.PublicInstancePropertiesEqual(this, analysisConfiguration, [ "DatasetType" ]) &&
                 DatasetType != null && analysisConfiguration.DatasetType != null &&
-                ObjectTools.PublicInstancePropertiesEqual(DatasetType, analysisConfiguration.DatasetType, [ "Errors", "IsChanged", "PVvarsList" ]) &&
-                DatasetType.PVvarsList.ElementObjectsEqual(analysisConfiguration.DatasetType.PVvarsList, [ "Errors" ]);
+                ObjectTools.PublicInstancePropertiesEqual(DatasetType, analysisConfiguration.DatasetType, [ "Errors", "IsChanged", "PossibleWeightVariables", "PVvarsList" ]) &&
+                DatasetType.PVvarsList.ElementObjectsEqual(analysisConfiguration.DatasetType.PVvarsList, [ "Errors" ]) &&
+                DatasetType.PossibleWeightVariables.ElementObjectsEqual(analysisConfiguration.DatasetType.PossibleWeightVariables, [ "Errors" ]);
         }
     }
 }

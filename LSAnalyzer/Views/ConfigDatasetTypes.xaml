@@ -15,6 +15,7 @@
         <converter:BooleanAnd x:Key="BooleanAndConverter"/>
         <converter:DictionaryHasElementToBool x:Key="DictionaryHasElementToBoolConverter"/>
         <converter:IndexToBool x:Key="IndexToBoolConverter"/>
+        <converter:NullToBool x:Key="NullToBoolConverter"/>
         <local:WindowSettings x:Key="WindowSettings"/>
     </Window.Resources>
     <Window.Width>
@@ -76,15 +77,21 @@
                 <CheckBox Content="Auto-encapsulate regular expressions" IsChecked="{Binding SelectedDatasetType.AutoEncapsulateRegex}"/>
                 <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="If checked, any regular expression XY will be treated as ^XY$ when used."/>
             </StackPanel>
-            <TextBlock Text="Weight variable:" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Left" Margin="0,5,0,0"/>
-            <TextBox Grid.Row="4" Grid.Column="1" Margin="5,5,0,0" TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Weight, UpdateSourceTrigger=PropertyChanged}" Width="200" HorizontalAlignment="Left">
-                <ToolTipService.ToolTip>
-                    <TextBlock Text="{Binding SelectedDatasetType.Errors[Weight]}" Foreground="Red"/>
-                </ToolTipService.ToolTip>
-                <ToolTipService.IsEnabled>
-                    <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Weight"/>
-                </ToolTipService.IsEnabled>
-            </TextBox>
+            <StackPanel Grid.Row="4" Grid.Column="0" HorizontalAlignment="Left" Margin="0,5,0,0" Orientation="Horizontal">
+                <TextBlock Text="Weight variable(s):"/>
+                <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="Since v1.4.0, the text field for weight variables exists for legacy reasons. Please use the dialog and define a list of weight variables. That will override the value in the text field."/>
+            </StackPanel>
+            <StackPanel Grid.Row="4" Grid.Column="1" Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBox TextWrapping="Wrap" Text="{Binding SelectedDatasetType.Weight, UpdateSourceTrigger=PropertyChanged}" Width="200" HorizontalAlignment="Left" IsEnabled="False" ToolTipService.ShowOnDisabled="True">
+                    <ToolTipService.ToolTip>
+                        <TextBlock Text="{Binding SelectedDatasetType.Errors[Weight]}" Foreground="Red"/>
+                    </ToolTipService.ToolTip>
+                    <ToolTipService.IsEnabled>
+                        <Binding Path="SelectedDatasetType.Errors" Converter="{StaticResource ResourceKey=DictionaryHasElementToBoolConverter}" ConverterParameter="Weight"/>
+                    </ToolTipService.IsEnabled>
+                </TextBox>
+                <Button Margin="5,0,0,0" ContentTemplate="{StaticResource Table}" HorizontalAlignment="Left" Width="25" IsEnabled="{Binding SelectedDatasetType, Converter={StaticResource NullToBoolConverter}}" Click="ButtonWeightVariables_OnClick" Validation.ErrorTemplate="{x:Null}"/>
+            </StackPanel>
             <StackPanel Grid.Row="5" Grid.Column="0" Margin="0,5,0,0" Orientation="Horizontal">
                 <TextBlock Text="ID variable:"/>
                 <ContentControl ContentTemplate="{StaticResource InfoTipInline}" ToolTip="Providing a unique ID variable is not necessary but will guarantee sorting and correct associations between cases when using MI indicator variable."/>

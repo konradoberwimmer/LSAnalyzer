@@ -407,7 +407,7 @@ public class TestSelectAnalysisFile
         Assert.False(selectAnalysisFile.UseCsv2);
         Assert.False(selectAnalysisFile.ReplaceCharacterVectors);
         Assert.Equal(selectAnalysisFile.DatasetTypes.First(), selectAnalysisFile.SelectedDatasetType);
-        Assert.Equal("wgt", selectAnalysisFile.SelectedWeightVariable);
+        Assert.Equal("wgt", selectAnalysisFile.SelectedWeightVariable?.Name);
         Assert.Equal(SelectAnalysisFile.AnalysisModes.Build, selectAnalysisFile.SelectedAnalysisMode);
         
         selectAnalysisFile.InitializeFromRecentFile(selectAnalysisFile.RecentFilesForAnalyses.Last());
