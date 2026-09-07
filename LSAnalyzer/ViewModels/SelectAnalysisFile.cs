@@ -370,7 +370,7 @@ public partial class SelectAnalysisFile : ObservableObject
 
             var foundAllWeightVariables = datasetType switch
             {
-                { PossibleWeightVariables.Count: > 0 } =>  PossibleWeightVariables.Where(weightVariable => weightVariable.Mandatory).All(weightVariable => variables.Any(var => var.Name == weightVariable.Name)),
+                { PossibleWeightVariables.Count: > 0 } =>  datasetType.PossibleWeightVariables.Where(weightVariable => weightVariable.Mandatory).All(weightVariable => variables.Any(var => var.Name == weightVariable.Name)),
                 _ => datasetType.Weight.Split(";").All(weightVariable => variables.Any(var => var.Name == weightVariable))
             };
             if (!foundAllWeightVariables)
