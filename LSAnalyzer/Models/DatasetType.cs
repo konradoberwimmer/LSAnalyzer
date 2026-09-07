@@ -218,6 +218,10 @@ namespace LSAnalyzer.Models
                 {
                     Id = 102, Name = "PIRLS since 2016 - student level", Group = "PIRLS/TIMSS", Description = "PIRLS since 2016 (reverse jackknife) - student level", 
                     Weight = "TOTWGT;SENWGT",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TOTWGT", Description = "Total student weight", Mandatory = true },
+                        new WeightVariable { Name = "SENWGT", Description = "Equal sum of student weights for each country", Mandatory = false },
+                    ],
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "ASRREA", DisplayName = "ASRREA", Label = "PLAUSIBLE VALUE: OVERALL READING", Mandatory = true},
                         new() { Regex = "ASRLIT", DisplayName = "ASRLIT", Label = "PLAUSIBLE VALUE: LITERARY PURPOSE", Mandatory = true},
@@ -232,6 +236,9 @@ namespace LSAnalyzer.Models
                 {
                     Id = 112, Name = "PIRLS since 2016 - teacher data on student level", Group = "PIRLS/TIMSS", Description = "PIRLS since 2016 (reverse jackknife) - teacher data on student level",
                     Weight = "TCHWGT",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TCHWGT", Description = "Student-centered teacher weight", Mandatory = true },
+                    ],
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "ASRREA", DisplayName = "ASRREA", Label = "PLAUSIBLE VALUE: OVERALL READING", Mandatory = false},
                         new() { Regex = "ASRLIT", DisplayName = "ASRLIT", Label = "PLAUSIBLE VALUE: LITERARY PURPOSE", Mandatory = false},
@@ -246,6 +253,10 @@ namespace LSAnalyzer.Models
                 {
                     Id = 122, Name = "PIRLS since 2016 - principal level", Group = "PIRLS/TIMSS", Description = "PIRLS since 2016 (reverse jackknife) - principal level",
                     Weight = "SCHWGT;STOTWGTU",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "SCHWGT", Description = "School weight", Mandatory = true },
+                        new WeightVariable { Name = "STOTWGTU", Description = "Sum of total student weight at school level", Mandatory = true },
+                    ],
                     NMI = 1, PVvarsList = new() { },
                     FayFac = 0.5, JKzone = "JKCZONE", JKrep = "JKCREP", JKreverse = true,
                 },
@@ -253,6 +264,10 @@ namespace LSAnalyzer.Models
                 {
                     Id = 205, Name = "TIMSS since 2015 - 4th grade student level", Group = "PIRLS/TIMSS", Description = "TIMSS since 2015 (reverse jackknife) - 4th grade student level",
                     Weight = "TOTWGT;SENWGT",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TOTWGT", Description = "Total student weight", Mandatory = true },
+                        new WeightVariable { Name = "SENWGT", Description = "Equal sum of student weights for each country", Mandatory = false },
+                    ],
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "ASMMAT", DisplayName = "ASMMAT", Label = "PLAUSIBLE VALUE MATHEMATICS", Mandatory = true},
                         new() { Regex = "ASSSCI", DisplayName = "ASSSCI", Label = "PLAUSIBLE VALUE SCIENCE", Mandatory = true},
@@ -278,6 +293,10 @@ namespace LSAnalyzer.Models
                 {
                     Id = 206, Name = "TIMSS since 2015 - 8th grade student level", Group = "PIRLS/TIMSS", Description = "TIMSS since 2015 (reverse jackknife) - 8th grade student level",
                     Weight = "TOTWGT;SENWGT",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TOTWGT", Description = "Total student weight", Mandatory = true },
+                        new WeightVariable { Name = "SENWGT", Description = "Equal sum of student weights for each country", Mandatory = false },
+                    ],
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "BSMMAT", DisplayName = "BSMMAT", Label = "PLAUSIBLE VALUE MATHEMATICS", Mandatory = true},
                         new() { Regex = "BSSSCI", DisplayName = "BSSSCI", Label = "PLAUSIBLE VALUE SCIENCE", Mandatory = true},
@@ -305,6 +324,11 @@ namespace LSAnalyzer.Models
                 {
                     Id = 215, Name = "TIMSS since 2015 - 4th grade teacher data on student level", Group = "PIRLS/TIMSS", Description = "TIMSS since 2015 (reverse jackknife) - 4th grade teacher data on student level",
                     Weight = "TCHWGT;MATWGT;SCIWGT",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TCHWGT", Description = "Student-centered teacher weight", Mandatory = true },
+                        new WeightVariable { Name = "MATWGT", Description = "Student-centered mathematics teacher weight", Mandatory = false },
+                        new WeightVariable { Name = "SCIWGT", Description = "Student-centered science teacher weight", Mandatory = false },
+                    ],
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "ASMMAT", DisplayName = "ASMMAT", Label = "PLAUSIBLE VALUE MATHEMATICS", Mandatory = true},
                         new() { Regex = "ASSSCI", DisplayName = "ASSSCI", Label = "PLAUSIBLE VALUE SCIENCE", Mandatory = true},
@@ -330,6 +354,11 @@ namespace LSAnalyzer.Models
                 {
                     Id = 216, Name = "TIMSS since 2015 - 8th grade teacher data on student level", Group = "PIRLS/TIMSS", Description = "TIMSS since 2015 (reverse jackknife) - 8th grade teacher data on student level",
                     Weight = "TCHWGT;MATWGT;SCIWGT",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TCHWGT", Description = "Student-centered teacher weight", Mandatory = true },
+                        new WeightVariable { Name = "MATWGT", Description = "Student-centered mathematics teacher weight", Mandatory = false },
+                        new WeightVariable { Name = "SCIWGT", Description = "Student-centered science teacher weight", Mandatory = false },
+                    ],
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "BSMMAT", DisplayName = "BSMMAT", Label = "PLAUSIBLE VALUE MATHEMATICS", Mandatory = true},
                         new() { Regex = "BSSSCI", DisplayName = "BSSSCI", Label = "PLAUSIBLE VALUE SCIENCE", Mandatory = true},
@@ -357,6 +386,10 @@ namespace LSAnalyzer.Models
                 {
                     Id = 225, Name = "TIMSS since 2015 - principal level", Group = "PIRLS/TIMSS", Description = "TIMSS since 2015 (reverse jackknife) - principal level",
                     Weight = "SCHWGT;STOTWGTU",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "SCHWGT", Description = "School weight", Mandatory = true },
+                        new WeightVariable { Name = "STOTWGTU", Description = "Sum of total student weight at school level", Mandatory = true },
+                    ],
                     NMI = 1, PVvarsList = new() { },
                     FayFac = 0.5, JKzone = "JKCZONE", JKrep = "JKCREP", JKreverse = true,
                 },
@@ -364,6 +397,9 @@ namespace LSAnalyzer.Models
                 {
                     Id = 302, Name = "PISA since 2015 - student level", Group = "PISA", Description = "PISA since 2015 - student level",
                     Weight = "W_FSTUWT",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "W_FSTUWT", Description = "Final student weight", Mandatory = true },
+                    ],
                     NMI = 10, PVvarsList = new() {
                         new() { Regex = "PV[0-9]+MATH", DisplayName = "PVMATH", Label = "Plausible Value in Mathematics", Mandatory = true},
                         new() { Regex = "PV[0-9]+READ", DisplayName = "PVREAD", Label = "Plausible Value in Reading", Mandatory = true},
@@ -397,6 +433,9 @@ namespace LSAnalyzer.Models
                 {
                     Id = 401, Name = "TALIS until 2018 - principal level", Group = "TALIS", Description = "TALIS until 2018 - principal level",
                     Weight = "SCHWGT",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "SCHWGT", Description = "Final school weight", Mandatory = true },
+                    ],
                     NMI = 1,
                     RepWgts = "SRWGT", FayFac = 0.04, JKreverse = false,
                 },
@@ -404,6 +443,9 @@ namespace LSAnalyzer.Models
                 {
                     Id = 411, Name = "TALIS since 2024 - principal level", Group = "TALIS", Description = "TALIS since 2024 - principal level",
                     Weight = "SCHWGTC",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "SCHWGTC", Description = "Final school weight in principal datasets", Mandatory = true },
+                    ],
                     NMI = 1,
                     RepWgts = "CRWGT", FayFac = 0.04, JKreverse = false,
                 },
@@ -411,6 +453,9 @@ namespace LSAnalyzer.Models
                 {
                     Id = 402, Name = "TALIS - teacher level", Group = "TALIS", Description = "TALIS - teacher level",
                     Weight = "TCHWGT",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TCHWGT", Description = "Final teacher weight", Mandatory = true },
+                    ],
                     NMI = 1,
                     RepWgts = "TRWGT", FayFac = 0.04, JKreverse = false,
                 },
@@ -418,6 +463,9 @@ namespace LSAnalyzer.Models
                 {
                     Id = 501, Name = "PIAAC", Group = "PIAAC", Description = "PIAAC since 2011 - person level",
                     Weight = "SPFWT0",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "SPFWT0", Description = "Final calibrated sample person weight", Mandatory = true },
+                    ],
                     NMI = 10, PVvarsList = new() {
                         new() { Regex = "PVLIT", DisplayName = "PVLIT", Label = "Literacy scale score - Plausible value", Mandatory = true},
                         new() { Regex = "PVNUM", DisplayName = "PVNUM", Label = "Numeracy scale score - Plausible value", Mandatory = true},
@@ -430,6 +478,9 @@ namespace LSAnalyzer.Models
                 {
                     Id = 601, Name = "ICILS - student level", Group = "ICILS", Description = "ICILS since 2013 - student level",
                     Weight = "TOTWGTS",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TOTWGTS", Description = "Final student weight", Mandatory = true },
+                    ],
                     NMI = 5, PVvarsList = new() {
                         new() { Regex = "PV[0-9]+CIL", DisplayName = "PVCIL", Label = "Computer and Information Literacy - PV", Mandatory = true},
                         new() { Regex = "PV[0-9]+CT", DisplayName = "PVCT", Label = "Computational Thinking - PV", Mandatory = false},
@@ -440,6 +491,9 @@ namespace LSAnalyzer.Models
                 {
                     Id = 611, Name = "ICILS - teacher level", Group = "ICILS", Description = "ICILS since 2013 - teacher level",
                     Weight = "TOTWGTT",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TOTWGTT", Description = "Final teacher weight", Mandatory = true },
+                    ],
                     NMI = 1, PVvarsList = new() { },
                     RepWgts = "TRWGT[0-9]+", FayFac = 1, JKreverse = false,
                 },
@@ -447,6 +501,9 @@ namespace LSAnalyzer.Models
                 {
                     Id = 621, Name = "ICILS - school level", Group = "ICILS", Description = "ICILS since 2013 - school level",
                     Weight = "TOTWGTC",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TOTWGTC", Description = "Final school weight", Mandatory = true },
+                    ],
                     NMI = 1, PVvarsList = new() { },
                     RepWgts = "CRWGT[0-9]+", FayFac = 1, JKreverse = false,
                 },
@@ -454,6 +511,9 @@ namespace LSAnalyzer.Models
                 {
                     Id = 701, Name = "ICCS - student level", Group = "ICCS", Description = "ICCS - student level",
                     Weight = "TOTWGTS",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TOTWGTS", Description = "Final student weight", Mandatory = true },
+                    ],
                     NMI = 5, PVvarsList = [
                         new() { Regex = "PV[0-9]+CIV", DisplayName = "PVCIV", Label = "Civic knowledge - PV", Mandatory = true },
                     ],
@@ -463,6 +523,9 @@ namespace LSAnalyzer.Models
                 {
                     Id = 711, Name = "ICCS - teacher level", Group = "ICCS", Description = "ICCS - teacher level",
                     Weight = "TOTWGTT",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TOTWGTT", Description = "Final teacher weight", Mandatory = true },
+                    ],
                     NMI = 1, PVvarsList = [],
                     FayFac = 1, JKzone = "JKZONET", JKrep = "JKREPT", JKreverse = false,
                 },
@@ -470,6 +533,9 @@ namespace LSAnalyzer.Models
                 {
                     Id = 721, Name = "ICCS - school level", Group = "ICCS", Description = "ICCS - school level",
                     Weight = "TOTWGTC",
+                    PossibleWeightVariables = [
+                        new WeightVariable { Name = "TOTWGTC", Description = "Final school weight", Mandatory = true },
+                    ],
                     NMI = 1, PVvarsList = [],
                     FayFac = 1, JKzone = "JKZONEC", JKrep = "JKREPC", JKreverse = false,
                 }

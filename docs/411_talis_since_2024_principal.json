@@ -6,6 +6,14 @@
   "AutoEncapsulateRegex": false,
   "Weight": "SCHWGTC",
   "NMI": 1,
+  "PossibleWeightVariables": [
+    {
+      "Name": "SCHWGTC",
+      "Description": "Final school weight in principal datasets",
+      "Mandatory": true,
+      "HasErrors": false
+    }
+  ],
   "MIvar": null,
   "IDvar": null,
   "PVvarsList": [],

@@ -6,6 +6,20 @@
   "AutoEncapsulateRegex": false,
   "Weight": "TOTWGT;SENWGT",
   "NMI": 5,
+  "PossibleWeightVariables": [
+    {
+      "Name": "TOTWGT",
+      "Description": "Total student weight",
+      "Mandatory": true,
+      "HasErrors": false
+    },
+    {
+      "Name": "SENWGT",
+      "Description": "Equal sum of student weights for each country",
+      "Mandatory": false,
+      "HasErrors": false
+    }
+  ],
   "MIvar": null,
   "IDvar": null,
   "PVvarsList": [

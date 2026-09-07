@@ -6,6 +6,14 @@
   "AutoEncapsulateRegex": false,
   "Weight": "W_FSTUWT",
   "NMI": 10,
+  "PossibleWeightVariables": [
+    {
+      "Name": "W_FSTUWT",
+      "Description": "Final student weight",
+      "Mandatory": true,
+      "HasErrors": false
+    }
+  ],
   "MIvar": null,
   "IDvar": null,
   "PVvarsList": [

@@ -6,6 +6,14 @@
   "AutoEncapsulateRegex": false,
   "Weight": "SPFWT0",
   "NMI": 10,
+  "PossibleWeightVariables": [
+    {
+      "Name": "SPFWT0",
+      "Description": "Final calibrated sample person weight",
+      "Mandatory": true,
+      "HasErrors": false
+    }
+  ],
   "MIvar": null,
   "IDvar": null,
   "PVvarsList": [
