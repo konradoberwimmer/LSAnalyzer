@@ -68,6 +68,9 @@ namespace LSAnalyzer.Models
             };
 
         [JsonIgnore]
+        public Dictionary<string, string> UsedVirtualVariables => VirtualVariables.ToDictionary(var => var.Name, var => var.Info);
+        
+        [JsonIgnore]
         public Dictionary<string, string> VariableLabels
         {
             get
