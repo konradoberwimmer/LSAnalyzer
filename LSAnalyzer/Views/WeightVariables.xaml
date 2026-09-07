@@ -7,7 +7,8 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewModels:ConfigDatasetTypes, IsDesignTimeCreatable=True}"
         x:Name="WindowWeightVariables"
-        Title="Weight variables" Height="300" MinHeight="300" Width="600" MinWidth="600" WindowStartupLocation="CenterOwner"><Grid Margin="10">
+        Title="Weight variables" Height="300" MinHeight="300" Width="600" MinWidth="600" WindowStartupLocation="CenterOwner" Closing="WeightVariables_OnClosing">
+    <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -19,6 +20,6 @@
                 <DataGridCheckBoxColumn Header="Mandatory" Binding="{Binding Mandatory}"/>
             </DataGrid.Columns>
         </DataGrid>
-        <Button Grid.Row="1" Margin="0,5,0,0" Content="Apply" HorizontalAlignment="Right" Width="80" Height="22" Command="{Binding MakeWeightFromPossibleWeightVariablesCommand}" CommandParameter="{Binding ElementName=WindowWeightVariables}"/>
+        <Button Grid.Row="1" Margin="0,5,0,0" Content="Apply" HorizontalAlignment="Right" Width="80" Height="22" Click="ButtonApply_OnClick"/>
     </Grid>
 </Window>

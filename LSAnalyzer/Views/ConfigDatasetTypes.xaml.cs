@@ -111,15 +111,11 @@ namespace LSAnalyzer.Views
             }
             WeightVariables weightVariablesView = new()
             {
-                DataContext = viewModel
+                DataContext = viewModel,
+                FormerWeightVariables = viewModel.SelectedDatasetType.PossibleWeightVariables.Select(weightVariable => new WeightVariable(weightVariable)).ToList()
             };
             
             weightVariablesView.ShowDialog();
-
-            if (string.Join(";", viewModel.SelectedDatasetType.PossibleWeightVariables.Select(weightVariable => weightVariable.Name)) != viewModel.SelectedDatasetType.Weight)
-            {
-                viewModel.SelectedDatasetType.PossibleWeightVariables = [..storedPossibleWeightVariables];
-            }
         }
     }
 }
