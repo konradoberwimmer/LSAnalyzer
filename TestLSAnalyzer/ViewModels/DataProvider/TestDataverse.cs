@@ -100,7 +100,7 @@ public class TestDataverse
         
         Assert.False(selectAnalysisFile.ReplaceCharacterVectors);
         Assert.Equal(selectAnalysisFile.DatasetTypes.First(), selectAnalysisFile.SelectedDatasetType);
-        Assert.Equal("wgt", selectAnalysisFile.SelectedWeightVariable);
+        Assert.Equal("wgt", selectAnalysisFile.SelectedWeightVariable?.Name);
         Assert.Equal(SelectAnalysisFile.AnalysisModes.Build, selectAnalysisFile.SelectedAnalysisMode);
         
         selectAnalysisFile.InitializeFromRecentFile(dataverse.RecentFilesForAnalyses.Last());

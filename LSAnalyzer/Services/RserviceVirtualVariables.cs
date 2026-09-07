@@ -563,7 +563,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             };
             variablesToRemove = variablesToRemove.Where(v => v is not null).ToList();
 
-            foreach (var variableNameToRemove in variablesToRemove.Select(v => v.Name))
+            foreach (var variableNameToRemove in variablesToRemove.Select(v => v!.Name))
             {
                 _engine.Evaluate($"lsanalyzer_dat_raw_preview_distinct$`{variableNameToRemove}` <- NULL");
             }

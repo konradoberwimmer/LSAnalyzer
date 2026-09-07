@@ -180,7 +180,7 @@ public partial class Dataverse : ObservableObject, IDataProviderViewModel
         
         ParentViewModel.ReplaceCharacterVectors = recentFileForAnalysis.ConvertCharacters;
         ParentViewModel.SelectedDatasetType = ParentViewModel.DatasetTypes.First(dst => dst.Id == recentFileForAnalysis.DatasetTypeId);
-        ParentViewModel.SelectedWeightVariable = recentFileForAnalysis.Weight;
+        ParentViewModel.SelectedWeightVariable = ParentViewModel.PossibleWeightVariables.FirstOrDefault(possibleWeightVariable => possibleWeightVariable.Name == recentFileForAnalysis.Weight);
         ParentViewModel.SelectedAnalysisMode = recentFileForAnalysis.ModeKeep ? SelectAnalysisFile.AnalysisModes.Keep : SelectAnalysisFile.AnalysisModes.Build;
     }
 

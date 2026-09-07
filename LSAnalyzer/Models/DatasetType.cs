@@ -484,6 +484,8 @@ namespace LSAnalyzer.Models
         public string Description { get; set; } = string.Empty;
         public bool Mandatory { get; set; } = true;
 
+        [JsonIgnore] public string Info => $"{Name}{(string.IsNullOrWhiteSpace(Description) ? "" : $" ({Description})")}";
+
         public WeightVariable()
         {
             
