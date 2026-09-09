@@ -237,8 +237,7 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
 
             EvaluateAndLog($"{target}$`{virtualVariableScale.Name}` <- ({target}$`{inputVariable}` - {target}$lsanalyzer_tmp_mean) / {target}$lsanalyzer_tmp_sd * {virtualVariableScale.Sd.ToString(CultureInfo.InvariantCulture)} + {virtualVariableScale.Mean.ToString(CultureInfo.InvariantCulture)}");
                 
-            EvaluateAndLog($"{target}$lsanalyzer_tmp_mean <- NULL");
-            EvaluateAndLog($"{target}$lsanalyzer_tmp_sd <- NULL");
+            EvaluateAndLog($"{target}[, c('lsanalyzer_tmp_mean', 'lsanalyzer_tmp_sd')] <- NULL");
 
             if (!string.IsNullOrWhiteSpace(virtualVariableScale.Label) && _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() is true)
             {
@@ -534,11 +533,11 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
             var lastTempVariableName = VisitExpression(parser.expression());
             
             EvaluateAndLog($"{target}$`{virtualVariableCompute.Name}` <- {target}$`{lastTempVariableName}`");
-            foreach (var tempVariableName in _tempVariableNames)
+            if (_tempVariableNames.Count > 0)
             {
-                EvaluateAndLog($"{target}$`{tempVariableName}` <- NULL");
+                EvaluateAndLog($"{target}[,c({string.Join(", ", _tempVariableNames.Select(tempVariableName => $"'{tempVariableName}'"))})] <- NULL");
             }
-            
+
             _lastVirtualVariableNames.Add(virtualVariableCompute.Name);
             
             return true;
