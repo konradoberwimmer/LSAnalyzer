@@ -231,8 +231,21 @@ public partial class Rservice : VirtualVariableComputeBaseVisitor<string>, IRser
                 var sumOfWeights = $"sum(imp1$`{weightVariable}`[!is.na(imp1$`{inputVariable}`)])";
                 var weightedSd = $"sqrt(sum(imp1$`{weightVariable}` * (imp1$`{inputVariable}` - {weightedMean}) ^ 2.0, na.rm = TRUE) / ({sumOfWeights} - 1))";
                     
+                var preserveLabels = _engine?.Evaluate($"'variable.labels' %in% names(attributes({target}))").AsLogical().First() ?? false;
+                if (preserveLabels)
+                {
+                    EvaluateAndLog($"lsanalyzer_stored_attributes <- attributes({target})");
+                    EvaluateAndLog($"lsanalyzer_stored_attributes_columns <- lapply({target}, attributes)");
+                }
+                
                 EvaluateAndLog($$"""lsanalyzer_tmp_means <- do.call('rbind', lapply(split({{target}}, {{target}}$`{{miVariable}}`), FUN = function(imp1) { return(data.frame(mi = unique(imp1$`{{miVariable}}`), lsanalyzer_tmp_mean = {{weightedMean}}, lsanalyzer_tmp_sd = {{weightedSd}})) }))""");
                 EvaluateAndLog($"{target} <- merge({target}, lsanalyzer_tmp_means, by.x='{miVariable}', by.y='mi', all.x=TRUE)");
+
+                if (preserveLabels)
+                {
+                    EvaluateAndLog($"attributes({target})$`variable.labels` <- lsanalyzer_stored_attributes$`variable.labels`");
+                    EvaluateAndLog($"for (vv in setdiff(colnames({target}), 'lsanalyzer_tmp_means')) attributes(lsanalyzer_dat_raw_stored[,vv]) <- lsanalyzer_stored_attributes_columns[[vv]]");
+                }
             }
 
             EvaluateAndLog($"{target}$`{virtualVariableScale.Name}` <- ({target}$`{inputVariable}` - {target}$lsanalyzer_tmp_mean) / {target}$lsanalyzer_tmp_sd * {virtualVariableScale.Sd.ToString(CultureInfo.InvariantCulture)} + {virtualVariableScale.Mean.ToString(CultureInfo.InvariantCulture)}");
