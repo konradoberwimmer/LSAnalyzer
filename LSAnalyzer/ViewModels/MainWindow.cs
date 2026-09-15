@@ -157,10 +157,12 @@ public partial class MainWindow : ObservableObject
         WeakReferenceMessenger.Default.Register<RequestAnalysis.RequestAnalysisMessage>(this, (_, m) =>
         {
             var analysis = m.Value;
+            var virtualVariables = _configuration.GetVirtualVariablesFor(
+                AnalysisConfiguration?.FileNameWithoutPath ?? string.Empty,
+                AnalysisConfiguration?.DatasetType ?? new DatasetType { Id = -1 });
+            
             analysis.VirtualVariables = 
-                _configuration.GetVirtualVariablesFor(AnalysisConfiguration?.FileNameWithoutPath ?? string.Empty, AnalysisConfiguration?.DatasetType ?? new DatasetType { Id = -1 })
-                    .Where(vv => analysis.AllVariables.Select(v => v.Name).Contains(vv.Name))
-                    .ToList();
+                virtualVariables.Where(vv => analysis.AllVariables.Select(v => v.Name).Contains(vv.Name) || (SubsettingExpression?.Contains(vv.Name) ?? false)).ToList();
             
             AnalysisPresentation analysisPresentation = new(analysis, this);
 

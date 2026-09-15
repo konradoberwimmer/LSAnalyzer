@@ -311,7 +311,8 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         }
 
         analysis.AnalysisConfiguration = _currentConfiguration!;
-        analysis.VirtualVariables = _currentVirtualVariables.Where(vv => analysis.AllVariables.Select(v => v.Name).Contains(vv.Name)).ToList();
+        analysis.VirtualVariables = 
+            _currentVirtualVariables.Where(vv => analysis.AllVariables.Select(v => v.Name).Contains(vv.Name) || (analysis.SubsettingExpression?.Contains(vv.Name) ?? false)).ToList();
         
         return true;
     }
