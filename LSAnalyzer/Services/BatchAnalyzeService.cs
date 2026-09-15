@@ -291,7 +291,7 @@ public class BatchAnalyzeService : IBatchAnalyzeService
         {
             previousSubsettingExpression = "$$$initialize$$$";
             
-            if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, analysis.VirtualVariables, analysis.SubsettingExpression))
+            if (!_rservice.TestAnalysisConfiguration(_currentConfiguration!, _currentVirtualVariables, analysis.SubsettingExpression))
             {
                 entry.Success = false;
                 entry.Message = AbortedOr("Could not reapply subsetting '" + analysis.SubsettingExpression + "'!");
