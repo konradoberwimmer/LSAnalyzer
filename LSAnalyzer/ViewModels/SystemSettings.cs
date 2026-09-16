@@ -26,7 +26,7 @@ public partial class SystemSettings : ObservableValidatorExtended, IChangeTracki
     private readonly IDatasetTypeRepository _datasetTypeRepository;
     private readonly ISettingsService _settingsService;
 
-    [ObservableProperty] private string _version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
+    [ObservableProperty] private string _version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
 
     [ObservableProperty] private int _countConfiguredDatasetTypes;
 
